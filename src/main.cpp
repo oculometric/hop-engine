@@ -10,28 +10,22 @@
 
 #include <iostream>
 
+#include "window.h"
+#include "graphics_environment.h"
+
 int main() {
-    glfwInit();
+    HopEngine::Window::initEnvironment();
+    HopEngine::Window* window = new HopEngine::Window(1024, 1024, "hop!");
+    HopEngine::GraphicsEnvironment* ge = new HopEngine::GraphicsEnvironment(window);
 
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Vulkan window", nullptr, nullptr);
-
-    uint32_t extensionCount = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-
-    std::cout << extensionCount << " extensions supported\n";
-
-    glm::mat4 matrix;
-    glm::vec4 vec;
-    auto test = matrix * vec;
-
-    while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
+    while (!window->getShouldClose())
+    {
+        window->pollEvents();
     }
 
-    glfwDestroyWindow(window);
-
-    glfwTerminate();
+    delete ge;
+    delete window;
+    HopEngine::Window::terminateEnvironment();
 
     return 0;
 }
