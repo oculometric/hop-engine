@@ -5,10 +5,14 @@
 #include <vulkan/vulkan.h>
 
 #include "window.h"
-#include "swapchain.h"
 
 namespace HopEngine
 {
+
+class Swapchain;
+class RenderPass;
+class Pipeline;
+class Shader;
 
 class GraphicsEnvironment
 {
@@ -39,6 +43,9 @@ private:
 	VkSurfaceKHR surface = VK_NULL_HANDLE;
 
 	Swapchain* swapchain = nullptr;
+	RenderPass* render_pass = nullptr;
+	Shader* shader = nullptr;
+	Pipeline* pipeline = nullptr;
 
 public:
 	GraphicsEnvironment(Window* window);

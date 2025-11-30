@@ -4,6 +4,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include "common.h"
+
 namespace HopEngine
 {
 
@@ -13,7 +15,8 @@ private:
 	GLFWwindow* window;
 	
 public:
-	Window() = delete;
+	DELETE_CONSTRUCTORS(Window);
+
 	Window(uint32_t width, uint32_t height, std::string title);
 
 	static void initEnvironment();

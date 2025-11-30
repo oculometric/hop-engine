@@ -3,6 +3,8 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
+#include "common.h"
+
 namespace HopEngine
 {
 
@@ -23,9 +25,13 @@ private:
 	std::vector<VkImageView> image_views;
 
 public:
-	Swapchain() = delete;
+	DELETE_CONSTRUCTORS(Swapchain);
+
 	Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR surface);
 	~Swapchain();
+
+	inline VkFormat getFormat() { return format; }
+	inline VkExtent2D getExtent() { return extent; }
 
 	static SwapchainSupportInfo getSupportInfo(VkPhysicalDevice device, VkSurfaceKHR surface);
 	static VkSurfaceFormatKHR getIdealSurfaceFormat(const SwapchainSupportInfo& info);

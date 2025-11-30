@@ -113,6 +113,10 @@
       <AdditionalLibraryDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\lib-vc2019;C:\VulkanSDK\1.4.313.0\Lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>glslc.exe res/shader.vert -o shader_vert.spv
+glslc.exe res/shader.frag -o shader_frag.spv</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -131,17 +135,32 @@
       <AdditionalLibraryDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\lib-vc2019;C:\VulkanSDK\1.4.313.0\Lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>glslc.exe res/shader.vert -o shader_vert.spv
+glslc.exe res/shader.frag -o shader_frag.spv</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\graphics_environment.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\pipeline.cpp" />
+    <ClCompile Include="src\render_pass.cpp" />
+    <ClCompile Include="src\shader.cpp" />
     <ClCompile Include="src\swapchain.cpp" />
     <ClCompile Include="src\window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\common.h" />
     <ClInclude Include="src\graphics_environment.h" />
+    <ClInclude Include="src\pipeline.h" />
+    <ClInclude Include="src\render_pass.h" />
+    <ClInclude Include="src\shader.h" />
     <ClInclude Include="src\swapchain.h" />
     <ClInclude Include="src\window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\shader.frag" />
+    <None Include="res\shader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

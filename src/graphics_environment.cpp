@@ -8,6 +8,9 @@
 #include <GLFW/glfw3.h>
 
 #include "swapchain.h"
+#include "pipeline.h"
+#include "render_pass.h"
+#include "shader.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -25,6 +28,9 @@ GraphicsEnvironment::GraphicsEnvironment(Window* window)
 
     auto framebuffer_size = window->getSize();
     swapchain = new Swapchain(framebuffer_size.first, framebuffer_size.second, surface);
+    render_pass = new RenderPass(swapchain);
+    shader = new Shader("shader");
+    pipeline = new Pipeline(shader, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL, render_pass->getRenderPass());
 }
 
 GraphicsEnvironment::QueueFamilies GraphicsEnvironment::getQueueFamilies(VkPhysicalDevice device)
@@ -58,6 +64,9 @@ GraphicsEnvironment* GraphicsEnvironment::get()
 
 GraphicsEnvironment::~GraphicsEnvironment()
 {
+    delete pipeline;
+    delete shader;
+    delete render_pass;
     delete swapchain;
 
     vkDestroyDevice(device, nullptr);
@@ -138,6 +147,9 @@ void GraphicsEnvironment::createDevice()
 
         score += properties.limits.maxImageDimension2D;
 
+        if (features.fillModeNonSolid == VK_FALSE)
+            score = 0;
+
         // check that the necessary queues are present
         auto queue_families = getQueueFamilies(device);
         if (!queue_families.graphics_family.has_value()
@@ -188,6 +200,7 @@ void GraphicsEnvironment::createDevice()
 
     // we aren't using any device features
     VkPhysicalDeviceFeatures features{ };
+    features.fillModeNonSolid = VK_TRUE;
     
     // actually create the logical device
     VkDeviceCreateInfo device_create_info{ };
