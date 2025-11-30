@@ -7,6 +7,7 @@
 #include <set>
 #include <GLFW/glfw3.h>
 
+#include "window.h"
 #include "swapchain.h"
 #include "pipeline.h"
 #include "render_pass.h"
@@ -17,20 +18,18 @@ using namespace std;
 
 static GraphicsEnvironment* environment = nullptr;
 
-GraphicsEnvironment::GraphicsEnvironment(Window* window)
+GraphicsEnvironment::GraphicsEnvironment(Window* main_window)
 {
     environment = this;
+
+    window = main_window;
 
 	createInstance();
     if (glfwCreateWindowSurface(instance, window->getWindow(), nullptr, &surface) != VK_SUCCESS)
         throw std::runtime_error("glfwCreateWindowSurface failed");
     createDevice();
-
-    auto framebuffer_size = window->getSize();
-    swapchain = new Swapchain(framebuffer_size.first, framebuffer_size.second, surface);
-    render_pass = new RenderPass(swapchain);
-    shader = new Shader("shader");
-    pipeline = new Pipeline(shader, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL, render_pass->getRenderPass());
+    createResources();
+    createCommandPool();
 }
 
 GraphicsEnvironment::QueueFamilies GraphicsEnvironment::getQueueFamilies(VkPhysicalDevice device)
@@ -62,8 +61,18 @@ GraphicsEnvironment* GraphicsEnvironment::get()
     return environment;
 }
 
+void GraphicsEnvironment::drawFrame()
+{
+
+}
+
 GraphicsEnvironment::~GraphicsEnvironment()
 {
+    vkDestroyCommandPool(device, command_pool, nullptr);
+
+    for (VkFramebuffer framebuffer : framebuffers)
+        vkDestroyFramebuffer(device, framebuffer, nullptr);
+
     delete pipeline;
     delete shader;
     delete render_pass;
@@ -217,4 +226,107 @@ void GraphicsEnvironment::createDevice()
     // extract queues
     vkGetDeviceQueue(device, queue_family_indices.graphics_family.value(), 0, &graphics_queue);
     vkGetDeviceQueue(device, queue_family_indices.present_family.value(), 0, &present_queue);
+}
+
+void GraphicsEnvironment::createResources()
+{
+    auto framebuffer_size = window->getSize();
+    swapchain = new Swapchain(framebuffer_size.first, framebuffer_size.second, surface);
+    render_pass = new RenderPass(swapchain);
+    shader = new Shader("shader");
+    pipeline = new Pipeline(shader, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL, render_pass->getRenderPass());
+
+    // create framebuffers
+    framebuffers.resize(swapchain->getImageCount());
+    for (size_t i = 0; i < framebuffers.size(); ++i)
+    {
+        VkImageView attachments[] =
+        {
+            swapchain->getImage(i)
+        };
+
+        VkFramebufferCreateInfo framebuffer_create_info{ };
+        framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebuffer_create_info.renderPass = render_pass->getRenderPass();
+        framebuffer_create_info.attachmentCount = 1;
+        framebuffer_create_info.pAttachments = attachments;
+        framebuffer_create_info.width = swapchain->getExtent().width;
+        framebuffer_create_info.height = swapchain->getExtent().height;
+        framebuffer_create_info.layers = 1;
+
+        if (vkCreateFramebuffer(device, &framebuffer_create_info, nullptr, &framebuffers[i]) != VK_SUCCESS)
+            throw runtime_error("vkCreateFramebuffer failed");
+    }
+}
+
+void GraphicsEnvironment::createCommandPool()
+{
+    QueueFamilies queue_families = getQueueFamilies(physical_device);
+
+    VkCommandPoolCreateInfo pool_create_info{ };
+    pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    pool_create_info.queueFamilyIndex = queue_families.graphics_family.value();
+
+    if (vkCreateCommandPool(device, &pool_create_info, nullptr, &command_pool) != VK_SUCCESS)
+        throw runtime_error("vkCreateCommandPool failed");
+
+    VkCommandBufferAllocateInfo buffer_allocate_info{ };
+    buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    buffer_allocate_info.commandPool = command_pool;
+    buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    buffer_allocate_info.commandBufferCount = MAX_FRAMES_IN_FLIGHT;
+    command_buffers.resize(MAX_FRAMES_IN_FLIGHT);
+
+    if (vkAllocateCommandBuffers(device, &buffer_allocate_info, command_buffers.data()) != VK_SUCCESS)
+        throw runtime_error("vkAllocateCommandBuffers failed");
+}
+
+void GraphicsEnvironment::createSyncObjects()
+{
+
+}
+
+void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index)
+{
+    VkCommandBufferBeginInfo cmd_buffer_begin_info{ };
+    cmd_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+    if (vkBeginCommandBuffer(command_buffer, &cmd_buffer_begin_info) != VK_SUCCESS)
+        throw runtime_error("vkBeginCommandBuffer failed");
+
+    VkRenderPassBeginInfo render_pass_begin_info{ };
+    render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    render_pass_begin_info.renderPass = render_pass->getRenderPass();
+    render_pass_begin_info.framebuffer = framebuffers[image_index];
+    render_pass_begin_info.renderArea.offset = { 0, 0 };
+    render_pass_begin_info.renderArea.extent = swapchain->getExtent();
+    VkClearValue clear_colour = { { { 0.0f, 0.0f, 0.0f, 1.0f } } };
+    render_pass_begin_info.clearValueCount = 1;
+    render_pass_begin_info.pClearValues = &clear_colour;
+
+    vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+
+    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getPipeline());
+    
+    VkViewport viewport{ };
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(swapchain->getExtent().width);
+    viewport.height = static_cast<float>(swapchain->getExtent().height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(command_buffer, 0, 1, &viewport);
+
+    VkRect2D scissor{ };
+    scissor.offset = { 0, 0 };
+    scissor.extent = swapchain->getExtent();
+    vkCmdSetScissor(command_buffer, 0, 1, &scissor);
+
+    vkCmdDraw(command_buffer, 3, 1, 0, 0);
+
+    vkCmdEndRenderPass(command_buffer);
+
+    if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS)
+        throw runtime_error("vkEndCommandBuffer failed");
 }

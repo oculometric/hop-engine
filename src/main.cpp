@@ -21,6 +21,7 @@ int main() {
     while (!window->getShouldClose())
     {
         window->pollEvents();
+        ge->drawFrame();
     }
 
     delete ge;

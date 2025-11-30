@@ -4,11 +4,10 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-#include "window.h"
-
 namespace HopEngine
 {
 
+class Window;
 class Swapchain;
 class RenderPass;
 class Pipeline;
@@ -34,33 +33,45 @@ private:
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
 	};
 
+	const int MAX_FRAMES_IN_FLIGHT = 2;
+
 private:
+	Window* window = nullptr;
+
 	VkInstance instance = VK_NULL_HANDLE;
 	VkPhysicalDevice physical_device = VK_NULL_HANDLE;
 	VkDevice device = VK_NULL_HANDLE;
 	VkQueue graphics_queue = VK_NULL_HANDLE;
 	VkQueue present_queue = VK_NULL_HANDLE;
+	VkCommandPool command_pool = VK_NULL_HANDLE;
+	std::vector<VkCommandBuffer> command_buffers;
 	VkSurfaceKHR surface = VK_NULL_HANDLE;
 
 	Swapchain* swapchain = nullptr;
+	std::vector<VkFramebuffer> framebuffers;
 	RenderPass* render_pass = nullptr;
 	Shader* shader = nullptr;
 	Pipeline* pipeline = nullptr;
 
 public:
-	GraphicsEnvironment(Window* window);
+	GraphicsEnvironment(Window* main_window);
 
 	QueueFamilies getQueueFamilies(VkPhysicalDevice device);
 	inline VkPhysicalDevice getPhysicalDevice() { return physical_device; }
 	inline VkDevice getDevice() { return device; }
 	static GraphicsEnvironment* get();
+	void drawFrame();
 
 	~GraphicsEnvironment();
 
 private:
 	void createInstance();
 	void createDevice();
-	
+	void createResources();
+	void createCommandPool();
+	void createSyncObjects();
+
+	void recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index);
 };
 
 }
