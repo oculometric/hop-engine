@@ -12,6 +12,7 @@ class Swapchain;
 class RenderPass;
 class Pipeline;
 class Shader;
+class Mesh;
 
 class GraphicsEnvironment
 {
@@ -55,6 +56,7 @@ private:
 	RenderPass* render_pass = nullptr;
 	Shader* shader = nullptr;
 	Pipeline* pipeline = nullptr;
+	Mesh* mesh = nullptr;
 
 public:
 	GraphicsEnvironment(Window* main_window);

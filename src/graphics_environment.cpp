@@ -12,6 +12,7 @@
 #include "pipeline.h"
 #include "render_pass.h"
 #include "shader.h"
+#include "mesh.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -31,6 +32,13 @@ GraphicsEnvironment::GraphicsEnvironment(Window* main_window)
     createResources();
     createCommandPool();
     createSyncObjects();
+
+    mesh = new Mesh(
+    {
+        { { 0.0f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+        { { 0.5f,  0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+        { { -0.5f, 0.5f, 0.0f }, { 1.0f, 0.0f, 1.0f } }
+    }, { 0, 1, 2 });
 }
 
 GraphicsEnvironment::~GraphicsEnvironment()
@@ -49,6 +57,7 @@ GraphicsEnvironment::~GraphicsEnvironment()
     for (VkFramebuffer framebuffer : framebuffers)
         vkDestroyFramebuffer(device, framebuffer, nullptr);
 
+    delete mesh;
     delete pipeline;
     delete shader;
     delete render_pass;
@@ -384,7 +393,11 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
     scissor.extent = swapchain->getExtent();
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
-    vkCmdDraw(command_buffer, 3, 1, 0, 0);
+    VkBuffer vertex_buffers[] = { mesh->getVertexBuffer() };
+    VkDeviceSize offsets[] = { 0 };
+    vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
+    vkCmdBindIndexBuffer(command_buffer, mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
+    vkCmdDrawIndexed(command_buffer, mesh->getIndexCount(), 1, 0, 0, 0);
 
     vkCmdEndRenderPass(command_buffer);
 

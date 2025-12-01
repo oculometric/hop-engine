@@ -5,6 +5,7 @@
 
 #include "graphics_environment.h"
 #include "shader.h"
+#include "mesh.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -25,10 +26,12 @@ Pipeline::Pipeline(Shader* shader, VkCullModeFlags culling_mode, VkPolygonMode p
     // TODO: mesh data description here!
     VkPipelineVertexInputStateCreateInfo vertex_input_create_info{ };
     vertex_input_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertex_input_create_info.vertexBindingDescriptionCount = 0;
-    vertex_input_create_info.pVertexBindingDescriptions = nullptr;
-    vertex_input_create_info.vertexAttributeDescriptionCount = 0;
-    vertex_input_create_info.pVertexAttributeDescriptions = nullptr;
+    auto binding_description = Mesh::getBindingDescription();
+    vertex_input_create_info.vertexBindingDescriptionCount = 1;
+    vertex_input_create_info.pVertexBindingDescriptions = &binding_description;
+    auto attribute_descriptions = Mesh::getAttributeDescriptions();
+    vertex_input_create_info.vertexAttributeDescriptionCount = static_cast<uint32_t>(attribute_descriptions.size());
+    vertex_input_create_info.pVertexAttributeDescriptions = attribute_descriptions.data();
 
     VkPipelineInputAssemblyStateCreateInfo input_assembly_create_info{ };
     input_assembly_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
