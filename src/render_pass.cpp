@@ -29,12 +29,23 @@ RenderPass::RenderPass(Swapchain* swapchain)
     subpass.pColorAttachments = &colour_attachment_ref;
     subpass.colorAttachmentCount = 1;
 
+    VkSubpassDependency dependency{ };
+    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependency.dstSubpass = 0;
+    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.srcAccessMask = 0;
+    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
     VkRenderPassCreateInfo render_pass_create_info{};
     render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     render_pass_create_info.attachmentCount = 1;
     render_pass_create_info.pAttachments = &colour_attachment;
     render_pass_create_info.subpassCount = 1;
     render_pass_create_info.pSubpasses = &subpass;
+
+    render_pass_create_info.dependencyCount = 1;
+    render_pass_create_info.pDependencies = &dependency;
 
     if (vkCreateRenderPass(GraphicsEnvironment::get()->getDevice(), &render_pass_create_info, nullptr, &render_pass) != VK_SUCCESS)
         throw runtime_error("vkCreateRenderPass failed");

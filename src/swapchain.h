@@ -34,6 +34,7 @@ public:
 	inline VkExtent2D getExtent() { return extent; }
 	inline uint32_t getImageCount() { return static_cast<uint32_t>(image_views.size()); }
 	inline VkImageView getImage(uint32_t i) { return image_views[i]; }
+	inline VkSwapchainKHR getSwapchain() { return swapchain; }
 
 	static SwapchainSupportInfo getSupportInfo(VkPhysicalDevice device, VkSurfaceKHR surface);
 	static VkSurfaceFormatKHR getIdealSurfaceFormat(const SwapchainSupportInfo& info);

@@ -30,6 +30,35 @@ GraphicsEnvironment::GraphicsEnvironment(Window* main_window)
     createDevice();
     createResources();
     createCommandPool();
+    createSyncObjects();
+}
+
+GraphicsEnvironment::~GraphicsEnvironment()
+{
+    vkDeviceWaitIdle(device);
+
+    for (size_t i = 0; i < framebuffers.size(); ++i)
+    {
+        vkDestroySemaphore(device, image_available_semaphores[i], nullptr);
+        vkDestroySemaphore(device, render_finished_semaphores[i], nullptr);
+        vkDestroyFence(device, in_flight_fences[i], nullptr);
+    }
+
+    vkDestroyCommandPool(device, command_pool, nullptr);
+
+    for (VkFramebuffer framebuffer : framebuffers)
+        vkDestroyFramebuffer(device, framebuffer, nullptr);
+
+    delete pipeline;
+    delete shader;
+    delete render_pass;
+    delete swapchain;
+
+    vkDestroyDevice(device, nullptr);
+    vkDestroySurfaceKHR(instance, surface, nullptr);
+    vkDestroyInstance(instance, nullptr);
+
+    environment = nullptr;
 }
 
 GraphicsEnvironment::QueueFamilies GraphicsEnvironment::getQueueFamilies(VkPhysicalDevice device)
@@ -63,26 +92,41 @@ GraphicsEnvironment* GraphicsEnvironment::get()
 
 void GraphicsEnvironment::drawFrame()
 {
+    static size_t frame_index = 0;
 
-}
+    vkWaitForFences(device, 1, &in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT], VK_TRUE, UINT64_MAX);
+    vkResetFences(device, 1, &in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT]);
 
-GraphicsEnvironment::~GraphicsEnvironment()
-{
-    vkDestroyCommandPool(device, command_pool, nullptr);
+    uint32_t image_index;
+    vkAcquireNextImageKHR(device, swapchain->getSwapchain(), UINT64_MAX, image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT], VK_NULL_HANDLE, &image_index);
 
-    for (VkFramebuffer framebuffer : framebuffers)
-        vkDestroyFramebuffer(device, framebuffer, nullptr);
+    vkResetCommandBuffer(command_buffers[image_index], 0);
+    recordRenderCommands(command_buffers[image_index], image_index);
 
-    delete pipeline;
-    delete shader;
-    delete render_pass;
-    delete swapchain;
+    VkSubmitInfo submit_info{ };
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    VkSemaphore wait_semaphores[] = { image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT] };
+    VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    submit_info.waitSemaphoreCount = 1;
+    submit_info.pWaitSemaphores = wait_semaphores;
+    submit_info.pWaitDstStageMask = wait_stages;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &(command_buffers[image_index]);
+    VkSemaphore signal_semaphores[] = { render_finished_semaphores[image_index] };
+    submit_info.signalSemaphoreCount = 1;
+    submit_info.pSignalSemaphores = signal_semaphores;
+    if (vkQueueSubmit(graphics_queue, 1, &submit_info, in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT]) != VK_SUCCESS)
+        throw runtime_error("vkQueueSubmit failed");
 
-    vkDestroyDevice(device, nullptr);
-    vkDestroySurfaceKHR(instance, surface, nullptr);
-    vkDestroyInstance(instance, nullptr);
-
-    environment = nullptr;
+    VkPresentInfoKHR present_info{};
+    present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    present_info.waitSemaphoreCount = 1;
+    present_info.pWaitSemaphores = signal_semaphores;
+    VkSwapchainKHR swapchains[] = { swapchain->getSwapchain() };
+    present_info.swapchainCount = 1;
+    present_info.pSwapchains = swapchains;
+    present_info.pImageIndices = &image_index;
+    vkQueuePresentKHR(present_queue, &present_info);
 }
 
 void GraphicsEnvironment::createInstance()
@@ -232,6 +276,7 @@ void GraphicsEnvironment::createResources()
 {
     auto framebuffer_size = window->getSize();
     swapchain = new Swapchain(framebuffer_size.first, framebuffer_size.second, surface);
+    MAX_FRAMES_IN_FLIGHT = swapchain->getImageCount();
     render_pass = new RenderPass(swapchain);
     shader = new Shader("shader");
     pipeline = new Pipeline(shader, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL, render_pass->getRenderPass());
@@ -284,7 +329,23 @@ void GraphicsEnvironment::createCommandPool()
 
 void GraphicsEnvironment::createSyncObjects()
 {
+    VkSemaphoreCreateInfo semaphore_create_info{ };
+    semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    VkFenceCreateInfo fence_create_info{ };
+    fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
+    image_available_semaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    render_finished_semaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    in_flight_fences.resize(MAX_FRAMES_IN_FLIGHT);
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    {
+        if (vkCreateSemaphore(device, &semaphore_create_info, nullptr, &image_available_semaphores[i]) != VK_SUCCESS ||
+            vkCreateSemaphore(device, &semaphore_create_info, nullptr, &render_finished_semaphores[i]) != VK_SUCCESS ||
+            vkCreateFence(device, &fence_create_info, nullptr, &in_flight_fences[i]) != VK_SUCCESS)
+            throw runtime_error("vkCreateSemaphore failed");
+    }
 }
 
 void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index)

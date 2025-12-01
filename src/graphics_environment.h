@@ -33,7 +33,7 @@ private:
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
 	};
 
-	const int MAX_FRAMES_IN_FLIGHT = 2;
+	int MAX_FRAMES_IN_FLIGHT = 2;
 
 private:
 	Window* window = nullptr;
@@ -45,6 +45,9 @@ private:
 	VkQueue present_queue = VK_NULL_HANDLE;
 	VkCommandPool command_pool = VK_NULL_HANDLE;
 	std::vector<VkCommandBuffer> command_buffers;
+	std::vector<VkSemaphore> image_available_semaphores;
+	std::vector<VkSemaphore> render_finished_semaphores;
+	std::vector<VkFence> in_flight_fences;
 	VkSurfaceKHR surface = VK_NULL_HANDLE;
 
 	Swapchain* swapchain = nullptr;
@@ -55,14 +58,13 @@ private:
 
 public:
 	GraphicsEnvironment(Window* main_window);
+	~GraphicsEnvironment();
 
 	QueueFamilies getQueueFamilies(VkPhysicalDevice device);
 	inline VkPhysicalDevice getPhysicalDevice() { return physical_device; }
 	inline VkDevice getDevice() { return device; }
 	static GraphicsEnvironment* get();
 	void drawFrame();
-
-	~GraphicsEnvironment();
 
 private:
 	void createInstance();
