@@ -12,21 +12,24 @@
 
 #include "window.h"
 #include "graphics_environment.h"
+#include "counted_ref.h"
+
+using namespace HopEngine;
 
 int main() {
-    HopEngine::Window::initEnvironment();
-    HopEngine::Window* window = new HopEngine::Window(1024, 1024, "hop!");
-    HopEngine::GraphicsEnvironment* ge = new HopEngine::GraphicsEnvironment(window);
+    Window::initEnvironment();
+    Ref<Window> window = new HopEngine::Window(1024, 1024, "hop!");
+    Ref<GraphicsEnvironment> ge = new HopEngine::GraphicsEnvironment(window);
 
-    while (!window->getShouldClose())
+    while (!window.get()->getShouldClose())
     {
-        window->pollEvents();
-        ge->drawFrame();
+        window.get()->pollEvents();
+        ge.get()->drawFrame();
     }
 
-    delete ge;
-    delete window;
-    HopEngine::Window::terminateEnvironment();
+    ge = nullptr;
+    window = nullptr;
+    Window::terminateEnvironment();
 
     return 0;
 }

@@ -19,7 +19,7 @@ using namespace std;
 
 static GraphicsEnvironment* environment = nullptr;
 
-GraphicsEnvironment::GraphicsEnvironment(Window* main_window)
+GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
 {
     environment = this;
 
@@ -57,11 +57,11 @@ GraphicsEnvironment::~GraphicsEnvironment()
     for (VkFramebuffer framebuffer : framebuffers)
         vkDestroyFramebuffer(device, framebuffer, nullptr);
 
-    delete mesh;
-    delete pipeline;
-    delete shader;
-    delete render_pass;
-    delete swapchain;
+    mesh = nullptr;
+    pipeline = nullptr;
+    shader = nullptr;
+    render_pass = nullptr;
+    swapchain = nullptr;
 
     vkDestroyDevice(device, nullptr);
     vkDestroySurfaceKHR(instance, surface, nullptr);

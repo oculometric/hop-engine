@@ -27,8 +27,8 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<uint16_t> indices)
 
 Mesh::~Mesh()
 {
-    delete vertex_buffer;
-    delete index_buffer;
+    vertex_buffer = nullptr;
+    index_buffer = nullptr;
 }
 
 VkBuffer Mesh::getVertexBuffer()

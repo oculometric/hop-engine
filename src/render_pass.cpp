@@ -8,7 +8,7 @@
 using namespace HopEngine;
 using namespace std;
 
-RenderPass::RenderPass(Swapchain* swapchain)
+RenderPass::RenderPass(Ref<Swapchain> swapchain)
 {
     VkAttachmentDescription colour_attachment{ };
     colour_attachment.format = swapchain->getFormat();

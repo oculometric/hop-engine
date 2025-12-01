@@ -4,6 +4,8 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
+#include "common.h"
+
 namespace HopEngine
 {
 
@@ -37,7 +39,7 @@ private:
 	int MAX_FRAMES_IN_FLIGHT = 2;
 
 private:
-	Window* window = nullptr;
+	Ref<Window> window = nullptr;
 
 	VkInstance instance = VK_NULL_HANDLE;
 	VkPhysicalDevice physical_device = VK_NULL_HANDLE;
@@ -51,15 +53,15 @@ private:
 	std::vector<VkFence> in_flight_fences;
 	VkSurfaceKHR surface = VK_NULL_HANDLE;
 
-	Swapchain* swapchain = nullptr;
+	Ref<Swapchain> swapchain = nullptr;
 	std::vector<VkFramebuffer> framebuffers;
-	RenderPass* render_pass = nullptr;
-	Shader* shader = nullptr;
-	Pipeline* pipeline = nullptr;
-	Mesh* mesh = nullptr;
+	Ref<RenderPass> render_pass = nullptr;
+	Ref<Shader> shader = nullptr;
+	Ref<Pipeline> pipeline = nullptr;
+	Ref<Mesh> mesh = nullptr;
 
 public:
-	GraphicsEnvironment(Window* main_window);
+	GraphicsEnvironment(Ref<Window> main_window);
 	~GraphicsEnvironment();
 
 	QueueFamilies getQueueFamilies(VkPhysicalDevice device);

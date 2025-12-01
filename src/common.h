@@ -5,3 +5,5 @@
     name##(name##&& other) = delete;\
     name##& operator=(const name##& other) = delete;\
     name##& operator=(name##&& other) = delete
+
+#include "counted_ref.h"

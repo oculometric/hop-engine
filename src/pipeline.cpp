@@ -10,7 +10,7 @@
 using namespace HopEngine;
 using namespace std;
 
-Pipeline::Pipeline(Shader* shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode, VkRenderPass render_pass)
+Pipeline::Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode, VkRenderPass render_pass)
 {
     array<VkDynamicState, 2> dynamic_states =
     {

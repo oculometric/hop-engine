@@ -24,8 +24,8 @@ class Buffer;
 class Mesh
 {
 private:
-	Buffer* vertex_buffer = nullptr;
-	Buffer* index_buffer = nullptr;
+	Ref<Buffer> vertex_buffer = nullptr;
+	Ref<Buffer> index_buffer = nullptr;
 	size_t index_count = 0;
 
 public:

@@ -154,6 +154,7 @@ glslc.exe res/shader.frag -o shader_frag.spv</Command>
   <ItemGroup>
     <ClInclude Include="src\buffer.h" />
     <ClInclude Include="src\common.h" />
+    <ClInclude Include="src\counted_ref.h" />
     <ClInclude Include="src\graphics_environment.h" />
     <ClInclude Include="src\mesh.h" />
     <ClInclude Include="src\pipeline.h" />

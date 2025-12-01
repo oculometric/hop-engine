@@ -17,7 +17,7 @@ private:
 public:
 	DELETE_CONSTRUCTORS(RenderPass);
 
-	RenderPass(Swapchain* swapchain);
+	RenderPass(Ref<Swapchain> swapchain);
 	~RenderPass();
 
 	inline VkRenderPass getRenderPass() { return render_pass; }
