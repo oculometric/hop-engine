@@ -37,6 +37,8 @@ public:
 	VkPipeline getPipeline();
 	VkPipelineLayout getPipelineLayout();
 	void updateUniformBuffer(size_t index);
+	inline VkDescriptorSet getDescriptorSet(size_t index) { return material_descriptor_sets[index]; }
+
 	// TODO: the material needs to know about the layout/arrangement of variables in the UBO, and have functions for updating them by name
 };
 

@@ -6,6 +6,8 @@
 #include <map>
 #include <set>
 #include <GLFW/glfw3.h>
+#include <glm/common.hpp>
+#include <glm/mat4x4.hpp>
 
 #include "window.h"
 #include "swapchain.h"
@@ -18,6 +20,19 @@
 
 using namespace HopEngine;
 using namespace std;
+
+struct SceneUniforms
+{
+    glm::mat4 world_to_view;
+    glm::mat4 view_to_clip;
+    float time;
+};
+
+struct ObjectUniforms
+{
+    glm::mat4 model_to_world;
+    int id;
+};
 
 static GraphicsEnvironment* environment = nullptr;
 
@@ -59,8 +74,13 @@ GraphicsEnvironment::~GraphicsEnvironment()
     for (VkFramebuffer framebuffer : framebuffers)
         vkDestroyFramebuffer(device, framebuffer, nullptr);
 
-    mesh = nullptr;
     material = nullptr;
+    freeDescriptorSets(test_object_descriptor_sets);
+    test_object_uniform_buffers.clear();
+    mesh = nullptr;
+    vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
+    vkDestroyDescriptorSetLayout(device, scene_descriptor_set_layout, nullptr);
+    vkDestroyDescriptorSetLayout(device, object_descriptor_set_layout, nullptr);
     shader = nullptr;
     scene_uniform_buffers.clear();
     render_pass = nullptr;
@@ -141,6 +161,49 @@ void GraphicsEnvironment::drawFrame()
     present_info.pSwapchains = swapchains;
     present_info.pImageIndices = &image_index;
     vkQueuePresentKHR(present_queue, &present_info);
+}
+
+void GraphicsEnvironment::createUniformsAndDescriptorSets(VkDescriptorSetLayout layout, VkDeviceSize buffer_size, std::vector<VkDescriptorSet>& descriptor_sets, vector<Ref<Buffer>>& uniform_buffers)
+{
+    uniform_buffers.resize(MAX_FRAMES_IN_FLIGHT);
+    for (size_t i = 0; i < uniform_buffers.size(); ++i)
+        uniform_buffers[i] = new Buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    vector<VkDescriptorSetLayout> set_layouts(MAX_FRAMES_IN_FLIGHT, layout);
+    VkDescriptorSetAllocateInfo descriptor_set_alloc_info{ };
+    descriptor_set_alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    descriptor_set_alloc_info.descriptorPool = descriptor_pool;
+    descriptor_set_alloc_info.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+    descriptor_set_alloc_info.pSetLayouts = set_layouts.data();
+    descriptor_sets.resize(MAX_FRAMES_IN_FLIGHT);
+    if (vkAllocateDescriptorSets(device, &descriptor_set_alloc_info, descriptor_sets.data()) != VK_SUCCESS)
+        throw runtime_error("vkAllocateDescriptorSets failed");
+
+    vector<VkDescriptorBufferInfo> buffer_infos(descriptor_sets.size());
+    vector<VkWriteDescriptorSet> descriptor_writes(descriptor_sets.size());
+    for (size_t i = 0; i < descriptor_sets.size(); ++i)
+    {
+        // FIXME: improve this (encapsulate in a uniform-buffer-manager?) to allow more complex descriptor set management (i.e. with more than one descriptor, textures, etc)
+        buffer_infos[i].buffer = uniform_buffers[i]->getBuffer();
+        buffer_infos[i].offset = 0;
+        buffer_infos[i].range = buffer_size;
+
+        descriptor_writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptor_writes[i].dstSet = descriptor_sets[i];
+        descriptor_writes[i].dstBinding = 0;
+        descriptor_writes[i].dstArrayElement = 0;
+        descriptor_writes[i].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptor_writes[i].descriptorCount = 1;
+        descriptor_writes[i].pBufferInfo = &(buffer_infos[i]);
+    }
+    vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptor_writes.size()), descriptor_writes.data(), 0, nullptr);
+}
+
+void GraphicsEnvironment::freeDescriptorSets(vector<VkDescriptorSet>& descriptor_sets)
+{
+    if (vkFreeDescriptorSets(device, descriptor_pool, static_cast<uint32_t>(descriptor_sets.size()), descriptor_sets.data()) != VK_SUCCESS)
+        throw runtime_error("vkFreeDescriptorSets failed");
+    descriptor_sets.clear();
 }
 
 void GraphicsEnvironment::createInstance()
@@ -293,18 +356,41 @@ void GraphicsEnvironment::createResources()
     MAX_FRAMES_IN_FLIGHT = swapchain->getImageCount();
     render_pass = new RenderPass(swapchain);
 
-    VkDescriptorSetLayoutCreateInfo scene_dsl_create_info = Shader::getSceneUniformDescriptorSetLayoutCreateInfo();
-    VkDescriptorSetLayoutCreateInfo object_dsl_create_info = Shader::getObjectUniformDescriptorSetLayoutCreateInfo();
-    if (vkCreateDescriptorSetLayout(device, &scene_dsl_create_info, nullptr, &scene_descriptor_set_layout) != VK_SUCCESS)
+
+
+    VkDescriptorPoolSize descriptor_pool_size{ };
+    descriptor_pool_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptor_pool_size.descriptorCount = static_cast<uint32_t>(512 * 3 * MAX_FRAMES_IN_FLIGHT);
+    VkDescriptorPoolCreateInfo descriptor_pool_create_info{ };
+    descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    descriptor_pool_create_info.poolSizeCount = 1;
+    descriptor_pool_create_info.pPoolSizes = &descriptor_pool_size;
+    descriptor_pool_create_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+    descriptor_pool_create_info.maxSets = static_cast<uint32_t>(512 * 3 * MAX_FRAMES_IN_FLIGHT);
+
+    if (vkCreateDescriptorPool(device, &descriptor_pool_create_info, nullptr, &descriptor_pool) != VK_SUCCESS)
+        throw runtime_error("vkCreateDescriptorPool failed");
+
+    VkDescriptorSetLayoutBinding uniform_layout_binding{ };
+    uniform_layout_binding.binding = 0;
+    uniform_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uniform_layout_binding.descriptorCount = 1;
+    uniform_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo layout_create_info{ };
+    layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layout_create_info.bindingCount = 1;
+    layout_create_info.pBindings = &uniform_layout_binding;
+
+    if (vkCreateDescriptorSetLayout(device, &layout_create_info, nullptr, &scene_descriptor_set_layout) != VK_SUCCESS)
         throw runtime_error("vkCreateDescriptorSetLayout failed");
-    scene_uniform_buffers.resize(MAX_FRAMES_IN_FLIGHT);
-    for (size_t i = 0; i < scene_uniform_buffers.size(); ++i)
-        scene_uniform_buffers[i] = new Buffer(sizeof(SceneUniforms), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    // TODO: create (and bind to the uniform buffers!) the actual scene descriptor sets
-    if (vkCreateDescriptorSetLayout(device, &object_dsl_create_info, nullptr, &object_descriptor_set_layout) != VK_SUCCESS)
+    createUniformsAndDescriptorSets(scene_descriptor_set_layout, sizeof(SceneUniforms), scene_descriptor_sets, scene_uniform_buffers);
+
+    if (vkCreateDescriptorSetLayout(device, &layout_create_info, nullptr, &object_descriptor_set_layout) != VK_SUCCESS)
         throw runtime_error("vkCreateDescriptorSetLayout failed");
-    // TODO: create a test object descriptor set array (and buffers)
-    // TODO: create descriptor set pool
+    createUniformsAndDescriptorSets(object_descriptor_set_layout, sizeof(ObjectUniforms), test_object_descriptor_sets, test_object_uniform_buffers);
+
+
 
     shader = new Shader("shader");
     material = new Material(shader, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL);
@@ -413,7 +499,8 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->getPipelineLayout(), 0, 1, &(scene_descriptor_sets[image_index]), 0, nullptr);
-    // TODO: bind the object and material descriptor sets!!
+    VkDescriptorSet material_descriptor_set = material->getDescriptorSet(image_index);
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->getPipelineLayout(), 2, 1, &material_descriptor_set, 0, nullptr);
 
     VkBuffer vertex_buffers[] = { mesh->getVertexBuffer() };
     VkDeviceSize offsets[] = { 0 };

@@ -6,6 +6,7 @@
 #include "graphics_environment.h"
 #include "shader.h"
 #include "mesh.h"
+#include "render_pass.h"
 
 using namespace HopEngine;
 using namespace std;

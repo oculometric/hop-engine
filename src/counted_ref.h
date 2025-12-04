@@ -93,6 +93,7 @@ private:
 			{
 				delete payload;
 				delete ref_counter;
+				ref_counter = nullptr;
 			}
 		}
 	}

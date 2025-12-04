@@ -14,13 +14,14 @@ Material::Material(Ref<Shader> _shader, VkCullModeFlags culling_mode, VkPolygonM
 	shader = _shader;
 	pipeline = new Pipeline(shader, culling_mode, polygon_mode, GraphicsEnvironment::get()->getRenderPass()->getRenderPass());
 
-	// TODO: allocate descriptor sets (shader will tell us the layout and size), and buffers, and bind them together
-	// TODO: also allocate live buffer
+	auto uniform_info = shader->getMaterialUniformConfig();
+	GraphicsEnvironment::get()->createUniformsAndDescriptorSets(uniform_info.first, uniform_info.second, material_descriptor_sets, material_uniform_buffers);
+	live_uniform_buffer.resize(uniform_info.second);
 }
 
 Material::~Material()
 {
-	material_descriptor_sets.clear();
+	GraphicsEnvironment::get()->freeDescriptorSets(material_descriptor_sets);
 	material_uniform_buffers.clear();
 	live_uniform_buffer.clear();
 }

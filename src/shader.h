@@ -15,6 +15,8 @@ private:
 	VkShaderModule vert_module = VK_NULL_HANDLE;
 	VkShaderModule frag_module = VK_NULL_HANDLE;
 	VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
+	VkDescriptorSetLayout descriptor_set_layout = VK_NULL_HANDLE;
+	VkDeviceSize uniform_buffer_size;
 
 public:
 	DELETE_CONSTRUCTORS(Shader);
@@ -24,8 +26,7 @@ public:
 
 	inline VkPipelineLayout getPipelineLayout() { return pipeline_layout; }
 	std::vector<VkPipelineShaderStageCreateInfo> getShaderStageCreateInfos();
-	static VkDescriptorSetLayoutCreateInfo getSceneUniformDescriptorSetLayoutCreateInfo();
-	static VkDescriptorSetLayoutCreateInfo getObjectUniformDescriptorSetLayoutCreateInfo();
+	std::pair<VkDescriptorSetLayout, VkDeviceSize> getMaterialUniformConfig();
 
 private:
 	static std::vector<char> readFile(std::string path);

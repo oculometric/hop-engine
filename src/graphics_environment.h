@@ -59,10 +59,14 @@ private:
 	std::vector<VkFramebuffer> framebuffers;
 	Ref<RenderPass> render_pass = nullptr;
 
+	VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
 	VkDescriptorSetLayout scene_descriptor_set_layout = VK_NULL_HANDLE;
 	VkDescriptorSetLayout object_descriptor_set_layout = VK_NULL_HANDLE;
 	std::vector<VkDescriptorSet> scene_descriptor_sets;
 	std::vector<Ref<Buffer>> scene_uniform_buffers;
+
+	std::vector<VkDescriptorSet> test_object_descriptor_sets;
+	std::vector<Ref<Buffer>> test_object_uniform_buffers;
 
 	Ref<Shader> shader = nullptr;
 	Ref<Material> material = nullptr;
@@ -80,8 +84,8 @@ public:
 	inline VkDescriptorSetLayout getObjectDescriptorSetLayout() { return object_descriptor_set_layout; }
 	static GraphicsEnvironment* get();
 	void drawFrame();
-	// TODO: create descriptor sets and buffers from layouts, and bind them together
 	void createUniformsAndDescriptorSets(VkDescriptorSetLayout layout, VkDeviceSize buffer_size, std::vector<VkDescriptorSet>& descriptor_sets, std::vector<Ref<Buffer>>& uniform_buffers);
+	void freeDescriptorSets(std::vector<VkDescriptorSet>& descriptor_sets);
 
 private:
 	void createInstance();
