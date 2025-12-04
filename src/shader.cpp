@@ -14,9 +14,19 @@ Shader::Shader(string base_path)
 
 	vert_module = createShaderModule(vert_blob);
 	frag_module = createShaderModule(frag_blob);
+	// TODO: extract and create our shader-specific descriptor set layout (remember to destroy it)
 
 	VkPipelineLayoutCreateInfo layout_create_info{ };
 	layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	layout_create_info.setLayoutCount = 2; // TODO: insert the shader-specific descriptor set layout
+	VkDescriptorSetLayout layouts[3] =
+	{
+		GraphicsEnvironment::get()->getSceneDescriptorSetLayout(),
+		GraphicsEnvironment::get()->getObjectDescriptorSetLayout(),
+		
+	};
+	layout_create_info.pSetLayouts = layouts;
+
 	if (vkCreatePipelineLayout(GraphicsEnvironment::get()->getDevice(), &layout_create_info, nullptr, &pipeline_layout) != VK_SUCCESS)
 		throw runtime_error("vkCreatePipelineLayout failed");
 }
@@ -44,6 +54,28 @@ vector<VkPipelineShaderStageCreateInfo> Shader::getShaderStageCreateInfos()
 	frag_stage_create_info.pName = "main";
 
 	return { vert_stage_create_info, frag_stage_create_info };
+}
+
+VkDescriptorSetLayoutCreateInfo Shader::getSceneUniformDescriptorSetLayoutCreateInfo()
+{
+	VkDescriptorSetLayoutBinding uniform_layout_binding{ };
+	uniform_layout_binding.binding = 0;
+	uniform_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	uniform_layout_binding.descriptorCount = 1;
+	uniform_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+	VkDescriptorSetLayoutCreateInfo layout_create_info{ };
+	layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	layout_create_info.bindingCount = 1;
+	layout_create_info.pBindings = &uniform_layout_binding;
+
+	return layout_create_info;
+}
+
+VkDescriptorSetLayoutCreateInfo Shader::getObjectUniformDescriptorSetLayoutCreateInfo()
+{
+	// it's the exact same!!
+	return Shader::getSceneUniformDescriptorSetLayoutCreateInfo();
 }
 
 vector<char> Shader::readFile(string path)

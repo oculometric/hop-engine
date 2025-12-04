@@ -23,7 +23,6 @@ Pipeline::Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMo
     dynamic_state_create_info.dynamicStateCount = static_cast<uint32_t>(dynamic_states.size());
     dynamic_state_create_info.pDynamicStates = dynamic_states.data();
 
-    // TODO: mesh data description here!
     VkPipelineVertexInputStateCreateInfo vertex_input_create_info{ };
     vertex_input_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     auto binding_description = Mesh::getBindingDescription();

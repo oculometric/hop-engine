@@ -24,6 +24,8 @@ public:
 
 	inline VkPipelineLayout getPipelineLayout() { return pipeline_layout; }
 	std::vector<VkPipelineShaderStageCreateInfo> getShaderStageCreateInfos();
+	static VkDescriptorSetLayoutCreateInfo getSceneUniformDescriptorSetLayoutCreateInfo();
+	static VkDescriptorSetLayoutCreateInfo getObjectUniformDescriptorSetLayoutCreateInfo();
 
 private:
 	static std::vector<char> readFile(std::string path);

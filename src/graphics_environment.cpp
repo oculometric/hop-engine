@@ -13,6 +13,8 @@
 #include "render_pass.h"
 #include "shader.h"
 #include "mesh.h"
+#include "buffer.h"
+#include "material.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -58,8 +60,9 @@ GraphicsEnvironment::~GraphicsEnvironment()
         vkDestroyFramebuffer(device, framebuffer, nullptr);
 
     mesh = nullptr;
-    pipeline = nullptr;
+    material = nullptr;
     shader = nullptr;
+    scene_uniform_buffers.clear();
     render_pass = nullptr;
     swapchain = nullptr;
 
@@ -108,6 +111,8 @@ void GraphicsEnvironment::drawFrame()
 
     uint32_t image_index;
     vkAcquireNextImageKHR(device, swapchain->getSwapchain(), UINT64_MAX, image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT], VK_NULL_HANDLE, &image_index);
+
+    // TODO: update scene, object, material UBOs
 
     vkResetCommandBuffer(command_buffers[image_index], 0);
     recordRenderCommands(command_buffers[image_index], image_index);
@@ -287,8 +292,22 @@ void GraphicsEnvironment::createResources()
     swapchain = new Swapchain(framebuffer_size.first, framebuffer_size.second, surface);
     MAX_FRAMES_IN_FLIGHT = swapchain->getImageCount();
     render_pass = new RenderPass(swapchain);
+
+    VkDescriptorSetLayoutCreateInfo scene_dsl_create_info = Shader::getSceneUniformDescriptorSetLayoutCreateInfo();
+    VkDescriptorSetLayoutCreateInfo object_dsl_create_info = Shader::getObjectUniformDescriptorSetLayoutCreateInfo();
+    if (vkCreateDescriptorSetLayout(device, &scene_dsl_create_info, nullptr, &scene_descriptor_set_layout) != VK_SUCCESS)
+        throw runtime_error("vkCreateDescriptorSetLayout failed");
+    scene_uniform_buffers.resize(MAX_FRAMES_IN_FLIGHT);
+    for (size_t i = 0; i < scene_uniform_buffers.size(); ++i)
+        scene_uniform_buffers[i] = new Buffer(sizeof(SceneUniforms), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    // TODO: create (and bind to the uniform buffers!) the actual scene descriptor sets
+    if (vkCreateDescriptorSetLayout(device, &object_dsl_create_info, nullptr, &object_descriptor_set_layout) != VK_SUCCESS)
+        throw runtime_error("vkCreateDescriptorSetLayout failed");
+    // TODO: create a test object descriptor set array (and buffers)
+    // TODO: create descriptor set pool
+
     shader = new Shader("shader");
-    pipeline = new Pipeline(shader, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL, render_pass->getRenderPass());
+    material = new Material(shader, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL);
 
     // create framebuffers
     framebuffers.resize(swapchain->getImageCount());
@@ -377,7 +396,7 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
 
     vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
-    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getPipeline());
+    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->getPipeline());
     
     VkViewport viewport{ };
     viewport.x = 0.0f;
@@ -392,6 +411,9 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
     scissor.offset = { 0, 0 };
     scissor.extent = swapchain->getExtent();
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
+
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->getPipelineLayout(), 0, 1, &(scene_descriptor_sets[image_index]), 0, nullptr);
+    // TODO: bind the object and material descriptor sets!!
 
     VkBuffer vertex_buffers[] = { mesh->getVertexBuffer() };
     VkDeviceSize offsets[] = { 0 };

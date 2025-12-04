@@ -15,6 +15,8 @@ class RenderPass;
 class Pipeline;
 class Shader;
 class Mesh;
+class Material;
+class Buffer;
 
 class GraphicsEnvironment
 {
@@ -56,19 +58,30 @@ private:
 	Ref<Swapchain> swapchain = nullptr;
 	std::vector<VkFramebuffer> framebuffers;
 	Ref<RenderPass> render_pass = nullptr;
+
+	VkDescriptorSetLayout scene_descriptor_set_layout = VK_NULL_HANDLE;
+	VkDescriptorSetLayout object_descriptor_set_layout = VK_NULL_HANDLE;
+	std::vector<VkDescriptorSet> scene_descriptor_sets;
+	std::vector<Ref<Buffer>> scene_uniform_buffers;
+
 	Ref<Shader> shader = nullptr;
-	Ref<Pipeline> pipeline = nullptr;
+	Ref<Material> material = nullptr;
 	Ref<Mesh> mesh = nullptr;
 
 public:
 	GraphicsEnvironment(Ref<Window> main_window);
 	~GraphicsEnvironment();
 
+	inline Ref<RenderPass> getRenderPass() { return render_pass; }
 	QueueFamilies getQueueFamilies(VkPhysicalDevice device);
 	inline VkPhysicalDevice getPhysicalDevice() { return physical_device; }
 	inline VkDevice getDevice() { return device; }
+	inline VkDescriptorSetLayout getSceneDescriptorSetLayout() { return scene_descriptor_set_layout; }
+	inline VkDescriptorSetLayout getObjectDescriptorSetLayout() { return object_descriptor_set_layout; }
 	static GraphicsEnvironment* get();
 	void drawFrame();
+	// TODO: create descriptor sets and buffers from layouts, and bind them together
+	void createUniformsAndDescriptorSets(VkDescriptorSetLayout layout, VkDeviceSize buffer_size, std::vector<VkDescriptorSet>& descriptor_sets, std::vector<Ref<Buffer>>& uniform_buffers);
 
 private:
 	void createInstance();
