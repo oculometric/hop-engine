@@ -50,8 +50,7 @@ UniformBlock::UniformBlock(VkDescriptorSetLayout layout, VkDeviceSize buffer_siz
 
 UniformBlock::~UniformBlock()
 {
-    if (vkFreeDescriptorSets(GraphicsEnvironment::get()->getDevice(), GraphicsEnvironment::get()->getDescriptorPool(), static_cast<uint32_t>(descriptor_sets.size()), descriptor_sets.data()) != VK_SUCCESS)
-        throw runtime_error("vkFreeDescriptorSets failed");
+    vkFreeDescriptorSets(GraphicsEnvironment::get()->getDevice(), GraphicsEnvironment::get()->getDescriptorPool(), static_cast<uint32_t>(descriptor_sets.size()), descriptor_sets.data());
     descriptor_sets.clear();
     uniform_buffers.clear();
     live_uniform_buffer.clear();

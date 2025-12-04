@@ -18,6 +18,7 @@ class Mesh;
 class Material;
 class Buffer;
 class UniformBlock;
+class Object;
 
 class GraphicsEnvironment
 {
@@ -65,11 +66,7 @@ private:
 	VkDescriptorSetLayout object_descriptor_set_layout = VK_NULL_HANDLE;
 	Ref<UniformBlock> scene_uniforms = nullptr;
 
-	Ref<UniformBlock> test_object_uniforms = nullptr;
-
-	Ref<Shader> shader = nullptr;
-	Ref<Material> material = nullptr;
-	Ref<Mesh> mesh = nullptr;
+	Ref<Object> object = nullptr;
 
 public:
 	GraphicsEnvironment(Ref<Window> main_window);

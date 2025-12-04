@@ -146,6 +146,7 @@ glslc.exe res/shader.frag -o shader_frag.spv</Command>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\material.cpp" />
     <ClCompile Include="src\mesh.cpp" />
+    <ClCompile Include="src\object.cpp" />
     <ClCompile Include="src\pipeline.cpp" />
     <ClCompile Include="src\render_pass.cpp" />
     <ClCompile Include="src\shader.cpp" />

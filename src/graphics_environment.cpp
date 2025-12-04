@@ -6,8 +6,8 @@
 #include <map>
 #include <set>
 #include <GLFW/glfw3.h>
-#include <glm/common.hpp>
-#include <glm/mat4x4.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
 
 #include "window.h"
@@ -19,6 +19,7 @@
 #include "buffer.h"
 #include "material.h"
 #include "uniform_block.h"
+#include "object.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -28,12 +29,6 @@ struct SceneUniforms
     glm::mat4 world_to_view;
     glm::mat4 view_to_clip;
     float time;
-};
-
-struct ObjectUniforms
-{
-    glm::mat4 model_to_world;
-    int id;
 };
 
 static GraphicsEnvironment* environment = nullptr;
@@ -54,15 +49,15 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
     createSyncObjects();
 
     // TODO: these are not mandatory! these are just here for testing
-    test_object_uniforms = new UniformBlock(object_descriptor_set_layout, sizeof(ObjectUniforms));
-    shader = new Shader("shader");
-    material = new Material(shader, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL);
-    mesh = new Mesh(
-    {
-        { { 0.0f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-        { { 0.5f,  0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-        { { -0.5f, 0.5f, 0.0f }, { 1.0f, 0.0f, 1.0f } }
-    }, { 0, 1, 2 });
+    object = new Object(
+        new Mesh(
+        {
+            { { 0.0f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+            { { 0.5f,  0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+            { { -0.5f, 0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
+        }, { 0, 1, 2 }),
+        new Material(new Shader("shader"), VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL)
+    );
 }
 
 GraphicsEnvironment::~GraphicsEnvironment()
@@ -82,10 +77,7 @@ GraphicsEnvironment::~GraphicsEnvironment()
         vkDestroyFramebuffer(device, framebuffer, nullptr);
 
     // TODO: these are not mandatory!
-    mesh = nullptr;
-    material = nullptr;
-    test_object_uniforms = nullptr;
-    shader = nullptr;
+    object = nullptr;
 
     scene_uniforms = nullptr;
     vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
@@ -147,9 +139,17 @@ void GraphicsEnvironment::drawFrame()
     auto now_time = chrono::steady_clock::now();
     chrono::duration<float> since_start = now_time - start_time;
     scene_uniform_buffer->time = since_start.count();
+    scene_uniform_buffer->world_to_view = 
+        glm::lookAt(glm::vec3(sin(scene_uniform_buffer->time) * 2.0f, cos(scene_uniform_buffer->time) * 2.0f, 2.0f),
+            glm::vec3(0.0f, 0.0f, 0.0f), 
+            glm::vec3(0.0f, 0.0f, 1.0f)
+    );
+    scene_uniform_buffer->view_to_clip = glm::perspective(glm::radians(45.0f), swapchain->getExtent().width / (float)swapchain->getExtent().width, 0.1f, 10.0f);
+    scene_uniform_buffer->view_to_clip[1][1] *= -1;
     scene_uniforms->pushToDescriptorSet(image_index);
     
-    material->pushToDescriptorSet(image_index);
+    object->pushToDescriptorSet(image_index);
+    object->getMaterial()->pushToDescriptorSet(image_index);
     // TODO: update scene, object, material UBOs for all objects/scenes in use
 
     vkResetCommandBuffer(command_buffers[image_index], 0);
@@ -452,7 +452,7 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
 
     vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
-    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->getPipeline());
+    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->getMaterial()->getPipeline());
     
     VkViewport viewport{ };
     viewport.x = 0.0f;
@@ -469,15 +469,17 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
     VkDescriptorSet scene_descriptor_set = scene_uniforms->getDescriptorSet(image_index);
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->getPipelineLayout(), 0, 1, &scene_descriptor_set, 0, nullptr);
-    VkDescriptorSet material_descriptor_set = material->getDescriptorSet(image_index);
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->getPipelineLayout(), 2, 1, &material_descriptor_set, 0, nullptr);
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->getMaterial()->getPipelineLayout(), 0, 1, &scene_descriptor_set, 0, nullptr);
+    VkDescriptorSet material_descriptor_set = object->getMaterial()->getDescriptorSet(image_index);
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->getMaterial()->getPipelineLayout(), 2, 1, &material_descriptor_set, 0, nullptr);
+    VkDescriptorSet object_descriptor_set = object->getDescriptorSet(image_index);
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->getMaterial()->getPipelineLayout(), 1, 1, &object_descriptor_set, 0, nullptr);
 
-    VkBuffer vertex_buffers[] = { mesh->getVertexBuffer() };
+    VkBuffer vertex_buffers[] = { object->getMesh()->getVertexBuffer()};
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
-    vkCmdBindIndexBuffer(command_buffer, mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
-    vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(mesh->getIndexCount()), 1, 0, 0, 0);
+    vkCmdBindIndexBuffer(command_buffer, object->getMesh()->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
+    vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(object->getMesh()->getIndexCount()), 1, 0, 0, 0);
 
     vkCmdEndRenderPass(command_buffer);
 

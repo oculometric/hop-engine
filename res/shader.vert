@@ -28,6 +28,6 @@ layout(location = 0) out vec3 fragColor;
 
 void main()
 {
-    gl_Position = vec4(position.xy, 0.0, 1.0);
-    fragColor = colour * scene_uniforms.time;
+    gl_Position = scene_uniforms.view_to_clip * scene_uniforms.world_to_view * object_uniforms.model_to_world * vec4(position.xy, 0.0, 1.0);
+    fragColor = position;
 }
