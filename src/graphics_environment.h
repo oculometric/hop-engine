@@ -17,6 +17,7 @@ class Shader;
 class Mesh;
 class Material;
 class Buffer;
+class UniformBlock;
 
 class GraphicsEnvironment
 {
@@ -62,11 +63,9 @@ private:
 	VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
 	VkDescriptorSetLayout scene_descriptor_set_layout = VK_NULL_HANDLE;
 	VkDescriptorSetLayout object_descriptor_set_layout = VK_NULL_HANDLE;
-	std::vector<VkDescriptorSet> scene_descriptor_sets;
-	std::vector<Ref<Buffer>> scene_uniform_buffers;
+	Ref<UniformBlock> scene_uniforms = nullptr;
 
-	std::vector<VkDescriptorSet> test_object_descriptor_sets;
-	std::vector<Ref<Buffer>> test_object_uniform_buffers;
+	Ref<UniformBlock> test_object_uniforms = nullptr;
 
 	Ref<Shader> shader = nullptr;
 	Ref<Material> material = nullptr;
@@ -76,20 +75,21 @@ public:
 	GraphicsEnvironment(Ref<Window> main_window);
 	~GraphicsEnvironment();
 
-	inline Ref<RenderPass> getRenderPass() { return render_pass; }
+	Ref<RenderPass> getRenderPass();
 	QueueFamilies getQueueFamilies(VkPhysicalDevice device);
 	inline VkPhysicalDevice getPhysicalDevice() { return physical_device; }
 	inline VkDevice getDevice() { return device; }
 	inline VkDescriptorSetLayout getSceneDescriptorSetLayout() { return scene_descriptor_set_layout; }
 	inline VkDescriptorSetLayout getObjectDescriptorSetLayout() { return object_descriptor_set_layout; }
+	inline size_t getFramesInFlight() { return MAX_FRAMES_IN_FLIGHT; }
+	inline VkDescriptorPool getDescriptorPool() { return descriptor_pool; }
 	static GraphicsEnvironment* get();
 	void drawFrame();
-	void createUniformsAndDescriptorSets(VkDescriptorSetLayout layout, VkDeviceSize buffer_size, std::vector<VkDescriptorSet>& descriptor_sets, std::vector<Ref<Buffer>>& uniform_buffers);
-	void freeDescriptorSets(std::vector<VkDescriptorSet>& descriptor_sets);
 
 private:
 	void createInstance();
 	void createDevice();
+	void createDescriptorPoolAndSets();
 	void createResources();
 	void createCommandPool();
 	void createSyncObjects();

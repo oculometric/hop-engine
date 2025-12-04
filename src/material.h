@@ -18,15 +18,14 @@ namespace HopEngine
 class Shader;
 class Buffer;
 class Pipeline;
+class UniformBlock;
 
 class Material
 {
 private:
 	Ref<Shader> shader = nullptr;
 	Ref<Pipeline> pipeline = nullptr;
-	std::vector<VkDescriptorSet> material_descriptor_sets;
-	std::vector<Ref<Buffer>> material_uniform_buffers;
-	std::vector<uint8_t> live_uniform_buffer;
+	Ref<UniformBlock> uniforms = nullptr;
 
 public:
 	DELETE_CONSTRUCTORS(Material);
@@ -36,8 +35,8 @@ public:
 
 	VkPipeline getPipeline();
 	VkPipelineLayout getPipelineLayout();
-	void updateUniformBuffer(size_t index);
-	inline VkDescriptorSet getDescriptorSet(size_t index) { return material_descriptor_sets[index]; }
+	void pushToDescriptorSet(size_t index);
+	VkDescriptorSet getDescriptorSet(size_t index);
 
 	// TODO: the material needs to know about the layout/arrangement of variables in the UBO, and have functions for updating them by name
 };

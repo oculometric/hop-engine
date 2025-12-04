@@ -1,10 +1,13 @@
 #include "material.h"
 
+#include <glm/glm.hpp>
+
 #include "graphics_environment.h"
 #include "render_pass.h"
 #include "pipeline.h"
 #include "shader.h"
 #include "buffer.h"
+#include "uniform_block.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -15,15 +18,12 @@ Material::Material(Ref<Shader> _shader, VkCullModeFlags culling_mode, VkPolygonM
 	pipeline = new Pipeline(shader, culling_mode, polygon_mode, GraphicsEnvironment::get()->getRenderPass()->getRenderPass());
 
 	auto uniform_info = shader->getMaterialUniformConfig();
-	GraphicsEnvironment::get()->createUniformsAndDescriptorSets(uniform_info.first, uniform_info.second, material_descriptor_sets, material_uniform_buffers);
-	live_uniform_buffer.resize(uniform_info.second);
+	uniforms = new UniformBlock(uniform_info.first, uniform_info.second);
 }
 
 Material::~Material()
 {
-	GraphicsEnvironment::get()->freeDescriptorSets(material_descriptor_sets);
-	material_uniform_buffers.clear();
-	live_uniform_buffer.clear();
+	uniforms = nullptr;
 }
 
 VkPipeline Material::getPipeline()
@@ -36,7 +36,12 @@ VkPipelineLayout Material::getPipelineLayout()
 	return shader->getPipelineLayout();
 }
 
-void Material::updateUniformBuffer(size_t index)
+void Material::pushToDescriptorSet(size_t index)
 {
-	memcpy(material_uniform_buffers[index]->mapMemory(), live_uniform_buffer.data(), live_uniform_buffer.size());
+	uniforms->pushToDescriptorSet(index);
+}
+
+VkDescriptorSet Material::getDescriptorSet(size_t index)
+{
+	return uniforms->getDescriptorSet(index);
 }

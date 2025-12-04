@@ -12,7 +12,7 @@ class Swapchain;
 class RenderPass
 {
 private:
-	VkRenderPass render_pass;
+	VkRenderPass render_pass = VK_NULL_HANDLE;
 
 public:
 	DELETE_CONSTRUCTORS(RenderPass);

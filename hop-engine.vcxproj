@@ -150,6 +150,7 @@ glslc.exe res/shader.frag -o shader_frag.spv</Command>
     <ClCompile Include="src\render_pass.cpp" />
     <ClCompile Include="src\shader.cpp" />
     <ClCompile Include="src\swapchain.cpp" />
+    <ClCompile Include="src\uniform_block.cpp" />
     <ClCompile Include="src\window.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -164,6 +165,7 @@ glslc.exe res/shader.frag -o shader_frag.spv</Command>
     <ClInclude Include="src\render_pass.h" />
     <ClInclude Include="src\shader.h" />
     <ClInclude Include="src\swapchain.h" />
+    <ClInclude Include="src\uniform_block.h" />
     <ClInclude Include="src\window.h" />
   </ItemGroup>
   <ItemGroup>

@@ -8,6 +8,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/common.hpp>
 #include <glm/mat4x4.hpp>
+#include <chrono>
 
 #include "window.h"
 #include "swapchain.h"
@@ -17,6 +18,7 @@
 #include "mesh.h"
 #include "buffer.h"
 #include "material.h"
+#include "uniform_block.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -46,10 +48,15 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
     if (glfwCreateWindowSurface(instance, window->getWindow(), nullptr, &surface) != VK_SUCCESS)
         throw std::runtime_error("glfwCreateWindowSurface failed");
     createDevice();
+    createDescriptorPoolAndSets();
     createResources();
     createCommandPool();
     createSyncObjects();
 
+    // TODO: these are not mandatory! these are just here for testing
+    test_object_uniforms = new UniformBlock(object_descriptor_set_layout, sizeof(ObjectUniforms));
+    shader = new Shader("shader");
+    material = new Material(shader, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL);
     mesh = new Mesh(
     {
         { { 0.0f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
@@ -74,15 +81,16 @@ GraphicsEnvironment::~GraphicsEnvironment()
     for (VkFramebuffer framebuffer : framebuffers)
         vkDestroyFramebuffer(device, framebuffer, nullptr);
 
-    material = nullptr;
-    freeDescriptorSets(test_object_descriptor_sets);
-    test_object_uniform_buffers.clear();
+    // TODO: these are not mandatory!
     mesh = nullptr;
+    material = nullptr;
+    test_object_uniforms = nullptr;
+    shader = nullptr;
+
+    scene_uniforms = nullptr;
     vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
     vkDestroyDescriptorSetLayout(device, scene_descriptor_set_layout, nullptr);
     vkDestroyDescriptorSetLayout(device, object_descriptor_set_layout, nullptr);
-    shader = nullptr;
-    scene_uniform_buffers.clear();
     render_pass = nullptr;
     swapchain = nullptr;
 
@@ -92,6 +100,8 @@ GraphicsEnvironment::~GraphicsEnvironment()
 
     environment = nullptr;
 }
+
+Ref<RenderPass> GraphicsEnvironment::getRenderPass() { return render_pass; }
 
 GraphicsEnvironment::QueueFamilies GraphicsEnvironment::getQueueFamilies(VkPhysicalDevice device)
 {
@@ -125,6 +135,7 @@ GraphicsEnvironment* GraphicsEnvironment::get()
 void GraphicsEnvironment::drawFrame()
 {
     static size_t frame_index = 0;
+    static auto start_time = chrono::steady_clock::now();
 
     vkWaitForFences(device, 1, &in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT], VK_TRUE, UINT64_MAX);
     vkResetFences(device, 1, &in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT]);
@@ -132,7 +143,14 @@ void GraphicsEnvironment::drawFrame()
     uint32_t image_index;
     vkAcquireNextImageKHR(device, swapchain->getSwapchain(), UINT64_MAX, image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT], VK_NULL_HANDLE, &image_index);
 
-    // TODO: update scene, object, material UBOs
+    SceneUniforms* scene_uniform_buffer = (SceneUniforms*)(scene_uniforms->getBuffer());
+    auto now_time = chrono::steady_clock::now();
+    chrono::duration<float> since_start = now_time - start_time;
+    scene_uniform_buffer->time = since_start.count();
+    scene_uniforms->pushToDescriptorSet(image_index);
+    
+    material->pushToDescriptorSet(image_index);
+    // TODO: update scene, object, material UBOs for all objects/scenes in use
 
     vkResetCommandBuffer(command_buffers[image_index], 0);
     recordRenderCommands(command_buffers[image_index], image_index);
@@ -161,49 +179,6 @@ void GraphicsEnvironment::drawFrame()
     present_info.pSwapchains = swapchains;
     present_info.pImageIndices = &image_index;
     vkQueuePresentKHR(present_queue, &present_info);
-}
-
-void GraphicsEnvironment::createUniformsAndDescriptorSets(VkDescriptorSetLayout layout, VkDeviceSize buffer_size, std::vector<VkDescriptorSet>& descriptor_sets, vector<Ref<Buffer>>& uniform_buffers)
-{
-    uniform_buffers.resize(MAX_FRAMES_IN_FLIGHT);
-    for (size_t i = 0; i < uniform_buffers.size(); ++i)
-        uniform_buffers[i] = new Buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-    vector<VkDescriptorSetLayout> set_layouts(MAX_FRAMES_IN_FLIGHT, layout);
-    VkDescriptorSetAllocateInfo descriptor_set_alloc_info{ };
-    descriptor_set_alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    descriptor_set_alloc_info.descriptorPool = descriptor_pool;
-    descriptor_set_alloc_info.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-    descriptor_set_alloc_info.pSetLayouts = set_layouts.data();
-    descriptor_sets.resize(MAX_FRAMES_IN_FLIGHT);
-    if (vkAllocateDescriptorSets(device, &descriptor_set_alloc_info, descriptor_sets.data()) != VK_SUCCESS)
-        throw runtime_error("vkAllocateDescriptorSets failed");
-
-    vector<VkDescriptorBufferInfo> buffer_infos(descriptor_sets.size());
-    vector<VkWriteDescriptorSet> descriptor_writes(descriptor_sets.size());
-    for (size_t i = 0; i < descriptor_sets.size(); ++i)
-    {
-        // FIXME: improve this (encapsulate in a uniform-buffer-manager?) to allow more complex descriptor set management (i.e. with more than one descriptor, textures, etc)
-        buffer_infos[i].buffer = uniform_buffers[i]->getBuffer();
-        buffer_infos[i].offset = 0;
-        buffer_infos[i].range = buffer_size;
-
-        descriptor_writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptor_writes[i].dstSet = descriptor_sets[i];
-        descriptor_writes[i].dstBinding = 0;
-        descriptor_writes[i].dstArrayElement = 0;
-        descriptor_writes[i].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptor_writes[i].descriptorCount = 1;
-        descriptor_writes[i].pBufferInfo = &(buffer_infos[i]);
-    }
-    vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptor_writes.size()), descriptor_writes.data(), 0, nullptr);
-}
-
-void GraphicsEnvironment::freeDescriptorSets(vector<VkDescriptorSet>& descriptor_sets)
-{
-    if (vkFreeDescriptorSets(device, descriptor_pool, static_cast<uint32_t>(descriptor_sets.size()), descriptor_sets.data()) != VK_SUCCESS)
-        throw runtime_error("vkFreeDescriptorSets failed");
-    descriptor_sets.clear();
 }
 
 void GraphicsEnvironment::createInstance()
@@ -349,15 +324,8 @@ void GraphicsEnvironment::createDevice()
     vkGetDeviceQueue(device, queue_family_indices.present_family.value(), 0, &present_queue);
 }
 
-void GraphicsEnvironment::createResources()
+void GraphicsEnvironment::createDescriptorPoolAndSets()
 {
-    auto framebuffer_size = window->getSize();
-    swapchain = new Swapchain(framebuffer_size.first, framebuffer_size.second, surface);
-    MAX_FRAMES_IN_FLIGHT = swapchain->getImageCount();
-    render_pass = new RenderPass(swapchain);
-
-
-
     VkDescriptorPoolSize descriptor_pool_size{ };
     descriptor_pool_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     descriptor_pool_size.descriptorCount = static_cast<uint32_t>(512 * 3 * MAX_FRAMES_IN_FLIGHT);
@@ -384,16 +352,18 @@ void GraphicsEnvironment::createResources()
 
     if (vkCreateDescriptorSetLayout(device, &layout_create_info, nullptr, &scene_descriptor_set_layout) != VK_SUCCESS)
         throw runtime_error("vkCreateDescriptorSetLayout failed");
-    createUniformsAndDescriptorSets(scene_descriptor_set_layout, sizeof(SceneUniforms), scene_descriptor_sets, scene_uniform_buffers);
 
     if (vkCreateDescriptorSetLayout(device, &layout_create_info, nullptr, &object_descriptor_set_layout) != VK_SUCCESS)
         throw runtime_error("vkCreateDescriptorSetLayout failed");
-    createUniformsAndDescriptorSets(object_descriptor_set_layout, sizeof(ObjectUniforms), test_object_descriptor_sets, test_object_uniform_buffers);
+}
 
-
-
-    shader = new Shader("shader");
-    material = new Material(shader, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL);
+void GraphicsEnvironment::createResources()
+{
+    auto framebuffer_size = window->getSize();
+    swapchain = new Swapchain(framebuffer_size.first, framebuffer_size.second, surface);
+    MAX_FRAMES_IN_FLIGHT = swapchain->getImageCount();
+    render_pass = new RenderPass(swapchain);
+    scene_uniforms = new UniformBlock(scene_descriptor_set_layout, sizeof(SceneUniforms));
 
     // create framebuffers
     framebuffers.resize(swapchain->getImageCount());
@@ -498,7 +468,8 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
     scissor.extent = swapchain->getExtent();
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->getPipelineLayout(), 0, 1, &(scene_descriptor_sets[image_index]), 0, nullptr);
+    VkDescriptorSet scene_descriptor_set = scene_uniforms->getDescriptorSet(image_index);
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->getPipelineLayout(), 0, 1, &scene_descriptor_set, 0, nullptr);
     VkDescriptorSet material_descriptor_set = material->getDescriptorSet(image_index);
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->getPipelineLayout(), 2, 1, &material_descriptor_set, 0, nullptr);
 
@@ -506,7 +477,7 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
     vkCmdBindIndexBuffer(command_buffer, mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
-    vkCmdDrawIndexed(command_buffer, mesh->getIndexCount(), 1, 0, 0, 0);
+    vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(mesh->getIndexCount()), 1, 0, 0, 0);
 
     vkCmdEndRenderPass(command_buffer);
 
