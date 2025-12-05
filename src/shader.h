@@ -15,12 +15,20 @@ enum DescriptorBindingType
 	TEXTURE
 };
 
+struct UniformVariable
+{
+	std::string name;
+	size_t size;
+	size_t offset;
+};
+
 struct DescriptorBinding
 {
 	uint32_t binding;
 	DescriptorBindingType type;
 	VkDeviceSize buffer_size;
 	std::string name;
+	std::vector<UniformVariable> variables;
 };
 
 struct ShaderLayout

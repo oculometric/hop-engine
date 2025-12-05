@@ -42,7 +42,7 @@ public:
 		other.ref_counter = nullptr;
 	}
 
-	inline void operator=(Ref&& other)
+	inline void operator=(Ref&& other) noexcept
 	{
 		invalidateSelf();
 

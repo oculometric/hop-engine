@@ -197,6 +197,11 @@ vector<DescriptorBinding> Shader::getReflectedBindings(vector<char> blob)
 			db.binding = binding->binding;
 			db.buffer_size = binding->block.padded_size;
 			db.name = binding->name;
+			for (size_t j = 0; j < binding->block.member_count; ++j)
+			{
+				SpvReflectBlockVariable member = binding->block.members[j];
+				db.variables.push_back({ member.name, member.padded_size, member.offset });
+			}
 			bindings.push_back(db);
 		}
 		else if (binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)

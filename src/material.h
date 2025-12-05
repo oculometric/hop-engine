@@ -1,9 +1,12 @@
 #pragma once
 
+#include <map>
 #include <vector>
 #include <vulkan/vulkan.h>
+#include <glm/glm.hpp>
 
 #include "common.h"
+#include "shader.h"
 
 namespace HopEngine
 {
@@ -20,6 +23,7 @@ class Buffer;
 class Pipeline;
 class UniformBlock;
 class Image;
+class Sampler;
 
 class Material
 {
@@ -27,6 +31,8 @@ private:
 	Ref<Shader> shader = nullptr;
 	Ref<Pipeline> pipeline = nullptr;
 	Ref<UniformBlock> uniforms = nullptr;
+	std::map<std::string, uint32_t> texture_name_to_binding;
+	std::map<std::string, UniformVariable> variable_name_to_binding;
 
 public:
 	DELETE_CONSTRUCTORS(Material);
@@ -39,8 +45,31 @@ public:
 	void pushToDescriptorSet(size_t index);
 	VkDescriptorSet getDescriptorSet(size_t index);
 
-	// TODO: the material needs to understand textures
-	// TODO: the material needs to know about the layout/arrangement of variables in the UBO, and have functions for updating them by name
+	void setTexture(size_t index, Ref<Image> texture);
+	void setSampler(size_t index, Ref<Sampler> sampler);
+	void setTexture(std::string name, Ref<Image> texture);
+	void setSampler(std::string name, Ref<Sampler> sampler);
+
+	inline void setFloatUniform(std::string name, float value) { setUniformVariable(name, &value, sizeof(value)); }
+	void setVec2Uniform(std::string name, glm::vec2 value) { setUniformVariable(name, &value, sizeof(value)); }
+	void setVec3Uniform(std::string name, glm::vec3 value) { setUniformVariable(name, &value, sizeof(value)); }
+	void setVec4Uniform(std::string name, glm::vec4 value) { setUniformVariable(name, &value, sizeof(value)); }
+
+	void setIntUniform(std::string name, int value) { setUniformVariable(name, &value, sizeof(value)); }
+	void setIvec2Uniform(std::string name, glm::ivec2 value) { setUniformVariable(name, &value, sizeof(value)); }
+	void setIvec3Uniform(std::string name, glm::ivec3 value) { setUniformVariable(name, &value, sizeof(value)); }
+	void setIvec4Uniform(std::string name, glm::ivec4 value) { setUniformVariable(name, &value, sizeof(value)); }
+
+	void setUintUniform(std::string name, glm::uint value) { setUniformVariable(name, &value, sizeof(value)); }
+
+	void setBoolUniform(std::string name, bool value) { setUniformVariable(name, &value, sizeof(value)); }
+
+	void setMat2Uniform(std::string name, glm::mat2 value) { setUniformVariable(name, &value, sizeof(value)); }
+	void setMat3Uniform(std::string name, glm::mat3 value) { setUniformVariable(name, &value, sizeof(value)); }
+	void setMat4Uniform(std::string name, glm::mat4 value) { setUniformVariable(name, &value, sizeof(value)); }
+
+private:
+	void setUniformVariable(std::string name, void* data, size_t size);
 };
 
 }

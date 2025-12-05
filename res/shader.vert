@@ -38,5 +38,5 @@ void main()
     frag_tangent = tangent;
     frag_uv = uv;
 
-    gl_Position = scene_uniforms.view_to_clip * scene_uniforms.world_to_view * object_uniforms.model_to_world * vec4(position.xy, 0.0, 1.0);
+    gl_Position = scene_uniforms.view_to_clip * scene_uniforms.world_to_view * object_uniforms.model_to_world * vec4(position.xyz, 1.0);
 }
