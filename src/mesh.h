@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <string>
 #include <vector>
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
@@ -31,6 +32,7 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Mesh);
 
+	Mesh(std::string path);
 	Mesh(std::vector<Vertex> vertices, std::vector<uint16_t> indices);
 	~Mesh();
 
@@ -40,6 +42,10 @@ public:
 
 	static VkVertexInputBindingDescription getBindingDescription();
 	static std::array<VkVertexInputAttributeDescription, 5> getAttributeDescriptions();
+
+private:
+	bool readFileToArrays(std::string path, std::vector<Vertex>& verts, std::vector<uint16_t>& inds);
+	void createFromArrays(std::vector<Vertex> verts, std::vector<uint16_t> inds);
 };
 
 }

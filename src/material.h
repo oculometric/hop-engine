@@ -45,8 +45,8 @@ public:
 	void pushToDescriptorSet(size_t index);
 	VkDescriptorSet getDescriptorSet(size_t index);
 
-	void setTexture(size_t index, Ref<Texture> texture);
-	void setSampler(size_t index, Ref<Sampler> sampler);
+	void setTexture(uint32_t binding, Ref<Texture> texture);
+	void setSampler(uint32_t binding, Ref<Sampler> sampler);
 	void setTexture(std::string name, Ref<Texture> texture);
 	void setSampler(std::string name, Ref<Sampler> sampler);
 

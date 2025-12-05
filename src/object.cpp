@@ -30,11 +30,11 @@ void Object::pushToDescriptorSet(size_t index)
 
 	object_uniforms->id = (int)(size_t)this;
 	object_uniforms->model_to_world = glm::mat4(1);
-	object_uniforms->model_to_world = glm::scale(object_uniforms->model_to_world, scale);
-	object_uniforms->model_to_world = glm::rotate(object_uniforms->model_to_world, rotation.x, glm::vec3(1, 0, 0));
-	object_uniforms->model_to_world = glm::rotate(object_uniforms->model_to_world, rotation.y, glm::vec3(0, 1, 0));
-	object_uniforms->model_to_world = glm::rotate(object_uniforms->model_to_world, rotation.z, glm::vec3(0, 0, 1));
 	object_uniforms->model_to_world = glm::translate(object_uniforms->model_to_world, position);
+	object_uniforms->model_to_world = glm::rotate(object_uniforms->model_to_world, rotation.z, glm::vec3(0, 0, 1));
+	object_uniforms->model_to_world = glm::rotate(object_uniforms->model_to_world, rotation.y, glm::vec3(0, 1, 0));
+	object_uniforms->model_to_world = glm::rotate(object_uniforms->model_to_world, rotation.x, glm::vec3(1, 0, 0));
+	object_uniforms->model_to_world = glm::scale(object_uniforms->model_to_world, scale);
 
 	uniforms->pushToDescriptorSet(index);
 }

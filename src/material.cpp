@@ -61,14 +61,14 @@ VkDescriptorSet Material::getDescriptorSet(size_t index)
 	return uniforms->getDescriptorSet(index);
 }
 
-void Material::setTexture(size_t index, Ref<Texture> texture)
+void Material::setTexture(uint32_t binding, Ref<Texture> texture)
 {
-	uniforms->setTexture(index, texture);
+	uniforms->setTexture(binding, texture);
 }
 
-void Material::setSampler(size_t index, Ref<Sampler> sampler)
+void Material::setSampler(uint32_t binding, Ref<Sampler> sampler)
 {
-	uniforms->setSampler(index, sampler);
+	uniforms->setSampler(binding, sampler);
 }
 
 void Material::setTexture(string name, Ref<Texture> texture)

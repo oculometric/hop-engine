@@ -57,19 +57,16 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
 
     uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
     default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, default_image_data);
-    default_sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+    default_sampler = new Sampler(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
     createSyncObjects();
 
     // TODO: these are not mandatory! these are just here for testing
     object = new Object(
-        new Mesh(
-        {
-            { { 0.0f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f }, {}, {}, { 0.0f, 0.0f } },
-            { { 0.5f,  0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f }, {}, {}, { 1.0f, 0.0f } },
-            { { -0.5f, 0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f }, {}, {}, { 0.0f, 1.0f } }
-        }, { 0, 1, 2 }),
+        new Mesh("res/bunny.obj"),
         new Material(new Shader("res/shader", false), VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL)
     );
+    object->scale = { 3, 3, 3 };
+    object->position = { 0, 0, -0.25f };
     object->material->setTexture("tex2", new Texture("res/tex2.png"));
 }
 
@@ -162,7 +159,7 @@ void GraphicsEnvironment::drawFrame()
     scene_uniform_buffer->time = since_start.count();
     scene_uniform_buffer->world_to_view = 
         glm::lookAt(
-            glm::vec3(sin(scene_uniform_buffer->time) * 2.0f, cos(scene_uniform_buffer->time) * 2.0f, 2.0f),
+            glm::vec3(sin(scene_uniform_buffer->time) * 1.0f, cos(scene_uniform_buffer->time) * 1.0f, 1.0f),
             glm::vec3(0.0f, 0.0f, 0.0f), 
             glm::vec3(0.0f, 0.0f, 1.0f)
     );
