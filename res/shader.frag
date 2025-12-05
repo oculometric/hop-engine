@@ -15,7 +15,9 @@ layout(set = 2, binding = 0) uniform MaterialUniforms
 
 layout(set = 2, binding = 1) uniform sampler2D tex2;
 
+float saturate(float f) { return clamp(f, 0, 1); }
+
 void main()
 {
-    out_color = texture(tex2, frag_position.xy).bgra;
+    out_color = vec4(texture(tex2, frag_position.xy).bgr * saturate(dot(frag_normal, -normalize(vec3(0.3f, 0.5, -1.0)))), 1);
 }

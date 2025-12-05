@@ -32,10 +32,10 @@ layout(location = 4) out vec2 frag_uv;
 
 void main()
 {
-    frag_position = position;
+    frag_position = (object_uniforms.model_to_world * vec4(position, 1)).xyz;
     frag_colour = colour;
-    frag_normal = normal;
-    frag_tangent = tangent;
+    frag_normal = normalize((object_uniforms.model_to_world * vec4(normal, 0)).xyz);
+    frag_tangent = normalize((object_uniforms.model_to_world * vec4(tangent, 0)).xyz);
     frag_uv = uv;
 
     gl_Position = scene_uniforms.view_to_clip * scene_uniforms.world_to_view * object_uniforms.model_to_world * vec4(position.xyz, 1.0);

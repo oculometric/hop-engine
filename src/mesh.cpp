@@ -260,7 +260,7 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
             Vertex new_vert;
             new_vert.position = tmp_co[fc.co];
             new_vert.colour = tmp_cl[fc.co];
-            if (tmp_vn.size() > fc.uv) // TODO: generate normals if they are missing
+            if (tmp_vn.size() > fc.uv)
                 new_vert.normal = tmp_vn[fc.vn];
             if (tmp_uv.size() > fc.uv)
                 new_vert.uv = tmp_uv[fc.uv];
@@ -271,6 +271,32 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
             inds.push_back(new_index);
             verts.push_back(new_vert);
         }
+    }
+
+    if (tmp_vn.size() == 0)
+    {
+        for (size_t i = 0; i < inds.size() - 2; i += 3)
+        {
+            const uint16_t i0 = inds[i];
+            const uint16_t i1 = inds[i + 1];
+            const uint16_t i2 = inds[i + 2];
+
+            const glm::vec3 v0 = verts[i0].position;
+            const glm::vec3 v1 = verts[i1].position;
+            const glm::vec3 v2 = verts[i2].position;
+
+            glm::vec3 e01 = v1 - v0;
+            glm::vec3 e02 = v2 - v0;
+            glm::vec3 e12 = v2 - v1;
+            glm::vec3 normal = glm::cross(e01, e02);
+
+            verts[i0].normal += normal;
+            verts[i1].normal += normal;
+            verts[i2].normal += normal;
+        }
+
+        for (Vertex& vert : verts)
+            vert.normal = glm::normalize(vert.normal);
     }
 
     // compute tangents
