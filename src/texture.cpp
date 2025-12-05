@@ -11,7 +11,21 @@
 using namespace HopEngine;
 using namespace std;
 
-Image::Image(string file)
+Texture::Texture(size_t _width, size_t _height, VkFormat _format, void* data)
+{
+    format = _format;
+    width = _width; height = _height;
+
+    if (format != VK_FORMAT_R8G8B8A8_SRGB)
+        throw runtime_error("only RGBA8 SRGB format is supported");
+
+    if (data == nullptr)
+        throw runtime_error("image data was null");
+
+    loadFromMemory(data);
+}
+
+Texture::Texture(string file)
 {
     int img_width, img_height, img_channels;
     stbi_uc* pixels = stbi_load(file.c_str(), &img_width, &img_height, &img_channels, STBI_rgb_alpha);
@@ -25,7 +39,7 @@ Image::Image(string file)
     stbi_image_free(pixels);
 }
 
-Image::~Image()
+Texture::~Texture()
 {
     if (view != VK_NULL_HANDLE)
         vkDestroyImageView(GraphicsEnvironment::get()->getDevice(), view, nullptr);
@@ -33,7 +47,7 @@ Image::~Image()
     vkFreeMemory(GraphicsEnvironment::get()->getDevice(), memory, nullptr);
 }
 
-void Image::transitionLayout(VkImageLayout new_layout)
+void Texture::transitionLayout(VkImageLayout new_layout)
 {
     Ref<CommandBuffer> cmd_buf = new CommandBuffer();
 
@@ -75,7 +89,7 @@ void Image::transitionLayout(VkImageLayout new_layout)
     current_layout = new_layout;
 }
 
-void Image::copyBufferToImage(Ref<Buffer> buffer)
+void Texture::copyBufferToImage(Ref<Buffer> buffer)
 {
     Ref<CommandBuffer> cmd_buf = new CommandBuffer();
 
@@ -101,7 +115,7 @@ void Image::copyBufferToImage(Ref<Buffer> buffer)
     cmd_buf->submit();
 }
 
-VkImageView Image::getView()
+VkImageView Texture::getView()
 {
     if (view != VK_NULL_HANDLE)
         return view;
@@ -123,7 +137,7 @@ VkImageView Image::getView()
     return view;
 }
 
-void Image::createImage()
+void Texture::createImage()
 {
     VkImageCreateInfo image_create_info{ };
     image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -155,7 +169,7 @@ void Image::createImage()
     vkBindImageMemory(GraphicsEnvironment::get()->getDevice(), image, memory, 0);
 }
 
-void Image::loadFromMemory(void* data)
+void Texture::loadFromMemory(void* data)
 {
     VkDeviceSize image_length = width * height * 4;
     Ref<Buffer> staging_buffer = new Buffer(image_length, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);

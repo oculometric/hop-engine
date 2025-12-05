@@ -14,7 +14,6 @@ layout(set = 2, binding = 0) uniform MaterialUniforms
 } material_uniforms;
 
 layout(set = 2, binding = 1) uniform sampler2D tex2;
-layout(set = 2, binding = 2) uniform sampler2D tex3;
 
 void main()
 {

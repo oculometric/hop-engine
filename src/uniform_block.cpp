@@ -20,7 +20,7 @@ UniformBlock::UniformBlock(ShaderLayout layout_info)
         if (binding.type == UNIFORM)
             size += binding.buffer_size;
         else if (binding.type == TEXTURE)
-            ++texture_count;
+            textures_in_use[binding.binding] = GraphicsEnvironment::get()->getDefaultTextureSampler();
     }
 
     uniform_buffers.resize(GraphicsEnvironment::get()->getFramesInFlight());
@@ -37,10 +37,6 @@ UniformBlock::UniformBlock(ShaderLayout layout_info)
     if (vkAllocateDescriptorSets(GraphicsEnvironment::get()->getDevice(), &descriptor_set_alloc_info, descriptor_sets.data()) != VK_SUCCESS)
         throw runtime_error("vkAllocateDescriptorSets failed");
 
-    textures_in_use.resize(texture_count);
-    for (size_t i = 0; i < texture_count; ++i)
-        textures_in_use[i] = GraphicsEnvironment::get()->getDefaultTextureSampler();
-
     applyDescriptorBindings();
 
     live_uniform_buffer.resize(size);
@@ -55,15 +51,15 @@ UniformBlock::~UniformBlock()
     live_uniform_buffer.clear();
 }
 
-void UniformBlock::setTexture(size_t index, Ref<Image> image)
+void UniformBlock::setTexture(uint32_t binding, Ref<Texture> image)
 {
-    textures_in_use[index].first = image;
+    textures_in_use[binding].first = image;
     applyDescriptorBindings();
 }
 
-void UniformBlock::setSampler(size_t index, Ref<Sampler> sampler)
+void UniformBlock::setSampler(uint32_t binding, Ref<Sampler> sampler)
 {
-    textures_in_use[index].second = sampler;
+    textures_in_use[binding].second = sampler;
     applyDescriptorBindings();
 }
 
@@ -77,7 +73,6 @@ void UniformBlock::applyDescriptorBindings()
     for (size_t i = 0; i < descriptor_sets.size(); ++i)
     {
         VkDeviceSize offset = 0;
-        size_t texture_index = 0;
         for (const DescriptorBinding& binding : layout.bindings)
         {
             VkWriteDescriptorSet descriptor_write{ };
@@ -98,14 +93,13 @@ void UniformBlock::applyDescriptorBindings()
                 descriptor_write.pBufferInfo = &buffer_info;
                 offset += binding.buffer_size;
             }
-            else
+            else if (binding.type == TEXTURE)
             {
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = textures_in_use[texture_index].first->getView();
-                image_info.sampler = textures_in_use[texture_index].second->getSampler();
+                image_info.imageView = textures_in_use[binding.binding].first->getView();
+                image_info.sampler = textures_in_use[binding.binding].second->getSampler();
                 descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 descriptor_write.pImageInfo = &image_info;
-                ++texture_index;
             }
             vkUpdateDescriptorSets(GraphicsEnvironment::get()->getDevice(), 1, &descriptor_write, 0, nullptr);
         }

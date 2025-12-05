@@ -18,15 +18,15 @@ enum DescriptorBindingType
 struct UniformVariable
 {
 	std::string name;
-	size_t size;
-	size_t offset;
+	size_t size = 0;
+	size_t offset = 0;
 };
 
 struct DescriptorBinding
 {
-	uint32_t binding;
-	DescriptorBindingType type;
-	VkDeviceSize buffer_size;
+	uint32_t binding = 0;
+	DescriptorBindingType type = UNIFORM;
+	VkDeviceSize buffer_size = 0;
 	std::string name;
 	std::vector<UniformVariable> variables;
 };

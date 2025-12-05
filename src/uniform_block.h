@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <map>
 #include <vulkan/vulkan.h>
 
 #include "shader.h"
@@ -10,7 +11,7 @@ namespace HopEngine
 {
 
 class Buffer;
-class Image;
+class Texture;
 class Sampler;
 
 class UniformBlock
@@ -18,7 +19,7 @@ class UniformBlock
 private:
 	std::vector<VkDescriptorSet> descriptor_sets;
 	std::vector<Ref<Buffer>> uniform_buffers;
-	std::vector<std::pair<Ref<Image>, Ref<Sampler>>> textures_in_use;
+	std::map<uint32_t, std::pair<Ref<Texture>, Ref<Sampler>>> textures_in_use;
 	std::vector<uint8_t> live_uniform_buffer;
 	VkDeviceSize size;
 	ShaderLayout layout;
@@ -30,8 +31,8 @@ public:
 	~UniformBlock();
 
 	inline void* getBuffer() { return live_uniform_buffer.data(); }
-	void setTexture(size_t index, Ref<Image> image);
-	void setSampler(size_t index, Ref<Sampler> sampler);
+	void setTexture(uint32_t binding, Ref<Texture> image);
+	void setSampler(uint32_t binding, Ref<Sampler> sampler);
 	inline VkDeviceSize getSize() { return size; }
 	void pushToDescriptorSet(size_t index);
 	inline VkDescriptorSet getDescriptorSet(size_t index) { return descriptor_sets[index]; }

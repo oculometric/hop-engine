@@ -27,7 +27,7 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Object);
 
-	Object(Ref<Mesh> _mesh, Ref<Material> _material);
+	Object(Ref<Mesh> mesh, Ref<Material> material);
 
 	Ref<Mesh> getMesh();
 	Ref<Material> getMaterial();

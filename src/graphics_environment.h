@@ -19,7 +19,7 @@ class Material;
 class Buffer;
 class UniformBlock;
 class Object;
-class Image;
+class Texture;
 class Sampler;
 
 class GraphicsEnvironment
@@ -68,7 +68,7 @@ private:
 	VkDescriptorSetLayout object_descriptor_set_layout = VK_NULL_HANDLE;
 	Ref<UniformBlock> scene_uniforms = nullptr;
 
-	Ref<Image> default_image = nullptr;
+	Ref<Texture> default_image = nullptr;
 	Ref<Sampler> default_sampler = nullptr;
 	Ref<Object> object = nullptr;
 
@@ -86,7 +86,7 @@ public:
 	inline VkDescriptorPool getDescriptorPool() { return descriptor_pool; }
 	inline VkCommandPool getCommandPool() { return command_pool; }
 	inline VkQueue getGraphicsQueue() { return graphics_queue; }
-	std::pair<Ref<Image>, Ref<Sampler>> getDefaultTextureSampler();
+	std::pair<Ref<Texture>, Ref<Sampler>> getDefaultTextureSampler();
 	static GraphicsEnvironment* get();
 	void drawFrame();
 

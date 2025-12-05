@@ -51,8 +51,10 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
     createCommandPool();
     createSyncObjects();
 
-    default_image = new Image("res/tex2.png");
+    uint8_t default_image_data[4] = {0xFF, 0xFF, 0xFF, 0xFF};
+    default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, default_image_data);
     default_sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+
     // TODO: these are not mandatory! these are just here for testing
     object = new Object(
         new Mesh(
@@ -63,6 +65,7 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
         }, { 0, 1, 2 }),
         new Material(new Shader("res/shader", false), VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL)
     );
+    object->getMaterial()->setTexture("tex2", new Texture("res/tex2.png"));
 }
 
 GraphicsEnvironment::~GraphicsEnvironment()
@@ -126,7 +129,7 @@ GraphicsEnvironment::QueueFamilies GraphicsEnvironment::getQueueFamilies(VkPhysi
     return families;
 }
 
-pair<Ref<Image>, Ref<Sampler>> GraphicsEnvironment::getDefaultTextureSampler()
+pair<Ref<Texture>, Ref<Sampler>> GraphicsEnvironment::getDefaultTextureSampler()
 {
     return { default_image, default_sampler };
 }

@@ -61,7 +61,7 @@ VkDescriptorSet Material::getDescriptorSet(size_t index)
 	return uniforms->getDescriptorSet(index);
 }
 
-void Material::setTexture(size_t index, Ref<Image> texture)
+void Material::setTexture(size_t index, Ref<Texture> texture)
 {
 	uniforms->setTexture(index, texture);
 }
@@ -71,7 +71,7 @@ void Material::setSampler(size_t index, Ref<Sampler> sampler)
 	uniforms->setSampler(index, sampler);
 }
 
-void Material::setTexture(string name, Ref<Image> texture)
+void Material::setTexture(string name, Ref<Texture> texture)
 {
 	auto it = texture_name_to_binding.find(name);
 	if (it != texture_name_to_binding.end())

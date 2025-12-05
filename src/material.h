@@ -22,7 +22,7 @@ class Shader;
 class Buffer;
 class Pipeline;
 class UniformBlock;
-class Image;
+class Texture;
 class Sampler;
 
 class Material
@@ -37,7 +37,7 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Material);
 
-	Material(Ref<Shader> _shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode);
+	Material(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode);
 	~Material();
 
 	VkPipeline getPipeline();
@@ -45,9 +45,9 @@ public:
 	void pushToDescriptorSet(size_t index);
 	VkDescriptorSet getDescriptorSet(size_t index);
 
-	void setTexture(size_t index, Ref<Image> texture);
+	void setTexture(size_t index, Ref<Texture> texture);
 	void setSampler(size_t index, Ref<Sampler> sampler);
-	void setTexture(std::string name, Ref<Image> texture);
+	void setTexture(std::string name, Ref<Texture> texture);
 	void setSampler(std::string name, Ref<Sampler> sampler);
 
 	inline void setFloatUniform(std::string name, float value) { setUniformVariable(name, &value, sizeof(value)); }

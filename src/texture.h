@@ -10,7 +10,7 @@ namespace HopEngine
 
 class Buffer;
 
-class Image
+class Texture
 {
 private:
 	size_t width;
@@ -22,11 +22,11 @@ private:
 	VkImageView view = VK_NULL_HANDLE;
 
 public:
-	DELETE_CONSTRUCTORS(Image);
+	DELETE_CONSTRUCTORS(Texture);
 
-	// TODO: empty image constructor
-	Image(std::string file);
-	~Image();
+	Texture(size_t width, size_t height, VkFormat format, void* data);
+	Texture(std::string file);
+	~Texture();
 
 	void transitionLayout(VkImageLayout new_layout);
 	void copyBufferToImage(Ref<Buffer> buffer);
