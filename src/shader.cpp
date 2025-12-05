@@ -1,5 +1,6 @@
 #include "shader.h"
 
+#include <map>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -11,6 +12,7 @@
 #define popen _popen
 #define pclose _pclose
 #endif
+#include <spirv_reflect/spirv_reflect.h>
 
 #include "graphics_environment.h"
 #include "render_pass.h"
@@ -61,12 +63,10 @@ Shader::Shader(string base_path, bool is_precompiled)
 	vert_module = createShaderModule(vert_blob);
 	frag_module = createShaderModule(frag_blob);
 
-	// TODO: we should read the bindings and buffer size for set 2 from the shader reflection data
-	bindings =
-	{
-		{ 0, UNIFORM, 16 },
-		{ 1, TEXTURE }
-	};
+	auto vert_bindings = getReflectedBindings(vert_blob);
+	auto frag_bindings = getReflectedBindings(frag_blob);
+
+	bindings = mergeBindings(vert_bindings, frag_bindings);
 
 	vector<VkDescriptorSetLayoutBinding> layout_bindings;
 	for (const DescriptorBinding& binding : bindings)
@@ -133,6 +133,84 @@ vector<VkPipelineShaderStageCreateInfo> Shader::getShaderStageCreateInfos()
 ShaderLayout Shader::getShaderLayout()
 {
 	return { descriptor_set_layout, bindings };
+}
+
+vector<DescriptorBinding> Shader::mergeBindings(vector<DescriptorBinding> list_a, vector<DescriptorBinding> list_b)
+{
+	multimap<uint32_t, DescriptorBinding> bindings;
+
+	for (auto item : list_a)
+		bindings.insert({ item.binding, item });
+	for (auto item : list_b)
+		bindings.insert({ item.binding, item });
+
+	if (bindings.empty())
+		return { };
+	if (bindings.size() == 1)
+		return { bindings.begin()->second };
+
+	vector<DescriptorBinding> resolved_bindings;
+
+	uint32_t last_binding_index = 0;
+	auto binding_it = bindings.begin();
+	while (binding_it != bindings.end())
+	{
+		DescriptorBinding last_binding = binding_it->second;
+		resolved_bindings.push_back(last_binding);
+		binding_it++;
+		if (binding_it == bindings.end())
+			return resolved_bindings;
+		else if (binding_it->first == last_binding.binding)
+		{
+			// uh oh! duplicate bindings! that's not good...
+			if (binding_it->second.type == last_binding.type && binding_it->second.buffer_size == last_binding.buffer_size)
+				binding_it++;
+			else
+				throw runtime_error("incompatible duplicate shader uniform/texture bindings found");
+		}
+	}
+
+	return resolved_bindings;
+}
+
+vector<DescriptorBinding> Shader::getReflectedBindings(vector<char> blob)
+{
+	SpvReflectShaderModule reflected_module;
+	SpvReflectResult result = spvReflectCreateShaderModule(blob.size(), blob.data(), &reflected_module);
+	if (result != SPV_REFLECT_RESULT_SUCCESS)
+		return {};
+	const SpvReflectDescriptorSet* vert_material_set = spvReflectGetDescriptorSet(&reflected_module, 2, &result);
+	if (result != SPV_REFLECT_RESULT_SUCCESS)
+	{
+		spvReflectDestroyShaderModule(&reflected_module);
+		return {};
+	}
+
+	vector<DescriptorBinding> bindings;
+	for (size_t i = 0; i < vert_material_set->binding_count; ++i)
+	{
+		SpvReflectDescriptorBinding* binding = vert_material_set->bindings[i];
+		if (binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+		{
+			DescriptorBinding db;
+			db.type = UNIFORM;
+			db.binding = binding->binding;
+			db.buffer_size = binding->block.padded_size;
+			db.name = binding->name;
+			bindings.push_back(db);
+		}
+		else if (binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+		{
+			DescriptorBinding db;
+			db.type = TEXTURE;
+			db.binding = binding->binding;
+			db.name = binding->name;
+			bindings.push_back(db);
+		}
+	}
+
+	spvReflectDestroyShaderModule(&reflected_module);
+	return bindings;
 }
 
 bool Shader::compileFile(string path, string out_path)

@@ -105,7 +105,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\glm-1.0.2;$(ProjectDir)lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\glm-1.0.2;$(ProjectDir)lib;$(ProjectDir)lib\spirv_reflect;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -127,7 +127,7 @@ glslc.exe res/shader.frag -o shader_frag.spv</Command>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\glm-1.0.2;$(ProjectDir)lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\glm-1.0.2;$(ProjectDir)lib;$(ProjectDir)lib\spirv_reflect;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -152,6 +152,7 @@ glslc.exe res/shader.frag -o shader_frag.spv</Command>
     <ClCompile Include="src\render_pass.cpp" />
     <ClCompile Include="src\sampler.cpp" />
     <ClCompile Include="src\shader.cpp" />
+    <ClCompile Include="src\spirv_compile.cpp" />
     <ClCompile Include="src\swapchain.cpp" />
     <ClCompile Include="src\texture.cpp" />
     <ClCompile Include="src\uniform_block.cpp" />

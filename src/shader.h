@@ -20,6 +20,7 @@ struct DescriptorBinding
 	uint32_t binding;
 	DescriptorBindingType type;
 	VkDeviceSize buffer_size;
+	std::string name;
 };
 
 struct ShaderLayout
@@ -49,6 +50,8 @@ public:
 	ShaderLayout getShaderLayout();
 
 private:
+	static std::vector<DescriptorBinding> mergeBindings(std::vector<DescriptorBinding> list_a, std::vector<DescriptorBinding> list_b);
+	static std::vector<DescriptorBinding> getReflectedBindings(std::vector<char> blob);
 	static bool compileFile(std::string path, std::string out_path);
 	static std::vector<char> readFile(std::string path);
 	static VkShaderModule createShaderModule(const std::vector<char>& blob);
