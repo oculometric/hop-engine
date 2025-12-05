@@ -61,7 +61,7 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
             { { 0.5f,  0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f }, {}, {}, { 1.0f, 0.0f } },
             { { -0.5f, 0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f }, {}, {}, { 0.0f, 1.0f } }
         }, { 0, 1, 2 }),
-        new Material(new Shader("shader"), VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL)
+        new Material(new Shader("res/shader", false), VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL)
     );
 }
 

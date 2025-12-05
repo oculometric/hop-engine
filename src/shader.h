@@ -41,7 +41,7 @@ public:
 	DELETE_CONSTRUCTORS(Shader);
 		
 	// TODO: direct string shader constructor, and runtime compilation
-	Shader(std::string base_path);
+	Shader(std::string base_path, bool is_precompiled);
 	~Shader();
 
 	inline VkPipelineLayout getPipelineLayout() { return pipeline_layout; }
@@ -49,6 +49,7 @@ public:
 	ShaderLayout getShaderLayout();
 
 private:
+	static bool compileFile(std::string path, std::string out_path);
 	static std::vector<char> readFile(std::string path);
 	static VkShaderModule createShaderModule(const std::vector<char>& blob);
 };

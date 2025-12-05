@@ -24,12 +24,19 @@ layout(location = 2) in vec3 normal;
 layout(location = 3) in vec3 tangent;
 layout(location = 4) in vec2 uv;
 
-layout(location = 0) out vec3 fragColor;
-layout(location = 1) out vec2 fragUV;
+layout(location = 0) out vec3 frag_position;
+layout(location = 1) out vec3 frag_colour;
+layout(location = 2) out vec3 frag_normal;
+layout(location = 3) out vec3 frag_tangent;
+layout(location = 4) out vec2 frag_uv;
 
 void main()
 {
+    frag_position = position;
+    frag_colour = colour;
+    frag_normal = normal;
+    frag_tangent = tangent;
+    frag_uv = uv;
+
     gl_Position = scene_uniforms.view_to_clip * scene_uniforms.world_to_view * object_uniforms.model_to_world * vec4(position.xy, 0.0, 1.0);
-    fragColor = colour;
-    fragUV = uv;
 }

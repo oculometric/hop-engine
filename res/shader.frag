@@ -1,9 +1,12 @@
 #version 450
 
-layout(location = 0) in vec3 fragColor;
-layout(location = 1) in vec2 fragUV;
+layout(location = 0) in vec3 frag_position;
+layout(location = 1) in vec3 frag_colour;
+layout(location = 2) in vec3 frag_normal;
+layout(location = 3) in vec3 frag_tangent;
+layout(location = 4) in vec2 frag_uv;
 
-layout(location = 0) out vec4 outColor;
+layout(location = 0) out vec4 out_color;
 
 layout(set = 2, binding = 0) uniform MaterialUniforms
 {
@@ -14,5 +17,5 @@ layout(set = 2, binding = 1) uniform sampler2D tex2;
 
 void main()
 {
-    outColor = texture(tex2, fragUV);//vec4(fragColor, 1.0);// * material_uniforms.colour;
+    out_color = texture(tex2, frag_position.xy).bgra;
 }

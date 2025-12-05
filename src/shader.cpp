@@ -1,7 +1,16 @@
 #include "shader.h"
 
+#include <iostream>
 #include <fstream>
 #include <vector>
+#include <string>
+#include <array>
+#ifndef _WIN32
+#include <unistd.h>
+#else
+#define popen _popen
+#define pclose _pclose
+#endif
 
 #include "graphics_environment.h"
 #include "render_pass.h"
@@ -9,10 +18,45 @@
 using namespace HopEngine;
 using namespace std;
 
-Shader::Shader(string base_path)
+inline int exec(std::string command, std::string& output)
 {
-	auto vert_blob = Shader::readFile(base_path + "_vert.spv");
-	auto frag_blob = Shader::readFile(base_path + "_frag.spv");
+	const size_t buffer_size = 512;
+	std::array<char, buffer_size> buffer;
+
+	auto pipe = popen((command + " 2>&1").c_str(), "r");
+	if (!pipe)
+	{
+		output = "popen failed.";
+		return -1;
+	}
+
+	output = "";
+	size_t count;
+	do {
+		if ((count = fread(buffer.data(), 1, buffer_size, pipe)) > 0)
+			output.insert(output.end(), std::begin(buffer), std::next(std::begin(buffer), count));
+	} while (count > 0);
+
+	return pclose(pipe);
+}
+
+Shader::Shader(string base_path, bool is_precompiled)
+{
+	string proper_path = base_path;
+	if (!is_precompiled)
+	{
+		proper_path = "_TEMP_SHADER";
+
+		bool result = Shader::compileFile(base_path + ".vert", proper_path + "_vert.spv");
+		if (!result)
+			throw runtime_error("shader compilation failed");
+		result = Shader::compileFile(base_path + ".frag", proper_path + "_frag.spv");
+		if (!result)
+			throw runtime_error("shader compilation failed");
+	}
+	
+	auto vert_blob = Shader::readFile(proper_path + "_vert.spv");
+	auto frag_blob = Shader::readFile(proper_path + "_frag.spv");
 
 	vert_module = createShaderModule(vert_blob);
 	frag_module = createShaderModule(frag_blob);
@@ -89,6 +133,36 @@ vector<VkPipelineShaderStageCreateInfo> Shader::getShaderStageCreateInfos()
 ShaderLayout Shader::getShaderLayout()
 {
 	return { descriptor_set_layout, bindings };
+}
+
+bool Shader::compileFile(string path, string out_path)
+{
+	// TODO: compile the shaders
+	string compile_command = "glslc";
+#if defined(_WIN32)
+	for (size_t i = 0; i < path.size(); i++)
+	{
+		if (path[i] == '/')
+			path[i] = '\\';
+	}
+	for (size_t i = 0; i < path.size(); i++)
+	{
+		if (path[i] == '/')
+			path[i] = '\\';
+	}
+#endif
+
+	string command_out;
+	compile_command = compile_command + ' ' + path + " -o " + out_path;
+	int result = exec(compile_command.c_str(), command_out);
+
+	if (result != 0)
+	{
+		cout << "error when compiling " << path << endl << command_out;
+		return false;
+	}
+
+	return true;
 }
 
 vector<char> Shader::readFile(string path)
