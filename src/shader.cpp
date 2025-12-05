@@ -137,7 +137,6 @@ ShaderLayout Shader::getShaderLayout()
 
 bool Shader::compileFile(string path, string out_path)
 {
-	// TODO: compile the shaders
 	string compile_command = "glslc";
 #if defined(_WIN32)
 	for (size_t i = 0; i < path.size(); i++)
