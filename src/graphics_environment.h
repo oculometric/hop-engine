@@ -60,8 +60,9 @@ private:
 	VkSurfaceKHR surface = VK_NULL_HANDLE;
 
 	Ref<Swapchain> swapchain = nullptr;
-	std::vector<VkFramebuffer> framebuffers;
 	Ref<RenderPass> render_pass = nullptr;
+	Ref<Texture> depth_texture = nullptr;
+	std::vector<VkFramebuffer> framebuffers;
 
 	VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
 	VkDescriptorSetLayout scene_descriptor_set_layout = VK_NULL_HANDLE;
@@ -94,7 +95,7 @@ private:
 	void createInstance();
 	void createDevice();
 	void createDescriptorPoolAndSets();
-	void createResources();
+	void createFramebuffers();
 	void createCommandPool();
 	void createSyncObjects();
 

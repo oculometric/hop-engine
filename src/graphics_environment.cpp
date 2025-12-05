@@ -47,13 +47,18 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
         throw std::runtime_error("glfwCreateWindowSurface failed");
     createDevice();
     createDescriptorPoolAndSets();
-    createResources();
+    auto framebuffer_size = window->getSize();
+    swapchain = new Swapchain(framebuffer_size.first, framebuffer_size.second, surface);
+    MAX_FRAMES_IN_FLIGHT = swapchain->getImageCount();
     createCommandPool();
-    createSyncObjects();
+    render_pass = new RenderPass(swapchain);
+    createFramebuffers();
+    scene_uniforms = new UniformBlock(ShaderLayout{ scene_descriptor_set_layout, {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
 
-    uint8_t default_image_data[4] = {0xFF, 0xFF, 0xFF, 0xFF};
+    uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
     default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, default_image_data);
     default_sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+    createSyncObjects();
 
     // TODO: these are not mandatory! these are just here for testing
     object = new Object(
@@ -65,7 +70,7 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
         }, { 0, 1, 2 }),
         new Material(new Shader("res/shader", false), VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL)
     );
-    object->getMaterial()->setTexture("tex2", new Texture("res/tex2.png"));
+    object->material->setTexture("tex2", new Texture("res/tex2.png"));
 }
 
 GraphicsEnvironment::~GraphicsEnvironment()
@@ -83,6 +88,7 @@ GraphicsEnvironment::~GraphicsEnvironment()
 
     for (VkFramebuffer framebuffer : framebuffers)
         vkDestroyFramebuffer(device, framebuffer, nullptr);
+    depth_texture = nullptr;
 
     default_image = nullptr;
     default_sampler = nullptr;
@@ -165,7 +171,7 @@ void GraphicsEnvironment::drawFrame()
     scene_uniforms->pushToDescriptorSet(image_index);
     
     object->pushToDescriptorSet(image_index);
-    object->getMaterial()->pushToDescriptorSet(image_index);
+    object->material->pushToDescriptorSet(image_index);
     // TODO: update scene, object, material UBOs for all objects/scenes in use
 
     vkResetCommandBuffer(command_buffers[image_index], 0);
@@ -375,13 +381,10 @@ void GraphicsEnvironment::createDescriptorPoolAndSets()
         throw runtime_error("vkCreateDescriptorSetLayout failed");
 }
 
-void GraphicsEnvironment::createResources()
+void GraphicsEnvironment::createFramebuffers()
 {
     auto framebuffer_size = window->getSize();
-    swapchain = new Swapchain(framebuffer_size.first, framebuffer_size.second, surface);
-    MAX_FRAMES_IN_FLIGHT = swapchain->getImageCount();
-    render_pass = new RenderPass(swapchain);
-    scene_uniforms = new UniformBlock(ShaderLayout{ scene_descriptor_set_layout, {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
+    depth_texture = new Texture(framebuffer_size.first, framebuffer_size.second, Texture::depth_format, nullptr);
 
     // create framebuffers
     framebuffers.resize(swapchain->getImageCount());
@@ -389,13 +392,14 @@ void GraphicsEnvironment::createResources()
     {
         VkImageView attachments[] =
         {
-            swapchain->getImage(i)
+            swapchain->getImage(i),
+            depth_texture->getView()
         };
 
         VkFramebufferCreateInfo framebuffer_create_info{ };
         framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         framebuffer_create_info.renderPass = render_pass->getRenderPass();
-        framebuffer_create_info.attachmentCount = 1;
+        framebuffer_create_info.attachmentCount = 2;
         framebuffer_create_info.pAttachments = attachments;
         framebuffer_create_info.width = swapchain->getExtent().width;
         framebuffer_create_info.height = swapchain->getExtent().height;
@@ -464,13 +468,16 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
     render_pass_begin_info.framebuffer = framebuffers[image_index];
     render_pass_begin_info.renderArea.offset = { 0, 0 };
     render_pass_begin_info.renderArea.extent = swapchain->getExtent();
-    VkClearValue clear_colour = { { { 0.0f, 0.0f, 0.0f, 1.0f } } };
-    render_pass_begin_info.clearValueCount = 1;
-    render_pass_begin_info.pClearValues = &clear_colour;
+    VkClearValue clear_values[] = {
+        { VkClearColorValue{{1.0f, 0.0f, 1.0f, 1.0f}} },
+        { 1.0f, 0 }
+    };
+    render_pass_begin_info.clearValueCount = 2;
+    render_pass_begin_info.pClearValues = clear_values;
 
     vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
-    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->getMaterial()->getPipeline());
+    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipeline());
     
     VkViewport viewport{ };
     viewport.x = 0.0f;
@@ -487,17 +494,17 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
     VkDescriptorSet scene_descriptor_set = scene_uniforms->getDescriptorSet(image_index);
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->getMaterial()->getPipelineLayout(), 0, 1, &scene_descriptor_set, 0, nullptr);
-    VkDescriptorSet material_descriptor_set = object->getMaterial()->getDescriptorSet(image_index);
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->getMaterial()->getPipelineLayout(), 2, 1, &material_descriptor_set, 0, nullptr);
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipelineLayout(), 0, 1, &scene_descriptor_set, 0, nullptr);
+    VkDescriptorSet material_descriptor_set = object->material->getDescriptorSet(image_index);
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipelineLayout(), 2, 1, &material_descriptor_set, 0, nullptr);
     VkDescriptorSet object_descriptor_set = object->getDescriptorSet(image_index);
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->getMaterial()->getPipelineLayout(), 1, 1, &object_descriptor_set, 0, nullptr);
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipelineLayout(), 1, 1, &object_descriptor_set, 0, nullptr);
 
-    VkBuffer vertex_buffers[] = { object->getMesh()->getVertexBuffer()};
+    VkBuffer vertex_buffers[] = { object->mesh->getVertexBuffer()};
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
-    vkCmdBindIndexBuffer(command_buffer, object->getMesh()->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
-    vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(object->getMesh()->getIndexCount()), 1, 0, 0, 0);
+    vkCmdBindIndexBuffer(command_buffer, object->mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
+    vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(object->mesh->getIndexCount()), 1, 0, 0, 0);
 
     vkCmdEndRenderPass(command_buffer);
 

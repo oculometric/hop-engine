@@ -24,16 +24,6 @@ Object::Object(Ref<Mesh> _mesh, Ref<Material> _material)
 	uniforms = new UniformBlock(ShaderLayout{ GraphicsEnvironment::get()->getObjectDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(ObjectUniforms) }} });
 }
 
-Ref<Mesh> Object::getMesh()
-{
-	return mesh;
-}
-
-Ref<Material> Object::getMaterial()
-{
-	return material;
-}
-
 void Object::pushToDescriptorSet(size_t index)
 {
 	ObjectUniforms* object_uniforms = (ObjectUniforms*)(uniforms->getBuffer());

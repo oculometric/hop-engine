@@ -58,6 +58,14 @@ Pipeline::Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMo
     multisampling.sampleShadingEnable = VK_FALSE;
     multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
+    VkPipelineDepthStencilStateCreateInfo depth{ };
+    depth.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depth.depthCompareOp = VK_COMPARE_OP_LESS;
+    depth.depthWriteEnable = VK_TRUE;
+    depth.depthTestEnable = VK_TRUE;
+    depth.depthBoundsTestEnable = VK_FALSE;
+    depth.stencilTestEnable = VK_FALSE;
+
     VkPipelineColorBlendAttachmentState color_blend_attachment{ };
     color_blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
     color_blend_attachment.blendEnable = VK_FALSE;
@@ -86,7 +94,7 @@ Pipeline::Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMo
     pipeline_create_info.pViewportState = &viewport_state;
     pipeline_create_info.pRasterizationState = &rasterizer;
     pipeline_create_info.pMultisampleState = &multisampling;
-    pipeline_create_info.pDepthStencilState = nullptr; // TODO: depth buffer
+    pipeline_create_info.pDepthStencilState = &depth;
     pipeline_create_info.pColorBlendState = &color_blending;
     pipeline_create_info.pDynamicState = &dynamic_state_create_info;
     pipeline_create_info.layout = shader->getPipelineLayout();

@@ -16,13 +16,13 @@ Texture::Texture(size_t _width, size_t _height, VkFormat _format, void* data)
     format = _format;
     width = _width; height = _height;
 
-    if (format != VK_FORMAT_R8G8B8A8_SRGB)
-        throw runtime_error("only RGBA8 SRGB format is supported");
+    if (data != nullptr)
+    {
+        loadFromMemory(data);
+        return;
+    }
 
-    if (data == nullptr)
-        throw runtime_error("image data was null");
-
-    loadFromMemory(data);
+    createImage();
 }
 
 Texture::Texture(string file)
@@ -125,7 +125,18 @@ VkImageView Texture::getView()
     view_create_info.image = image;
     view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
     view_create_info.format = format;
-    view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    if (format == VK_FORMAT_D16_UNORM
+        || format == VK_FORMAT_D16_UNORM_S8_UINT
+        || format == VK_FORMAT_D32_SFLOAT_S8_UINT
+        || format == VK_FORMAT_D32_SFLOAT
+        || format == VK_FORMAT_D24_UNORM_S8_UINT)
+    {
+        view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    }
+    else
+    {
+        view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    }
     view_create_info.subresourceRange.baseMipLevel = 0;
     view_create_info.subresourceRange.levelCount = 1;
     view_create_info.subresourceRange.baseArrayLayer = 0;
@@ -150,7 +161,18 @@ void Texture::createImage()
     image_create_info.format = format;
     image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    image_create_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    if (format == VK_FORMAT_D16_UNORM
+        || format == VK_FORMAT_D16_UNORM_S8_UINT
+        || format == VK_FORMAT_D32_SFLOAT_S8_UINT
+        || format == VK_FORMAT_D32_SFLOAT
+        || format == VK_FORMAT_D24_UNORM_S8_UINT)
+    {
+        image_create_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    }
+    else
+    {
+        image_create_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    }
     image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
     if (vkCreateImage(GraphicsEnvironment::get()->getDevice(), &image_create_info, nullptr, &image) != VK_SUCCESS)

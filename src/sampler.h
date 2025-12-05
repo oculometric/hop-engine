@@ -10,7 +10,7 @@ namespace HopEngine
 class Sampler
 {
 private:
-	VkSampler sampler;
+	VkSampler sampler = VK_NULL_HANDLE;
 
 public:
 	DELETE_CONSTRUCTORS(Sampler);

@@ -12,6 +12,9 @@ class Buffer;
 
 class Texture
 {
+public:
+	static constexpr VkFormat depth_format = VK_FORMAT_D32_SFLOAT;
+
 private:
 	size_t width;
 	size_t height;
