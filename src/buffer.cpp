@@ -21,26 +21,10 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlag
     VkMemoryRequirements memory_requirements;
     vkGetBufferMemoryRequirements(GraphicsEnvironment::get()->getDevice(), buffer, &memory_requirements);
 
-    uint32_t type_filter = memory_requirements.memoryTypeBits;
-
-    VkPhysicalDeviceMemoryProperties memory_properties;
-    vkGetPhysicalDeviceMemoryProperties(GraphicsEnvironment::get()->getPhysicalDevice(), &memory_properties);
-
-    uint32_t memory_type_index = -1;
-    for (uint32_t i = 0; i < memory_properties.memoryTypeCount; i++) {
-        if ((type_filter & (1 << i)) && (memory_properties.memoryTypes[i].propertyFlags & properties) == properties)
-        {
-            memory_type_index = i;
-            break;
-        }
-    }
-    if (memory_type_index == (uint32_t)-1)
-        throw runtime_error("failed to find suitable memory");
-
     VkMemoryAllocateInfo allocate_info{ };
     allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocate_info.allocationSize = memory_requirements.size;
-    allocate_info.memoryTypeIndex = memory_type_index;
+    allocate_info.memoryTypeIndex = Buffer::findMemoryType(memory_requirements.memoryTypeBits, properties);
 
     if (vkAllocateMemory(GraphicsEnvironment::get()->getDevice(), &allocate_info, nullptr, &memory) != VK_SUCCESS)
         throw runtime_error("vkAllocateMemory failed");
@@ -73,4 +57,18 @@ void Buffer::unmapMemory()
 
     vkUnmapMemory(GraphicsEnvironment::get()->getDevice(), memory);
     mapped = nullptr;
+}
+
+uint32_t Buffer::findMemoryType(uint32_t type_bits, VkMemoryPropertyFlags properties)
+{
+    VkPhysicalDeviceMemoryProperties memory_properties;
+    vkGetPhysicalDeviceMemoryProperties(GraphicsEnvironment::get()->getPhysicalDevice(), &memory_properties);
+
+    uint32_t memory_type_index = -1;
+    for (uint32_t i = 0; i < memory_properties.memoryTypeCount; i++)
+    {
+        if ((type_bits & (1 << i)) && (memory_properties.memoryTypes[i].propertyFlags & properties) == properties)
+            return i;
+    }
+    throw runtime_error("failed to find suitable memory type");
 }

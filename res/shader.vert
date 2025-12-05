@@ -25,9 +25,11 @@ layout(location = 3) in vec3 tangent;
 layout(location = 4) in vec2 uv;
 
 layout(location = 0) out vec3 fragColor;
+layout(location = 1) out vec2 fragUV;
 
 void main()
 {
     gl_Position = scene_uniforms.view_to_clip * scene_uniforms.world_to_view * object_uniforms.model_to_world * vec4(position.xy, 0.0, 1.0);
-    fragColor = position;
+    fragColor = colour;
+    fragUV = uv;
 }

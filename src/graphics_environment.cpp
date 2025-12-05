@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <vector>
+#include <array>
 #include <map>
 #include <set>
 #include <GLFW/glfw3.h>
@@ -20,6 +21,8 @@
 #include "material.h"
 #include "uniform_block.h"
 #include "object.h"
+#include "texture.h"
+#include "sampler.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -48,13 +51,15 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
     createCommandPool();
     createSyncObjects();
 
+    default_image = new Image("res/tex2.png");
+    default_sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
     // TODO: these are not mandatory! these are just here for testing
     object = new Object(
         new Mesh(
         {
-            { { 0.0f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-            { { 0.5f,  0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-            { { -0.5f, 0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
+            { { 0.0f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f }, {}, {}, { 0.0f, 0.0f } },
+            { { 0.5f,  0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f }, {}, {}, { 1.0f, 0.0f } },
+            { { -0.5f, 0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f }, {}, {}, { 0.0f, 1.0f } }
         }, { 0, 1, 2 }),
         new Material(new Shader("shader"), VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL)
     );
@@ -76,6 +81,8 @@ GraphicsEnvironment::~GraphicsEnvironment()
     for (VkFramebuffer framebuffer : framebuffers)
         vkDestroyFramebuffer(device, framebuffer, nullptr);
 
+    default_image = nullptr;
+    default_sampler = nullptr;
     // TODO: these are not mandatory!
     object = nullptr;
 
@@ -119,6 +126,11 @@ GraphicsEnvironment::QueueFamilies GraphicsEnvironment::getQueueFamilies(VkPhysi
     return families;
 }
 
+pair<Ref<Image>, Ref<Sampler>> GraphicsEnvironment::getDefaultTextureSampler()
+{
+    return { default_image, default_sampler };
+}
+
 GraphicsEnvironment* GraphicsEnvironment::get()
 {
     return environment;
@@ -140,7 +152,8 @@ void GraphicsEnvironment::drawFrame()
     chrono::duration<float> since_start = now_time - start_time;
     scene_uniform_buffer->time = since_start.count();
     scene_uniform_buffer->world_to_view = 
-        glm::lookAt(glm::vec3(sin(scene_uniform_buffer->time) * 2.0f, cos(scene_uniform_buffer->time) * 2.0f, 2.0f),
+        glm::lookAt(
+            glm::vec3(sin(scene_uniform_buffer->time) * 2.0f, cos(scene_uniform_buffer->time) * 2.0f, 2.0f),
             glm::vec3(0.0f, 0.0f, 0.0f), 
             glm::vec3(0.0f, 0.0f, 1.0f)
     );
@@ -252,7 +265,7 @@ void GraphicsEnvironment::createDevice()
 
         score += properties.limits.maxImageDimension2D;
 
-        if (features.fillModeNonSolid == VK_FALSE)
+        if (features.fillModeNonSolid == VK_FALSE || features.samplerAnisotropy == VK_FALSE)
             score = 0;
 
         // check that the necessary queues are present
@@ -303,9 +316,9 @@ void GraphicsEnvironment::createDevice()
         queue_create_infos.push_back(queue_create_info);
     }
 
-    // we aren't using any device features
     VkPhysicalDeviceFeatures features{ };
     features.fillModeNonSolid = VK_TRUE;
+    features.samplerAnisotropy = VK_TRUE;
     
     // actually create the logical device
     VkDeviceCreateInfo device_create_info{ };
@@ -326,15 +339,17 @@ void GraphicsEnvironment::createDevice()
 
 void GraphicsEnvironment::createDescriptorPoolAndSets()
 {
-    VkDescriptorPoolSize descriptor_pool_size{ };
-    descriptor_pool_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    descriptor_pool_size.descriptorCount = static_cast<uint32_t>(512 * 3 * MAX_FRAMES_IN_FLIGHT);
+    array<VkDescriptorPoolSize, 2> descriptor_pool_sizes;
+    descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptor_pool_sizes[0].descriptorCount = static_cast<uint32_t>(512 * 3 * MAX_FRAMES_IN_FLIGHT);
+    descriptor_pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptor_pool_sizes[1].descriptorCount = static_cast<uint32_t>(512 * 4 * MAX_FRAMES_IN_FLIGHT);
     VkDescriptorPoolCreateInfo descriptor_pool_create_info{ };
     descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    descriptor_pool_create_info.poolSizeCount = 1;
-    descriptor_pool_create_info.pPoolSizes = &descriptor_pool_size;
+    descriptor_pool_create_info.poolSizeCount = static_cast<uint32_t>(descriptor_pool_sizes.size());
+    descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.data();
     descriptor_pool_create_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-    descriptor_pool_create_info.maxSets = static_cast<uint32_t>(512 * 3 * MAX_FRAMES_IN_FLIGHT);
+    descriptor_pool_create_info.maxSets = static_cast<uint32_t>(512 * 8 * MAX_FRAMES_IN_FLIGHT);
 
     if (vkCreateDescriptorPool(device, &descriptor_pool_create_info, nullptr, &descriptor_pool) != VK_SUCCESS)
         throw runtime_error("vkCreateDescriptorPool failed");
@@ -363,7 +378,7 @@ void GraphicsEnvironment::createResources()
     swapchain = new Swapchain(framebuffer_size.first, framebuffer_size.second, surface);
     MAX_FRAMES_IN_FLIGHT = swapchain->getImageCount();
     render_pass = new RenderPass(swapchain);
-    scene_uniforms = new UniformBlock(scene_descriptor_set_layout, sizeof(SceneUniforms));
+    scene_uniforms = new UniformBlock(ShaderLayout{ scene_descriptor_set_layout, {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
 
     // create framebuffers
     framebuffers.resize(swapchain->getImageCount());

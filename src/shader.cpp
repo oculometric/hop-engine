@@ -1,6 +1,7 @@
 #include "shader.h"
 
 #include <fstream>
+#include <vector>
 
 #include "graphics_environment.h"
 #include "render_pass.h"
@@ -17,18 +18,28 @@ Shader::Shader(string base_path)
 	frag_module = createShaderModule(frag_blob);
 
 	// TODO: we should read the bindings and buffer size for set 2 from the shader reflection data
-	VkDescriptorSetLayoutBinding uniform_layout_binding{ };
-	uniform_layout_binding.binding = 0;
-	uniform_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	uniform_layout_binding.descriptorCount = 1;
-	uniform_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+	bindings =
+	{
+		{ 0, UNIFORM, 16 },
+		{ 1, TEXTURE }
+	};
+
+	vector<VkDescriptorSetLayoutBinding> layout_bindings;
+	for (const DescriptorBinding& binding : bindings)
+	{
+		VkDescriptorSetLayoutBinding layout_binding{ };
+		layout_binding.binding = binding.binding;
+		layout_binding.descriptorType = (binding.type == UNIFORM) ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		layout_binding.descriptorCount = 1;
+		layout_binding.pImmutableSamplers = nullptr;
+		layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		layout_bindings.push_back(layout_binding);
+	}
 
 	VkDescriptorSetLayoutCreateInfo set_layout_create_info{ };
 	set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	set_layout_create_info.bindingCount = 1;
-	set_layout_create_info.pBindings = &uniform_layout_binding;
-
-	uniform_buffer_size = 16;
+	set_layout_create_info.bindingCount = static_cast<uint32_t>(layout_bindings.size());
+	set_layout_create_info.pBindings = layout_bindings.data();
 
 	if (vkCreateDescriptorSetLayout(GraphicsEnvironment::get()->getDevice(), &set_layout_create_info, nullptr, &descriptor_set_layout) != VK_SUCCESS)
 		throw runtime_error("vkCreateDescriptorSetLayout failed");
@@ -75,9 +86,9 @@ vector<VkPipelineShaderStageCreateInfo> Shader::getShaderStageCreateInfos()
 	return { vert_stage_create_info, frag_stage_create_info };
 }
 
-pair<VkDescriptorSetLayout, VkDeviceSize> Shader::getMaterialUniformConfig()
+ShaderLayout Shader::getShaderLayout()
 {
-	return { descriptor_set_layout, uniform_buffer_size };
+	return { descriptor_set_layout, bindings };
 }
 
 vector<char> Shader::readFile(string path)

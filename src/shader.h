@@ -9,6 +9,25 @@
 namespace HopEngine
 {
 
+enum DescriptorBindingType
+{
+	UNIFORM,
+	TEXTURE
+};
+
+struct DescriptorBinding
+{
+	uint32_t binding;
+	DescriptorBindingType type;
+	VkDeviceSize buffer_size;
+};
+
+struct ShaderLayout
+{
+	VkDescriptorSetLayout layout = VK_NULL_HANDLE;
+	std::vector<DescriptorBinding> bindings;
+};
+
 class Shader
 {
 private:
@@ -16,17 +35,18 @@ private:
 	VkShaderModule frag_module = VK_NULL_HANDLE;
 	VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
 	VkDescriptorSetLayout descriptor_set_layout = VK_NULL_HANDLE;
-	VkDeviceSize uniform_buffer_size;
+	std::vector<DescriptorBinding> bindings;
 
 public:
 	DELETE_CONSTRUCTORS(Shader);
 		
+	// TODO: direct string shader constructor, and runtime compilation
 	Shader(std::string base_path);
 	~Shader();
 
 	inline VkPipelineLayout getPipelineLayout() { return pipeline_layout; }
 	std::vector<VkPipelineShaderStageCreateInfo> getShaderStageCreateInfos();
-	std::pair<VkDescriptorSetLayout, VkDeviceSize> getMaterialUniformConfig();
+	ShaderLayout getShaderLayout();
 
 private:
 	static std::vector<char> readFile(std::string path);

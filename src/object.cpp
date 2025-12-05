@@ -21,7 +21,7 @@ Object::Object(Ref<Mesh> _mesh, Ref<Material> _material)
 {
 	mesh = _mesh;
 	material = _material;
-	uniforms = new UniformBlock(GraphicsEnvironment::get()->getObjectDescriptorSetLayout(), sizeof(ObjectUniforms));
+	uniforms = new UniformBlock(ShaderLayout{ GraphicsEnvironment::get()->getObjectDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(ObjectUniforms) }} });
 }
 
 Ref<Mesh> Object::getMesh()

@@ -19,6 +19,7 @@ class Shader;
 class Buffer;
 class Pipeline;
 class UniformBlock;
+class Image;
 
 class Material
 {
@@ -38,6 +39,7 @@ public:
 	void pushToDescriptorSet(size_t index);
 	VkDescriptorSet getDescriptorSet(size_t index);
 
+	// TODO: the material needs to understand textures
 	// TODO: the material needs to know about the layout/arrangement of variables in the UBO, and have functions for updating them by name
 };
 
