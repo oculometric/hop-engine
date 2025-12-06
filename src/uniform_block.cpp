@@ -25,7 +25,7 @@ UniformBlock::UniformBlock(ShaderLayout layout_info)
 
     uniform_buffers.resize(GraphicsEnvironment::get()->getFramesInFlight());
     for (size_t i = 0; i < uniform_buffers.size(); ++i)
-        uniform_buffers[i] = new Buffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        uniform_buffers[i] = new Buffer(size + 4, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     vector<VkDescriptorSetLayout> set_layouts(uniform_buffers.size(), layout_info.layout);
     VkDescriptorSetAllocateInfo descriptor_set_alloc_info{ };

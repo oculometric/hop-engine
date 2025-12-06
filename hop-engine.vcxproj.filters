@@ -113,12 +113,27 @@
     <ClInclude Include="src\command_buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hop_engine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shader.frag">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="res\shader.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\psx.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\common.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\psx.frag">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

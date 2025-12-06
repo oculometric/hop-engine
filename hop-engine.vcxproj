@@ -170,7 +170,9 @@
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\counted_ref.h" />
     <ClInclude Include="src\graphics_environment.h" />
+    <ClInclude Include="src\hop_engine.h" />
     <ClInclude Include="src\sampler.h" />
+    <ClInclude Include="src\scene.h" />
     <ClInclude Include="src\texture.h" />
     <ClInclude Include="src\material.h" />
     <ClInclude Include="src\mesh.h" />
@@ -183,6 +185,9 @@
     <ClInclude Include="src\window.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="res\common.glsl" />
+    <None Include="res\psx.frag" />
+    <None Include="res\psx.vert" />
     <None Include="res\shader.frag" />
     <None Include="res\shader.vert" />
   </ItemGroup>

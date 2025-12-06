@@ -23,6 +23,7 @@
 #include "object.h"
 #include "texture.h"
 #include "sampler.h"
+#include "scene.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -59,15 +60,6 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
     default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, default_image_data);
     default_sampler = new Sampler(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
     createSyncObjects();
-
-    // TODO: these are not mandatory! these are just here for testing
-    object = new Object(
-        new Mesh("res/bunny.obj"),
-        new Material(new Shader("res/shader", false), VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL)
-    );
-    object->scale = { 3, 3, 3 };
-    object->position = { 0, 0, -0.25f };
-    object->material->setTexture("tex2", new Texture("res/tex2.png"));
 }
 
 GraphicsEnvironment::~GraphicsEnvironment()
@@ -89,8 +81,7 @@ GraphicsEnvironment::~GraphicsEnvironment()
 
     default_image = nullptr;
     default_sampler = nullptr;
-    // TODO: these are not mandatory!
-    object = nullptr;
+    scene = nullptr;
 
     scene_uniforms = nullptr;
     vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
@@ -159,17 +150,22 @@ void GraphicsEnvironment::drawFrame()
     scene_uniform_buffer->time = since_start.count();
     scene_uniform_buffer->world_to_view = 
         glm::lookAt(
-            glm::vec3(sin(scene_uniform_buffer->time) * 1.0f, cos(scene_uniform_buffer->time) * 1.0f, 1.0f),
+            glm::vec3(sin(scene_uniform_buffer->time) * 1.5f, cos(scene_uniform_buffer->time) * 1.5f, 0.5f),
             glm::vec3(0.0f, 0.0f, 0.0f), 
             glm::vec3(0.0f, 0.0f, 1.0f)
     );
-    scene_uniform_buffer->view_to_clip = glm::perspective(glm::radians(45.0f), swapchain->getExtent().width / (float)swapchain->getExtent().width, 0.1f, 10.0f);
+    scene_uniform_buffer->view_to_clip = glm::perspective(glm::radians(90.0f), swapchain->getExtent().width / (float)swapchain->getExtent().width, 0.1f, 10.0f);
     scene_uniform_buffer->view_to_clip[1][1] *= -1;
     scene_uniforms->pushToDescriptorSet(image_index);
     
-    object->pushToDescriptorSet(image_index);
-    object->material->pushToDescriptorSet(image_index);
-    // TODO: update scene, object, material UBOs for all objects/scenes in use
+    if (scene.get() != nullptr)
+    {
+        for (Ref<Object>& object : scene->objects)
+        {
+            object->pushToDescriptorSet(image_index);
+            object->material->pushToDescriptorSet(image_index);
+        }
+    }
 
     vkResetCommandBuffer(command_buffers[image_index], 0);
     recordRenderCommands(command_buffers[image_index], image_index);
@@ -469,13 +465,13 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
         { VkClearColorValue{{1.0f, 0.0f, 1.0f, 1.0f}} },
         { 1.0f, 0 }
     };
+    if (scene.get() != nullptr)
+        clear_values[0].color = { scene->background_colour.r, scene->background_colour.g, scene->background_colour.b };
     render_pass_begin_info.clearValueCount = 2;
     render_pass_begin_info.pClearValues = clear_values;
 
     vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
-    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipeline());
-    
     VkViewport viewport{ };
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -490,18 +486,26 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
     scissor.extent = swapchain->getExtent();
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
-    VkDescriptorSet scene_descriptor_set = scene_uniforms->getDescriptorSet(image_index);
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipelineLayout(), 0, 1, &scene_descriptor_set, 0, nullptr);
-    VkDescriptorSet material_descriptor_set = object->material->getDescriptorSet(image_index);
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipelineLayout(), 2, 1, &material_descriptor_set, 0, nullptr);
-    VkDescriptorSet object_descriptor_set = object->getDescriptorSet(image_index);
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipelineLayout(), 1, 1, &object_descriptor_set, 0, nullptr);
+    if (scene.get() != nullptr)
+    {
+        for (Ref<Object>& object : scene->objects)
+        {
+            vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipeline());
 
-    VkBuffer vertex_buffers[] = { object->mesh->getVertexBuffer()};
-    VkDeviceSize offsets[] = { 0 };
-    vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
-    vkCmdBindIndexBuffer(command_buffer, object->mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
-    vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(object->mesh->getIndexCount()), 1, 0, 0, 0);
+            VkDescriptorSet scene_descriptor_set = scene_uniforms->getDescriptorSet(image_index);
+            vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipelineLayout(), 0, 1, &scene_descriptor_set, 0, nullptr);
+            VkDescriptorSet material_descriptor_set = object->material->getDescriptorSet(image_index);
+            vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipelineLayout(), 2, 1, &material_descriptor_set, 0, nullptr);
+            VkDescriptorSet object_descriptor_set = object->getDescriptorSet(image_index);
+            vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipelineLayout(), 1, 1, &object_descriptor_set, 0, nullptr);
+
+            VkBuffer vertex_buffers[] = { object->mesh->getVertexBuffer() };
+            VkDeviceSize offsets[] = { 0 };
+            vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
+            vkCmdBindIndexBuffer(command_buffer, object->mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
+            vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(object->mesh->getIndexCount()), 1, 0, 0, 0);
+        }
+    }
 
     vkCmdEndRenderPass(command_buffer);
 

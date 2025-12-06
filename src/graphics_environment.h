@@ -21,6 +21,7 @@ class UniformBlock;
 class Object;
 class Texture;
 class Sampler;
+class Scene;
 
 class GraphicsEnvironment
 {
@@ -43,6 +44,9 @@ private:
 	};
 
 	int MAX_FRAMES_IN_FLIGHT = 2;
+
+public:
+	Ref<Scene> scene = nullptr;
 
 private:
 	Ref<Window> window = nullptr;
@@ -71,7 +75,6 @@ private:
 
 	Ref<Texture> default_image = nullptr;
 	Ref<Sampler> default_sampler = nullptr;
-	Ref<Object> object = nullptr;
 
 public:
 	GraphicsEnvironment(Ref<Window> main_window);
