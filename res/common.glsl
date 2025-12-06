@@ -2,6 +2,7 @@ layout(set = 0, binding = 0) uniform SceneUniforms
 {
     mat4 world_to_view;
     mat4 view_to_clip;
+    ivec2 viewport_size;
     float time;
 } scene;
 

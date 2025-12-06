@@ -5,7 +5,7 @@
 
 vec4 snap(vec4 value)
 {
-    vec4 snapping_value = vec4(128, 128, 1024, 1);
+    vec4 snapping_value = vec4(vec2(scene.viewport_size) * 0.125f, 1024, 1);
     vec4 snapped = round(value * snapping_value) / snapping_value;
     snapped.w = value.w;
     return snapped;

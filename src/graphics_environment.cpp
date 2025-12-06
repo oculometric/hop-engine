@@ -32,6 +32,7 @@ struct SceneUniforms
 {
     glm::mat4 world_to_view;
     glm::mat4 view_to_clip;
+    glm::ivec2 viewport_size;
     float time;
 };
 
@@ -148,7 +149,9 @@ void GraphicsEnvironment::drawFrame()
     auto now_time = chrono::steady_clock::now();
     chrono::duration<float> since_start = now_time - start_time;
     scene_uniform_buffer->time = since_start.count();
-    scene_uniform_buffer->world_to_view = 
+    auto framebuffer_size = window->getSize();
+    scene_uniform_buffer->viewport_size = { framebuffer_size.first, framebuffer_size.second };
+    scene_uniform_buffer->world_to_view =
         glm::lookAt(
             glm::vec3(sin(scene_uniform_buffer->time) * 1.5f, cos(scene_uniform_buffer->time) * 1.5f, 0.5f),
             glm::vec3(0.0f, 0.0f, 0.0f), 
