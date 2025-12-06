@@ -17,7 +17,7 @@ using namespace std;
 Material::Material(Ref<Shader> _shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode)
 {
 	shader = _shader;
-	pipeline = new Pipeline(shader, culling_mode, polygon_mode, GraphicsEnvironment::get()->getRenderPass()->getRenderPass());
+	pipeline = new Pipeline(shader, culling_mode, polygon_mode, GraphicsEnvironment::get()->getRenderPass());
 
 	auto layout = shader->getShaderLayout();
 	uniforms = new UniformBlock(layout);

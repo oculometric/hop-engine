@@ -35,4 +35,7 @@ layout(location = 0) out Frag frag;
 layout(location = 0) in Frag frag;
 
 layout(location = 0) out vec4 colour;
+layout(location = 1) out vec4 normal;
+layout(location = 2) out vec4 params;
+layout(location = 3) out vec4 custom;
 #endif

@@ -8,6 +8,7 @@ namespace HopEngine
 {
 
 class Shader;
+class RenderPass;
 
 class Pipeline
 {
@@ -17,7 +18,7 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Pipeline);
 
-	Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode, VkRenderPass render_pass);
+	Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode, Ref<RenderPass> render_pass);
 	~Pipeline();
 
 	inline VkPipeline getPipeline() { return pipeline; }

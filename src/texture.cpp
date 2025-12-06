@@ -170,13 +170,13 @@ void Texture::createImage()
     image_create_info.format = format;
     image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    if (format == VK_FORMAT_D16_UNORM
-        || format == VK_FORMAT_D16_UNORM_S8_UINT
-        || format == VK_FORMAT_D32_SFLOAT_S8_UINT
-        || format == VK_FORMAT_D32_SFLOAT
-        || format == VK_FORMAT_D24_UNORM_S8_UINT)
+    if (format == Texture::depth_format)
     {
         image_create_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    }
+    else if (format == Texture::data_format)
+    {
+        image_create_info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     }
     else
     {

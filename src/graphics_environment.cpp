@@ -53,8 +53,7 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
     swapchain = new Swapchain(framebuffer_size.first, framebuffer_size.second, surface);
     MAX_FRAMES_IN_FLIGHT = swapchain->getImageCount();
     createCommandPool();
-    render_pass = new RenderPass(swapchain);
-    createFramebuffers();
+    render_pass = new RenderPass(swapchain, { 3, true });
     scene_uniforms = new UniformBlock(ShaderLayout{ scene_descriptor_set_layout, {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
 
     uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
@@ -67,7 +66,7 @@ GraphicsEnvironment::~GraphicsEnvironment()
 {
     vkDeviceWaitIdle(device);
 
-    for (size_t i = 0; i < framebuffers.size(); ++i)
+    for (size_t i = 0; i < image_available_semaphores.size(); ++i)
     {
         vkDestroySemaphore(device, image_available_semaphores[i], nullptr);
         vkDestroySemaphore(device, render_finished_semaphores[i], nullptr);
@@ -75,10 +74,6 @@ GraphicsEnvironment::~GraphicsEnvironment()
     }
 
     vkDestroyCommandPool(device, command_pool, nullptr);
-
-    for (VkFramebuffer framebuffer : framebuffers)
-        vkDestroyFramebuffer(device, framebuffer, nullptr);
-    depth_texture = nullptr;
 
     default_image = nullptr;
     default_sampler = nullptr;
@@ -270,7 +265,9 @@ void GraphicsEnvironment::createDevice()
 
         score += properties.limits.maxImageDimension2D;
 
-        if (features.fillModeNonSolid == VK_FALSE || features.samplerAnisotropy == VK_FALSE)
+        if (features.fillModeNonSolid == VK_FALSE
+            || features.samplerAnisotropy == VK_FALSE
+            || features.independentBlend == VK_FALSE)
             score = 0;
 
         // check that the necessary queues are present
@@ -324,6 +321,7 @@ void GraphicsEnvironment::createDevice()
     VkPhysicalDeviceFeatures features{ };
     features.fillModeNonSolid = VK_TRUE;
     features.samplerAnisotropy = VK_TRUE;
+    features.independentBlend = VK_TRUE;
     
     // actually create the logical device
     VkDeviceCreateInfo device_create_info{ };
@@ -375,35 +373,6 @@ void GraphicsEnvironment::createDescriptorPoolAndSets()
 
     if (vkCreateDescriptorSetLayout(device, &layout_create_info, nullptr, &object_descriptor_set_layout) != VK_SUCCESS)
         throw runtime_error("vkCreateDescriptorSetLayout failed");
-}
-
-void GraphicsEnvironment::createFramebuffers()
-{
-    auto framebuffer_size = window->getSize();
-    depth_texture = new Texture(framebuffer_size.first, framebuffer_size.second, Texture::depth_format, nullptr);
-
-    // create framebuffers
-    framebuffers.resize(swapchain->getImageCount());
-    for (size_t i = 0; i < framebuffers.size(); ++i)
-    {
-        VkImageView attachments[] =
-        {
-            swapchain->getImage(i),
-            depth_texture->getView()
-        };
-
-        VkFramebufferCreateInfo framebuffer_create_info{ };
-        framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebuffer_create_info.renderPass = render_pass->getRenderPass();
-        framebuffer_create_info.attachmentCount = 2;
-        framebuffer_create_info.pAttachments = attachments;
-        framebuffer_create_info.width = swapchain->getExtent().width;
-        framebuffer_create_info.height = swapchain->getExtent().height;
-        framebuffer_create_info.layers = 1;
-
-        if (vkCreateFramebuffer(device, &framebuffer_create_info, nullptr, &framebuffers[i]) != VK_SUCCESS)
-            throw runtime_error("vkCreateFramebuffer failed");
-    }
 }
 
 void GraphicsEnvironment::createCommandPool()
@@ -461,17 +430,14 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
     VkRenderPassBeginInfo render_pass_begin_info{ };
     render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     render_pass_begin_info.renderPass = render_pass->getRenderPass();
-    render_pass_begin_info.framebuffer = framebuffers[image_index];
+    render_pass_begin_info.framebuffer = render_pass->getFramebuffer(image_index);
     render_pass_begin_info.renderArea.offset = { 0, 0 };
     render_pass_begin_info.renderArea.extent = swapchain->getExtent();
-    VkClearValue clear_values[] = {
-        { VkClearColorValue{{1.0f, 0.0f, 1.0f, 1.0f}} },
-        { 1.0f, 0 }
-    };
+    vector<VkClearValue> clear_values = render_pass->getClearValues();
     if (scene.get() != nullptr)
         clear_values[0].color = { scene->background_colour.r, scene->background_colour.g, scene->background_colour.b };
-    render_pass_begin_info.clearValueCount = 2;
-    render_pass_begin_info.pClearValues = clear_values;
+    render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
+    render_pass_begin_info.pClearValues = clear_values.data();
 
     vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 

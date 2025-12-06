@@ -11,7 +11,7 @@
 using namespace HopEngine;
 using namespace std;
 
-Pipeline::Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode, VkRenderPass render_pass)
+Pipeline::Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode, Ref<RenderPass> render_pass)
 {
     array<VkDynamicState, 2> dynamic_states =
     {
@@ -66,21 +66,32 @@ Pipeline::Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMo
     depth.depthBoundsTestEnable = VK_FALSE;
     depth.stencilTestEnable = VK_FALSE;
 
-    VkPipelineColorBlendAttachmentState color_blend_attachment{ };
-    color_blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-    color_blend_attachment.blendEnable = VK_TRUE;
-    color_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-    color_blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-    color_blend_attachment.colorBlendOp = VK_BLEND_OP_ADD;
-    color_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-    color_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-    color_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
+    vector<VkPipelineColorBlendAttachmentState> colour_attachment_blends;
+    VkPipelineColorBlendAttachmentState colour_blend_attachment{ };
+    colour_blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    colour_blend_attachment.blendEnable = VK_TRUE;
+    colour_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    colour_blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    colour_blend_attachment.colorBlendOp = VK_BLEND_OP_ADD;
+    colour_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    colour_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    colour_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
+    colour_attachment_blends.push_back(colour_blend_attachment);
+
+    RenderOutput output_config = render_pass->getOutputConfig();
+    for (size_t i = 0; i < output_config.additional_attachments; ++i)
+    {
+        VkPipelineColorBlendAttachmentState blend_attachment{ };
+        blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        blend_attachment.blendEnable = VK_FALSE;
+        colour_attachment_blends.push_back(blend_attachment);
+    }
 
     VkPipelineColorBlendStateCreateInfo color_blending{ };
     color_blending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     color_blending.logicOpEnable = VK_FALSE;
-    color_blending.attachmentCount = 1;
-    color_blending.pAttachments = &color_blend_attachment;
+    color_blending.attachmentCount = static_cast<uint32_t>(colour_attachment_blends.size());
+    color_blending.pAttachments = colour_attachment_blends.data();
 
     auto shader_stages = shader->getShaderStageCreateInfos();
 
@@ -97,7 +108,7 @@ Pipeline::Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMo
     pipeline_create_info.pColorBlendState = &color_blending;
     pipeline_create_info.pDynamicState = &dynamic_state_create_info;
     pipeline_create_info.layout = shader->getPipelineLayout();
-    pipeline_create_info.renderPass = render_pass;
+    pipeline_create_info.renderPass = render_pass->getRenderPass();
     pipeline_create_info.subpass = 0;
 
     if (vkCreateGraphicsPipelines(GraphicsEnvironment::get()->getDevice(), VK_NULL_HANDLE, 1, &pipeline_create_info, nullptr, &pipeline) != VK_SUCCESS)

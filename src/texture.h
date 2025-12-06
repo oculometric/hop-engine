@@ -14,6 +14,7 @@ class Texture
 {
 public:
 	static constexpr VkFormat depth_format = VK_FORMAT_D32_SFLOAT;
+	static constexpr VkFormat data_format = VK_FORMAT_R16G16B16A16_SFLOAT;
 
 private:
 	size_t width;
