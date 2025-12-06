@@ -16,23 +16,26 @@ using namespace HopEngine;
 
 void initScene(Ref<Scene> scene)
 {
-    Ref<Shader> shader = new Shader("res/psx", false);
+    Package::init();
+    Package::loadPackage("resources.hop");
+
+    Ref<Shader> shader = new Shader("res://psx", false);
     Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
     Ref<Object> asha = new Object(
-        new Mesh("res/asha.obj"),
+        new Mesh("res://asha/asha.obj"),
         new Material(
             shader, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL
         ));
-    asha->material->setTexture("albedo", new Texture("res/asha.png"));
+    asha->material->setTexture("albedo", new Texture("res://asha/asha.png"));
     asha->material->setSampler("albedo", sampler);
     asha->position.z = -0.9f;
     scene->objects.push_back(asha);
     Ref<Object> bunny = new Object(
-        new Mesh("res/bunny.obj"),
+        new Mesh("res://bunny.obj"),
         new Material(
             shader, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL
         ));
-    bunny->material->setTexture("albedo", new Texture("res/bunny.png"));
+    bunny->material->setTexture("albedo", new Texture("res://bunny.png"));
     bunny->material->setSampler("albedo", sampler);
     bunny->position.y = -0.5;
     bunny->scale = { 2, 2, 2 };

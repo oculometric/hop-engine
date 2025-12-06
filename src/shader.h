@@ -59,10 +59,10 @@ public:
 
 private:
 	static std::vector<DescriptorBinding> mergeBindings(std::vector<DescriptorBinding> list_a, std::vector<DescriptorBinding> list_b);
-	static std::vector<DescriptorBinding> getReflectedBindings(std::vector<char> blob);
+	static std::vector<DescriptorBinding> getReflectedBindings(std::vector<uint8_t> blob);
 	static bool compileFile(std::string path, std::string out_path);
-	static std::vector<char> readFile(std::string path);
-	static VkShaderModule createShaderModule(const std::vector<char>& blob);
+	static VkShaderModule createShaderModule(const std::vector<uint8_t>& blob);
+	static void fixIncludes(std::vector<uint8_t>& source_code, std::string path_prefix);
 };
 
 }

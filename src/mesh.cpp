@@ -3,9 +3,11 @@
 #include <stdexcept>
 #include <fstream>
 #include <glm/gtc/matrix_access.hpp>
+#include <sstream>
 
 #include "graphics_environment.h"
 #include "buffer.h"
+#include "package.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -152,10 +154,8 @@ static glm::vec3 computeTangent(glm::vec3 co_a, glm::vec3 co_b, glm::vec3 co_c, 
 
 bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>& inds)
 {
-    ifstream file;
-    file.open(path);
-    if (!file.is_open())
-        return false;
+    auto file_data = Package::tryLoadFile(path);
+    stringstream file(string((char*)(file_data.data())));
 
     // vectors to load data into
     vector<glm::vec3> tmp_co;

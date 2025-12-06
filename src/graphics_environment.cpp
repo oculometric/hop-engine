@@ -1,3 +1,4 @@
+
 #include "graphics_environment.h"
 
 #include <stdexcept>
@@ -24,6 +25,7 @@
 #include "texture.h"
 #include "sampler.h"
 #include "scene.h"
+#include "package.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -41,7 +43,7 @@ static GraphicsEnvironment* environment = nullptr;
 GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
 {
     environment = this;
-
+    
     window = main_window;
 
 	createInstance();

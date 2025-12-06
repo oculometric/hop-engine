@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36109.1 d17.14
+VisualStudioVersion = 17.14.36109.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hop-engine", "hop-engine.vcxproj", "{0BC10909-2771-49F9-96DE-6F5132DF49BD}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "package-builder", "package-builder\package-builder.vcxproj", "{9B6A0172-BDF6-4361-8F77-17894DC4786F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,14 @@ Global
 		{0BC10909-2771-49F9-96DE-6F5132DF49BD}.Release|x64.Build.0 = Release|x64
 		{0BC10909-2771-49F9-96DE-6F5132DF49BD}.Release|x86.ActiveCfg = Release|Win32
 		{0BC10909-2771-49F9-96DE-6F5132DF49BD}.Release|x86.Build.0 = Release|Win32
+		{9B6A0172-BDF6-4361-8F77-17894DC4786F}.Debug|x64.ActiveCfg = Debug|x64
+		{9B6A0172-BDF6-4361-8F77-17894DC4786F}.Debug|x64.Build.0 = Debug|x64
+		{9B6A0172-BDF6-4361-8F77-17894DC4786F}.Debug|x86.ActiveCfg = Debug|Win32
+		{9B6A0172-BDF6-4361-8F77-17894DC4786F}.Debug|x86.Build.0 = Debug|Win32
+		{9B6A0172-BDF6-4361-8F77-17894DC4786F}.Release|x64.ActiveCfg = Release|x64
+		{9B6A0172-BDF6-4361-8F77-17894DC4786F}.Release|x64.Build.0 = Release|x64
+		{9B6A0172-BDF6-4361-8F77-17894DC4786F}.Release|x86.ActiveCfg = Release|Win32
+		{9B6A0172-BDF6-4361-8F77-17894DC4786F}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

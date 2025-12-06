@@ -7,6 +7,7 @@
 #include "buffer.h"
 #include "graphics_environment.h"
 #include "command_buffer.h"
+#include "package.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -27,8 +28,9 @@ Texture::Texture(size_t _width, size_t _height, VkFormat _format, void* data)
 
 Texture::Texture(string file)
 {
+    auto file_data = Package::tryLoadFile(file);
     int img_width, img_height, img_channels;
-    stbi_uc* pixels = stbi_load(file.c_str(), &img_width, &img_height, &img_channels, STBI_rgb_alpha);
+    stbi_uc* pixels = stbi_load_from_memory(file_data.data(), static_cast<int>(file_data.size()), &img_width, &img_height, &img_channels, STBI_rgb_alpha);
     format = VK_FORMAT_R8G8B8A8_SRGB;
     width = img_width; height = img_height;
 

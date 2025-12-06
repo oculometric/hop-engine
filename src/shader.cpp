@@ -13,9 +13,11 @@
 #define pclose _pclose
 #endif
 #include <spirv_reflect/spirv_reflect.h>
+#include <filesystem>
 
 #include "graphics_environment.h"
 #include "render_pass.h"
+#include "package.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -47,18 +49,29 @@ Shader::Shader(string base_path, bool is_precompiled)
 	string proper_path = base_path;
 	if (!is_precompiled)
 	{
-		proper_path = "_TEMP_SHADER";
+		auto vert_data = Package::tryLoadFile(base_path + ".vert");
+		auto frag_data = Package::tryLoadFile(base_path + ".frag");
+		filesystem::path path = base_path;
+		string prefix = path.remove_filename().string();
+		Shader::fixIncludes(vert_data, prefix);
+		Shader::fixIncludes(frag_data, prefix);
 
-		bool result = Shader::compileFile(base_path + ".vert", proper_path + "_vert.spv");
+		string input_path = Package::getTempPath() + "temp_shader";
+		Package::tryWriteFile(input_path + ".vert", vert_data);
+		Package::tryWriteFile(input_path + ".frag", frag_data);
+
+		proper_path = Package::getTempPath() + "temp_shader_compiled";
+
+		bool result = Shader::compileFile(input_path + ".vert", proper_path + "_vert.spv");
 		if (!result)
 			throw runtime_error("shader compilation failed");
-		result = Shader::compileFile(base_path + ".frag", proper_path + "_frag.spv");
+		result = Shader::compileFile(input_path + ".frag", proper_path + "_frag.spv");
 		if (!result)
 			throw runtime_error("shader compilation failed");
 	}
 	
-	auto vert_blob = Shader::readFile(proper_path + "_vert.spv");
-	auto frag_blob = Shader::readFile(proper_path + "_frag.spv");
+	auto vert_blob = Package::tryLoadFile(proper_path + "_vert.spv");
+	auto frag_blob = Package::tryLoadFile(proper_path + "_frag.spv");
 
 	vert_module = createShaderModule(vert_blob);
 	frag_module = createShaderModule(frag_blob);
@@ -173,7 +186,7 @@ vector<DescriptorBinding> Shader::mergeBindings(vector<DescriptorBinding> list_a
 	return resolved_bindings;
 }
 
-vector<DescriptorBinding> Shader::getReflectedBindings(vector<char> blob)
+vector<DescriptorBinding> Shader::getReflectedBindings(vector<uint8_t> blob)
 {
 	SpvReflectShaderModule reflected_module;
 	SpvReflectResult result = spvReflectCreateShaderModule(blob.size(), blob.data(), &reflected_module);
@@ -247,22 +260,7 @@ bool Shader::compileFile(string path, string out_path)
 	return true;
 }
 
-vector<char> Shader::readFile(string path)
-{
-	ifstream file(path, ios::ate | ios::binary);
-	if (!file.is_open())
-		return { };
-
-	size_t size = (size_t)file.tellg();
-	vector<char> buffer(size);
-	file.seekg(0);
-	file.read(buffer.data(), size);
-	file.close();
-
-	return buffer;
-}
-
-VkShaderModule Shader::createShaderModule(const vector<char>& blob)
+VkShaderModule Shader::createShaderModule(const vector<uint8_t>& blob)
 {
 	VkShaderModuleCreateInfo create_info{ };
 	create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -274,4 +272,31 @@ VkShaderModule Shader::createShaderModule(const vector<char>& blob)
 		throw runtime_error("vkCreateShaderModule failed");
 
 	return shader_module;
+}
+
+void Shader::fixIncludes(vector<uint8_t>& source_code, string path_prefix)
+{
+	string source_code_text(source_code.size(), ' ');
+	memcpy(source_code_text.data(), source_code.data(), source_code.size());
+
+	string include_search = "#include \"";
+	size_t offset = source_code_text.find(include_search, 0);
+	while (offset != string::npos)
+	{
+		size_t start = offset + include_search.size();
+		size_t end = source_code_text.find('\"', start);
+		string path = source_code_text.substr(start, end - start);
+		if (path.find(' ') != string::npos)
+			throw runtime_error("malformed include!");
+		source_code_text.erase(offset, (end - offset) + 1);
+		auto include_data = Package::tryLoadFile(path_prefix + path);
+		string include_string(include_data.size(), ' ');
+		memcpy(include_string.data(), include_data.data(), include_data.size());
+		source_code_text.insert(source_code_text.begin() + offset, include_data.begin(), include_data.end());
+
+		offset = source_code_text.find(include_search, offset);
+	}
+
+	source_code.resize(source_code_text.size());
+	memcpy(source_code.data(), source_code_text.data(), source_code_text.size());
 }

@@ -154,6 +154,7 @@
     <ClCompile Include="src\material.cpp" />
     <ClCompile Include="src\mesh.cpp" />
     <ClCompile Include="src\object.cpp" />
+    <ClCompile Include="src\package.cpp" />
     <ClCompile Include="src\pipeline.cpp" />
     <ClCompile Include="src\render_pass.cpp" />
     <ClCompile Include="src\sampler.cpp" />
@@ -171,6 +172,7 @@
     <ClInclude Include="src\counted_ref.h" />
     <ClInclude Include="src\graphics_environment.h" />
     <ClInclude Include="src\hop_engine.h" />
+    <ClInclude Include="src\package.h" />
     <ClInclude Include="src\sampler.h" />
     <ClInclude Include="src\scene.h" />
     <ClInclude Include="src\texture.h" />
