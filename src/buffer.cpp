@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "graphics_environment.h"
+#include "command_buffer.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -71,4 +72,17 @@ uint32_t Buffer::findMemoryType(uint32_t type_bits, VkMemoryPropertyFlags proper
             return i;
     }
     throw runtime_error("failed to find suitable memory type");
+}
+
+void Buffer::copyToBuffer(Ref<Buffer> other)
+{
+    Ref<CommandBuffer> cmd_buf = new CommandBuffer();
+
+    VkBufferCopy buffer_copy{ };
+    buffer_copy.srcOffset = 0;
+    buffer_copy.dstOffset = 0;
+    buffer_copy.size = buffer_size;
+    vkCmdCopyBuffer(cmd_buf->getBuffer(), buffer, other->buffer, 1, &buffer_copy);
+
+    cmd_buf->submit();
 }

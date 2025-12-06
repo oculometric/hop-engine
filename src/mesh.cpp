@@ -327,17 +327,25 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
 
 void Mesh::createFromArrays(vector<Vertex> verts, vector<uint16_t> inds)
 {
-    vertex_buffer = new Buffer(sizeof(Vertex) * verts.size(),
-        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    Ref<Buffer> staging_buffer = new Buffer(sizeof(Vertex) * verts.size(),
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    memcpy(vertex_buffer->mapMemory(), verts.data(), vertex_buffer->getSize());
-    vertex_buffer->unmapMemory();
+    memcpy(staging_buffer->mapMemory(), verts.data(), staging_buffer->getSize());
+    staging_buffer->unmapMemory();
+    vertex_buffer = new Buffer(staging_buffer->getSize(),
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    staging_buffer->copyToBuffer(vertex_buffer);
 
-    index_buffer = new Buffer(sizeof(uint16_t) * inds.size(),
-        VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+    staging_buffer = new Buffer(sizeof(uint16_t) * inds.size(),
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    memcpy(index_buffer->mapMemory(), inds.data(), index_buffer->getSize());
-    index_buffer->unmapMemory();
+    memcpy(staging_buffer->mapMemory(), inds.data(), staging_buffer->getSize());
+    staging_buffer->unmapMemory();
+    index_buffer = new Buffer(staging_buffer->getSize(),
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    staging_buffer->copyToBuffer(index_buffer);
 
     index_count = inds.size();
 }

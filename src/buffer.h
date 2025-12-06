@@ -26,7 +26,7 @@ public:
 	inline VkBuffer getBuffer() { return buffer; }
 	inline VkDeviceSize getSize() { return buffer_size; }
 	static uint32_t findMemoryType(uint32_t type_bits, VkMemoryPropertyFlags properties);
-	// TODO: function to copy buffer-to-buffer
+	void copyToBuffer(Ref<Buffer> other);
 };
 
 }
