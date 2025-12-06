@@ -29,11 +29,20 @@ Texture::Texture(string file)
 {
     int img_width, img_height, img_channels;
     stbi_uc* pixels = stbi_load(file.c_str(), &img_width, &img_height, &img_channels, STBI_rgb_alpha);
-    format = VK_FORMAT_B8G8R8A8_SRGB;
+    format = VK_FORMAT_R8G8B8A8_SRGB;
     width = img_width; height = img_height;
 
     if (pixels == nullptr)
         throw runtime_error("unable to load image file");
+
+    size_t row_size = width * 4;
+    void* tmp = new uint8_t[row_size];
+    for (size_t i = 0; i < height / 2; ++i)
+    {
+        memcpy(tmp, pixels + (i * row_size), row_size);
+        memcpy(pixels + (i * row_size), pixels + ((height - i - 1) * row_size), row_size);
+        memcpy(pixels + ((height - i - 1) * row_size), tmp, row_size);
+    }
 
     loadFromMemory(pixels);
     stbi_image_free(pixels);
