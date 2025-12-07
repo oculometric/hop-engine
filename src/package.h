@@ -22,6 +22,7 @@ public:
 
 	static bool loadPackage(std::string load_path);
 	static bool storePackage(std::string store_path);
+	static bool storeCompressedPackage(std::string store_path);
 	static std::vector<uint8_t> loadData(std::string identifier);
 	static void storeData(std::string identifier, std::vector<uint8_t> data);
 	static std::vector<uint8_t> tryLoadFile(std::string path_or_identifier);
@@ -31,6 +32,8 @@ public:
 private:
 	Package();
 	~Package();
+
+	static std::vector<uint8_t> loadCompressedPackage(std::vector<uint8_t> data);
 };
 
 }

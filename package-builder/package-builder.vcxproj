@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\exec.cpp" />
     <ClCompile Include="..\src\package.cpp" />
     <ClCompile Include="package-builder.cpp" />
   </ItemGroup>

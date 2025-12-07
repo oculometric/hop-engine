@@ -5,13 +5,6 @@
 #include <fstream>
 #include <vector>
 #include <string>
-#include <array>
-#ifndef _WIN32
-#include <unistd.h>
-#else
-#define popen _popen
-#define pclose _pclose
-#endif
 #include <spirv_reflect/spirv_reflect.h>
 #include <filesystem>
 
@@ -21,28 +14,6 @@
 
 using namespace HopEngine;
 using namespace std;
-
-inline int exec(std::string command, std::string& output)
-{
-	const size_t buffer_size = 512;
-	std::array<char, buffer_size> buffer;
-
-	auto pipe = popen((command + " 2>&1").c_str(), "r");
-	if (!pipe)
-	{
-		output = "popen failed.";
-		return -1;
-	}
-
-	output = "";
-	size_t count;
-	do {
-		if ((count = fread(buffer.data(), 1, buffer_size, pipe)) > 0)
-			output.insert(output.end(), std::begin(buffer), std::next(std::begin(buffer), count));
-	} while (count > 0);
-
-	return pclose(pipe);
-}
 
 Shader::Shader(string base_path, bool is_precompiled)
 {

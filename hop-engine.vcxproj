@@ -149,6 +149,7 @@
   <ItemGroup>
     <ClCompile Include="src\buffer.cpp" />
     <ClCompile Include="src\command_buffer.cpp" />
+    <ClCompile Include="src\exec.cpp" />
     <ClCompile Include="src\graphics_environment.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\material.cpp" />

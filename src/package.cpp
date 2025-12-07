@@ -1,5 +1,6 @@
 #include "package.h"
 
+#include <filesystem>
 #include <fstream>
 
 using namespace HopEngine;
@@ -58,9 +59,9 @@ bool Package::loadPackage(string load_path)
 		return false;
 
 	size_t size = (size_t)file.tellg();
-	vector<char> content(size);
+	vector<uint8_t> content(size);
 	file.seekg(0);
-	file.read(content.data(), size);
+	file.read((char*)(content.data()), size);
 	file.close();
 
 	if (size < sizeof(PackageHeader))
@@ -69,10 +70,14 @@ bool Package::loadPackage(string load_path)
 	PackageHeader header = *((PackageHeader*)content.data());
 	if (header.signature != SIGNATURE)
 		return false;
-	if (header.version != 1)
-		return false;
 	if (header.file_size != size)
 		return false;
+	if (header.version == 2)
+		content = loadCompressedPackage(content);
+	else if (header.version != 1)
+		return false;
+
+	header = *((PackageHeader*)content.data());
 
 	vector<PackageEntry> entries(header.package_entries);
 	memcpy(entries.data(), content.data() + sizeof(PackageHeader), sizeof(PackageEntry) * entries.size());
@@ -133,6 +138,120 @@ bool Package::storePackage(string store_path)
 	file.close();
 
 	return true;
+}
+
+bool Package::storeCompressedPackage(string store_path)
+{
+	if (!storePackage(store_path))
+		return false;
+
+	string command = "tar";
+#if defined(_WIN32)
+	command = "tar.exe";
+#endif
+
+	string temp_address = Package::getTempPath() + "hop_package_tmp.zip";
+	filesystem::create_directories(Package::getTempPath());
+	command = command + " -a -c -f " + temp_address + ' ' + store_path;
+	string output;
+
+	int result = exec(command, output);
+	if (result != 0)
+		return false;
+
+	ifstream file(temp_address, ios::ate | ios::binary);
+	if (!file.is_open())
+	{
+		filesystem::remove(temp_address);
+		return false;
+	}
+
+	size_t size = (size_t)file.tellg();
+	vector<uint8_t> content(size);
+	file.seekg(0);
+	file.read((char*)(content.data()), size);
+	file.close();
+	filesystem::remove(temp_address);
+
+	PackageHeader header;
+	header.signature = SIGNATURE;
+	header.package_entries = 0;
+	header.file_size = sizeof(PackageHeader) + size;
+	header.version = 2;
+
+	ofstream outfile(store_path, ios::binary);
+	if (!outfile.is_open())
+		return false;
+	outfile.write((char*)(&header), sizeof(PackageHeader));
+	outfile.write((char*)(content.data()), content.size());
+	outfile.close();
+
+	return true;
+}
+
+vector<uint8_t> Package::loadCompressedPackage(vector<uint8_t> data)
+{
+	PackageHeader header = *((PackageHeader*)data.data());
+
+	if (header.signature != SIGNATURE)
+		return { };
+	if (header.file_size != data.size())
+		return { };
+	if (header.version != 2)
+		return { };
+
+	string temp_address = Package::getTempPath() + "hop_package_tmp.zip";
+	filesystem::create_directories(Package::getTempPath());
+	ofstream file(temp_address, ios::binary);
+	if (!file.is_open())
+		return { };
+	file.write((char*)(data.data()) + sizeof(PackageHeader), header.file_size - sizeof(PackageHeader));
+	file.close();
+
+	string command = "tar";
+#if defined(_WIN32)
+	command = "tar.exe";
+#endif
+
+	string unpack_dir = Package::getTempPath() + "hop";
+	filesystem::create_directory(unpack_dir);
+	command = command + " -x -f " + temp_address + " -C " + unpack_dir;
+	string output;
+
+	int result = exec(command, output);
+	filesystem::remove(temp_address);
+	if (result != 0)
+		return { };
+
+	auto it = filesystem::directory_iterator(unpack_dir);
+	if (!it->exists())
+	{
+		filesystem::remove(unpack_dir);
+		return { };
+	}
+
+	ifstream infile(it->path().string(), ios::ate | ios::binary);
+	if (!infile.is_open())
+	{
+		filesystem::remove(unpack_dir);
+		return { };
+	}
+	size_t size = (size_t)infile.tellg();
+	vector<uint8_t> content(size);
+	infile.seekg(0);
+	infile.read((char*)(content.data()), size);
+	infile.close();
+	filesystem::remove_all(unpack_dir);
+
+	header = *((PackageHeader*)content.data());
+	if (header.signature != SIGNATURE)
+		return { };
+	if (header.file_size != content.size())
+		return { };
+	if (header.version != 1)
+		return { };
+
+	return content;
 }
 
 vector<uint8_t> Package::loadData(string identifier)

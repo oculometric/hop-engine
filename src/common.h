@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #define DELETE_CONSTRUCTORS(name) name##() = delete;\
     name##(const name##& other) = delete;\
     name##(name##&& other) = delete;\
@@ -12,3 +14,5 @@
     name##& operator=(name##&& other) = delete
 
 #include "counted_ref.h"
+
+int exec(std::string command, std::string& output);
