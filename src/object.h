@@ -4,6 +4,7 @@
 #include <glm/vec3.hpp>
 
 #include "common.h"
+#include "transform.h"
 
 namespace HopEngine
 {
@@ -15,11 +16,10 @@ class UniformBlock;
 class Object
 {
 public:
-	glm::vec3 position = { 0, 0, 0 };
-	glm::vec3 rotation = { 0, 0, 0 };
-	glm::vec3 scale = { 1, 1, 1 };
+	Transform transform;
 	Ref<Mesh> mesh = nullptr;
 	Ref<Material> material = nullptr;
+	Ref<Object> parent = nullptr;
 
 private:
 	Ref<UniformBlock> uniforms = nullptr;

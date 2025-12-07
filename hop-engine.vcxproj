@@ -162,6 +162,7 @@
     <ClCompile Include="src\spirv_compile.cpp" />
     <ClCompile Include="src\swapchain.cpp" />
     <ClCompile Include="src\texture.cpp" />
+    <ClCompile Include="src\transform.cpp" />
     <ClCompile Include="src\uniform_block.cpp" />
     <ClCompile Include="src\window.cpp" />
   </ItemGroup>
@@ -183,6 +184,7 @@
     <ClInclude Include="src\render_pass.h" />
     <ClInclude Include="src\shader.h" />
     <ClInclude Include="src\swapchain.h" />
+    <ClInclude Include="src\transform.h" />
     <ClInclude Include="src\uniform_block.h" />
     <ClInclude Include="src\window.h" />
   </ItemGroup>

@@ -14,6 +14,8 @@
 
 using namespace HopEngine;
 
+Ref<Object> asha;
+
 void initScene(Ref<Scene> scene)
 {
     Package::init();
@@ -21,14 +23,14 @@ void initScene(Ref<Scene> scene)
 
     Ref<Shader> shader = new Shader("res://psx", false);
     Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-    Ref<Object> asha = new Object(
+    asha = new Object(
         new Mesh("res://asha/asha.obj"),
         new Material(
             shader, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL
         ));
     asha->material->setTexture("albedo", new Texture("res://asha/asha.png"));
     asha->material->setSampler("albedo", sampler);
-    asha->position.z = -0.9f;
+    asha->transform.setLocalPosition({ 0, 0, -0.9f });
     scene->objects.push_back(asha);
     Ref<Object> bunny = new Object(
         new Mesh("res://bunny.obj"),
@@ -37,14 +39,16 @@ void initScene(Ref<Scene> scene)
         ));
     bunny->material->setTexture("albedo", new Texture("res://bunny.png"));
     bunny->material->setSampler("albedo", sampler);
-    bunny->position.y = -0.5;
-    bunny->scale = { 2, 2, 2 };
+    bunny->parent = asha; // TODO: setParent function
+    bunny->transform.updateWorldMatrix();
+    bunny->transform.setLocalPosition({ 0, -0.5f, 0.9f });
+    bunny->transform.scaleLocal({ 2, 2, 2 });
     scene->objects.push_back(bunny);
 }
 
 void updateScene(Ref<Scene> scene)
 {
-
+    asha->transform.rotateLocal({ 0, 0.01f, 0 });
 }
 
 int main() {
@@ -61,6 +65,8 @@ int main() {
         ge.get()->drawFrame();
         updateScene(ge->scene);
     }
+
+    asha = nullptr;
 
     ge = nullptr;
     window = nullptr;
