@@ -193,6 +193,7 @@ void GraphicsEnvironment::createInstance()
     create_info.ppEnabledExtensionNames = glfwGetRequiredInstanceExtensions(&(create_info.enabledExtensionCount));
 
     // apply validation layers for debug
+#if !defined(NDEBUG)
     uint32_t validation_layer_count;
     vkEnumerateInstanceLayerProperties(&validation_layer_count, nullptr);
     vector<VkLayerProperties> available_validation_layers(validation_layer_count);
@@ -208,7 +209,10 @@ void GraphicsEnvironment::createInstance()
     }
     create_info.enabledLayerCount = static_cast<uint32_t>(required_validation_layers.size());
     create_info.ppEnabledLayerNames = required_validation_layers.data();
-    
+#else
+    create_info.enabledLayerCount = 0;
+#endif
+
     // create the vulkan instance
     if (vkCreateInstance(&create_info, nullptr, &instance) != VK_SUCCESS)
         throw runtime_error("vkCreateInstance failed");
