@@ -46,6 +46,7 @@ struct SceneUniforms
 	glm::mat4 view_to_clip;
 	glm::ivec2 viewport_size;
 	float time;
+	glm::vec3 eye_position;
 };
 
 Camera::Camera()
@@ -57,6 +58,7 @@ void Camera::pushToDescriptorSet(size_t index, glm::ivec2 viewport_size, float t
 {
 	SceneUniforms scene_uniforms;
 	scene_uniforms.time = time;
+	scene_uniforms.eye_position = transform.getLocalPosition();
 	scene_uniforms.viewport_size = viewport_size;
 	scene_uniforms.world_to_view = glm::inverse(transform.getMatrix());
 	scene_uniforms.view_to_clip = glm::perspective(glm::radians(fov), viewport_size.x / (float)(viewport_size.y), 0.1f, 10.0f);

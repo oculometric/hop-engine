@@ -3,7 +3,7 @@
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/vec4.hpp>
+#include <glm/glm.hpp>
 #include <glm/mat4x4.hpp>
 
 #include <vulkan/vulkan.h>
@@ -15,6 +15,31 @@
 using namespace HopEngine;
 
 Ref<Object> asha;
+Ref<Object> cube;
+
+struct LightParams
+{
+    glm::vec4 position = { 0, -3, 0, 0 };
+    glm::vec4 direction = { 0, 0, 0, 0 };
+    glm::vec4 colour = { 1, 0, 0, 0 };
+    float spot_angle = 0.0f;
+    float constant_attenuation = 0.0f;
+    float linear_attenuation = 0.0f;
+    float quadratic_attenuation = 1.0f;
+    int light_type = 0;
+    bool enabled = true;
+    glm::ivec2 padding;
+};
+
+struct MaterialParams
+{
+    glm::vec4 diffuse = { 1, 1, 1, 0 };
+    glm::vec4 specular = { 1, 1, 1, 0 };
+    glm::vec4 ambient = { 1, 1, 1, 0 };
+    glm::vec4 emissive = { 0, 0, 0, 0 };
+    float specular_exponent = 32.0f;
+    glm::vec3 padding;
+};
 
 void initScene(Ref<Scene> scene)
 {
@@ -32,11 +57,11 @@ void initScene(Ref<Scene> scene)
     asha->material->setSampler("albedo", sampler);
     asha->transform.setLocalPosition({ 0, 0, -0.9f });
     scene->objects.push_back(asha);
+
     Ref<Object> bunny = new Object(
         new Mesh("res://bunny.obj"),
-        new Material(
-            shader, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL
-        ));
+        new Material(shader, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL)
+    );
     bunny->material->setTexture("albedo", new Texture("res://bunny.png"));
     bunny->material->setSampler("albedo", sampler);
     bunny->parent = asha; // TODO: setParent function
@@ -45,7 +70,22 @@ void initScene(Ref<Scene> scene)
     bunny->transform.scaleLocal({ 2, 2, 2 });
     scene->objects.push_back(bunny);
 
-    scene->camera->transform.lookAt(glm::vec3(1.5f, -1.5f, 0.5f),
+    cube = new Object(
+        new Mesh("res://cube.obj"), 
+        new Material(new Shader("res://split", false), VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL)
+    );
+    cube->material->setTexture("tex", new Texture("res://stone.png"));
+    cube->material->setTexture("tex2", new Texture("res://tex2.png"));
+    cube->transform.scaleLocal({ 0.5f, 0.5f, 0.5f });
+    MaterialParams material;
+    LightParams light;
+    glm::vec4 ambient_colour = { 0.1f, 0.1f, 0.1f, 0.0f };
+    cube->material->setUniform("material", &material, sizeof(MaterialParams));
+    cube->material->setUniform("light", &light, sizeof(LightParams));
+    cube->material->setVec4Uniform("ambient_colour", ambient_colour);
+    scene->objects.push_back(cube);
+
+    scene->camera->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f));
 }
@@ -53,6 +93,7 @@ void initScene(Ref<Scene> scene)
 void updateScene(Ref<Scene> scene)
 {
     asha->transform.rotateLocal({ 0, 0.01f, 0 });
+    cube->transform.rotateLocal({ 0, 0, 0.03f });
 }
 
 int main() {
@@ -70,6 +111,7 @@ int main() {
         updateScene(ge->scene);
     }
 
+    cube = nullptr;
     asha = nullptr;
 
     ge = nullptr;

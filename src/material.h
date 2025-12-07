@@ -50,26 +50,27 @@ public:
 	void setTexture(std::string name, Ref<Texture> texture);
 	void setSampler(std::string name, Ref<Sampler> sampler);
 
-	inline void setFloatUniform(std::string name, float value) { setUniformVariable(name, &value, sizeof(value)); }
-	void setVec2Uniform(std::string name, glm::vec2 value) { setUniformVariable(name, &value, sizeof(value)); }
-	void setVec3Uniform(std::string name, glm::vec3 value) { setUniformVariable(name, &value, sizeof(value)); }
-	void setVec4Uniform(std::string name, glm::vec4 value) { setUniformVariable(name, &value, sizeof(value)); }
+	inline void setFloatUniform(std::string name, float value) { setUniform(name, &value, sizeof(value)); }
+	inline void setVec2Uniform(std::string name, glm::vec2 value) { setUniform(name, &value, sizeof(value)); }
+	inline void setVec3Uniform(std::string name, glm::vec3 value) { setUniform(name, &value, sizeof(value)); }
+	inline void setVec4Uniform(std::string name, glm::vec4 value) { setUniform(name, &value, sizeof(value)); }
 
-	void setIntUniform(std::string name, int value) { setUniformVariable(name, &value, sizeof(value)); }
-	void setIvec2Uniform(std::string name, glm::ivec2 value) { setUniformVariable(name, &value, sizeof(value)); }
-	void setIvec3Uniform(std::string name, glm::ivec3 value) { setUniformVariable(name, &value, sizeof(value)); }
-	void setIvec4Uniform(std::string name, glm::ivec4 value) { setUniformVariable(name, &value, sizeof(value)); }
+	inline void setIntUniform(std::string name, int value) { setUniform(name, &value, sizeof(value)); }
+	inline void setIvec2Uniform(std::string name, glm::ivec2 value) { setUniform(name, &value, sizeof(value)); }
+	inline void setIvec3Uniform(std::string name, glm::ivec3 value) { setUniform(name, &value, sizeof(value)); }
+	inline void setIvec4Uniform(std::string name, glm::ivec4 value) { setUniform(name, &value, sizeof(value)); }
 
-	void setUintUniform(std::string name, glm::uint value) { setUniformVariable(name, &value, sizeof(value)); }
+	inline void setUintUniform(std::string name, glm::uint value) { setUniform(name, &value, sizeof(value)); }
 
-	void setBoolUniform(std::string name, bool value) { setUniformVariable(name, &value, sizeof(value)); }
+	inline void setBoolUniform(std::string name, bool value) { setUniform(name, &value, sizeof(value)); }
 
-	void setMat2Uniform(std::string name, glm::mat2 value) { setUniformVariable(name, &value, sizeof(value)); }
-	void setMat3Uniform(std::string name, glm::mat3 value) { setUniformVariable(name, &value, sizeof(value)); }
-	void setMat4Uniform(std::string name, glm::mat4 value) { setUniformVariable(name, &value, sizeof(value)); }
+	inline void setMat2Uniform(std::string name, glm::mat2 value) { setUniform(name, &value, sizeof(value)); }
+	inline void setMat3Uniform(std::string name, glm::mat3 value) { setUniform(name, &value, sizeof(value)); }
+	inline void setMat4Uniform(std::string name, glm::mat4 value) { setUniform(name, &value, sizeof(value)); }
+
+	void setUniform(std::string name, void* data, size_t size);
 
 private:
-	void setUniformVariable(std::string name, void* data, size_t size);
 };
 
 }

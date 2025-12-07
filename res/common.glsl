@@ -4,6 +4,7 @@ layout(set = 0, binding = 0) uniform SceneUniforms
     mat4 view_to_clip;
     ivec2 viewport_size;
     float time;
+    vec3 eye_position;
 } scene;
 
 layout(set = 1, binding = 0) uniform ObjectUniforms
@@ -39,3 +40,27 @@ layout(location = 1) out vec4 normal;
 layout(location = 2) out vec4 params;
 layout(location = 3) out vec4 custom;
 #endif
+
+struct Light
+{
+    vec4 position;
+    vec4 direction;
+    vec4 colour;
+    float spot_angle;
+    float constant_attenuation;
+    float linear_attenuation;
+    float quadratic_attenuation;
+    int light_type;
+    bool enabled;
+    ivec2 padding;
+};
+
+struct Material
+{
+    vec4 diffuse;
+    vec4 specular;
+    vec4 ambient;
+    vec4 emissive;
+    float specular_exponent;
+    vec3 padding;
+};

@@ -195,6 +195,8 @@
     <None Include="res\psx.vert" />
     <None Include="res\shader.frag" />
     <None Include="res\shader.vert" />
+    <None Include="res\split.frag" />
+    <None Include="res\split.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

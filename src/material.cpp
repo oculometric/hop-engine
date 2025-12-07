@@ -85,7 +85,7 @@ void Material::setSampler(string name, Ref<Sampler> sampler)
 		uniforms->setSampler(it->second, sampler);
 }
 
-void Material::setUniformVariable(string name, void* data, size_t size)
+void Material::setUniform(string name, void* data, size_t size)
 {
 	auto it = variable_name_to_binding.find(name);
 	if (it == variable_name_to_binding.end())

@@ -151,5 +151,11 @@
     <None Include="res\psx.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="res\split.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\split.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
