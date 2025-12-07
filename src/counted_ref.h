@@ -86,7 +86,7 @@ public:
 private:
 	inline void invalidateSelf()
 	{
-		if (ref_counter != nullptr)
+		if (ref_counter != nullptr && payload != nullptr)
 		{
 			--(*ref_counter);
 			if (*ref_counter == 0)

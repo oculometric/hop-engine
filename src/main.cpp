@@ -94,12 +94,27 @@ void updateScene(Ref<Scene> scene)
 {
     asha->transform.rotateLocal({ 0, 0.01f, 0 });
     cube->transform.rotateLocal({ 0, 0, 0.03f });
+
+    glm::vec2 mouse_delta = Input::getMouseDelta() * 0.004f;
+    if (Input::isMouseDown(GLFW_MOUSE_BUTTON_2))
+        scene->camera->transform.rotateLocal({ -mouse_delta.y, 0, -mouse_delta.x });
+
+    glm::mat4 camera_matrix = scene->camera->transform.getMatrix();
+    glm::vec3 local_move_vector = glm::vec3{
+        Input::getAxis('A', 'D'),
+        Input::getAxis('Q', 'E'),
+        Input::getAxis('W', 'S')
+    } * 0.02f;
+    if (Input::isKeyDown(GLFW_KEY_LEFT_SHIFT))
+        local_move_vector *= 3.0f;
+    scene->camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
 }
 
 int main() {
     Window::initEnvironment();
-    Ref<Window> window = new HopEngine::Window(1024, 1024, "hop!");
-    Ref<GraphicsEnvironment> ge = new HopEngine::GraphicsEnvironment(window);
+    Ref<Window> window = new Window(1024, 1024, "hop!");
+    Input::init(window->getWindow());
+    Ref<GraphicsEnvironment> ge = new GraphicsEnvironment(window);
 
     ge->scene = new Scene();
     initScene(ge->scene);
