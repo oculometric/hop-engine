@@ -75,6 +75,9 @@
     <ClCompile Include="src\input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\node_view.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\window.h">
@@ -140,6 +143,9 @@
     <ClInclude Include="src\input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\node_view.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shader.frag">
@@ -161,6 +167,12 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="res\split.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\node_shader.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\node_shader.frag">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

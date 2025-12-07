@@ -39,6 +39,8 @@ class Camera
 public:
 	Transform transform;
 	float fov = 90.0f;
+	float near = 0.01f;
+	float far = 100.0f;
 
 private:
 	Ref<UniformBlock> uniforms = nullptr;

@@ -61,7 +61,7 @@ void Camera::pushToDescriptorSet(size_t index, glm::ivec2 viewport_size, float t
 	scene_uniforms.eye_position = transform.getLocalPosition();
 	scene_uniforms.viewport_size = viewport_size;
 	scene_uniforms.world_to_view = glm::inverse(transform.getMatrix());
-	scene_uniforms.view_to_clip = glm::perspective(glm::radians(fov), viewport_size.x / (float)(viewport_size.y), 0.1f, 10.0f);
+	scene_uniforms.view_to_clip = glm::perspective(glm::radians(fov), viewport_size.x / (float)(viewport_size.y), near, far);
 	scene_uniforms.view_to_clip[1][1] *= -1;
 
 	memcpy(uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));

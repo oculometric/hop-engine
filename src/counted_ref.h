@@ -33,7 +33,7 @@ public:
 			++(*ref_counter);
 	}
 
-	inline Ref(Ref&& other)
+	inline Ref(Ref&& other) noexcept
 	{
 		payload = other.payload;
 		ref_counter = other.ref_counter;
@@ -80,8 +80,16 @@ public:
 		invalidateSelf();
 	}
 
-	inline T* get() { return payload; }
+	inline bool isValid() { return payload != nullptr; }
 	inline T* operator->() { return payload; }
+	template<typename S>
+	inline Ref<S> cast()
+	{
+		Ref<S> ref;
+		memcpy(&ref, this, sizeof(*this));
+		(*ref_counter)++;
+		return ref;
+	}
 
 private:
 	inline void invalidateSelf()

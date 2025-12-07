@@ -132,7 +132,7 @@ void GraphicsEnvironment::drawFrame()
     uint32_t image_index;
     vkAcquireNextImageKHR(device, swapchain->getSwapchain(), UINT64_MAX, image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT], VK_NULL_HANDLE, &image_index);
 
-    if (scene.get() != nullptr)
+    if (scene.isValid())
     {
         auto now_time = chrono::steady_clock::now();
         chrono::duration<float> since_start = now_time - start_time;
@@ -419,7 +419,7 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
     render_pass_begin_info.renderArea.offset = { 0, 0 };
     render_pass_begin_info.renderArea.extent = swapchain->getExtent();
     vector<VkClearValue> clear_values = render_pass->getClearValues();
-    if (scene.get() != nullptr)
+    if (scene.isValid())
         clear_values[0].color = { scene->background_colour.r, scene->background_colour.g, scene->background_colour.b };
     render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
     render_pass_begin_info.pClearValues = clear_values.data();
@@ -440,10 +440,13 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
     scissor.extent = swapchain->getExtent();
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
-    if (scene.get() != nullptr)
+    if (scene.isValid())
     {
         for (Ref<Object>& object : scene->objects)
         {
+            if (!object->material.isValid() || !object->mesh.isValid())
+                continue;
+
             vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipeline());
 
             VkDescriptorSet scene_descriptor_set = scene->camera->getDescriptorSet(image_index);

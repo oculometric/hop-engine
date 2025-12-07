@@ -11,6 +11,7 @@
 #include <iostream>
 
 #include "hop_engine.h"
+#include "node_view.h"
 
 using namespace HopEngine;
 
@@ -43,9 +44,6 @@ struct MaterialParams
 
 void initScene(Ref<Scene> scene)
 {
-    Package::init();
-    Package::loadPackage("resources.hop");
-
     Ref<Shader> shader = new Shader("res://psx", false);
     Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
     asha = new Object(
@@ -110,20 +108,51 @@ void updateScene(Ref<Scene> scene)
     scene->camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
 }
 
+void initNodeScene(Ref<Scene> scene)
+{
+    Ref<NodeView> node_view = new NodeView();
+    node_view->boxes.push_back({ "multiply", "this node has a description. yea, indeed it does. it even wraps automatically! what the hell am i doing here", { 0, 0 }, { 18, 28 }});
+    //node_view->boxes.push_back({ { 0, 5 }, { 4, 2 } });
+    node_view->updateMesh();
+    node_view->transform.setLocalScale({ 0.25f, 0.25f, 1.0f });
+    scene->objects.push_back(node_view.cast<Object>());
+
+    scene->camera->transform.lookAt({ 0, -1, 1 }, { 0, 0, 0 }, { 0, 0, 1 });
+}
+
+void updateNodeScene(Ref<Scene> scene)
+{
+    glm::vec2 mouse_delta = Input::getMouseDelta() * 0.004f;
+    if (Input::isMouseDown(GLFW_MOUSE_BUTTON_2))
+        scene->camera->transform.rotateLocal({ -mouse_delta.y, 0, -mouse_delta.x });
+
+    glm::mat4 camera_matrix = scene->camera->transform.getMatrix();
+    glm::vec3 local_move_vector = glm::vec3{
+        Input::getAxis('A', 'D'),
+        Input::getAxis('Q', 'E'),
+        Input::getAxis('W', 'S')
+    } *0.02f;
+    if (Input::isKeyDown(GLFW_KEY_LEFT_SHIFT))
+        local_move_vector *= 3.0f;
+    scene->camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
+}
+
 int main() {
     Window::initEnvironment();
     Ref<Window> window = new Window(1024, 1024, "hop!");
     Input::init(window->getWindow());
     Ref<GraphicsEnvironment> ge = new GraphicsEnvironment(window);
+    Package::init();
+    Package::loadPackage("resources.hop");
 
     ge->scene = new Scene();
-    initScene(ge->scene);
+    initNodeScene(ge->scene);
 
-    while (!window.get()->getShouldClose())
+    while (!window->getShouldClose())
     {
-        window.get()->pollEvents();
-        ge.get()->drawFrame();
-        updateScene(ge->scene);
+        window->pollEvents();
+        ge->drawFrame();
+        updateNodeScene(ge->scene);
     }
 
     cube = nullptr;
