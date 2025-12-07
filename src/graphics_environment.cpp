@@ -30,14 +30,6 @@
 using namespace HopEngine;
 using namespace std;
 
-struct SceneUniforms
-{
-    glm::mat4 world_to_view;
-    glm::mat4 view_to_clip;
-    glm::ivec2 viewport_size;
-    float time;
-};
-
 static GraphicsEnvironment* environment = nullptr;
 
 GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
@@ -56,7 +48,6 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
     MAX_FRAMES_IN_FLIGHT = swapchain->getImageCount();
     createCommandPool();
     render_pass = new RenderPass(swapchain, { 3, true });
-    scene_uniforms = new UniformBlock(ShaderLayout{ scene_descriptor_set_layout, {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
 
     uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
     default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, default_image_data);
@@ -81,7 +72,6 @@ GraphicsEnvironment::~GraphicsEnvironment()
     default_sampler = nullptr;
     scene = nullptr;
 
-    scene_uniforms = nullptr;
     vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
     vkDestroyDescriptorSetLayout(device, scene_descriptor_set_layout, nullptr);
     vkDestroyDescriptorSetLayout(device, object_descriptor_set_layout, nullptr);
@@ -142,24 +132,13 @@ void GraphicsEnvironment::drawFrame()
     uint32_t image_index;
     vkAcquireNextImageKHR(device, swapchain->getSwapchain(), UINT64_MAX, image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT], VK_NULL_HANDLE, &image_index);
 
-    SceneUniforms* scene_uniform_buffer = (SceneUniforms*)(scene_uniforms->getBuffer());
-    auto now_time = chrono::steady_clock::now();
-    chrono::duration<float> since_start = now_time - start_time;
-    scene_uniform_buffer->time = since_start.count();
-    auto framebuffer_size = window->getSize();
-    scene_uniform_buffer->viewport_size = { framebuffer_size.first, framebuffer_size.second };
-    scene_uniform_buffer->world_to_view =
-        glm::lookAt(
-            glm::vec3(sin(scene_uniform_buffer->time) * 1.5f, cos(scene_uniform_buffer->time) * 1.5f, 0.5f),
-            glm::vec3(0.0f, 0.0f, 0.0f), 
-            glm::vec3(0.0f, 0.0f, 1.0f)
-    );
-    scene_uniform_buffer->view_to_clip = glm::perspective(glm::radians(90.0f), swapchain->getExtent().width / (float)swapchain->getExtent().width, 0.1f, 10.0f);
-    scene_uniform_buffer->view_to_clip[1][1] *= -1;
-    scene_uniforms->pushToDescriptorSet(image_index);
-    
     if (scene.get() != nullptr)
     {
+        auto now_time = chrono::steady_clock::now();
+        chrono::duration<float> since_start = now_time - start_time;
+        auto framebuffer_size = window->getSize();
+        scene->camera->pushToDescriptorSet(image_index, { framebuffer_size.first, framebuffer_size.second }, since_start.count());
+    
         for (Ref<Object>& object : scene->objects)
         {
             object->pushToDescriptorSet(image_index);
@@ -463,7 +442,7 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
         {
             vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipeline());
 
-            VkDescriptorSet scene_descriptor_set = scene_uniforms->getDescriptorSet(image_index);
+            VkDescriptorSet scene_descriptor_set = scene->camera->getDescriptorSet(image_index);
             vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipelineLayout(), 0, 1, &scene_descriptor_set, 0, nullptr);
             VkDescriptorSet material_descriptor_set = object->material->getDescriptorSet(image_index);
             vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipelineLayout(), 2, 1, &material_descriptor_set, 0, nullptr);

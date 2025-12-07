@@ -33,4 +33,23 @@ public:
 	VkDescriptorSet getDescriptorSet(size_t index);
 };
 
+// TODO: make camera an object so it can be parented...
+class Camera
+{
+public:
+	Transform transform;
+	float fov = 90.0f;
+
+private:
+	Ref<UniformBlock> uniforms = nullptr;
+
+public:
+	DELETE_NOT_ALL_CONSTRUCTORS(Camera);
+
+	Camera();
+
+	void pushToDescriptorSet(size_t index, glm::ivec2 viewport_size, float time);
+	VkDescriptorSet getDescriptorSet(size_t index);
+};
+
 }

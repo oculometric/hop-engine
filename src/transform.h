@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #include "common.h"
 
@@ -15,7 +16,7 @@ private:
 	Object* object;
 	glm::vec3 local_position;
 	glm::vec3 local_euler;
-	glm::vec4 local_quaternion;
+	glm::quat local_quaternion;
 	glm::vec3 local_scale;
 	glm::mat4 local_matrix;
 	bool world_matrix_dirty = true;
@@ -41,6 +42,8 @@ public:
 	inline glm::mat4 getMatrix() { updateWorldMatrix(); return world_matrix; }
 	// TODO: world space transforms
 	// TODO: quaternion functions
+
+	void lookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up);
 
 	void updateWorldMatrix();
 private:

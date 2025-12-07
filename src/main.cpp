@@ -44,6 +44,10 @@ void initScene(Ref<Scene> scene)
     bunny->transform.setLocalPosition({ 0, -0.5f, 0.9f });
     bunny->transform.scaleLocal({ 2, 2, 2 });
     scene->objects.push_back(bunny);
+
+    scene->camera->transform.lookAt(glm::vec3(1.5f, -1.5f, 0.5f),
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
 void updateScene(Ref<Scene> scene)

@@ -69,7 +69,6 @@ private:
 	VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
 	VkDescriptorSetLayout scene_descriptor_set_layout = VK_NULL_HANDLE;
 	VkDescriptorSetLayout object_descriptor_set_layout = VK_NULL_HANDLE;
-	Ref<UniformBlock> scene_uniforms = nullptr;
 
 	Ref<Texture> default_image = nullptr;
 	Ref<Sampler> default_sampler = nullptr;
