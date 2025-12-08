@@ -33,8 +33,8 @@ public:
 	void updateMesh();
 
 private:
-	void addFrame(glm::vec2 position, glm::vec2 size, int layer, std::vector<Vertex>& vertices, std::vector<uint16_t>& indices);
-	void addCharacter(char c, glm::vec2 position, glm::vec2 size, int layer, std::vector<Vertex>& vertices, std::vector<uint16_t>& indices);
+	void addFrame(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 tint, std::vector<Vertex>& vertices, std::vector<uint16_t>& indices);
+	void addCharacter(char c, glm::vec2 position, int layer, std::vector<Vertex>& vertices, std::vector<uint16_t>& indices);
 };
 
 }

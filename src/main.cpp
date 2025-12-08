@@ -112,13 +112,12 @@ void initNodeScene(Ref<Scene> scene)
 {
     Ref<NodeView> node_view = new NodeView();
     node_view->boxes.push_back({ "multiply", "this node has a description. yea, indeed it does. it even wraps automatically! what the hell am i doing here", { 0, 0 }, { 18, 28 }});
-    //node_view->boxes.push_back({ { 0, 5 }, { 4, 2 } });
     node_view->material->setBoolUniform("debug_segments", false);
     node_view->updateMesh();
-    node_view->transform.setLocalScale({ 0.25f, 0.25f, 1.0f });
+    node_view->transform.setLocalScale({ 0.05f, 0.05f, 1.0f });
     scene->objects.push_back(node_view.cast<Object>());
 
-    scene->camera->transform.lookAt({ 0, -1, 1 }, { 0, 0, 0 }, { 0, 0, 1 });
+    scene->camera->transform.lookAt({ 0, 0, 6 }, { 0, 0, 0 }, { 0, 1, 0 });
 }
 
 void updateNodeScene(Ref<Scene> scene)

@@ -46,7 +46,7 @@ void main()
             vec4 tex_sample = texture(sliced_texture, uv);
             if (tex_sample.a < 0.5f)
                 discard;
-            colour = vec4(tex_sample.rgb, 1);
+            colour = vec4(tex_sample.rgb * frag.normal.rgb, 1);
         }
     }
 }
