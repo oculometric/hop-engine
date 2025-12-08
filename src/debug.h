@@ -3,7 +3,11 @@
 #pragma warning(push)
 #pragma warning(disable: 4005)
 
-#define DEBUG_LEVEL 0
+#if defined(NDEBUG)
+#define DEBUG_LEVEL 3
+#else
+#define DEBUG_LEVEL 1
+#endif
 #define DEBUG_ENABLED
 
 #define DBG_BABBLE(str)

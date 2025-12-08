@@ -30,7 +30,7 @@ Sampler::Sampler(VkFilter filtering_mode, VkSamplerAddressMode address_mode)
 	create_info.minLod = 0.0f;
 	create_info.maxLod = 0.0f;
 	if (vkCreateSampler(GraphicsEnvironment::get()->getDevice(), &create_info, nullptr, &sampler) != VK_SUCCESS)
-		throw runtime_error("vkCreateSampler failed");
+		DBG_FAULT("vkCreateSampler failed");
 
 	DBG_INFO("created sampler for " + string(string_VkFilter(filtering_mode)) + ", " + string_VkSamplerAddressMode(address_mode));
 }

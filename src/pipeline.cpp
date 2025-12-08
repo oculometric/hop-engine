@@ -115,7 +115,7 @@ Pipeline::Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMo
     if (vkCreateGraphicsPipelines(GraphicsEnvironment::get()->getDevice(), VK_NULL_HANDLE, 1, &pipeline_create_info, nullptr, &pipeline) != VK_SUCCESS)
         DBG_FAULT("vkCreateGraphicsPipelines failed");
 
-    DBG_VERBOSE("created pipeline for shader " + PTR(shader.get()) + " with cull mode " + string_VkCullModeFlagBits((VkCullModeFlagBits)culling_mode) + " and polygon mode " + string_VkPolygonMode(polygon_mode) + " for render pass " + PTR(render_pass.get()));
+    DBG_VERBOSE("created pipeline for shader " + PTR(shader.get()));
 }
 
 Pipeline::~Pipeline()

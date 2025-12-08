@@ -15,6 +15,19 @@
 using namespace HopEngine;
 using namespace std;
 
+string getCullMode(VkCullModeFlags mode)
+{
+	VkCullModeFlagBits flag = (VkCullModeFlagBits)1;
+	string result;
+	while (flag - 1 < VkCullModeFlagBits::VK_CULL_MODE_FLAG_BITS_MAX_ENUM)
+	{
+		if (mode & flag)
+			result += string(string_VkCullModeFlagBits(flag)) + " | ";
+		flag = (VkCullModeFlagBits)(flag << 1);
+	}
+	return result.substr(0, result.size() - 3);
+}
+
 Material::Material(Ref<Shader> _shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode)
 {
 	shader = _shader;
@@ -36,7 +49,7 @@ Material::Material(Ref<Shader> _shader, VkCullModeFlags culling_mode, VkPolygonM
 			texture_name_to_binding[binding.name] = binding.binding;
 	}
 
-	DBG_INFO("created material from shader " + PTR(shader.get()) + " with config " + string(string_VkCullModeFlagBits((VkCullModeFlagBits)culling_mode)) + ", " + string_VkPolygonMode(polygon_mode));
+	DBG_INFO("created material from shader " + PTR(shader.get()) + " with config " + getCullMode(culling_mode) + ", " + string_VkPolygonMode(polygon_mode));
 }
 
 Material::~Material()

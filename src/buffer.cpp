@@ -9,6 +9,32 @@
 using namespace HopEngine;
 using namespace std;
 
+string getBufferUsage(VkBufferUsageFlags usage)
+{
+    VkBufferUsageFlagBits flag = (VkBufferUsageFlagBits)1;
+    string result;
+    while (flag - 1 < VkBufferUsageFlagBits::VK_BUFFER_USAGE_FLAG_BITS_MAX_ENUM)
+    {
+        if (usage & flag)
+            result += string(string_VkBufferUsageFlagBits(flag)) + " | ";
+        flag = (VkBufferUsageFlagBits)(flag << 1);
+    }
+    return result.substr(0, result.size() - 3);
+}
+
+string getMemoryProperties(VkMemoryPropertyFlags properties)
+{
+    VkMemoryPropertyFlagBits flag = (VkMemoryPropertyFlagBits)1;
+    string result;
+    while (flag - 1 < VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_FLAG_BITS_MAX_ENUM)
+    {
+        if (properties & flag)
+            result += string(string_VkMemoryPropertyFlagBits(flag)) + " | ";
+        flag = (VkMemoryPropertyFlagBits)(flag << 1);
+    }
+    return result.substr(0, result.size() - 3);
+}
+
 Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
 {
     if (size == 0)
@@ -39,7 +65,7 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlag
 
     vkBindBufferMemory(GraphicsEnvironment::get()->getDevice(), buffer, memory, 0);
 
-    DBG_VERBOSE("created buffer of size " + to_string(size) + " with usage " + string_VkBufferUsageFlagBits((VkBufferUsageFlagBits)usage) + " and memory type " + to_string(allocate_info.memoryTypeIndex));
+    DBG_VERBOSE("created buffer of size " + to_string(size) + " with usage " + getBufferUsage(usage) + " and memory properties " + getMemoryProperties(properties));
 
     buffer_size = size;
 }
@@ -81,7 +107,8 @@ uint32_t Buffer::findMemoryType(uint32_t type_bits, VkMemoryPropertyFlags proper
         if ((type_bits & (1 << i)) && (memory_properties.memoryTypes[i].propertyFlags & properties) == properties)
             return i;
     }
-    throw runtime_error("failed to find suitable memory type");
+    DBG_FAULT("failed to find suitable memory type");
+    return 0;
 }
 
 void Buffer::copyToBuffer(Ref<Buffer> other)
