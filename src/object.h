@@ -31,6 +31,8 @@ public:
 
 	void pushToDescriptorSet(size_t index);
 	VkDescriptorSet getDescriptorSet(size_t index);
+
+	~Object();
 };
 
 // TODO: make camera an object so it can be parented...
@@ -52,6 +54,8 @@ public:
 
 	void pushToDescriptorSet(size_t index, glm::ivec2 viewport_size, float time);
 	VkDescriptorSet getDescriptorSet(size_t index);
+
+	~Camera();
 };
 
 }

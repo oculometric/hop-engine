@@ -35,15 +35,18 @@ UniformBlock::UniformBlock(ShaderLayout layout_info)
     descriptor_set_alloc_info.pSetLayouts = set_layouts.data();
     descriptor_sets.resize(uniform_buffers.size());
     if (vkAllocateDescriptorSets(GraphicsEnvironment::get()->getDevice(), &descriptor_set_alloc_info, descriptor_sets.data()) != VK_SUCCESS)
-        throw runtime_error("vkAllocateDescriptorSets failed");
+        DBG_FAULT("vkAllocateDescriptorSets failed");
 
     applyDescriptorBindings();
 
     live_uniform_buffer.resize(size);
+
+    DBG_INFO("created uniform block of buffer size " + to_string(size) + " with " + to_string(textures_in_use.size()) + " texture slots (" + to_string(layout_info.bindings.size()) + " total bindings)");
 }
 
 UniformBlock::~UniformBlock()
 {
+    DBG_INFO("destroying uniform block " + PTR(this));
     vkFreeDescriptorSets(GraphicsEnvironment::get()->getDevice(), GraphicsEnvironment::get()->getDescriptorPool(), static_cast<uint32_t>(descriptor_sets.size()), descriptor_sets.data());
     textures_in_use.clear();
     descriptor_sets.clear();
@@ -70,6 +73,7 @@ void UniformBlock::pushToDescriptorSet(size_t index)
 
 void UniformBlock::applyDescriptorBindings()
 {
+    DBG_INFO("uniform block " + PTR(this) + " updating " + to_string(layout.bindings.size()) + " descriptor bindings");
     for (size_t i = 0; i < descriptor_sets.size(); ++i)
     {
         VkDeviceSize offset = 0;

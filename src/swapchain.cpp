@@ -90,7 +90,7 @@ Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR surface)
 
 Swapchain::~Swapchain()
 {
-    DBG_INFO("destroying swapchain " + to_string((size_t)this));
+    DBG_INFO("destroying swapchain " + PTR(this));
     for (auto image_view : image_views)
         vkDestroyImageView(GraphicsEnvironment::get()->getDevice(), image_view, nullptr);
     

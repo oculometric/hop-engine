@@ -34,11 +34,12 @@ Shader::Shader(string base_path, bool is_precompiled)
 		proper_path = Package::getTempPath() + "temp_shader_compiled";
 
 		bool result = Shader::compileFile(input_path + ".vert", proper_path + "_vert.spv");
+		result &= Shader::compileFile(input_path + ".frag", proper_path + "_frag.spv");
 		if (!result)
-			throw runtime_error("shader compilation failed");
-		result = Shader::compileFile(input_path + ".frag", proper_path + "_frag.spv");
-		if (!result)
-			throw runtime_error("shader compilation failed");
+		{
+			DBG_ERROR(base_path + " shader compilation failed");
+			// TODO: replace with default shader!!
+		}
 	}
 	
 	auto vert_blob = Package::tryLoadFile(proper_path + "_vert.spv");
@@ -70,7 +71,7 @@ Shader::Shader(string base_path, bool is_precompiled)
 	set_layout_create_info.pBindings = layout_bindings.data();
 
 	if (vkCreateDescriptorSetLayout(GraphicsEnvironment::get()->getDevice(), &set_layout_create_info, nullptr, &descriptor_set_layout) != VK_SUCCESS)
-		throw runtime_error("vkCreateDescriptorSetLayout failed");
+		DBG_FAULT("vkCreateDescriptorSetLayout failed");
 
 	VkPipelineLayoutCreateInfo layout_create_info{ };
 	layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -85,11 +86,15 @@ Shader::Shader(string base_path, bool is_precompiled)
 	layout_create_info.pSetLayouts = layouts;
 
 	if (vkCreatePipelineLayout(GraphicsEnvironment::get()->getDevice(), &layout_create_info, nullptr, &pipeline_layout) != VK_SUCCESS)
-		throw runtime_error("vkCreatePipelineLayout failed");
+		DBG_FAULT("vkCreatePipelineLayout failed");
+
+	DBG_INFO("created shader from " + base_path);
 }
 
 Shader::~Shader()
 {
+	DBG_INFO("destroyed shader " + PTR(this));
+
 	vkDestroyPipelineLayout(GraphicsEnvironment::get()->getDevice(), pipeline_layout, nullptr);
 	vkDestroyDescriptorSetLayout(GraphicsEnvironment::get()->getDevice(), descriptor_set_layout, nullptr);
 
@@ -150,7 +155,10 @@ vector<DescriptorBinding> Shader::mergeBindings(vector<DescriptorBinding> list_a
 			if (binding_it->second.type == last_binding.type && binding_it->second.buffer_size == last_binding.buffer_size)
 				binding_it++;
 			else
-				throw runtime_error("incompatible duplicate shader uniform/texture bindings found");
+			{
+				DBG_ERROR("incompatible duplicate shader uniform/texture bindings found");
+				binding_it++;
+			}
 		}
 	}
 
@@ -162,10 +170,14 @@ vector<DescriptorBinding> Shader::getReflectedBindings(vector<uint8_t> blob)
 	SpvReflectShaderModule reflected_module;
 	SpvReflectResult result = spvReflectCreateShaderModule(blob.size(), blob.data(), &reflected_module);
 	if (result != SPV_REFLECT_RESULT_SUCCESS)
+	{
+		DBG_WARNING("unable to construct shader reflection module");
 		return {};
+	}
 	const SpvReflectDescriptorSet* vert_material_set = spvReflectGetDescriptorSet(&reflected_module, 2, &result);
 	if (result != SPV_REFLECT_RESULT_SUCCESS)
 	{
+		DBG_WARNING("unable to construct shader reflection module");
 		spvReflectDestroyShaderModule(&reflected_module);
 		return {};
 	}
@@ -224,7 +236,7 @@ bool Shader::compileFile(string path, string out_path)
 
 	if (result != 0)
 	{
-		cout << "error when compiling " << path << endl << command_out;
+		DBG_WARNING("error when compiling '" + path + "':\n" + command_out);
 		return false;
 	}
 
@@ -240,7 +252,7 @@ VkShaderModule Shader::createShaderModule(const vector<uint8_t>& blob)
 
 	VkShaderModule shader_module;
 	if (vkCreateShaderModule(GraphicsEnvironment::get()->getDevice(), &create_info, nullptr, &shader_module) != VK_SUCCESS)
-		throw runtime_error("vkCreateShaderModule failed");
+		DBG_FAULT("vkCreateShaderModule failed");
 
 	return shader_module;
 }
@@ -258,7 +270,12 @@ void Shader::fixIncludes(vector<uint8_t>& source_code, string path_prefix)
 		size_t end = source_code_text.find('\"', start);
 		string path = source_code_text.substr(start, end - start);
 		if (path.find(' ') != string::npos)
-			throw runtime_error("malformed include!");
+		{
+			DBG_ERROR("malformed include found!");
+			source_code.resize(source_code_text.size());
+			memcpy(source_code.data(), source_code_text.data(), source_code_text.size());
+			return;
+		}
 		source_code_text.erase(offset, (end - offset) + 1);
 		auto include_data = Package::tryLoadFile(path_prefix + path);
 		string include_string(include_data.size(), ' ');

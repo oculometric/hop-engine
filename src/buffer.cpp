@@ -1,6 +1,7 @@
 #include "buffer.h"
 
 #include <stdexcept>
+#include <vulkan/vk_enum_string_helper.h>
 
 #include "graphics_environment.h"
 #include "command_buffer.h"
@@ -34,18 +35,18 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlag
     allocate_info.memoryTypeIndex = Buffer::findMemoryType(memory_requirements.memoryTypeBits, properties);
 
     if (vkAllocateMemory(GraphicsEnvironment::get()->getDevice(), &allocate_info, nullptr, &memory) != VK_SUCCESS)
-        throw runtime_error("vkAllocateMemory failed");
+        DBG_FAULT("vkAllocateMemory failed");
 
     vkBindBufferMemory(GraphicsEnvironment::get()->getDevice(), buffer, memory, 0);
 
-    DBG_VERBOSE("created buffer of size " + to_string(size));
+    DBG_VERBOSE("created buffer of size " + to_string(size) + " with usage " + string_VkBufferUsageFlagBits((VkBufferUsageFlagBits)usage) + " and memory type " + to_string(allocate_info.memoryTypeIndex));
 
     buffer_size = size;
 }
 
 Buffer::~Buffer()
 {
-    DBG_VERBOSE("destroying buffer " + to_string((size_t)this));
+    DBG_VERBOSE("destroying buffer " + PTR(this));
     unmapMemory();
 
     vkDestroyBuffer(GraphicsEnvironment::get()->getDevice(), buffer, nullptr);
@@ -85,7 +86,7 @@ uint32_t Buffer::findMemoryType(uint32_t type_bits, VkMemoryPropertyFlags proper
 
 void Buffer::copyToBuffer(Ref<Buffer> other)
 {
-    DBG_VERBOSE("copying from " + to_string((size_t)this) + " to buffer " + to_string((size_t)other.get()));
+    DBG_VERBOSE("copying from " + PTR(this) + " to buffer " + PTR(other.get()));
     Ref<CommandBuffer> cmd_buf = new CommandBuffer();
 
     VkBufferCopy buffer_copy{ };

@@ -34,18 +34,20 @@ static GraphicsEnvironment* environment = nullptr;
 
 GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
 {
+    DBG_INFO("initialising graphics environment");
     environment = this;
     
     window = main_window;
 
 	createInstance();
     if (glfwCreateWindowSurface(instance, window->getWindow(), nullptr, &surface) != VK_SUCCESS)
-        throw std::runtime_error("glfwCreateWindowSurface failed");
+        DBG_FAULT("glfwCreateWindowSurface failed");
     createDevice();
     createDescriptorPoolAndSets();
     auto framebuffer_size = window->getSize();
     swapchain = new Swapchain(framebuffer_size.first, framebuffer_size.second, surface);
     MAX_FRAMES_IN_FLIGHT = swapchain->getImageCount();
+    DBG_VERBOSE("adjusted frames in flight to " + to_string(MAX_FRAMES_IN_FLIGHT));
     createCommandPool();
     render_pass = new RenderPass(swapchain, { 3, true });
 
@@ -53,12 +55,17 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
     default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, default_image_data);
     default_sampler = new Sampler(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
     createSyncObjects();
+
+    DBG_INFO("graphics environment initialised");
 }
 
 GraphicsEnvironment::~GraphicsEnvironment()
 {
+    DBG_INFO("destroying graphics environment");
+
     vkDeviceWaitIdle(device);
 
+    DBG_VERBOSE("destroying sync resources");
     for (size_t i = 0; i < image_available_semaphores.size(); ++i)
     {
         vkDestroySemaphore(device, image_available_semaphores[i], nullptr);
@@ -66,18 +73,22 @@ GraphicsEnvironment::~GraphicsEnvironment()
         vkDestroyFence(device, in_flight_fences[i], nullptr);
     }
 
+    DBG_VERBOSE("destroying command pool");
     vkDestroyCommandPool(device, command_pool, nullptr);
 
     default_image = nullptr;
     default_sampler = nullptr;
     scene = nullptr;
 
+    DBG_VERBOSE("destroying descriptors");
     vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
     vkDestroyDescriptorSetLayout(device, scene_descriptor_set_layout, nullptr);
     vkDestroyDescriptorSetLayout(device, object_descriptor_set_layout, nullptr);
+
     render_pass = nullptr;
     swapchain = nullptr;
 
+    DBG_VERBOSE("destroying device");
     vkDestroyDevice(device, nullptr);
     vkDestroySurfaceKHR(instance, surface, nullptr);
     vkDestroyInstance(instance, nullptr);
@@ -124,6 +135,7 @@ GraphicsEnvironment* GraphicsEnvironment::get()
 void GraphicsEnvironment::drawFrame()
 {
     static size_t frame_index = 0;
+    DBG_BABBLE("drawing frame " + to_string(frame_index));
     static auto start_time = chrono::steady_clock::now();
 
     vkWaitForFences(device, 1, &in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT], VK_TRUE, UINT64_MAX);
@@ -131,6 +143,7 @@ void GraphicsEnvironment::drawFrame()
 
     uint32_t image_index;
     vkAcquireNextImageKHR(device, swapchain->getSwapchain(), UINT64_MAX, image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT], VK_NULL_HANDLE, &image_index);
+    DBG_BABBLE("acquired image " + to_string(image_index));
 
     if (scene.isValid())
     {
@@ -138,13 +151,15 @@ void GraphicsEnvironment::drawFrame()
         chrono::duration<float> since_start = now_time - start_time;
         auto framebuffer_size = window->getSize();
         scene->camera->pushToDescriptorSet(image_index, { framebuffer_size.first, framebuffer_size.second }, since_start.count());
-    
+
         for (Ref<Object>& object : scene->objects)
         {
             object->pushToDescriptorSet(image_index);
             object->material->pushToDescriptorSet(image_index);
         }
     }
+    else
+        DBG_WARNING("no scene attached to environment");
 
     vkResetCommandBuffer(command_buffers[image_index], 0);
     recordRenderCommands(command_buffers[image_index], image_index);
@@ -161,10 +176,11 @@ void GraphicsEnvironment::drawFrame()
     VkSemaphore signal_semaphores[] = { render_finished_semaphores[image_index] };
     submit_info.signalSemaphoreCount = 1;
     submit_info.pSignalSemaphores = signal_semaphores;
+    DBG_BABBLE("submitting command buffer");
     if (vkQueueSubmit(graphics_queue, 1, &submit_info, in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT]) != VK_SUCCESS)
-        throw runtime_error("vkQueueSubmit failed");
+        DBG_FAULT("vkQueueSubmit failed");
 
-    VkPresentInfoKHR present_info{};
+    VkPresentInfoKHR present_info{ };
     present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     present_info.waitSemaphoreCount = 1;
     present_info.pWaitSemaphores = signal_semaphores;
@@ -172,6 +188,7 @@ void GraphicsEnvironment::drawFrame()
     present_info.swapchainCount = 1;
     present_info.pSwapchains = swapchains;
     present_info.pImageIndices = &image_index;
+    DBG_BABBLE("submitting present");
     vkQueuePresentKHR(present_queue, &present_info);
 }
 
@@ -204,18 +221,24 @@ void GraphicsEnvironment::createInstance()
         required_layers_unmet.erase(layer.layerName);
     if (!required_layers_unmet.empty())
     {
-        cout << "validation layer '" << *(required_layers_unmet.begin()) << "' not found." << endl;
-        throw runtime_error("missing validation layer");
+        DBG_FAULT("validation layer not found: " + *(required_layers_unmet.begin()));
     }
     create_info.enabledLayerCount = static_cast<uint32_t>(required_validation_layers.size());
     create_info.ppEnabledLayerNames = required_validation_layers.data();
 #else
     create_info.enabledLayerCount = 0;
 #endif
+    DBG_VERBOSE("enabling " + to_string(create_info.enabledExtensionCount) + " extensions:");
+    for (size_t i = 0; i < create_info.enabledExtensionCount; ++i)
+        DBG_VERBOSE(create_info.ppEnabledExtensionNames[i]);
+    DBG_VERBOSE("enabling " + to_string(create_info.enabledLayerCount) + " layers:");
+    for (size_t i = 0; i < create_info.enabledLayerCount; ++i)
+        DBG_VERBOSE(create_info.ppEnabledLayerNames[i]);
 
     // create the vulkan instance
+    DBG_VERBOSE("creating vulkan instance");
     if (vkCreateInstance(&create_info, nullptr, &instance) != VK_SUCCESS)
-        throw runtime_error("vkCreateInstance failed");
+        DBG_FAULT("vkCreateInstance failed");
 }
 
 void GraphicsEnvironment::createDevice()
@@ -224,9 +247,10 @@ void GraphicsEnvironment::createDevice()
     uint32_t physical_device_count = 0;
     vkEnumeratePhysicalDevices(instance, &physical_device_count, nullptr);
     if (physical_device_count == 0)
-        throw runtime_error("found no valid VkPhysicalDevice");
+        DBG_FAULT("found no valid VkPhysicalDevice");
     vector<VkPhysicalDevice> physical_devices(physical_device_count);
     vkEnumeratePhysicalDevices(instance, &physical_device_count, physical_devices.data());
+    DBG_VERBOSE("found " + to_string(physical_device_count) + " physical devices");
 
     // score each device. a score of zero indicates the device
     // is not usable for some reason
@@ -278,6 +302,7 @@ void GraphicsEnvironment::createDevice()
                 score = 0;
         }
 
+        DBG_BABBLE("found device " + string(properties.deviceName) + ", scored " + to_string(score));
         device_scores.insert({ score, device});
     }
     // check if any of the devices were suitable, and if so,
@@ -285,7 +310,10 @@ void GraphicsEnvironment::createDevice()
     if (device_scores.rbegin()->first > 0)
         physical_device = device_scores.rbegin()->second;
     else
-        throw runtime_error("unable to find suitable VkPhysicalDevice");
+        DBG_FAULT("unable to find suitable VkPhysicalDevice");
+    VkPhysicalDeviceProperties properties;
+    vkGetPhysicalDeviceProperties(physical_device, &properties);
+    DBG_INFO("selected device: " + string(properties.deviceName));
 
     // create queues, for our queue families
     QueueFamilies queue_family_indices = getQueueFamilies(physical_device);
@@ -317,10 +345,12 @@ void GraphicsEnvironment::createDevice()
     device_create_info.ppEnabledExtensionNames = required_extensions.data();
     device_create_info.enabledExtensionCount = static_cast<uint32_t>(required_extensions.size());
     
+    DBG_INFO("creating device");
     if (vkCreateDevice(physical_device, &device_create_info, nullptr, &device) != VK_SUCCESS)
-        throw runtime_error("vkCreateDevice failed");
+        DBG_FAULT("vkCreateDevice failed");
 
     // extract queues
+    DBG_VERBOSE("extracting queues");
     vkGetDeviceQueue(device, queue_family_indices.graphics_family.value(), 0, &graphics_queue);
     vkGetDeviceQueue(device, queue_family_indices.present_family.value(), 0, &present_queue);
 }
@@ -339,8 +369,9 @@ void GraphicsEnvironment::createDescriptorPoolAndSets()
     descriptor_pool_create_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
     descriptor_pool_create_info.maxSets = static_cast<uint32_t>(512 * 8 * MAX_FRAMES_IN_FLIGHT);
 
+    DBG_INFO("creating descriptor pool with " + to_string(descriptor_pool_create_info.maxSets) + " max sets");
     if (vkCreateDescriptorPool(device, &descriptor_pool_create_info, nullptr, &descriptor_pool) != VK_SUCCESS)
-        throw runtime_error("vkCreateDescriptorPool failed");
+        DBG_FAULT("vkCreateDescriptorPool failed");
 
     VkDescriptorSetLayoutBinding uniform_layout_binding{ };
     uniform_layout_binding.binding = 0;
@@ -353,15 +384,18 @@ void GraphicsEnvironment::createDescriptorPoolAndSets()
     layout_create_info.bindingCount = 1;
     layout_create_info.pBindings = &uniform_layout_binding;
 
+    DBG_INFO("creating scene and object descriptor sets");
     if (vkCreateDescriptorSetLayout(device, &layout_create_info, nullptr, &scene_descriptor_set_layout) != VK_SUCCESS)
-        throw runtime_error("vkCreateDescriptorSetLayout failed");
+        DBG_FAULT("vkCreateDescriptorSetLayout failed");
 
     if (vkCreateDescriptorSetLayout(device, &layout_create_info, nullptr, &object_descriptor_set_layout) != VK_SUCCESS)
-        throw runtime_error("vkCreateDescriptorSetLayout failed");
+        DBG_FAULT("vkCreateDescriptorSetLayout failed");
 }
 
 void GraphicsEnvironment::createCommandPool()
 {
+    DBG_INFO("creating command pool and buffers");
+
     QueueFamilies queue_families = getQueueFamilies(physical_device);
 
     VkCommandPoolCreateInfo pool_create_info{ };
@@ -370,7 +404,7 @@ void GraphicsEnvironment::createCommandPool()
     pool_create_info.queueFamilyIndex = queue_families.graphics_family.value();
 
     if (vkCreateCommandPool(device, &pool_create_info, nullptr, &command_pool) != VK_SUCCESS)
-        throw runtime_error("vkCreateCommandPool failed");
+        DBG_FAULT("vkCreateCommandPool failed");
 
     VkCommandBufferAllocateInfo buffer_allocate_info{ };
     buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -380,11 +414,12 @@ void GraphicsEnvironment::createCommandPool()
     command_buffers.resize(MAX_FRAMES_IN_FLIGHT);
 
     if (vkAllocateCommandBuffers(device, &buffer_allocate_info, command_buffers.data()) != VK_SUCCESS)
-        throw runtime_error("vkAllocateCommandBuffers failed");
+        DBG_FAULT("vkAllocateCommandBuffers failed");
 }
 
 void GraphicsEnvironment::createSyncObjects()
 {
+    DBG_INFO("creating sync objects");
     VkSemaphoreCreateInfo semaphore_create_info{ };
     semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     VkFenceCreateInfo fence_create_info{ };
@@ -400,17 +435,18 @@ void GraphicsEnvironment::createSyncObjects()
         if (vkCreateSemaphore(device, &semaphore_create_info, nullptr, &image_available_semaphores[i]) != VK_SUCCESS ||
             vkCreateSemaphore(device, &semaphore_create_info, nullptr, &render_finished_semaphores[i]) != VK_SUCCESS ||
             vkCreateFence(device, &fence_create_info, nullptr, &in_flight_fences[i]) != VK_SUCCESS)
-            throw runtime_error("vkCreateSemaphore failed");
+            DBG_FAULT("vkCreateSemaphore failed");
     }
 }
 
 void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index)
 {
+    DBG_BABBLE("recording command buffer");
     VkCommandBufferBeginInfo cmd_buffer_begin_info{ };
     cmd_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
     if (vkBeginCommandBuffer(command_buffer, &cmd_buffer_begin_info) != VK_SUCCESS)
-        throw runtime_error("vkBeginCommandBuffer failed");
+        DBG_FAULT("vkBeginCommandBuffer failed");
 
     VkRenderPassBeginInfo render_pass_begin_info{ };
     render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -445,7 +481,10 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
         for (Ref<Object>& object : scene->objects)
         {
             if (!object->material.isValid() || !object->mesh.isValid())
+            {
+                DBG_WARNING("object " + PTR(object.get()) + " had invalid material or mesh");
                 continue;
+            }
 
             vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipeline());
 
@@ -467,5 +506,5 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
     vkCmdEndRenderPass(command_buffer);
 
     if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS)
-        throw runtime_error("vkEndCommandBuffer failed");
+        DBG_FAULT("vkEndCommandBuffer failed");
 }

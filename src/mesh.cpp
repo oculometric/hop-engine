@@ -34,7 +34,7 @@ Mesh::Mesh(vector<Vertex> vertices, vector<uint16_t> indices)
 
 Mesh::~Mesh()
 {
-    DBG_INFO("destroying mesh " + to_string((size_t)this));
+    DBG_INFO("destroying mesh " + PTR(this));
     vertex_buffer = nullptr;
     index_buffer = nullptr;
 }

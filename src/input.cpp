@@ -7,7 +7,7 @@ static Input* application_instance = nullptr;
 
 void Input::init(GLFWwindow* window)
 {
-	DBG_INFO("initialising input for window " + to_string((size_t)window));
+	DBG_INFO("initialising input for window " + PTR(window));
 	if (application_instance == nullptr)
 	{
 		application_instance = new Input();

@@ -23,6 +23,8 @@ Object::Object(Ref<Mesh> _mesh, Ref<Material> _material)
 	mesh = _mesh;
 	material = _material;
 	uniforms = new UniformBlock(ShaderLayout{ GraphicsEnvironment::get()->getObjectDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(ObjectUniforms) }} });
+	
+	DBG_VERBOSE("created object");
 }
 
 void Object::pushToDescriptorSet(size_t index)
@@ -40,6 +42,11 @@ VkDescriptorSet Object::getDescriptorSet(size_t index)
 	return uniforms->getDescriptorSet(index);
 }
 
+Object::~Object()
+{
+	DBG_VERBOSE("destroying object " + PTR(this));
+}
+
 struct SceneUniforms
 {
 	glm::mat4 world_to_view;
@@ -52,6 +59,7 @@ struct SceneUniforms
 Camera::Camera()
 {
 	uniforms = new UniformBlock(ShaderLayout{ GraphicsEnvironment::get()->getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
+	DBG_VERBOSE("created camera");
 }
 
 void Camera::pushToDescriptorSet(size_t index, glm::ivec2 viewport_size, float time)
@@ -71,4 +79,9 @@ void Camera::pushToDescriptorSet(size_t index, glm::ivec2 viewport_size, float t
 VkDescriptorSet Camera::getDescriptorSet(size_t index)
 {
 	return uniforms->getDescriptorSet(index);
+}
+
+Camera::~Camera()
+{
+	DBG_VERBOSE("destroying camera " + PTR(this));
 }

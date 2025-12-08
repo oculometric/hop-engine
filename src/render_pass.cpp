@@ -109,7 +109,7 @@ RenderPass::RenderPass(Ref<Swapchain> swapchain, RenderOutput config)
     render_pass_create_info.pDependencies = &dependency;
 
     if (vkCreateRenderPass(GraphicsEnvironment::get()->getDevice(), &render_pass_create_info, nullptr, &render_pass) != VK_SUCCESS)
-        throw runtime_error("vkCreateRenderPass failed");
+        DBG_FAULT("vkCreateRenderPass failed");
 
     // create texture buffers to back everything
     auto texture_extent = swapchain->getExtent();
@@ -138,12 +138,15 @@ RenderPass::RenderPass(Ref<Swapchain> swapchain, RenderOutput config)
         framebuffer_create_info.layers = 1;
 
         if (vkCreateFramebuffer(GraphicsEnvironment::get()->getDevice(), &framebuffer_create_info, nullptr, &framebuffers[i]) != VK_SUCCESS)
-            throw runtime_error("vkCreateFramebuffer failed");
+            DBG_FAULT("vkCreateFramebuffer failed");
     }
+
+    DBG_INFO(string("created render pass with colour buffer, ") + (config.has_depth_attachment ? "depth buffer, " : "") + "and " + to_string(config.additional_attachments) + " data attachments");
 }
 
 RenderPass::~RenderPass()
 {
+    DBG_INFO("destroying render pass " + PTR(this));
     for (VkFramebuffer framebuffer : framebuffers)
         vkDestroyFramebuffer(GraphicsEnvironment::get()->getDevice(), framebuffer, nullptr);
     depth_texture = nullptr;

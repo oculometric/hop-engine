@@ -20,13 +20,13 @@ CommandBuffer::CommandBuffer()
     begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
     vkBeginCommandBuffer(buffer, &begin_info);
-    DBG_VERBOSE("started transient command buffer " + to_string((size_t)this));
+    DBG_BABBLE("started transient command buffer " + PTR(this));
 }
 
 CommandBuffer::~CommandBuffer()
 {
     submit();
-    DBG_VERBOSE("destroying command buffer " + to_string((size_t)this));
+    DBG_BABBLE("destroying command buffer " + PTR(this));
     vkFreeCommandBuffers(GraphicsEnvironment::get()->getDevice(), GraphicsEnvironment::get()->getCommandPool(), 1, &buffer);
 }
 
@@ -36,7 +36,7 @@ void CommandBuffer::submit()
         return;
     already_submitted = true;
 
-    DBG_VERBOSE("submitting transient command buffer " + to_string((size_t)this));
+    DBG_BABBLE("submitting transient command buffer " + PTR(this));
     vkEndCommandBuffer(buffer);
 
     VkSubmitInfo submit_info{ };

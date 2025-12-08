@@ -37,6 +37,6 @@ Sampler::Sampler(VkFilter filtering_mode, VkSamplerAddressMode address_mode)
 
 Sampler::~Sampler()
 {
-	DBG_INFO("destroying sampler " + to_string((size_t)this));
+	DBG_INFO("destroying sampler " + PTR(this));
 	vkDestroySampler(GraphicsEnvironment::get()->getDevice(), sampler, nullptr);
 }

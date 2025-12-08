@@ -13,6 +13,8 @@
 #define DBG_ERROR(str)
 #define DBG_FAULT(str) std::cout << str << std::endl; exit(-1)
 
+#define PTR(ptr) Debug::pointerToString(ptr)
+
 #if defined (DEBUG_ENABLED)
 
 #define DEBUG_TERMINAL cout
@@ -73,6 +75,7 @@ public:
 	static void write(std::string description, DebugLevel severity);
 	static void flush();
 	static void close();
+	static std::string pointerToString(void* ptr);
 
 private:
 	Debug();

@@ -44,6 +44,6 @@ pair<uint32_t, uint32_t> Window::getSize()
 
 Window::~Window()
 {
-    DBG_INFO("destroying window " + to_string((size_t)this));
+    DBG_INFO("destroying window " + PTR(this));
     glfwDestroyWindow(window);
 }

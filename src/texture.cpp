@@ -3,6 +3,7 @@
 #include <stdexcept>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#include <vulkan/vk_enum_string_helper.h>
 
 #include "buffer.h"
 #include "graphics_environment.h"
@@ -17,13 +18,26 @@ Texture::Texture(size_t _width, size_t _height, VkFormat _format, void* data)
     format = _format;
     width = _width; height = _height;
 
-    if (data != nullptr)
+    if (data != nullptr || width == 0 || height == 0)
     {
         loadFromMemory(data);
-        return;
+        DBG_INFO("created image from memory with size " + to_string(width) + "x" + to_string(height) + " and format " + string_VkFormat(format));
     }
-
-    createImage();
+    else
+    {
+        if (width == 0)
+        {
+            width = 1;
+            DBG_WARNING("image width is not allowed to be zero");
+        }
+        if (height == 0)
+        {
+            DBG_WARNING("image height is not allowed to be zero");
+            height = 1;
+        }
+        createImage();
+        DBG_INFO("created blank image with size " + to_string(width) + "x" + to_string(height) + " and format " + string_VkFormat(format));
+    }
 }
 
 Texture::Texture(string file)
@@ -35,23 +49,32 @@ Texture::Texture(string file)
     width = img_width; height = img_height;
 
     if (pixels == nullptr)
-        throw runtime_error("unable to load image file");
-
-    size_t row_size = width * 4;
-    void* tmp = new uint8_t[row_size];
-    for (size_t i = 0; i < height / 2; ++i)
     {
-        memcpy(tmp, pixels + (i * row_size), row_size);
-        memcpy(pixels + (i * row_size), pixels + ((height - i - 1) * row_size), row_size);
-        memcpy(pixels + ((height - i - 1) * row_size), tmp, row_size);
+        DBG_ERROR("failed to load image file");
+        width = 1; height = 1;
+        createImage();
     }
+    else
+    {
+        size_t row_size = width * 4;
+        void* tmp = new uint8_t[row_size];
+        for (size_t i = 0; i < height / 2; ++i)
+        {
+            memcpy(tmp, pixels + (i * row_size), row_size);
+            memcpy(pixels + (i * row_size), pixels + ((height - i - 1) * row_size), row_size);
+            memcpy(pixels + ((height - i - 1) * row_size), tmp, row_size);
+        }
 
-    loadFromMemory(pixels);
-    stbi_image_free(pixels);
+        loadFromMemory(pixels);
+        stbi_image_free(pixels);
+
+        DBG_INFO("created image from " + file + " with size " + to_string(width) + "x" + to_string(height) + " and format " + string_VkFormat(format));
+    }
 }
 
 Texture::~Texture()
 {
+    DBG_INFO("destroying image " + PTR(this));
     if (view != VK_NULL_HANDLE)
         vkDestroyImageView(GraphicsEnvironment::get()->getDevice(), view, nullptr);
     vkDestroyImage(GraphicsEnvironment::get()->getDevice(), image, nullptr);
@@ -60,7 +83,7 @@ Texture::~Texture()
 
 void Texture::transitionLayout(VkImageLayout new_layout)
 {
-    Ref<CommandBuffer> cmd_buf = new CommandBuffer();
+    DBG_VERBOSE("transitioning image " + PTR(this) + " layout from " + string_VkImageLayout(current_layout) + " to " + string_VkImageLayout(new_layout));
 
     VkImageMemoryBarrier memory_barrier{ };
     memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -92,7 +115,12 @@ void Texture::transitionLayout(VkImageLayout new_layout)
         dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
     }
     else
-        throw invalid_argument("unsupported layout transition!");
+    {
+        DBG_ERROR("unsupported layout transition!");
+        return;
+    }
+
+    Ref<CommandBuffer> cmd_buf = new CommandBuffer();
 
     vkCmdPipelineBarrier(cmd_buf->getBuffer(), src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &memory_barrier);
 
@@ -102,7 +130,7 @@ void Texture::transitionLayout(VkImageLayout new_layout)
 
 void Texture::copyBufferToImage(Ref<Buffer> buffer)
 {
-    Ref<CommandBuffer> cmd_buf = new CommandBuffer();
+    DBG_VERBOSE("copying buffer " + PTR(buffer.get()) + " to image " + PTR(this));
 
     VkBufferImageCopy image_copy{ };
     image_copy.bufferOffset = 0;
@@ -121,6 +149,8 @@ void Texture::copyBufferToImage(Ref<Buffer> buffer)
         1
     };
 
+    Ref<CommandBuffer> cmd_buf = new CommandBuffer();
+
     vkCmdCopyBufferToImage(cmd_buf->getBuffer(), buffer->getBuffer(), image, current_layout, 1, &image_copy);
 
     cmd_buf->submit();
@@ -130,6 +160,8 @@ VkImageView Texture::getView()
 {
     if (view != VK_NULL_HANDLE)
         return view;
+
+    DBG_VERBOSE("creating image view for image " + PTR(this));
 
     VkImageViewCreateInfo view_create_info{ };
     view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -154,7 +186,7 @@ VkImageView Texture::getView()
     view_create_info.subresourceRange.layerCount = 1;
 
     if (vkCreateImageView(GraphicsEnvironment::get()->getDevice(), &view_create_info, nullptr, &view) != VK_SUCCESS)
-        throw runtime_error("vkCreateImageView failed");
+        DBG_ERROR("vkCreateImageView failed");
 
     return view;
 }
@@ -187,7 +219,7 @@ void Texture::createImage()
     image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
     if (vkCreateImage(GraphicsEnvironment::get()->getDevice(), &image_create_info, nullptr, &image) != VK_SUCCESS)
-        throw runtime_error("vkCreateImage failed");
+        DBG_FAULT("vkCreateImage failed");
     current_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
     VkMemoryRequirements memory_requirements;
@@ -198,7 +230,7 @@ void Texture::createImage()
     allocate_info.allocationSize = memory_requirements.size;
     allocate_info.memoryTypeIndex = Buffer::findMemoryType(memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     if (vkAllocateMemory(GraphicsEnvironment::get()->getDevice(), &allocate_info, nullptr, &memory) != VK_SUCCESS)
-        throw runtime_error("vkAllocateMemory failed");
+        DBG_FAULT("vkAllocateMemory failed");
     vkBindImageMemory(GraphicsEnvironment::get()->getDevice(), image, memory, 0);
 }
 

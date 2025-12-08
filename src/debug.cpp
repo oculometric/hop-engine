@@ -83,6 +83,11 @@ void Debug::close()
 #endif
 }
 
+string Debug::pointerToString(void* ptr)
+{
+	return format("0x{:x}", (size_t)ptr);
+}
+
 Debug::Debug()
 {
 #if defined(DEBUG_LOGFILE)
