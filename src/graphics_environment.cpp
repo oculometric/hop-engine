@@ -206,8 +206,8 @@ void GraphicsEnvironment::drawFrame()
     {
         auto now_time = chrono::steady_clock::now();
         chrono::duration<float> since_start = now_time - start_time;
-        auto framebuffer_size = window->getSize();
-        scene->camera->pushToDescriptorSet(image_index, { framebuffer_size.first, framebuffer_size.second }, since_start.count());
+        VkExtent2D framebuffer_size = swapchain->getExtent();
+        scene->camera->pushToDescriptorSet(image_index, { framebuffer_size.width, framebuffer_size.height }, since_start.count());
 
         for (Ref<Object>& object : scene->objects)
         {

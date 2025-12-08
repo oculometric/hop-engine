@@ -35,6 +35,11 @@ bool Window::getShouldClose()
     return glfwWindowShouldClose(window);
 }
 
+bool HopEngine::Window::isMinified()
+{
+    return glfwGetWindowAttrib(window, GLFW_ICONIFIED);
+}
+
 pair<uint32_t, uint32_t> Window::getSize()
 {
     int width; int height;

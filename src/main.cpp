@@ -1,15 +1,14 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/mat4x4.hpp>
-
 #include <imgui.h>
 #include <vulkan/vulkan.h>
-
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 #include "hop_engine.h"
 #include "node_view.h"
@@ -161,6 +160,8 @@ int main() {
     while (!window->getShouldClose())
     {
         window->pollEvents();
+        if (window->isMinified())
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         ge->drawFrame();
         updateScene(ge->scene);
     }

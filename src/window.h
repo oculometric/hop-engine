@@ -25,6 +25,7 @@ public:
 	void pollEvents();
 	bool getShouldClose();
 	inline GLFWwindow* getWindow() { return window; }
+	bool isMinified();
 	std::pair<uint32_t, uint32_t> getSize();
 
 	~Window();
