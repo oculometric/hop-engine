@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/mat4x4.hpp>
 
+#include <imgui.h>
 #include <vulkan/vulkan.h>
 
 #include <iostream>
@@ -44,7 +45,7 @@ struct MaterialParams
 
 void initScene(Ref<Scene> scene)
 {
-    Ref<Shader> shader = new Shader("res://psaoeifjaeofx", false);
+    Ref<Shader> shader = new Shader("res://psx", false);
     Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
     asha = new Object(
         new Mesh("res://asha/asha.obj"),
@@ -137,6 +138,13 @@ void updateNodeScene(Ref<Scene> scene)
     scene->camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
 }
 
+void imGuiDrawFunc()
+{
+    ImGui::Begin("test");
+    ImGui::Text("yippee");
+    ImGui::End();
+}
+
 int main() {
     Debug::init(Debug::DEBUG_FAULT);
     Window::initEnvironment();
@@ -146,6 +154,7 @@ int main() {
     Package::init();
     Package::loadPackage("resources.hop");
 
+    ge->draw_imgui_function = imGuiDrawFunc;
     ge->scene = new Scene();
     initScene(ge->scene);
 

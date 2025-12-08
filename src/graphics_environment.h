@@ -49,6 +49,7 @@ private:
 
 public:
 	Ref<Scene> scene = nullptr;
+	void(* draw_imgui_function)() = nullptr;
 
 private:
 	Ref<Window> window = nullptr;
@@ -91,6 +92,7 @@ public:
 	inline VkQueue getGraphicsQueue() { return graphics_queue; }
 	std::pair<Ref<Texture>, Ref<Sampler>> getDefaultTextureSampler();
 	static GraphicsEnvironment* get();
+	void drawImGui();
 	void drawFrame();
 
 private:
@@ -99,6 +101,7 @@ private:
 	void createDescriptorPoolAndSets();
 	void createCommandPool();
 	void createSyncObjects();
+	void initImGui();
 
 	void recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index);
 };

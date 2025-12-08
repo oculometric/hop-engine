@@ -1,4 +1,3 @@
-
 #include "graphics_environment.h"
 
 #include <stdexcept>
@@ -7,10 +6,15 @@
 #include <array>
 #include <map>
 #include <set>
+#include <chrono>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_vulkan.h>
+#define GLFW_INCLUDE_NONE
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <chrono>
 
 #include "window.h"
 #include "swapchain.h"
@@ -56,6 +60,8 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
     default_sampler = new Sampler(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
     createSyncObjects();
 
+    initImGui();
+
     DBG_INFO("graphics environment initialised");
 }
 
@@ -64,6 +70,11 @@ GraphicsEnvironment::~GraphicsEnvironment()
     DBG_INFO("destroying graphics environment");
 
     vkDeviceWaitIdle(device);
+
+    DBG_VERBOSE("\033[31mkilling imgui with a gun\033[0m");
+    ImGui_ImplVulkan_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     DBG_VERBOSE("destroying sync resources");
     for (size_t i = 0; i < image_available_semaphores.size(); ++i)
@@ -132,11 +143,25 @@ GraphicsEnvironment* GraphicsEnvironment::get()
     return environment;
 }
 
+void GraphicsEnvironment::drawImGui()
+{
+    ImGui_ImplVulkan_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    if (draw_imgui_function)
+        draw_imgui_function();
+
+    ImGui::Render();
+}
+
 void GraphicsEnvironment::drawFrame()
 {
     static size_t frame_index = 0;
     DBG_BABBLE("drawing frame " + to_string(frame_index));
     static auto start_time = chrono::steady_clock::now();
+
+    drawImGui();
 
     vkWaitForFences(device, 1, &in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT], VK_TRUE, UINT64_MAX);
     vkResetFences(device, 1, &in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT]);
@@ -200,8 +225,8 @@ void GraphicsEnvironment::createInstance()
     app_info.pApplicationName = "HopEngine";
     app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     app_info.pEngineName = "HopEngine";
-    app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    app_info.apiVersion = VK_API_VERSION_1_0;
+    app_info.engineVersion = VK_MAKE_VERSION(0, 3, 0);
+    app_info.apiVersion = VK_API_VERSION_1_4;
 
     // use extensions required by GLFW
     VkInstanceCreateInfo create_info{ };
@@ -439,6 +464,32 @@ void GraphicsEnvironment::createSyncObjects()
     }
 }
 
+void GraphicsEnvironment::initImGui()
+{
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+    ImGui_ImplGlfw_InitForVulkan(window->getWindow(), true);
+    ImGui_ImplVulkan_InitInfo init_info{ };
+    init_info.ApiVersion = VK_API_VERSION_1_4;
+    init_info.Instance = instance;
+    init_info.PhysicalDevice = physical_device;
+    init_info.Device = device;
+    init_info.QueueFamily = getQueueFamilies(physical_device).graphics_family.value();
+    init_info.Queue = graphics_queue;
+    init_info.PipelineCache = VK_NULL_HANDLE;
+    init_info.DescriptorPool = descriptor_pool;
+    init_info.MinImageCount = MAX_FRAMES_IN_FLIGHT;
+    init_info.ImageCount = MAX_FRAMES_IN_FLIGHT;
+    init_info.Allocator = nullptr;
+    init_info.PipelineInfoMain.RenderPass = render_pass->getRenderPass();
+    init_info.PipelineInfoMain.Subpass = 0;
+    init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    ImGui_ImplVulkan_Init(&init_info);
+}
+
 void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index)
 {
     DBG_BABBLE("recording command buffer");
@@ -502,6 +553,9 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
             vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(object->mesh->getIndexCount()), 1, 0, 0, 0);
         }
     }
+
+    ImDrawData* draw_data = ImGui::GetDrawData();
+    ImGui_ImplVulkan_RenderDrawData(draw_data, command_buffer);
 
     vkCmdEndRenderPass(command_buffer);
 
