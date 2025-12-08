@@ -3,6 +3,7 @@
 #include <limits>
 #include <algorithm>
 #include <stdexcept>
+#include <vulkan/vk_enum_string_helper.h>
 
 #include "graphics_environment.h"
 
@@ -53,7 +54,7 @@ Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR surface)
 
     // create the swapchain
     if (vkCreateSwapchainKHR(GraphicsEnvironment::get()->getDevice(), &create_info, nullptr, &swapchain) != VK_SUCCESS)
-        throw runtime_error("vkCreateSwapchainKHR failed");
+        DBG_FAULT("vkCreateSwapchainKHR failed");
 
     // retreive images
     uint32_t image_count = 0;
@@ -81,12 +82,15 @@ Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR surface)
         view_create_info.subresourceRange.layerCount = 1;
 
         if (vkCreateImageView(GraphicsEnvironment::get()->getDevice(), &view_create_info, nullptr, &image_views[i]) != VK_SUCCESS)
-            throw runtime_error("vkCreateImageView failed");
+            DBG_FAULT("vkCreateImageView failed");
     }
+
+    DBG_INFO("created swapchain at " + to_string(width) + "x" + to_string(height) + " with " + to_string(image_count) + " images in present mode " + string_VkPresentModeKHR(create_info.presentMode));
 }
 
 Swapchain::~Swapchain()
 {
+    DBG_INFO("destroying swapchain " + to_string((size_t)this));
     for (auto image_view : image_views)
         vkDestroyImageView(GraphicsEnvironment::get()->getDevice(), image_view, nullptr);
     

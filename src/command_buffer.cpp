@@ -26,7 +26,7 @@ CommandBuffer::CommandBuffer()
 CommandBuffer::~CommandBuffer()
 {
     submit();
-    DBG_VERBOSE("destroying command buffer");
+    DBG_VERBOSE("destroying command buffer " + to_string((size_t)this));
     vkFreeCommandBuffers(GraphicsEnvironment::get()->getDevice(), GraphicsEnvironment::get()->getCommandPool(), 1, &buffer);
 }
 

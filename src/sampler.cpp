@@ -1,6 +1,7 @@
 #include "sampler.h"
 
 #include <stdexcept>
+#include <vulkan/vk_enum_string_helper.h>
 
 #include "graphics_environment.h"
 
@@ -30,9 +31,12 @@ Sampler::Sampler(VkFilter filtering_mode, VkSamplerAddressMode address_mode)
 	create_info.maxLod = 0.0f;
 	if (vkCreateSampler(GraphicsEnvironment::get()->getDevice(), &create_info, nullptr, &sampler) != VK_SUCCESS)
 		throw runtime_error("vkCreateSampler failed");
+
+	DBG_INFO("created sampler for " + string(string_VkFilter(filtering_mode)) + ", " + string_VkSamplerAddressMode(address_mode));
 }
 
 Sampler::~Sampler()
 {
+	DBG_INFO("destroying sampler " + to_string((size_t)this));
 	vkDestroySampler(GraphicsEnvironment::get()->getDevice(), sampler, nullptr);
 }

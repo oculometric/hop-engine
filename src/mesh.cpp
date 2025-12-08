@@ -20,16 +20,21 @@ Mesh::Mesh(string path)
     if (readFileToArrays(path, verts, inds))
         createFromArrays(verts, inds);
     else
-        throw runtime_error("failed to load mesh");
+        DBG_ERROR("failed to load mesh " + path);
+
+    DBG_INFO("created mesh from " + path + " with " + to_string(verts.size()) + " vertices and " + to_string(inds.size()) + " indices");
 }
 
 Mesh::Mesh(vector<Vertex> vertices, vector<uint16_t> indices)
 {
     createFromArrays(vertices, indices);
+
+    DBG_INFO("created mesh from arrays with " + to_string(vertices.size()) + " vertices and " + to_string(indices.size()) + " indices");
 }
 
 Mesh::~Mesh()
 {
+    DBG_INFO("destroying mesh " + to_string((size_t)this));
     vertex_buffer = nullptr;
     index_buffer = nullptr;
 }

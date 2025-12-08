@@ -1,6 +1,7 @@
 #include "material.h"
 
 #include <glm/glm.hpp>
+#include <vulkan/vk_enum_string_helper.h>
 
 #include "graphics_environment.h"
 #include "render_pass.h"
@@ -34,10 +35,13 @@ Material::Material(Ref<Shader> _shader, VkCullModeFlags culling_mode, VkPolygonM
 		else if (binding.type == TEXTURE)
 			texture_name_to_binding[binding.name] = binding.binding;
 	}
+
+	DBG_INFO("created material from shader " + to_string((size_t)_shader.get()) + " with config " + string(string_VkCullModeFlags(culling_mode)) + ", " + string_VkPolygonMode(polygon_mode));
 }
 
 Material::~Material()
 {
+	DBG_INFO("destroying material " + to_string((size_t)this));
 	uniforms = nullptr;
 }
 
@@ -53,6 +57,7 @@ VkPipelineLayout Material::getPipelineLayout()
 
 void Material::pushToDescriptorSet(size_t index)
 {
+	DBG_BABBLE("material " + to_string((size_t)this) + " pushing to descriptor set " + to_string(index));
 	uniforms->pushToDescriptorSet(index);
 }
 
@@ -63,11 +68,13 @@ VkDescriptorSet Material::getDescriptorSet(size_t index)
 
 void Material::setTexture(uint32_t binding, Ref<Texture> texture)
 {
+	DBG_VERBOSE("material " + to_string((size_t)this) + " assigned texture " + to_string((size_t)texture.get()) + " to binding " + to_string(binding));
 	uniforms->setTexture(binding, texture);
 }
 
 void Material::setSampler(uint32_t binding, Ref<Sampler> sampler)
 {
+	DBG_VERBOSE("material " + to_string((size_t)this) + " assigned sampler " + to_string((size_t)sampler.get()) + " to binding " + to_string(binding));
 	uniforms->setSampler(binding, sampler);
 }
 
@@ -75,22 +82,38 @@ void Material::setTexture(string name, Ref<Texture> texture)
 {
 	auto it = texture_name_to_binding.find(name);
 	if (it != texture_name_to_binding.end())
+	{
+		DBG_VERBOSE("material " + to_string((size_t)this) + " assigned texture " + to_string((size_t)texture.get()) + " to binding " + name);
 		uniforms->setTexture(it->second, texture);
+	}
+	else
+		DBG_WARNING("material " + to_string((size_t)this) + " has no such binding " + name);
 }
 
 void Material::setSampler(string name, Ref<Sampler> sampler)
 {
 	auto it = texture_name_to_binding.find(name);
 	if (it != texture_name_to_binding.end())
+	{
+		DBG_VERBOSE("material " + to_string((size_t)this) + " assigned sampler " + to_string((size_t)sampler.get()) + " to binding " + name);
 		uniforms->setSampler(it->second, sampler);
+	}
+	else
+		DBG_WARNING("material " + to_string((size_t)this) + " has no such binding " + name);
 }
 
 void Material::setUniform(string name, void* data, size_t size)
 {
 	auto it = variable_name_to_binding.find(name);
 	if (it == variable_name_to_binding.end())
+	{
+		DBG_WARNING("material " + to_string((size_t)this) + " has no such uniform " + name);
 		return;
+	}
 	UniformVariable var = it->second;
+	if (size != var.size)
+		DBG_WARNING("material " + to_string((size_t)this) + " uniform " + name + " size mismatch (given " + to_string(size) + ", expected " + to_string(var.size) + ")");
 	size_t clamped_size = min(size, var.size);
 	memcpy(((uint8_t*)uniforms->getBuffer()) + var.offset, data, clamped_size);
+	DBG_VERBOSE("material " + to_string((size_t)this) + " updated uniform " + name);
 }

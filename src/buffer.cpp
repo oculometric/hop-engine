@@ -45,7 +45,7 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlag
 
 Buffer::~Buffer()
 {
-    DBG_VERBOSE("destroying buffer");
+    DBG_VERBOSE("destroying buffer " + to_string((size_t)this));
     unmapMemory();
 
     vkDestroyBuffer(GraphicsEnvironment::get()->getDevice(), buffer, nullptr);
