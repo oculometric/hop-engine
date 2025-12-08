@@ -20,25 +20,12 @@ Shader::Shader(string base_path, bool is_precompiled)
 	string proper_path = base_path;
 	if (!is_precompiled)
 	{
-		auto vert_data = Package::tryLoadFile(base_path + ".vert");
-		auto frag_data = Package::tryLoadFile(base_path + ".frag");
-		filesystem::path path = base_path;
-		string prefix = path.remove_filename().string();
-		Shader::fixIncludes(vert_data, prefix);
-		Shader::fixIncludes(frag_data, prefix);
-
-		string input_path = Package::getTempPath() + "temp_shader";
-		Package::tryWriteFile(input_path + ".vert", vert_data);
-		Package::tryWriteFile(input_path + ".frag", frag_data);
-
 		proper_path = Package::getTempPath() + "temp_shader_compiled";
-
-		bool result = Shader::compileFile(input_path + ".vert", proper_path + "_vert.spv");
-		result &= Shader::compileFile(input_path + ".frag", proper_path + "_frag.spv");
-		if (!result)
+		if (!compileShaders(base_path, proper_path))
 		{
 			DBG_ERROR(base_path + " shader compilation failed");
-			// TODO: replace with default shader!!
+			if (!compileShaders("res://shader", proper_path))
+				DBG_FAULT("failed to load default shader!");
 		}
 	}
 	
@@ -287,4 +274,35 @@ void Shader::fixIncludes(vector<uint8_t>& source_code, string path_prefix)
 
 	source_code.resize(source_code_text.size());
 	memcpy(source_code.data(), source_code_text.data(), source_code_text.size());
+}
+
+bool Shader::compileShaders(string path, string out_path)
+{
+	auto vert_data = Package::tryLoadFile(path + ".vert");
+	auto frag_data = Package::tryLoadFile(path + ".frag");
+
+	if (vert_data.empty())
+	{
+		DBG_WARNING("shader " + path + ".vert not found");
+		return false;
+	}
+	if (frag_data.empty())
+	{
+		DBG_WARNING("shader " + path + ".frag not found");
+		return false;
+	}
+
+	filesystem::path _path = path;
+	string prefix = _path.remove_filename().string();
+	Shader::fixIncludes(vert_data, prefix);
+	Shader::fixIncludes(frag_data, prefix);
+
+	string input_path = Package::getTempPath() + "temp_shader";
+	Package::tryWriteFile(input_path + ".vert", vert_data);
+	Package::tryWriteFile(input_path + ".frag", frag_data);
+
+	bool result = Shader::compileFile(input_path + ".vert", out_path + "_vert.spv");
+	result &= Shader::compileFile(input_path + ".frag", out_path + "_frag.spv");
+
+	return result;
 }

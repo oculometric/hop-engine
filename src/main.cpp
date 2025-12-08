@@ -44,7 +44,7 @@ struct MaterialParams
 
 void initScene(Ref<Scene> scene)
 {
-    Ref<Shader> shader = new Shader("res://psx", false);
+    Ref<Shader> shader = new Shader("res://psaoeifjaeofx", false);
     Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
     asha = new Object(
         new Mesh("res://asha/asha.obj"),
@@ -147,13 +147,13 @@ int main() {
     Package::loadPackage("resources.hop");
 
     ge->scene = new Scene();
-    initNodeScene(ge->scene);
+    initScene(ge->scene);
 
     while (!window->getShouldClose())
     {
         window->pollEvents();
         ge->drawFrame();
-        updateNodeScene(ge->scene);
+        updateScene(ge->scene);
     }
 
     cube = nullptr;
@@ -162,6 +162,7 @@ int main() {
     ge = nullptr;
     window = nullptr;
     Window::terminateEnvironment();
+
     Debug::close();
 
     return 0;

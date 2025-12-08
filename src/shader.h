@@ -63,6 +63,7 @@ private:
 	static bool compileFile(std::string path, std::string out_path);
 	static VkShaderModule createShaderModule(const std::vector<uint8_t>& blob);
 	static void fixIncludes(std::vector<uint8_t>& source_code, std::string path_prefix);
+	static bool compileShaders(std::string path, std::string out_path);
 };
 
 }
