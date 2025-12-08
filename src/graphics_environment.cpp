@@ -36,6 +36,32 @@ using namespace std;
 
 static GraphicsEnvironment* environment = nullptr;
 
+#if !defined(NDEBUG)
+static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
+    VkDebugUtilsMessageTypeFlagsEXT message_type,
+    const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void* user_data)
+{
+    switch (message_severity)
+    {
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+        DBG_VERBOSE("[ VALIDATION ]: " + string(callback_data->pMessage));
+        break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+        DBG_INFO("[ VALIDATION ]: " + string(callback_data->pMessage));
+        break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+        DBG_WARNING("[ VALIDATION ]: " + string(callback_data->pMessage));
+        break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+        DBG_ERROR("[ VALIDATION ]: " + string(callback_data->pMessage));
+        break;
+    }
+
+    return VK_FALSE;
+}
+#endif
+
 GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
 {
     DBG_INFO("initialising graphics environment");
@@ -98,6 +124,12 @@ GraphicsEnvironment::~GraphicsEnvironment()
 
     render_pass = nullptr;
     swapchain = nullptr;
+
+#if !defined(NDEBUG)
+    DBG_VERBOSE("\033[31mkilling the (debug) messenger\033[0m");
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+    func(instance, debug_messenger, nullptr);
+#endif
 
     DBG_VERBOSE("destroying device");
     vkDestroyDevice(device, nullptr);
@@ -232,7 +264,13 @@ void GraphicsEnvironment::createInstance()
     VkInstanceCreateInfo create_info{ };
     create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     create_info.pApplicationInfo = &app_info;
-    create_info.ppEnabledExtensionNames = glfwGetRequiredInstanceExtensions(&(create_info.enabledExtensionCount));
+    uint32_t extension_count;
+    auto glfw_extensions = glfwGetRequiredInstanceExtensions(&extension_count);
+    vector<const char*> extensions_to_enable(extension_count);
+    memcpy(extensions_to_enable.data(), glfw_extensions, extensions_to_enable.size() * sizeof(const char*));
+    extensions_to_enable.insert(extensions_to_enable.end(), required_instance_extensions.begin(), required_instance_extensions.end());
+    create_info.enabledExtensionCount = static_cast<uint32_t>(extensions_to_enable.size());
+    create_info.ppEnabledExtensionNames = extensions_to_enable.data();
 
     // apply validation layers for debug
 #if !defined(NDEBUG)
@@ -264,6 +302,23 @@ void GraphicsEnvironment::createInstance()
     DBG_VERBOSE("creating vulkan instance");
     if (vkCreateInstance(&create_info, nullptr, &instance) != VK_SUCCESS)
         DBG_FAULT("vkCreateInstance failed");
+
+#if !defined(NDEBUG)
+    DBG_VERBOSE("creating debug messenger");
+    VkDebugUtilsMessengerCreateInfoEXT debug_create_info{ };
+    debug_create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    debug_create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+    debug_create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    debug_create_info.pfnUserCallback = vulkanDebugCallback;
+    auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+    if (!func)
+    {
+        DBG_FAULT("debug utils not found");
+        return;
+    }
+    if (func(instance, &debug_create_info, nullptr, &debug_messenger) != VK_SUCCESS)
+        DBG_FAULT("unable to create debug messenger");
+#endif
 }
 
 void GraphicsEnvironment::createDevice()

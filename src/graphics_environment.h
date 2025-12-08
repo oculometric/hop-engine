@@ -40,6 +40,13 @@ private:
 #endif
 	};
 
+	const std::vector<const char*> required_instance_extensions =
+	{
+#if !defined(NDEBUG)
+		VK_EXT_DEBUG_UTILS_EXTENSION_NAME
+#endif
+	};
+
 	const std::vector<const char*> required_extensions =
 	{
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -55,6 +62,9 @@ private:
 	Ref<Window> window = nullptr;
 
 	VkInstance instance = VK_NULL_HANDLE;
+#if !defined(NDEBUG)
+	VkDebugUtilsMessengerEXT debug_messenger;
+#endif
 	VkPhysicalDevice physical_device = VK_NULL_HANDLE;
 	VkDevice device = VK_NULL_HANDLE;
 	VkQueue graphics_queue = VK_NULL_HANDLE;
