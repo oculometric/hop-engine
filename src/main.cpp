@@ -9,6 +9,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <Windows.h>
 
 #include "hop_engine.h"
 #include "node_view.h"
@@ -144,7 +145,8 @@ void imGuiDrawFunc()
     ImGui::End();
 }
 
-int main() {
+int main()
+{
     Debug::init(Debug::DEBUG_FAULT);
     Window::initEnvironment();
     Ref<Window> window = new Window(1024, 1024, "hop!");

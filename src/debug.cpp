@@ -92,8 +92,13 @@ void Debug::write(string description, DebugLevel severity)
 	DEBUG_TERMINAL << term_line << endl;
 #endif
 	
+	static string crash_string = "crash-severity issue occurred. stopping.";
 	if (severity >= application_debug->crash_level)
+	{
+		file_output << crash_string << endl;
+		DEBUG_TERMINAL << makeANSIColour(1, 0) << crash_string;
 		exit(-1);
+	}
 }
 
 void Debug::flush()
