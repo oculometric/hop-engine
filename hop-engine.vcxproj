@@ -149,6 +149,7 @@
   <ItemGroup>
     <ClCompile Include="src\buffer.cpp" />
     <ClCompile Include="src\command_buffer.cpp" />
+    <ClCompile Include="src\debug.cpp" />
     <ClCompile Include="src\exec.cpp" />
     <ClCompile Include="src\graphics_environment.cpp" />
     <ClCompile Include="src\input.cpp" />
@@ -174,6 +175,7 @@
     <ClInclude Include="src\command_buffer.h" />
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\counted_ref.h" />
+    <ClInclude Include="src\debug.h" />
     <ClInclude Include="src\graphics_environment.h" />
     <ClInclude Include="src\hop_engine.h" />
     <ClInclude Include="src\input.h" />

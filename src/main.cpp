@@ -138,6 +138,13 @@ void updateNodeScene(Ref<Scene> scene)
 }
 
 int main() {
+    Debug::init(Debug::DEBUG_FAULT);
+    DBG_WARNING("generic warning!");
+    DBG_INFO("generic info!");
+    DBG_ERROR("generic error!");
+    DBG_VERBOSE("verbose!");
+    DBG_BABBLE("verbose!");
+    DBG_FAULT("fuck you!");
     Window::initEnvironment();
     Ref<Window> window = new Window(1024, 1024, "hop!");
     Input::init(window->getWindow());
@@ -161,6 +168,7 @@ int main() {
     ge = nullptr;
     window = nullptr;
     Window::terminateEnvironment();
+    Debug::close();
 
     return 0;
 }

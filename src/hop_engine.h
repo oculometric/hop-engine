@@ -15,3 +15,4 @@
 #include "uniform_block.h"
 #include "package.h"
 #include "input.h"
+#include "debug.h"

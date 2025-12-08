@@ -2,3 +2,4 @@
 bin
 *.vcxproj.user
 *.spv
+*.log
