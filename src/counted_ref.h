@@ -90,6 +90,7 @@ public:
 		(*ref_counter)++;
 		return ref;
 	}
+	inline T* get() { return payload; }
 
 private:
 	inline void invalidateSelf()

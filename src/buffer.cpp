@@ -10,6 +10,12 @@ using namespace std;
 
 Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
 {
+    if (size == 0)
+    {
+        DBG_ERROR("buffer size was zero, this is not allowed");
+        size = 1;
+    }
+
     VkBufferCreateInfo buffer_create_info{ };
     buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     buffer_create_info.size = size;
@@ -17,7 +23,7 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlag
     buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
     if (vkCreateBuffer(GraphicsEnvironment::get()->getDevice(), &buffer_create_info, nullptr, &buffer) != VK_SUCCESS)
-        throw runtime_error("vkCreateBuffer failed");
+        DBG_FAULT("vkCreateBuffer failed");
 
     VkMemoryRequirements memory_requirements;
     vkGetBufferMemoryRequirements(GraphicsEnvironment::get()->getDevice(), buffer, &memory_requirements);
@@ -32,11 +38,14 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlag
 
     vkBindBufferMemory(GraphicsEnvironment::get()->getDevice(), buffer, memory, 0);
 
+    DBG_VERBOSE("created buffer of size " + to_string(size));
+
     buffer_size = size;
 }
 
 Buffer::~Buffer()
 {
+    DBG_VERBOSE("destroying buffer");
     unmapMemory();
 
     vkDestroyBuffer(GraphicsEnvironment::get()->getDevice(), buffer, nullptr);
@@ -76,6 +85,7 @@ uint32_t Buffer::findMemoryType(uint32_t type_bits, VkMemoryPropertyFlags proper
 
 void Buffer::copyToBuffer(Ref<Buffer> other)
 {
+    DBG_VERBOSE("copying from " + to_string((size_t)this) + " to buffer " + to_string((size_t)other.get()));
     Ref<CommandBuffer> cmd_buf = new CommandBuffer();
 
     VkBufferCopy buffer_copy{ };

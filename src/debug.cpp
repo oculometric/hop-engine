@@ -4,6 +4,7 @@
 #include <format>
 #include <ctime>
 #include <iostream>
+#include <filesystem>
 
 using namespace HopEngine;
 using namespace std;
@@ -28,6 +29,7 @@ void Debug::init(DebugLevel crash_level)
 		application_debug = new Debug();
 	application_debug->log_level = (DebugLevel)DEBUG_LEVEL;
 	application_debug->crash_level = crash_level;
+	DBG_INFO("initialised debug");
 }
 
 void Debug::write(string description, DebugLevel severity)
@@ -87,7 +89,8 @@ Debug::Debug()
 	auto time_now = std::time(0);
 	tm time;
 	localtime_s(&time, &time_now);
-	string file_name = format("engine_{:0>2}_{:0>2}_{:0>2}.log", time.tm_hour, time.tm_min, time.tm_sec);
+	string file_name = format("{}engine_{:0>2}_{:0>2}_{:0>2}.log", DEBUG_LOGFILE, time.tm_hour, time.tm_min, time.tm_sec);
+	filesystem::create_directory(DEBUG_LOGFILE);
 	file_output.open(file_name);
 #endif
 }

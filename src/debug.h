@@ -16,7 +16,7 @@
 #if defined (DEBUG_ENABLED)
 
 #define DEBUG_TERMINAL cout
-#define DEBUG_LOGFILE
+#define DEBUG_LOGFILE "log/"
 
 #if DEBUG_LEVEL == 0
 #define DBG_BABBLE(str) Debug::write(str, Debug::DEBUG_BABBLE)
