@@ -5,6 +5,7 @@ using namespace std;
 
 static Input* application_instance = nullptr;
 
+
 void Input::init(GLFWwindow* window)
 {
 	DBG_INFO("initialising input for window " + PTR(window));
@@ -12,12 +13,22 @@ void Input::init(GLFWwindow* window)
 	{
 		application_instance = new Input();
 		application_instance->window = window;
+		glfwSetKeyCallback(window, Input::keyCallback);
 	}
 }
 
 bool Input::isKeyDown(int key)
 {
 	return glfwGetKey(application_instance->window, key) == GLFW_PRESS;
+}
+
+bool Input::wasKeyPressed(int key)
+{
+	auto it = application_instance->pressed_since_checked.find(key);
+	if (it == application_instance->pressed_since_checked.end())
+		return false;
+	application_instance->pressed_since_checked.erase(it);
+	return true;
 }
 
 float Input::getAxis(int key_negative, int key_positive)
@@ -45,6 +56,12 @@ glm::vec2 Input::getMouseDelta()
 bool Input::isMouseDown(int button)
 {
 	return glfwGetMouseButton(application_instance->window, button) == GLFW_PRESS;
+}
+
+void Input::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (action == GLFW_PRESS || action == GLFW_REPEAT)
+		application_instance->pressed_since_checked.insert(key);
 }
 
 

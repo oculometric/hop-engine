@@ -166,6 +166,18 @@ void initNodeScene(Ref<Scene> scene)
             { "execution?", NodeView::ELEMENT_OUTPUT, 5 },
             { "hello", NodeView::ELEMENT_INPUT, 0, false },
         }, { -6, -10 }, 6 });
+
+    node_view->links.push_back({ 2, 0, 1, 0 });
+
+    //node_view->palette =
+    //{
+    //    { 0.018f, 0.018f, 0.018f },
+    //    { 0.863f, 0.624f, 0.068f },
+    //    { 0.694f, 0.091f, 0.019f },
+    //    { 0.604f, 0.044f, 0.025f },
+    //    { 0.337f, 0.025f, 0.058f },
+    //    //{ 0.159f, 0.037f, 0.078f },
+    //};
     node_view->material->setBoolUniform("debug_segments", false);
     node_view->updateMesh();
     scene->objects.push_back(node_view.cast<Object>());
@@ -193,7 +205,7 @@ void updateNodeScene(Ref<Scene> scene)
         node_view->updateMesh();
     }
 
-    if (Input::isKeyDown(GLFW_KEY_TAB))
+    if (Input::wasKeyPressed(GLFW_KEY_TAB))
     {
         node_view->nodes[node_index].highlighted = false;
         node_index = (node_index + 1) % node_view->nodes.size();

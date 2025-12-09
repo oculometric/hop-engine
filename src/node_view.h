@@ -32,15 +32,28 @@ public:
 
 	struct Node
 	{
+		friend class NodeView;
+	public:
 		std::string title;
 		std::vector<NodeElement> elements;
 		glm::vec2 position;
 		int palette_index = 1;
 		bool highlighted = false;
+
+		glm::vec2 last_size;
+	};
+
+	struct Link
+	{
+		int start_node = 0;
+		int start_output = 0;
+		int end_node = 0;
+		int end_input = 0;
 	};
 
 public:
 	std::vector<Node> nodes;
+	std::vector<Link> links;
 	std::vector<glm::vec3> palette;
 	bool use_compact = true;
 
@@ -65,6 +78,8 @@ private:
 	void addPin(glm::vec2 position, float layer, glm::vec3 tint, int type, bool filled);
 	void addCharacter(char c, glm::vec2 position, float layer, glm::vec3 tint);
 	void addText(std::string text, glm::vec2 start, float layer, glm::vec3 tint);
+	void addLinkElem(glm::vec2 position, float layer, glm::vec3 tint, int type);
+	void addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, float layer, glm::vec3 tint);
 };
 
 }
