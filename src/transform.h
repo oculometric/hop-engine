@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <vector>
 
 #include "common.h"
 
@@ -48,6 +49,14 @@ public:
 	void updateWorldMatrix();
 private:
 	void updateMatrix();
+};
+
+struct Spline
+{
+	std::vector<glm::vec3> points;
+	bool loop = false;
+
+	glm::vec3 operator[](float t);
 };
 
 }
