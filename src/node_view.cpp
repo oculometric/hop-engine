@@ -33,7 +33,7 @@ NodeView::NodeView() : Object(nullptr, nullptr)
     updateMesh();
 }
 
-void NodeView::addQuad(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 colour, glm::vec3 tint, bool clip_uv, vector<Vertex>& vertices, vector<uint16_t>& indices)
+void NodeView::addQuad(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 colour, glm::vec3 tint, bool clip_uv, int uv_index, vector<Vertex>& vertices, vector<uint16_t>& indices)
 {
     uint16_t v_off = static_cast<uint16_t>(vertices.size());
     glm::vec3 segment_size = { size.x / grid_size, size.y / grid_size, 0 };
@@ -46,10 +46,14 @@ void NodeView::addQuad(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 
 
     if (clip_uv)
     {
-        tl_uv = (tl_uv + 1.0f) / 3.0f;
-        tr_uv = (tr_uv + 1.0f) / 3.0f;
-        bl_uv = (bl_uv + 1.0f) / 3.0f;
-        br_uv = (br_uv + 1.0f) / 3.0f;
+        glm::vec2 slice_offset = { uv_index % 3, 2.0f - (int)(uv_index / 3) };
+
+        tl_uv = (tl_uv + slice_offset) / 3.0f;
+        tr_uv = (tr_uv + slice_offset) / 3.0f;
+        bl_uv = (bl_uv + slice_offset) / 3.0f;
+        br_uv = (br_uv + slice_offset) / 3.0f;
+
+        segment_size += glm::vec3{ 2.0f, 2.0f, 0.0f };
     }
 
     vertices.push_back(Vertex{ { position.x, -position.y, z_height }, colour, segment_size, tint, tl_uv });
@@ -67,22 +71,22 @@ void NodeView::addQuad(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 
 
 void NodeView::addFrame(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 tint)
 {
-    addQuad(position, size, layer, { 1, 0, 0 }, tint, false, vertices, indices);
+    addQuad(position, size, layer, { 1, 0, 0 }, tint, false, 0, vertices, indices);
 }
 
 void NodeView::addBadge(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 tint)
 {
-    addQuad(position, size, layer, { 0, 1, 0 }, tint, false, vertices, indices);
+    addQuad(position, size, layer, { 0, 1, 0 }, tint, false, 0, vertices, indices);
 }
 
 void NodeView::addBlock(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 tint)
 {
-    addQuad(position, size, layer, { 0, 1, 0 }, tint, true, vertices, indices);
+    addQuad(position, size, layer, { 0, 1, 0 }, tint, true, 4, vertices, indices);
 }
 
-void NodeView::addPin(glm::vec2 position, int layer, glm::vec3 tint)
+void NodeView::addPin(glm::vec2 position, int layer, glm::vec3 tint, int type, bool filled)
 {
-    addQuad(position, glm::vec2{ grid_size, grid_size }, layer, { 0, 0, 1 }, tint, false, vertices, indices);
+    addQuad(position, glm::vec2{ grid_size, grid_size }, layer, { 0, 0, filled ? 10 : 1 }, tint, true, type, vertices, indices);
 }
 
 glm::vec2 flipUV(glm::vec2 v)
@@ -137,6 +141,12 @@ void NodeView::addText(std::string text, glm::vec2 start, int layer, glm::vec3 t
 // TODO: new font
 void NodeView::updateMesh()
 {
+    glm::vec3 background_colour = palette.empty() ?
+        glm::vec3{ 0.005f, 0.005f, 0.005f }
+    : palette[0];
+
+    material->setVec4Uniform("background_colour", glm::vec4(background_colour, 1));
+
     if (nodes.empty())
     {
         mesh = nullptr;
@@ -168,9 +178,6 @@ void NodeView::updateMesh()
         glm::vec3 foreground_colour = (palette.size() < 2) ? 
               glm::vec3{ 1.000f, 0.319f, 0.000f }
             : palette[glm::clamp(box.palette_index, 0, (int)palette.size() - 1)];
-        glm::vec3 background_colour = palette.empty() ?
-              glm::vec3{ 0.005f, 0.005f, 0.005f }
-            : palette[0];
 
         size_t box_height_lines = 0;
         glm::vec2 box_base = (glm::round(box.position) * grid_size);
@@ -186,11 +193,11 @@ void NodeView::updateMesh()
             switch (element.type)
             {
             case ELEMENT_INPUT:
-                addPin(line_pos_base, 1, foreground_colour);
+                addPin(line_pos_base, 2, foreground_colour, element.pin_type, element.pin_solid);
                 addText(element.text, line_pos_base + glm::vec2{ 6.0f + grid_size, 0 }, 2, foreground_colour);
                 break;
             case ELEMENT_OUTPUT:
-                addPin(line_pos_base + glm::vec2{ box_width - 1, 0 } * grid_size, 1, foreground_colour);
+                addPin(line_pos_base + glm::vec2{ box_width - 1, 0 } * grid_size, 2, foreground_colour, element.pin_type, element.pin_solid);
                 text_width = (size_t)(character_size.x) * element.text.size();
                 addText(element.text, line_pos_base + glm::vec2{ (box_width * grid_size) - (6.0f + grid_size + text_width), 0.0f }, 2, foreground_colour);
                 break;

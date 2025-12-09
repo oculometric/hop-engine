@@ -26,6 +26,8 @@ public:
 	{
 		std::string text;
 		NodeElementType type;
+		int pin_type = 4;
+		bool pin_solid = true;
 	};
 
 	struct Node
@@ -54,11 +56,11 @@ public:
 	void updateMesh();
 
 private:
-	void addQuad(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 colour, glm::vec3 tint, bool clip_uv, std::vector<Vertex>& vertices, std::vector<uint16_t>& indices);
+	void addQuad(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 colour, glm::vec3 tint, bool clip_uv, int uv_index, std::vector<Vertex>& vertices, std::vector<uint16_t>& indices);
 	void addFrame(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 tint);
 	void addBadge(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 tint);
 	void addBlock(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 tint);
-	void addPin(glm::vec2 position, int layer, glm::vec3 tint);
+	void addPin(glm::vec2 position, int layer, glm::vec3 tint, int type, bool filled);
 	void addCharacter(char c, glm::vec2 position, int layer, glm::vec3 tint);
 	void addText(std::string text, glm::vec2 start, int layer, glm::vec3 tint);
 };

@@ -6,6 +6,7 @@
 layout(set = 2, binding = 0) uniform MaterialUniforms
 {
     bool debug_segments;
+    vec4 background_colour;
 };
 
 layout(set = 2, binding = 1) uniform sampler2D sliced_texture;
@@ -46,13 +47,17 @@ void main()
             uv = fraction + 1.0f;
             uv -= vec2(lessThan(segment, ivec2(1, 1)));
             uv += vec2(greaterThan(segment, size_units - ivec2(2, 2)));
-
+            
             uv /= 3.0f;
 
             vec4 tex_sample = texture(sliced_texture, uv).rgba;
-            if (length(tex_sample.rgb * frag.colour.rgb) * tex_sample.a <= 0.4f)
+            float factor = length(tex_sample.rgb * frag.colour.rgb) * tex_sample.a;
+            if (factor <= 0.001f)
                 discard;
-            colour = vec4(frag.tangent.rgb,1);
+            else if (factor <= 0.4f)
+                colour = vec4(background_colour.rgb, 1);
+            else
+                colour = vec4(frag.tangent.rgb, 1);
         }
     }
 }

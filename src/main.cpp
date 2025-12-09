@@ -151,12 +151,12 @@ void initNodeScene(Ref<Scene> scene)
     node_view->nodes.push_back(
         { "make vec3",
         {
-            { "vector", NodeView::ELEMENT_OUTPUT },
+            { "vector", NodeView::ELEMENT_OUTPUT, 0 },
             { "length", NodeView::ELEMENT_OUTPUT },
             { "normalised", NodeView::ELEMENT_OUTPUT },
-            { "x", NodeView::ELEMENT_INPUT },
-            { "y", NodeView::ELEMENT_INPUT },
-            { "z", NodeView::ELEMENT_INPUT },
+            { "x", NodeView::ELEMENT_INPUT, 4, false },
+            { "y", NodeView::ELEMENT_INPUT, 4, false },
+            { "z", NodeView::ELEMENT_INPUT, 4, false },
         }, { -6, -10 }, 5 });
     node_view->material->setBoolUniform("debug_segments", false);
     node_view->updateMesh();
