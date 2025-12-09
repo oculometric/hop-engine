@@ -75,6 +75,7 @@ Buffer::~Buffer()
     DBG_VERBOSE("destroying buffer " + PTR(this));
     unmapMemory();
 
+    vkDeviceWaitIdle(GraphicsEnvironment::get()->getDevice());
     vkDestroyBuffer(GraphicsEnvironment::get()->getDevice(), buffer, nullptr);
     vkFreeMemory(GraphicsEnvironment::get()->getDevice(), memory, nullptr);
 }

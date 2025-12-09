@@ -10,8 +10,6 @@ constexpr float character_padding = 1.0f;
 constexpr float grid_size = 24.0f;
 constexpr float layer_offset = 0.1f;
 constexpr float character_top_inset = 4.0f;
-constexpr glm::vec3 background_colour = { 0, 0, 0 };
-constexpr glm::vec3 foreground_colour = { 1.0f, 0.133f, 0 };
 
 NodeView::NodeView() : Object(nullptr, nullptr)
 {
@@ -20,6 +18,17 @@ NodeView::NodeView() : Object(nullptr, nullptr)
     material->setSampler("sliced_texture", new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT));
     material->setTexture("text_atlas", new Texture("res://font.bmp"));
     material->setSampler("text_atlas", new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT));
+
+    palette =
+    {
+        { 0.005f, 0.005f, 0.005f },
+        { 1.000f, 0.319f, 0.000f },
+        { 1.000f, 0.133f, 0.000f },
+        { 0.624f, 0.027f, 0.012f },
+        { 0.127f, 0.027f, 0.304f },
+        { 0.175f, 0.451f, 0.005f },
+        { 0.292f, 0.041f, 0.117f }
+    };
 
     updateMesh();
 }
@@ -124,6 +133,8 @@ void NodeView::addText(std::string text, glm::vec2 start, int layer, glm::vec3 t
     }
 }
 
+// TODO: connections between nodes
+// TODO: new font
 void NodeView::updateMesh()
 {
     if (nodes.empty())
@@ -138,7 +149,7 @@ void NodeView::updateMesh()
     {
         size_t box_width = 3;
         size_t text_width = 0;
-        text_width = character_size.x * box.title.size();
+        text_width = (size_t)(character_size.x) * box.title.size();
         box_width = glm::max(box_width, ((size_t)(text_width / grid_size) + 4));
         for (const NodeElement& element : box.elements)
         {
@@ -148,17 +159,25 @@ void NodeView::updateMesh()
             case ELEMENT_BLOCK:
             case ELEMENT_OUTPUT:
             case ELEMENT_INPUT:
-                text_width = character_size.x * element.text.size();
+                text_width = (size_t)(character_size.x) * element.text.size();
                 box_width = glm::max(box_width, ((size_t)(text_width / grid_size) + 4));
                 break;
             }
         }
 
+        glm::vec3 foreground_colour = (palette.size() < 2) ? 
+              glm::vec3{ 1.000f, 0.319f, 0.000f }
+            : palette[glm::clamp(box.palette_index, 0, (int)palette.size() - 1)];
+        glm::vec3 background_colour = palette.empty() ?
+              glm::vec3{ 0.005f, 0.005f, 0.005f }
+            : palette[0];
+
         size_t box_height_lines = 0;
         glm::vec2 box_base = (glm::round(box.position) * grid_size);
-        text_width = character_size.x * box.title.size();
+        text_width = (size_t)(character_size.x) * box.title.size();
         addText(box.title, box_base + glm::vec2{ grid_size * 1.5f, 0 }, 2, box.highlighted ? background_colour : foreground_colour);
-        addBadge(box_base - glm::vec2{ 0, grid_size }, glm::vec2{ ((size_t)(text_width / grid_size) + 4), 3 } * grid_size, 1, box.highlighted ? foreground_colour : background_colour);
+        addBlock(box_base + glm::vec2{ grid_size - 4.0f, 0 }, glm::vec2{ ((size_t)(text_width / grid_size) + 2), 1 } *grid_size, 1, box.highlighted ? foreground_colour : background_colour);
+        //addBadge(box_base - glm::vec2{ 0, grid_size }, glm::vec2{ ((size_t)(text_width / grid_size) + 4), 3 } * grid_size, 1, box.highlighted ? foreground_colour : background_colour);
         box_height_lines += 2;
 
         for (const NodeElement& element : box.elements)
@@ -172,7 +191,7 @@ void NodeView::updateMesh()
                 break;
             case ELEMENT_OUTPUT:
                 addPin(line_pos_base + glm::vec2{ box_width - 1, 0 } * grid_size, 1, foreground_colour);
-                text_width = character_size.x * element.text.size();
+                text_width = (size_t)(character_size.x) * element.text.size();
                 addText(element.text, line_pos_base + glm::vec2{ (box_width * grid_size) - (6.0f + grid_size + text_width), 0.0f }, 2, foreground_colour);
                 break;
             case ELEMENT_BLOCK:
@@ -190,8 +209,11 @@ void NodeView::updateMesh()
 
         box_height_lines++;
         addFrame(box_base, glm::vec2{ box_width, box_height_lines + 1 } * grid_size, 0, foreground_colour);
+        addBlock(box_base, glm::vec2{box_width, box_height_lines + 1} * grid_size, -1, background_colour);
     }
 
-    // TODO: make it so we can update (rather than recreate) the mesh
-    mesh = new Mesh(vertices, indices);
+    if (mesh.isValid())
+        mesh->updateData(vertices, indices);
+    else
+        mesh = new Mesh(vertices, indices, true);
 }

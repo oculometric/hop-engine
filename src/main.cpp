@@ -125,14 +125,39 @@ void initNodeScene(Ref<Scene> scene)
             { "mixed-width font!", NodeView::ELEMENT_BLOCK },
             { "above is a banner", NodeView::ELEMENT_TEXT },
             { "extra bottom spacing", NodeView::ELEMENT_TEXT },
-        }, { 0, 0 } });
+        }, { 0, 0 }, 1, true });
     node_view->nodes.push_back(
         { "multiply",
         {
             { "result", NodeView::ELEMENT_OUTPUT },
             { "input a", NodeView::ELEMENT_INPUT },
             { "input b", NodeView::ELEMENT_INPUT },
-        }, { 13, 4 } });
+        }, { 13, 4 }, 2 });
+    node_view->nodes.push_back(
+        { "add",
+        {
+            { "result", NodeView::ELEMENT_OUTPUT },
+            { "input a", NodeView::ELEMENT_INPUT },
+            { "input b", NodeView::ELEMENT_INPUT },
+        }, { -6, 0 }, 3 });
+    node_view->nodes.push_back(
+        { "multiply add",
+        {
+            { "result", NodeView::ELEMENT_OUTPUT },
+            { "input a", NodeView::ELEMENT_INPUT },
+            { "input b", NodeView::ELEMENT_INPUT },
+            { "input c", NodeView::ELEMENT_INPUT },
+        }, { -6, 10 }, 4 });
+    node_view->nodes.push_back(
+        { "make vec3",
+        {
+            { "vector", NodeView::ELEMENT_OUTPUT },
+            { "length", NodeView::ELEMENT_OUTPUT },
+            { "normalised", NodeView::ELEMENT_OUTPUT },
+            { "x", NodeView::ELEMENT_INPUT },
+            { "y", NodeView::ELEMENT_INPUT },
+            { "z", NodeView::ELEMENT_INPUT },
+        }, { -6, -10 }, 5 });
     node_view->material->setBoolUniform("debug_segments", false);
     node_view->updateMesh();
     scene->objects.push_back(node_view.cast<Object>());

@@ -33,11 +33,13 @@ public:
 		std::string title;
 		std::vector<NodeElement> elements;
 		glm::vec2 position;
+		int palette_index = 1;
 		bool highlighted = false;
 	};
 
 public:
 	std::vector<Node> nodes;
+	std::vector<glm::vec3> palette;
 
 private:
 	std::vector<Vertex> vertices;
