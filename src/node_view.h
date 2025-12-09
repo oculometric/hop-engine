@@ -13,16 +13,35 @@ namespace HopEngine
 class NodeView : public Object
 {
 public:
+	enum NodeElementType
+	{
+		ELEMENT_INPUT,
+		ELEMENT_OUTPUT,
+		ELEMENT_TEXT,
+		ELEMENT_SPACE,
+		ELEMENT_BLOCK
+	};
+	
+	struct NodeElement
+	{
+		std::string text;
+		NodeElementType type;
+	};
+
 	struct Node
 	{
 		std::string title;
-		std::string description;
-		glm::ivec2 position;
-		glm::ivec2 size;
+		std::vector<NodeElement> elements;
+		glm::vec2 position;
+		bool highlighted = false;
 	};
 
 public:
-	std::vector<Node> boxes;
+	std::vector<Node> nodes;
+
+private:
+	std::vector<Vertex> vertices;
+	std::vector<uint16_t> indices;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(NodeView);
@@ -33,8 +52,13 @@ public:
 	void updateMesh();
 
 private:
-	void addFrame(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 tint, std::vector<Vertex>& vertices, std::vector<uint16_t>& indices);
-	void addCharacter(char c, glm::vec2 position, int layer, std::vector<Vertex>& vertices, std::vector<uint16_t>& indices);
+	void addQuad(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 colour, glm::vec3 tint, bool clip_uv, std::vector<Vertex>& vertices, std::vector<uint16_t>& indices);
+	void addFrame(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 tint);
+	void addBadge(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 tint);
+	void addBlock(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 tint);
+	void addPin(glm::vec2 position, int layer, glm::vec3 tint);
+	void addCharacter(char c, glm::vec2 position, int layer, glm::vec3 tint);
+	void addText(std::string text, glm::vec2 start, int layer, glm::vec3 tint);
 };
 
 }

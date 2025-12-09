@@ -11,20 +11,26 @@ layout(set = 2, binding = 0) uniform MaterialUniforms
 layout(set = 2, binding = 1) uniform sampler2D sliced_texture;
 layout(set = 2, binding = 2) uniform sampler2D text_atlas;
 
+const float slice_size = 24.0f;
+const float border_width = 1.0f;
+const float bordered_size = slice_size + (2.0f * border_width);
+const float border_ratio = slice_size / bordered_size;
+const float border_fraction = border_width / bordered_size;
+
 void main()
 {
     vec2 uv = frag.uv;
     
-    if (frag.colour.z > 0)
+    if (frag.normal.z > 0.5f)
     {
         if (texture(text_atlas, uv).r < 0.5f)
             discard;
 
-        colour = vec4(0, 0, 0, 1);
+        colour = vec4(frag.colour.rgb, 1);
     }
     else
     {
-        vec2 size_units = frag.colour.xy;
+        vec2 size_units = frag.normal.xy;
         vec2 scaled_uv = frag.uv * size_units;
         ivec2 segment = ivec2(floor(scaled_uv));
         if (debug_segments)
@@ -34,19 +40,19 @@ void main()
         else
         {
             vec2 fraction = fract(scaled_uv);
-            fraction *= 6.0f / 8.0f;
-            fraction += 1.0f / 8.0f;
-            fraction = clamp(fraction, 1.0f / 8.0f, 7.0f / 8.0f);
+            fraction *= border_ratio;
+            fraction += border_fraction;
+            fraction = clamp(fraction, border_fraction, 1.0f - border_fraction);
             uv = fraction + 1.0f;
             uv -= vec2(lessThan(segment, ivec2(1, 1)));
             uv += vec2(greaterThan(segment, size_units - ivec2(2, 2)));
 
             uv /= 3.0f;
 
-            vec4 tex_sample = texture(sliced_texture, uv);
-            if (tex_sample.a < 0.5f)
+            vec4 tex_sample = texture(sliced_texture, uv).rgba;
+            if (length(tex_sample.rgb * frag.colour.rgb) * tex_sample.a <= 0.4f)
                 discard;
-            colour = vec4(tex_sample.rgb * frag.normal.rgb, 1);
+            colour = vec4(frag.tangent.rgb,1);
         }
     }
 }

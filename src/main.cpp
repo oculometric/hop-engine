@@ -18,6 +18,8 @@ using namespace HopEngine;
 
 Ref<Object> asha;
 Ref<Object> cube;
+size_t node_index = 0;
+Ref<NodeView> node_view;
 
 struct LightParams
 {
@@ -111,28 +113,62 @@ void updateScene(Ref<Scene> scene)
 
 void initNodeScene(Ref<Scene> scene)
 {
-    Ref<NodeView> node_view = new NodeView();
-    node_view->boxes.push_back({ "multiply", "this node has a description. yea, indeed it does. it even wraps automatically! what the hell am i doing here", { 0, 0 }, { 18, 28 }});
+    node_view = new NodeView();
+    node_view->nodes.push_back(
+        { "Hello, World!",
+        {
+            { "Outputs on right", NodeView::ELEMENT_OUTPUT },
+            { "text 6px inwards", NodeView::ELEMENT_OUTPUT },
+            { "text 4px down", NodeView::ELEMENT_OUTPUT },
+            { "Inputs on the left", NodeView::ELEMENT_INPUT },
+            { "", NodeView::ELEMENT_SPACE },
+            { "mixed-width font!", NodeView::ELEMENT_BLOCK },
+            { "above is a banner", NodeView::ELEMENT_TEXT },
+            { "extra bottom spacing", NodeView::ELEMENT_TEXT },
+        }, { 0, 0 } });
+    node_view->nodes.push_back(
+        { "multiply",
+        {
+            { "result", NodeView::ELEMENT_OUTPUT },
+            { "input a", NodeView::ELEMENT_INPUT },
+            { "input b", NodeView::ELEMENT_INPUT },
+        }, { 13, 4 } });
     node_view->material->setBoolUniform("debug_segments", false);
     node_view->updateMesh();
-    node_view->transform.setLocalScale({ 0.05f, 0.05f, 1.0f });
     scene->objects.push_back(node_view.cast<Object>());
 
     scene->camera->transform.lookAt({ 0, 0, 6 }, { 0, 0, 0 }, { 0, 1, 0 });
+    scene->background_colour = { 0, 0, 0 };
 }
 
 void updateNodeScene(Ref<Scene> scene)
 {
     glm::vec2 mouse_delta = Input::getMouseDelta() * 0.004f;
-    if (Input::isMouseDown(GLFW_MOUSE_BUTTON_2))
+    if (Input::isMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
         scene->camera->transform.rotateLocal({ -mouse_delta.y, 0, -mouse_delta.x });
+
+    float move_x = Input::getAxis(GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
+    float move_y = Input::getAxis(GLFW_KEY_UP, GLFW_KEY_DOWN);
+    if (move_x != 0 || move_y != 0)
+    {
+        node_view->nodes[node_index].position += glm::vec2{ move_x, move_y } * 0.5f;
+        node_view->updateMesh();
+    }
+
+    if (Input::isKeyDown(GLFW_KEY_TAB))
+    {
+        node_view->nodes[node_index].highlighted = false;
+        node_index = (node_index + 1) % node_view->nodes.size();
+        node_view->nodes[node_index].highlighted = true;
+        node_view->updateMesh();
+    }
 
     glm::mat4 camera_matrix = scene->camera->transform.getMatrix();
     glm::vec3 local_move_vector = glm::vec3{
         Input::getAxis('A', 'D'),
         Input::getAxis('Q', 'E'),
         Input::getAxis('W', 'S')
-    } *0.02f;
+    } * 0.02f;
     if (Input::isKeyDown(GLFW_KEY_LEFT_SHIFT))
         local_move_vector *= 3.0f;
     scene->camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
@@ -157,7 +193,7 @@ int main()
 
     ge->draw_imgui_function = imGuiDrawFunc;
     ge->scene = new Scene();
-    initScene(ge->scene);
+    initNodeScene(ge->scene);
 
     while (!window->getShouldClose())
     {
@@ -165,9 +201,10 @@ int main()
         if (window->isMinified())
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         ge->drawFrame();
-        updateScene(ge->scene);
+        updateNodeScene(ge->scene);
     }
 
+    node_view = nullptr;
     cube = nullptr;
     asha = nullptr;
 
