@@ -178,7 +178,7 @@ void NodeView::updateMesh()
         addText(box.title, box_base + glm::vec2{ grid_size * 1.5f, 0 }, 2, box.highlighted ? background_colour : foreground_colour);
         addBlock(box_base + glm::vec2{ grid_size - 4.0f, 0 }, glm::vec2{ ((size_t)(text_width / grid_size) + 2), 1 } *grid_size, 1, box.highlighted ? foreground_colour : background_colour);
         //addBadge(box_base - glm::vec2{ 0, grid_size }, glm::vec2{ ((size_t)(text_width / grid_size) + 4), 3 } * grid_size, 1, box.highlighted ? foreground_colour : background_colour);
-        box_height_lines += 2;
+        box_height_lines += 1;
 
         for (const NodeElement& element : box.elements)
         {
@@ -197,7 +197,6 @@ void NodeView::updateMesh()
             case ELEMENT_BLOCK:
                 addBlock(line_pos_base + glm::vec2{ grid_size / 2.0f, 0 }, glm::vec2{ box_width - 1, 1 } * grid_size, 1, foreground_colour);
                 addText(element.text, line_pos_base + glm::vec2{ 6.0f + grid_size, 0 }, 2, background_colour);
-                box_height_lines++;
                 break;
             case ELEMENT_TEXT:
                 addText(element.text, line_pos_base + glm::vec2{ 6.0f + grid_size, 0 }, 2, foreground_colour);

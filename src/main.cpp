@@ -169,11 +169,16 @@ void initNodeScene(Ref<Scene> scene)
 void updateNodeScene(Ref<Scene> scene)
 {
     glm::vec2 mouse_delta = Input::getMouseDelta() * 0.004f;
-    if (Input::isMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
-        scene->camera->transform.rotateLocal({ -mouse_delta.y, 0, -mouse_delta.x });
-
     float move_x = Input::getAxis(GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
     float move_y = Input::getAxis(GLFW_KEY_UP, GLFW_KEY_DOWN);
+    if (Input::isMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
+        scene->camera->transform.translateLocal({ -mouse_delta.x * 0.5f, -mouse_delta.y * 0.5f, 0 });
+    else if (Input::isMouseDown(GLFW_MOUSE_BUTTON_LEFT))
+    {
+        move_x = mouse_delta.x * 20.0f;
+        move_y = mouse_delta.y * 20.0f;
+    }
+
     if (move_x != 0 || move_y != 0)
     {
         node_view->nodes[node_index].position += glm::vec2{ move_x, move_y } * 0.5f;
@@ -187,16 +192,6 @@ void updateNodeScene(Ref<Scene> scene)
         node_view->nodes[node_index].highlighted = true;
         node_view->updateMesh();
     }
-
-    glm::mat4 camera_matrix = scene->camera->transform.getMatrix();
-    glm::vec3 local_move_vector = glm::vec3{
-        Input::getAxis('A', 'D'),
-        Input::getAxis('Q', 'E'),
-        Input::getAxis('W', 'S')
-    } * 0.02f;
-    if (Input::isKeyDown(GLFW_KEY_LEFT_SHIFT))
-        local_move_vector *= 3.0f;
-    scene->camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
 }
 
 void imGuiDrawFunc()
