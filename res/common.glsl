@@ -15,18 +15,18 @@ layout(set = 1, binding = 0) uniform ObjectUniforms
 
 struct Frag
 {
-    vec3 position;
-    vec3 colour;
-    vec3 normal;
-    vec3 tangent;
+    vec4 position;
+    vec4 colour;
+    vec4 normal;
+    vec4 tangent;
     vec2 uv;
 };
 
 #ifdef VERTEX
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 colour;
-layout(location = 2) in vec3 normal;
-layout(location = 3) in vec3 tangent;
+layout(location = 0) in vec4 position;
+layout(location = 1) in vec4 colour;
+layout(location = 2) in vec4 normal;
+layout(location = 3) in vec4 tangent;
 layout(location = 4) in vec2 uv;
 
 layout(location = 0) out Frag frag;

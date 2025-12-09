@@ -33,10 +33,10 @@ NodeView::NodeView() : Object(nullptr, nullptr)
     updateMesh();
 }
 
-void NodeView::addQuad(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 colour, glm::vec3 tint, bool clip_uv, int uv_index, vector<Vertex>& vertices, vector<uint16_t>& indices)
+void NodeView::addQuad(glm::vec2 position, glm::vec2 size, float layer, glm::vec4 colour, glm::vec3 tint, bool clip_uv, int uv_index, vector<Vertex>& vertices, vector<uint16_t>& indices)
 {
     uint16_t v_off = static_cast<uint16_t>(vertices.size());
-    glm::vec3 segment_size = { size.x / grid_size, size.y / grid_size, 0 };
+    glm::vec3 segment_size = { glm::ceil(size.x / grid_size), glm::ceil(size.y / grid_size), 0 };
     float z_height = layer * layer_offset;
 
     glm::vec2 tl_uv = { 0, 1 };
@@ -69,24 +69,26 @@ void NodeView::addQuad(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 
     indices.push_back(v_off + 3);
 }
 
-void NodeView::addFrame(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 tint)
+void NodeView::addFrame(glm::vec2 position, glm::vec2 size, float layer, glm::vec3 tint)
 {
-    addQuad(position, size, layer, { 1, 0, 0 }, tint, false, 0, vertices, indices);
+    addQuad(position, size, layer, { 1, 0, 0, 0 }, tint, false, 0, vertices, indices);
 }
 
-void NodeView::addBadge(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 tint)
+void NodeView::addBadge(glm::vec2 position, glm::vec2 size, float layer, glm::vec3 tint)
 {
-    addQuad(position, size, layer, { 0, 1, 0 }, tint, false, 0, vertices, indices);
+    addQuad(position, size, layer, { 0, 1, 0, 0 }, tint, false, 0, vertices, indices);
 }
 
-void NodeView::addBlock(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 tint)
+void NodeView::addBlock(glm::vec2 position, glm::vec2 size, float layer, glm::vec3 tint, bool outline)
 {
-    addQuad(position, size, layer, { 0, 1, 0 }, tint, true, 4, vertices, indices);
+    addQuad(position, size, layer, { 0, 1, 0, 0 }, tint, true, 4, vertices, indices);
+    if (outline)
+        addQuad(position + 2.0f, size - 4.0f, layer + 0.5f, { 0, 1, 0, 0 }, background_colour, true, 4, vertices, indices);
 }
 
-void NodeView::addPin(glm::vec2 position, int layer, glm::vec3 tint, int type, bool filled)
+void NodeView::addPin(glm::vec2 position, float layer, glm::vec3 tint, int type, bool filled)
 {
-    addQuad(position, glm::vec2{ grid_size, grid_size }, layer, { 0, 0, filled ? 10 : 1 }, tint, true, type, vertices, indices);
+    addQuad(position, glm::vec2{ grid_size, grid_size }, layer, { 0, 0, filled ? 10 : 1, 0 }, tint, true, type, vertices, indices);
 }
 
 glm::vec2 flipUV(glm::vec2 v)
@@ -94,7 +96,7 @@ glm::vec2 flipUV(glm::vec2 v)
     return { v.x, 1.0f - v.y };
 }
 
-void NodeView::addCharacter(char c, glm::vec2 position, int layer, glm::vec3 tint)
+void NodeView::addCharacter(char c, glm::vec2 position, float layer, glm::vec3 tint)
 {
     float chars_horizontal = 32.0f;
     float chars_height = 320.0f / 18.0f;
@@ -114,10 +116,10 @@ void NodeView::addCharacter(char c, glm::vec2 position, int layer, glm::vec3 tin
     glm::vec3 pos_tr = { position.x + character_size.x, -position.y - top_inset, z_height };
 
     uint16_t v_off = static_cast<uint16_t>(vertices.size());
-    vertices.push_back(Vertex{ pos_bl, tint, { 0, 0, 1 }, {}, uv_bl });
-    vertices.push_back(Vertex{ pos_br, tint, { 0, 0, 1 }, {}, uv_br });
-    vertices.push_back(Vertex{ pos_tl, tint, { 0, 0, 1 }, {}, uv_tl });
-    vertices.push_back(Vertex{ pos_tr, tint, { 0, 0, 1 }, {}, uv_tr });
+    vertices.push_back(Vertex{ pos_bl, glm::vec4(tint, 1), { 0, 0, 1 }, {}, uv_bl });
+    vertices.push_back(Vertex{ pos_br, glm::vec4(tint, 1), { 0, 0, 1 }, {}, uv_br });
+    vertices.push_back(Vertex{ pos_tl, glm::vec4(tint, 1), { 0, 0, 1 }, {}, uv_tl });
+    vertices.push_back(Vertex{ pos_tr, glm::vec4(tint, 1), { 0, 0, 1 }, {}, uv_tr });
 
     indices.push_back(v_off + 0);
     indices.push_back(v_off + 3);
@@ -127,7 +129,7 @@ void NodeView::addCharacter(char c, glm::vec2 position, int layer, glm::vec3 tin
     indices.push_back(v_off + 3);
 }
 
-void NodeView::addText(std::string text, glm::vec2 start, int layer, glm::vec3 tint)
+void NodeView::addText(std::string text, glm::vec2 start, float layer, glm::vec3 tint)
 {
     glm::vec2 position = start;
     for (char c : text)
@@ -141,11 +143,12 @@ void NodeView::addText(std::string text, glm::vec2 start, int layer, glm::vec3 t
 // TODO: new font
 void NodeView::updateMesh()
 {
-    glm::vec3 background_colour = palette.empty() ?
+    glm::vec3 new_background_colour = palette.empty() ?
         glm::vec3{ 0.005f, 0.005f, 0.005f }
     : palette[0];
 
-    material->setVec4Uniform("background_colour", glm::vec4(background_colour, 1));
+    if (new_background_colour != background_colour)
+        material->setVec4Uniform("background_colour", glm::vec4(background_colour, 1));
 
     if (nodes.empty())
     {
@@ -183,9 +186,11 @@ void NodeView::updateMesh()
         glm::vec2 box_base = (glm::round(box.position) * grid_size);
         text_width = (size_t)(character_size.x) * box.title.size();
         addText(box.title, box_base + glm::vec2{ grid_size * 1.5f, 0 }, 2, box.highlighted ? background_colour : foreground_colour);
-        addBlock(box_base + glm::vec2{ grid_size - 4.0f, 0 }, glm::vec2{ ((size_t)(text_width / grid_size) + 2), 1 } *grid_size, 1, box.highlighted ? foreground_colour : background_colour);
+        addBlock(box_base + glm::vec2{ grid_size - 4.0f, 0 }, glm::vec2{ ((size_t)(text_width / grid_size) + 2), 1 } * grid_size, 1, foreground_colour, !box.highlighted);
         //addBadge(box_base - glm::vec2{ 0, grid_size }, glm::vec2{ ((size_t)(text_width / grid_size) + 4), 3 } * grid_size, 1, box.highlighted ? foreground_colour : background_colour);
-        box_height_lines += 1;
+        box_height_lines++;
+        if (!use_compact)
+            box_height_lines++;
 
         for (const NodeElement& element : box.elements)
         {
@@ -202,8 +207,10 @@ void NodeView::updateMesh()
                 addText(element.text, line_pos_base + glm::vec2{ (box_width * grid_size) - (6.0f + grid_size + text_width), 0.0f }, 2, foreground_colour);
                 break;
             case ELEMENT_BLOCK:
-                addBlock(line_pos_base + glm::vec2{ grid_size / 2.0f, 0 }, glm::vec2{ box_width - 1, 1 } * grid_size, 1, foreground_colour);
+                addBlock(line_pos_base + glm::vec2{ grid_size / 2.0f, 0 }, glm::vec2{ box_width - 1, 1 } * grid_size, 1, foreground_colour, false);
                 addText(element.text, line_pos_base + glm::vec2{ 6.0f + grid_size, 0 }, 2, background_colour);
+                if (!use_compact)
+                    box_height_lines++;
                 break;
             case ELEMENT_TEXT:
                 addText(element.text, line_pos_base + glm::vec2{ 6.0f + grid_size, 0 }, 2, foreground_colour);
@@ -213,9 +220,10 @@ void NodeView::updateMesh()
             box_height_lines++;
         }
 
-        box_height_lines++;
+        if (!use_compact)
+            box_height_lines++;
         addFrame(box_base, glm::vec2{ box_width, box_height_lines + 1 } * grid_size, 0, foreground_colour);
-        addBlock(box_base, glm::vec2{box_width, box_height_lines + 1} * grid_size, -1, background_colour);
+        addBlock(box_base, glm::vec2{box_width, box_height_lines + 1} * grid_size, -1, background_colour, false);
     }
 
     if (mesh.isValid())

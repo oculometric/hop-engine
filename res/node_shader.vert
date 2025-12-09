@@ -5,7 +5,7 @@
 
 void main()
 {
-    frag.position = (object.model_to_world * vec4(position, 1)).xyz;
+    frag.position = (object.model_to_world * vec4(position.xyz, 1));
     frag.colour = colour;
     frag.normal = normal;
     frag.tangent = tangent;

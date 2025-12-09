@@ -11,6 +11,6 @@ void main()
     if (col.a < 0.5f)
         discard;
     colour = vec4(col.rgb, 1);
-    normal = vec4(frag.normal, 0);
-    custom = vec4(frag.position, 0);
+    normal = vec4(frag.normal.xyz, 0);
+    custom = vec4(frag.position.xyz, 0);
 }

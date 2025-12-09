@@ -130,7 +130,7 @@ array<VkVertexInputAttributeDescription, 5> Mesh::getAttributeDescriptions()
 
     attributes[1].binding = 0;
     attributes[1].location = 1;
-    attributes[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attributes[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
     attributes[1].offset = offsetof(Vertex, colour);
 
     attributes[2].binding = 0;
@@ -325,7 +325,7 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
         {
             Vertex new_vert;
             new_vert.position = tmp_co[fc.co];
-            new_vert.colour = tmp_cl[fc.co];
+            new_vert.colour = glm::vec4(tmp_cl[fc.co], 0);
             if (tmp_vn.size() > fc.uv)
                 new_vert.normal = tmp_vn[fc.vn];
             if (tmp_uv.size() > fc.uv)

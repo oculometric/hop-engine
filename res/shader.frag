@@ -14,5 +14,5 @@ float saturate(float f) { return clamp(f, 0, 1); }
 
 void main()
 {
-    colour = vec4(texture(tex2, frag.position.xy).rgb * saturate(dot(frag.normal, -normalize(vec3(0.3f, 0.5, -1.0)))), 1);
+    colour = vec4(texture(tex2, frag.position.xy).rgb * saturate(dot(frag.normal.xyz, -normalize(vec3(0.3f, 0.5, -1.0)))), 1);
 }

@@ -114,6 +114,7 @@ void updateScene(Ref<Scene> scene)
 void initNodeScene(Ref<Scene> scene)
 {
     node_view = new NodeView();
+    node_view->use_compact = true;
     node_view->nodes.push_back(
         { "Hello, World!",
         {
@@ -151,13 +152,20 @@ void initNodeScene(Ref<Scene> scene)
     node_view->nodes.push_back(
         { "make vec3",
         {
-            { "vector", NodeView::ELEMENT_OUTPUT, 0 },
+            { "vector", NodeView::ELEMENT_OUTPUT, 1 },
             { "length", NodeView::ELEMENT_OUTPUT },
-            { "normalised", NodeView::ELEMENT_OUTPUT },
-            { "x", NodeView::ELEMENT_INPUT, 4, false },
-            { "y", NodeView::ELEMENT_INPUT, 4, false },
-            { "z", NodeView::ELEMENT_INPUT, 4, false },
+            { "normalised", NodeView::ELEMENT_OUTPUT, 3, false },
+            { "x", NodeView::ELEMENT_INPUT, 0, false },
+            { "y", NodeView::ELEMENT_INPUT, 0, false },
+            { "z", NodeView::ELEMENT_INPUT, 0, false },
         }, { -6, -10 }, 5 });
+    node_view->nodes.push_back(
+        { "kill john lennon",
+        {
+            { "", NodeView::ELEMENT_INPUT, 4, false },
+            { "execution?", NodeView::ELEMENT_OUTPUT, 5 },
+            { "hello", NodeView::ELEMENT_INPUT, 0, false },
+        }, { -6, -10 }, 6 });
     node_view->material->setBoolUniform("debug_segments", false);
     node_view->updateMesh();
     scene->objects.push_back(node_view.cast<Object>());

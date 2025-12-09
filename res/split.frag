@@ -30,13 +30,13 @@ void main()
         float attenuation = 1.0f / (light.constant_attenuation
                                   + (light.linear_attenuation * light_distance) 
                                   + (light.quadratic_attenuation * light_distance * light_distance));
-        float n_dot_l = max(0, dot(frag.normal, pixel_to_light));
+        float n_dot_l = max(0, dot(frag.normal.xyz, pixel_to_light));
         vec3 diffuse_contribution = light.colour.rgb * n_dot_l * attenuation;
-        float light_intensity = saturate(dot(frag.normal, pixel_to_light));
+        float light_intensity = saturate(dot(frag.normal.xyz, pixel_to_light));
         float specular = 0.0f;
         if (light_intensity > 0.0f)
         {
-            vec3 reflection = reflect(-pixel_to_light, frag.normal);
+            vec3 reflection = reflect(-pixel_to_light, frag.normal.xyz);
             float d = dot(reflection, pixel_to_eye);
             specular = pow(saturate(d * light_distance), material.specular_exponent);
         }

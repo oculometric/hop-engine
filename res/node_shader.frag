@@ -36,7 +36,7 @@ void main()
         ivec2 segment = ivec2(floor(scaled_uv));
         if (debug_segments)
         {
-            colour = vec4(segment / size_units, 0, 1);
+            colour = vec4(fract(scaled_uv), 0, 1);
         }
         else
         {
@@ -50,11 +50,11 @@ void main()
             
             uv /= 3.0f;
 
-            vec4 tex_sample = texture(sliced_texture, uv).rgba;
+            vec4 tex_sample = texture(sliced_texture, uv);
             float factor = length(tex_sample.rgb * frag.colour.rgb) * tex_sample.a;
             if (factor <= 0.001f)
                 discard;
-            else if (factor <= 0.4f)
+            else if (factor <= 0.7f)
                 colour = vec4(background_colour.rgb, 1);
             else
                 colour = vec4(frag.tangent.rgb, 1);
