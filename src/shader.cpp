@@ -15,6 +15,8 @@
 using namespace HopEngine;
 using namespace std;
 
+const char* Shader::compiler_path = "C:/tmp/glslc.exe";
+
 Shader::Shader(string base_path, bool is_precompiled)
 {
 	string proper_path = base_path;
@@ -203,7 +205,7 @@ vector<DescriptorBinding> Shader::getReflectedBindings(vector<uint8_t> blob)
 
 bool Shader::compileFile(string path, string out_path)
 {
-	string compile_command = "glslc";
+	string compile_command = Shader::compiler_path;
 #if defined(_WIN32)
 	for (size_t i = 0; i < path.size(); i++)
 	{

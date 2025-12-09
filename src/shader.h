@@ -39,6 +39,9 @@ struct ShaderLayout
 
 class Shader
 {
+public:
+	static const char* compiler_path;
+
 private:
 	VkShaderModule vert_module = VK_NULL_HANDLE;
 	VkShaderModule frag_module = VK_NULL_HANDLE;

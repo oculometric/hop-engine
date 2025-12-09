@@ -207,9 +207,9 @@ int main()
     Window::initEnvironment();
     Ref<Window> window = new Window(1024, 1024, "hop!");
     Input::init(window->getWindow());
-    Ref<GraphicsEnvironment> ge = new GraphicsEnvironment(window);
     Package::init();
     Package::loadPackage("resources.hop");
+    Ref<GraphicsEnvironment> ge = new GraphicsEnvironment(window);
 
     ge->draw_imgui_function = imGuiDrawFunc;
     ge->scene = new Scene();

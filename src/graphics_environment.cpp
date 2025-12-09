@@ -15,6 +15,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <filesystem>
 
 #include "window.h"
 #include "swapchain.h"
@@ -69,6 +70,9 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
     
     window = main_window;
 
+    auto data = Package::tryLoadFile("res://glslc.exe");
+    Package::tryWriteFile(Shader::compiler_path, data);
+
 	createInstance();
     if (glfwCreateWindowSurface(instance, window->getWindow(), nullptr, &surface) != VK_SUCCESS)
         DBG_FAULT("glfwCreateWindowSurface failed");
@@ -93,6 +97,8 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
 
 GraphicsEnvironment::~GraphicsEnvironment()
 {
+    filesystem::remove(Shader::compiler_path);
+
     DBG_INFO("destroying graphics environment");
 
     vkDeviceWaitIdle(device);
