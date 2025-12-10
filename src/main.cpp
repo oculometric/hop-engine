@@ -166,6 +166,7 @@ void initNodeScene(Ref<Scene> scene)
             { "hello", NodeView::ELEMENT_INPUT, 0, false },
         }, { -6, -10 }, 6 });
 
+    node_view->links.push_back({ node_view->nodes[4], 1, node_view->nodes[1], 1 });
     node_view->links.push_back({ node_view->nodes[2], 0, node_view->nodes[1], 0 });
 
     node_view->material->setBoolUniform("debug_segments", false);
@@ -173,7 +174,7 @@ void initNodeScene(Ref<Scene> scene)
 
     auto style = node_view->getStyle();
     style.use_dynamic_background = true;
-    style.palette =
+    /*style.palette =
     {
         { 0.018f, 0.018f, 0.018f },
         { 0.863f, 0.624f, 0.068f },
@@ -181,7 +182,7 @@ void initNodeScene(Ref<Scene> scene)
         { 0.604f, 0.044f, 0.025f },
         { 0.337f, 0.025f, 0.058f },
         { 0.159f, 0.037f, 0.078f },
-    };
+    };*/
     node_view->setStyle(style);
 
     scene->objects.push_back(node_view.cast<Object>());
@@ -262,6 +263,8 @@ int main()
         ge->drawFrame();
         updateNodeScene(ge->scene);
     }
+
+    ge->scene = nullptr;
 
     node_view = nullptr;
     cube = nullptr;

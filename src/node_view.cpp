@@ -40,6 +40,12 @@ NodeView::NodeView() : Object(nullptr, nullptr)
     updateMesh();
 }
 
+NodeView::~NodeView()
+{
+    style.font = nullptr;
+    material = nullptr;
+}
+
 void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec4 colour, glm::vec3 tint, bool clip_uv, int uv_index)
 {
     uint16_t v_off = static_cast<uint16_t>(vertices.size());
@@ -387,28 +393,32 @@ void NodeView::updateMesh()
         Ref<Node> start = link.start_node;
         Ref<Node> end = link.end_node;
 
-        glm::ivec2 start_pos = glm::round(start->position) + ((start->last_size * glm::vec2{ 1, 0 }) / grid_size);
-        start_pos.x--;
+        glm::ivec2 start_pos = glm::round(start->position);
+        start_pos.x += (start->last_size.x / grid_size) - 1;
         int start_offset = 0;
         for (int output_num = 0; start_offset < start->elements.size(); ++start_offset)
         {
             if (start->elements[start_offset].type == ELEMENT_OUTPUT)
+            {
+                if (output_num == link.start_output)
+                    break;
                 ++output_num;
-            if (output_num == link.start_output)
-                break;
+            }
         }
-        start_pos.y += (int)(start->last_size.y / grid_size) - (start_offset + 1);
+        start_pos.y += start_offset + 1;
 
         glm::ivec2 end_pos = glm::round(end->position);
         int end_offset = 0;
         for (int input_num = 0; end_offset < end->elements.size(); ++end_offset)
         {
             if (end->elements[end_offset].type == ELEMENT_INPUT)
+            {
+                if (input_num == link.end_input)
+                    break;
                 ++input_num;
-            if (input_num == link.end_input)
-                break;
+            }
         }
-        end_pos.y += (int)(end->last_size.y / grid_size) - (end_offset + 3);
+        end_pos.y += end_offset + 1;
 
         glm::vec3 foreground_colour = (style.palette.size() < 2) ?
             glm::vec3{ 1.000f, 0.319f, 0.000f }

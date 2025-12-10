@@ -160,15 +160,22 @@ vector<DescriptorBinding> Shader::getReflectedBindings(vector<uint8_t> blob)
 	SpvReflectResult result = spvReflectCreateShaderModule(blob.size(), blob.data(), &reflected_module);
 	if (result != SPV_REFLECT_RESULT_SUCCESS)
 	{
-		DBG_WARNING("unable to construct shader reflection module");
-		return {};
+		DBG_WARNING("unable to construct reflection module");
+		return { };
+	}
+	uint32_t descriptor_sets = 0;
+	spvReflectEnumerateDescriptorSets(&reflected_module, &descriptor_sets, nullptr);
+	if (descriptor_sets < 3)
+	{
+		DBG_VERBOSE("shader module does not have a descriptor set 2");
+		return { };
 	}
 	const SpvReflectDescriptorSet* vert_material_set = spvReflectGetDescriptorSet(&reflected_module, 2, &result);
 	if (result != SPV_REFLECT_RESULT_SUCCESS)
 	{
-		DBG_WARNING("unable to construct shader reflection module");
+		DBG_WARNING("unable to reflect descriptor set 2");
 		spvReflectDestroyShaderModule(&reflected_module);
-		return {};
+		return { };
 	}
 
 	vector<DescriptorBinding> bindings;

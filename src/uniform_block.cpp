@@ -47,6 +47,7 @@ UniformBlock::UniformBlock(ShaderLayout layout_info)
 UniformBlock::~UniformBlock()
 {
     DBG_INFO("destroying uniform block " + PTR(this));
+    vkDeviceWaitIdle(GraphicsEnvironment::get()->getDevice());
     vkFreeDescriptorSets(GraphicsEnvironment::get()->getDevice(), GraphicsEnvironment::get()->getDescriptorPool(), static_cast<uint32_t>(descriptor_sets.size()), descriptor_sets.data());
     textures_in_use.clear();
     descriptor_sets.clear();

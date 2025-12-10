@@ -78,7 +78,7 @@ public:
 	DELETE_NOT_ALL_CONSTRUCTORS(NodeView);
 
 	NodeView();
-	inline ~NodeView() { };
+	~NodeView();
 
 	inline Style getStyle() { return style; }
 	void setStyle(Style new_style);
