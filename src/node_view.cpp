@@ -376,7 +376,7 @@ void NodeView::updateMesh()
     for (auto it = nodes.rbegin(); it != nodes.rend(); it++)
     {
         Ref<Node> node = *it;
-        size_t box_width = node->last_size.x / grid_size;
+        size_t box_width = (size_t)(node->last_size.x / grid_size);
         glm::vec2 box_base = (glm::round(node->position) * grid_size);
 
         glm::vec3 foreground_colour = (palette.size() < 2) ?

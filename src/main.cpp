@@ -18,7 +18,6 @@ using namespace HopEngine;
 
 Ref<Object> asha;
 Ref<Object> cube;
-size_t node_index = 0;
 Ref<NodeView> node_view;
 Ref<NodeView::Node> selected_node;
 
