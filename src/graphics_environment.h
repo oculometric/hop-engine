@@ -10,7 +10,7 @@
 namespace HopEngine
 {
 
-class GraphicsEnvironment
+class RenderServer
 {
 public:
 	struct QueueFamilies
@@ -77,8 +77,8 @@ private:
 	Ref<Material> post_process = nullptr;
 
 public:
-	GraphicsEnvironment(Ref<Window> main_window);
-	~GraphicsEnvironment();
+	RenderServer(Ref<Window> main_window);
+	~RenderServer();
 
 	Ref<RenderPass> getRenderPass();
 	QueueFamilies getQueueFamilies(VkPhysicalDevice device);
@@ -92,7 +92,7 @@ public:
 	inline VkQueue getGraphicsQueue() { return graphics_queue; }
 	std::pair<Ref<Texture>, Ref<Sampler>> getDefaultTextureSampler();
 	glm::vec2 getFramebufferSize();
-	static GraphicsEnvironment* get();
+	static RenderServer* get();
 	void drawFrame(float delta_time);
 	void resizeSwapchain();
 

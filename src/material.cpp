@@ -32,7 +32,7 @@ Material::Material(Ref<Shader> _shader, VkCullModeFlags culling_mode, VkPolygonM
 	VkBool32 depth_write_enable, VkBool32 depth_test_enable, VkCompareOp depth_compare_op, Ref<RenderPass> render_pass)
 {
 	shader = _shader;
-	pipeline = new Pipeline(shader, culling_mode, polygon_mode, depth_write_enable, depth_test_enable, depth_compare_op, render_pass.isValid() ? render_pass : GraphicsEnvironment::get()->getRenderPass());
+	pipeline = new Pipeline(shader, culling_mode, polygon_mode, depth_write_enable, depth_test_enable, depth_compare_op, render_pass.isValid() ? render_pass : RenderServer::get()->getRenderPass());
 
 	auto layout = shader->getShaderLayout();
 	uniforms = new UniformBlock(layout);

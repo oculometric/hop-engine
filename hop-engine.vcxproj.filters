@@ -182,7 +182,7 @@
     <ClInclude Include="src\font.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\hop-forward.h">
+    <ClInclude Include="src\hop_forward.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

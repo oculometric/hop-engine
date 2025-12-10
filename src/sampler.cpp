@@ -18,7 +18,7 @@ Sampler::Sampler(VkFilter filtering_mode, VkSamplerAddressMode address_mode)
 	create_info.addressModeV = address_mode;
 	create_info.addressModeW = address_mode;
 	VkPhysicalDeviceProperties properties{ };
-	vkGetPhysicalDeviceProperties(GraphicsEnvironment::get()->getPhysicalDevice(), &properties);
+	vkGetPhysicalDeviceProperties(RenderServer::get()->getPhysicalDevice(), &properties);
 	create_info.anisotropyEnable = VK_TRUE;
 	create_info.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
 	create_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
@@ -29,7 +29,7 @@ Sampler::Sampler(VkFilter filtering_mode, VkSamplerAddressMode address_mode)
 	create_info.mipLodBias = 0.0f;
 	create_info.minLod = 0.0f;
 	create_info.maxLod = 0.0f;
-	if (vkCreateSampler(GraphicsEnvironment::get()->getDevice(), &create_info, nullptr, &sampler) != VK_SUCCESS)
+	if (vkCreateSampler(RenderServer::get()->getDevice(), &create_info, nullptr, &sampler) != VK_SUCCESS)
 		DBG_FAULT("vkCreateSampler failed");
 
 	DBG_INFO("created sampler for " + string(string_VkFilter(filtering_mode)) + ", " + string_VkSamplerAddressMode(address_mode));
@@ -38,5 +38,5 @@ Sampler::Sampler(VkFilter filtering_mode, VkSamplerAddressMode address_mode)
 Sampler::~Sampler()
 {
 	DBG_INFO("destroying sampler " + PTR(this));
-	vkDestroySampler(GraphicsEnvironment::get()->getDevice(), sampler, nullptr);
+	vkDestroySampler(RenderServer::get()->getDevice(), sampler, nullptr);
 }

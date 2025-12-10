@@ -201,8 +201,8 @@ void updateNodeScene(Ref<Scene> scene)
         if (selected_node.isValid())
             selected_node->highlighted = false;
         glm::vec2 camera_pos = scene->camera->transform.getLocalPosition();
-        glm::vec2 mouse_screen_pos = Input::getMousePosition() - (GraphicsEnvironment::get()->getFramebufferSize() * 0.5f);
-        glm::vec2 mouse_world_pos = mouse_screen_pos + (camera_pos * GraphicsEnvironment::get()->getFramebufferSize() * 0.5f);
+        glm::vec2 mouse_screen_pos = Input::getMousePosition() - (RenderServer::get()->getFramebufferSize() * 0.5f);
+        glm::vec2 mouse_world_pos = mouse_screen_pos + (camera_pos * RenderServer::get()->getFramebufferSize() * 0.5f);
         selected_node = node_view->select(mouse_world_pos);
         if (selected_node.isValid())
             selected_node->highlighted = true;
@@ -214,7 +214,7 @@ void updateNodeScene(Ref<Scene> scene)
     float move_y = Input::getAxis(GLFW_KEY_UP, GLFW_KEY_DOWN);
     if (Input::isMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
     {
-        glm::vec2 mouse_world_delta = glm::vec2{ -mouse_delta.x * 512.0f, -mouse_delta.y * 512.0f } / GraphicsEnvironment::get()->getFramebufferSize();
+        glm::vec2 mouse_world_delta = glm::vec2{ -mouse_delta.x * 512.0f, -mouse_delta.y * 512.0f } / RenderServer::get()->getFramebufferSize();
         scene->camera->transform.translateLocal({ mouse_world_delta.x, mouse_world_delta.y, 0 });
     }
     else if (Input::isMouseDown(GLFW_MOUSE_BUTTON_LEFT))
@@ -256,7 +256,7 @@ int main()
     Input::init(window->getWindow());
     Package::init();
     Package::loadPackage("resources.hop");
-    Ref<GraphicsEnvironment> ge = new GraphicsEnvironment(window);
+    Ref<RenderServer> ge = new RenderServer(window);
 
     ge->draw_imgui_function = imGuiDrawFunc;
     ge->scene = new Scene();

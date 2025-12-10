@@ -4,7 +4,7 @@ namespace HopEngine
 {
 
 class Window;
-class GraphicsEnvironment;
+class RenderServer;
 class CommandBuffer;
 class Swapchain;
 class RenderPass;

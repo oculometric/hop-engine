@@ -16,7 +16,7 @@ Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR _surface)
     surface = _surface;
 
     // calculate actual swapchain parameters
-    const SwapchainSupportInfo support_info = Swapchain::getSupportInfo(GraphicsEnvironment::get()->getPhysicalDevice(), surface);
+    const SwapchainSupportInfo support_info = Swapchain::getSupportInfo(RenderServer::get()->getPhysicalDevice(), surface);
     VkSurfaceFormatKHR surface_format = Swapchain::getIdealSurfaceFormat(support_info);
     format = surface_format.format;
     extent = Swapchain::getIdealExtent(support_info, width, height);
@@ -34,7 +34,7 @@ Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR _surface)
     create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     // get info about which present mode we're going to use
-    GraphicsEnvironment::QueueFamilies indices = GraphicsEnvironment::get()->getQueueFamilies(GraphicsEnvironment::get()->getPhysicalDevice());
+    RenderServer::QueueFamilies indices = RenderServer::get()->getQueueFamilies(RenderServer::get()->getPhysicalDevice());
     queue_families[0] = indices.graphics_family.value();
     queue_families[1] = indices.present_family.value();
     if (indices.graphics_family != indices.present_family)
@@ -57,7 +57,7 @@ Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR _surface)
     create_info.oldSwapchain = VK_NULL_HANDLE;
 
     // create the swapchain
-    if (vkCreateSwapchainKHR(GraphicsEnvironment::get()->getDevice(), &create_info, nullptr, &swapchain) != VK_SUCCESS)
+    if (vkCreateSwapchainKHR(RenderServer::get()->getDevice(), &create_info, nullptr, &swapchain) != VK_SUCCESS)
         DBG_FAULT("vkCreateSwapchainKHR failed");
     createImageViews();
 
@@ -75,11 +75,11 @@ void Swapchain::resize(uint32_t width, uint32_t height)
     DBG_INFO("resizing swapchain to " + to_string(width) + "x" + to_string(height));
     destroyResources();
 
-    const SwapchainSupportInfo support_info = Swapchain::getSupportInfo(GraphicsEnvironment::get()->getPhysicalDevice(), surface);
+    const SwapchainSupportInfo support_info = Swapchain::getSupportInfo(RenderServer::get()->getPhysicalDevice(), surface);
     extent = Swapchain::getIdealExtent(support_info, width, height);
     create_info.imageExtent = extent;
 
-    if (vkCreateSwapchainKHR(GraphicsEnvironment::get()->getDevice(), &create_info, nullptr, &swapchain) != VK_SUCCESS)
+    if (vkCreateSwapchainKHR(RenderServer::get()->getDevice(), &create_info, nullptr, &swapchain) != VK_SUCCESS)
         DBG_FAULT("vkCreateSwapchainKHR failed");
     createImageViews();
 }
@@ -148,9 +148,9 @@ void Swapchain::createImageViews()
 {
     // retreive images
     uint32_t image_count = 0;
-    vkGetSwapchainImagesKHR(GraphicsEnvironment::get()->getDevice(), swapchain, &image_count, nullptr);
+    vkGetSwapchainImagesKHR(RenderServer::get()->getDevice(), swapchain, &image_count, nullptr);
     images.resize(image_count);
-    vkGetSwapchainImagesKHR(GraphicsEnvironment::get()->getDevice(), swapchain, &image_count, images.data());
+    vkGetSwapchainImagesKHR(RenderServer::get()->getDevice(), swapchain, &image_count, images.data());
 
     // create image views
     image_views.resize(image_count);
@@ -171,7 +171,7 @@ void Swapchain::createImageViews()
         view_create_info.subresourceRange.baseArrayLayer = 0;
         view_create_info.subresourceRange.layerCount = 1;
 
-        if (vkCreateImageView(GraphicsEnvironment::get()->getDevice(), &view_create_info, nullptr, &image_views[i]) != VK_SUCCESS)
+        if (vkCreateImageView(RenderServer::get()->getDevice(), &view_create_info, nullptr, &image_views[i]) != VK_SUCCESS)
             DBG_FAULT("vkCreateImageView failed");
     }
 }
@@ -179,7 +179,7 @@ void Swapchain::createImageViews()
 void Swapchain::destroyResources()
 {
     for (auto image_view : image_views)
-        vkDestroyImageView(GraphicsEnvironment::get()->getDevice(), image_view, nullptr);
+        vkDestroyImageView(RenderServer::get()->getDevice(), image_view, nullptr);
 
-    vkDestroySwapchainKHR(GraphicsEnvironment::get()->getDevice(), swapchain, nullptr);
+    vkDestroySwapchainKHR(RenderServer::get()->getDevice(), swapchain, nullptr);
 }

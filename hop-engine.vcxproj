@@ -186,7 +186,7 @@
     <ClInclude Include="src\debug.h" />
     <ClInclude Include="src\font.h" />
     <ClInclude Include="src\graphics_environment.h" />
-    <ClInclude Include="src\hop-forward.h" />
+    <ClInclude Include="src\hop_forward.h" />
     <ClInclude Include="src\hop_engine.h" />
     <ClInclude Include="src\input.h" />
     <ClInclude Include="src\node_view.h" />

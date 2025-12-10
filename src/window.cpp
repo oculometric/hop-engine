@@ -52,7 +52,7 @@ bool Window::isResized()
     if (new_width != width || new_height != height)
     {
         width = new_width;
-        height == new_height;
+        height = new_height;
         return true;
     }
 

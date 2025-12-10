@@ -17,25 +17,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <filesystem>
 
-#include "window.h"
+#include "hop_engine.h"
 #include "swapchain.h"
-#include "pipeline.h"
-#include "render_pass.h"
-#include "shader.h"
-#include "mesh.h"
-#include "buffer.h"
-#include "material.h"
-#include "uniform_block.h"
-#include "object.h"
-#include "texture.h"
-#include "sampler.h"
-#include "scene.h"
-#include "package.h"
 
 using namespace HopEngine;
 using namespace std;
 
-static GraphicsEnvironment* environment = nullptr;
+static RenderServer* environment = nullptr;
 
 #if !defined(NDEBUG)
 static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
@@ -63,7 +51,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
 }
 #endif
 
-GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
+RenderServer::RenderServer(Ref<Window> main_window)
 {
     DBG_INFO("initialising graphics environment");
     environment = this;
@@ -115,7 +103,7 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
     DBG_INFO("graphics environment initialised");
 }
 
-GraphicsEnvironment::~GraphicsEnvironment()
+RenderServer::~RenderServer()
 {
     filesystem::remove(Shader::compiler_path);
 
@@ -168,9 +156,9 @@ GraphicsEnvironment::~GraphicsEnvironment()
     environment = nullptr;
 }
 
-Ref<RenderPass> GraphicsEnvironment::getRenderPass() { return offscreen_pass; }
+Ref<RenderPass> RenderServer::getRenderPass() { return offscreen_pass; }
 
-GraphicsEnvironment::QueueFamilies GraphicsEnvironment::getQueueFamilies(VkPhysicalDevice device)
+RenderServer::QueueFamilies RenderServer::getQueueFamilies(VkPhysicalDevice device)
 {
     QueueFamilies families;
 
@@ -194,23 +182,23 @@ GraphicsEnvironment::QueueFamilies GraphicsEnvironment::getQueueFamilies(VkPhysi
     return families;
 }
 
-pair<Ref<Texture>, Ref<Sampler>> GraphicsEnvironment::getDefaultTextureSampler()
+pair<Ref<Texture>, Ref<Sampler>> RenderServer::getDefaultTextureSampler()
 {
     return { default_image, default_sampler };
 }
 
-glm::vec2 GraphicsEnvironment::getFramebufferSize()
+glm::vec2 RenderServer::getFramebufferSize()
 {
     auto ext = swapchain->getExtent();
     return glm::vec2{ ext.width, ext.height };
 }
 
-GraphicsEnvironment* GraphicsEnvironment::get()
+RenderServer* RenderServer::get()
 {
     return environment;
 }
 
-void GraphicsEnvironment::drawImGui()
+void RenderServer::drawImGui()
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -222,7 +210,7 @@ void GraphicsEnvironment::drawImGui()
     ImGui::Render();
 }
 
-void GraphicsEnvironment::drawFrame(float delta_time)
+void RenderServer::drawFrame(float delta_time)
 {
     static size_t frame_index = 0;
     // FIXME: frame index being incremented breaks everything?
@@ -287,7 +275,7 @@ void GraphicsEnvironment::drawFrame(float delta_time)
     vkQueuePresentKHR(present_queue, &present_info);
 }
 
-void GraphicsEnvironment::resizeSwapchain()
+void RenderServer::resizeSwapchain()
 {
     vkDeviceWaitIdle(device);
 
@@ -303,7 +291,7 @@ void GraphicsEnvironment::resizeSwapchain()
     render_pass->resize();
 }
 
-void GraphicsEnvironment::createInstance()
+void RenderServer::createInstance()
 {
     // application info
     VkApplicationInfo app_info{ };
@@ -375,7 +363,7 @@ void GraphicsEnvironment::createInstance()
 #endif
 }
 
-void GraphicsEnvironment::createDevice()
+void RenderServer::createDevice()
 {
     // list out physical devices which are vulkan-compatible
     uint32_t physical_device_count = 0;
@@ -489,7 +477,7 @@ void GraphicsEnvironment::createDevice()
     vkGetDeviceQueue(device, queue_family_indices.present_family.value(), 0, &present_queue);
 }
 
-void GraphicsEnvironment::createDescriptorPoolAndSets()
+void RenderServer::createDescriptorPoolAndSets()
 {
     array<VkDescriptorPoolSize, 2> descriptor_pool_sizes;
     descriptor_pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -526,7 +514,7 @@ void GraphicsEnvironment::createDescriptorPoolAndSets()
         DBG_FAULT("vkCreateDescriptorSetLayout failed");
 }
 
-void GraphicsEnvironment::createCommandPool()
+void RenderServer::createCommandPool()
 {
     DBG_INFO("creating command pool and buffers");
 
@@ -551,7 +539,7 @@ void GraphicsEnvironment::createCommandPool()
         DBG_FAULT("vkAllocateCommandBuffers failed");
 }
 
-void GraphicsEnvironment::createSyncObjects()
+void RenderServer::createSyncObjects()
 {
     DBG_INFO("creating sync objects");
     VkSemaphoreCreateInfo semaphore_create_info{ };
@@ -573,7 +561,7 @@ void GraphicsEnvironment::createSyncObjects()
     }
 }
 
-void GraphicsEnvironment::initImGui()
+void RenderServer::initImGui()
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -599,7 +587,7 @@ void GraphicsEnvironment::initImGui()
     ImGui_ImplVulkan_Init(&init_info);
 }
 
-void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index)
+void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index)
 {
     DBG_BABBLE("recording command buffer");
     VkCommandBufferBeginInfo cmd_buffer_begin_info{ };
