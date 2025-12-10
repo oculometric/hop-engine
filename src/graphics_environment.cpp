@@ -222,11 +222,16 @@ void GraphicsEnvironment::drawImGui()
     ImGui::Render();
 }
 
-void GraphicsEnvironment::drawFrame()
+void GraphicsEnvironment::drawFrame(float delta_time)
 {
     static size_t frame_index = 0;
+    // FIXME: frame index being incremented breaks everything?
     DBG_BABBLE("drawing frame " + to_string(frame_index));
     static auto start_time = chrono::steady_clock::now();
+    auto now_time = chrono::steady_clock::now();
+    chrono::duration<float> since_start = now_time - start_time;
+
+    window->setTitle(format("hop-engine   -   {:>4.2f}ms   -   {:>6.2f} fps", delta_time * 1000.0f, 1.0f / delta_time));
 
     drawImGui();
 
@@ -239,8 +244,6 @@ void GraphicsEnvironment::drawFrame()
 
     if (scene.isValid())
     {
-        auto now_time = chrono::steady_clock::now();
-        chrono::duration<float> since_start = now_time - start_time;
         VkExtent2D framebuffer_size = swapchain->getExtent();
         scene->camera->pushToDescriptorSet(image_index, { framebuffer_size.width, framebuffer_size.height }, since_start.count());
 

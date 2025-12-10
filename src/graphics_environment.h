@@ -107,7 +107,7 @@ public:
 	std::pair<Ref<Texture>, Ref<Sampler>> getDefaultTextureSampler();
 	glm::vec2 getFramebufferSize();
 	static GraphicsEnvironment* get();
-	void drawFrame();
+	void drawFrame(float delta_time);
 	void resizeSwapchain();
 
 private:

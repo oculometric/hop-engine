@@ -7,6 +7,8 @@ Window::Window(uint32_t _width, uint32_t _height, string title)
 {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    glfwMakeContextCurrent(window);
+    glfwSwapInterval(0);
 
     width = _width;
     height = _height;
@@ -61,6 +63,11 @@ pair<uint32_t, uint32_t> Window::getSize()
 {
     glfwGetFramebufferSize(window, &width, &height);
     return { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
+}
+
+void Window::setTitle(std::string title)
+{
+    glfwSetWindowTitle(window, title.c_str());
 }
 
 Window::~Window()

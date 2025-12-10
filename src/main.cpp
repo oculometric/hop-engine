@@ -262,14 +262,19 @@ int main()
     ge->scene = new Scene();
     initScene(ge->scene);
 
+    auto last_frame = std::chrono::steady_clock::now();
+    
     while (!window->getShouldClose())
     {
+        auto this_frame = std::chrono::steady_clock::now();
+        std::chrono::duration<float> delta = this_frame - last_frame;
+        last_frame = this_frame;
         window->pollEvents();
         if (window->isMinified())
             continue;
         if (window->isResized())
             ge->resizeSwapchain();
-        ge->drawFrame();
+        ge->drawFrame(delta.count());
         updateScene(ge->scene);
     }
 
