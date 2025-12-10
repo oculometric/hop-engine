@@ -125,7 +125,7 @@ void initNodeScene(Ref<Scene> scene)
             { "mixed-width font!", NodeView::ELEMENT_BLOCK },
             { "above is a banner", NodeView::ELEMENT_TEXT },
             { "extra bottom spacing", NodeView::ELEMENT_TEXT },
-        }, { 0, 0 }, 1 });
+        }, { 5, -10 }, 1 });
     node_view->nodes.push_back(new NodeView::Node
         { "multiply",
         {
@@ -164,10 +164,11 @@ void initNodeScene(Ref<Scene> scene)
             { "", NodeView::ELEMENT_INPUT, 4, false },
             { "execution?", NodeView::ELEMENT_OUTPUT, 5 },
             { "hello", NodeView::ELEMENT_INPUT, 0, false },
-        }, { -6, -10 }, 6 });
+        }, { -6, -15 }, 6 });
 
     node_view->links.push_back({ node_view->nodes[4], 1, node_view->nodes[1], 1 });
     node_view->links.push_back({ node_view->nodes[2], 0, node_view->nodes[1], 0 });
+    node_view->links.push_back({ node_view->nodes[5], 0, node_view->nodes[0], 0 });
 
     node_view->material->setBoolUniform("debug_segments", false);
     node_view->updateMesh();
@@ -253,7 +254,7 @@ int main()
 
     ge->draw_imgui_function = imGuiDrawFunc;
     ge->scene = new Scene();
-    initNodeScene(ge->scene);
+    initScene(ge->scene);
 
     while (!window->getShouldClose())
     {
@@ -261,7 +262,7 @@ int main()
         if (window->isMinified())
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         ge->drawFrame();
-        updateNodeScene(ge->scene);
+        updateScene(ge->scene);
     }
 
     ge->scene = nullptr;

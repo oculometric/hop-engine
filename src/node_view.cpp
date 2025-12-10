@@ -21,7 +21,7 @@ NodeView::NodeView() : Object(nullptr, nullptr)
     material->setSampler("link_atlas", sampler);
 
     material->setIntUniform("background_mode", 0);
-    material->setIntUniform("background_factor", style.background_factor);
+    material->setFloatUniform("background_factor", style.background_factor);
 
     style.palette =
     {
@@ -342,7 +342,7 @@ void NodeView::setStyle(Style new_style)
     background_colour = new_background_colour;
 
     if (new_style.background_factor != style.background_factor)
-        material->setIntUniform("background_factor", new_style.background_factor);
+        material->setFloatUniform("background_factor", new_style.background_factor);
     if (new_style.use_dynamic_background != style.use_dynamic_background)
         material->setIntUniform("background_mode", new_style.use_dynamic_background);
 
@@ -394,7 +394,7 @@ void NodeView::updateMesh()
         Ref<Node> end = link.end_node;
 
         glm::ivec2 start_pos = glm::round(start->position);
-        start_pos.x += (start->last_size.x / grid_size) - 1;
+        start_pos.x += (int)(start->last_size.x / grid_size) - 1;
         int start_offset = 0;
         for (int output_num = 0; start_offset < start->elements.size(); ++start_offset)
         {
