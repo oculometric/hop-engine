@@ -3,6 +3,14 @@
 #define VERTEX
 #include "common.glsl"
 
+layout(set = 2, binding = 0) uniform MaterialUniforms
+{
+    bool debug_segments;
+    int background_mode;
+    float background_factor;
+    vec4 background_colour;
+};
+
 void main()
 {
     frag.position = (object.model_to_world * vec4(position.xyz, 1));

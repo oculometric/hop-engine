@@ -11,6 +11,7 @@ namespace HopEngine
 {
 
 class Font;
+class Texture;
 
 class NodeView : public Object
 {
@@ -59,9 +60,13 @@ public:
 		std::vector<glm::vec3> palette;
 		bool use_dynamic_background = false;
 		float background_factor = 0.02f;
-		//size_t scale_factor = 2; // TODO:
 		Ref<Font> font = nullptr;
-		// TODO: other style textures
+		Ref<Texture> node_atlas = nullptr;
+		Ref<Texture> link_atlas = nullptr;
+		float grid_size = 24.0f;
+		glm::vec2 title_offset = glm::vec2{ 1.5, 0.0f };
+		float text_top_inset = 6.0f;
+		float text_left_inset = 6.0f;
 	};
 
 public:

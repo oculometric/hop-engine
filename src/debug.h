@@ -4,7 +4,7 @@
 #pragma warning(disable: 4005)
 
 #if defined(NDEBUG)
-#define DEBUG_LEVEL 3
+#define DEBUG_LEVEL 2
 #else
 #define DEBUG_LEVEL 1
 #endif

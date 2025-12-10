@@ -17,7 +17,7 @@ Package::~Package()
 
 void Package::init()
 {
-	DBG_INFO("initialising package");
+	DBG_INFO("initialising package manager");
 	if (application_package == nullptr)
 		application_package = new Package();
 }

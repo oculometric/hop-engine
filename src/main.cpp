@@ -244,6 +244,9 @@ void imGuiDrawFunc()
 
 int main()
 {
+    system("package-builder.exe res -c resources.hop");
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
     Debug::init(Debug::DEBUG_FAULT);
     Window::initEnvironment();
     Ref<Window> window = new Window(1024, 1024, "hop!");

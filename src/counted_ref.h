@@ -17,6 +17,9 @@ public:
 	
 	inline Ref(const Ref& other)
 	{
+		if (other.payload == payload)
+			return;
+
 		payload = other.payload;
 		ref_counter = other.ref_counter;
 		if (ref_counter != nullptr)
@@ -25,6 +28,9 @@ public:
 
 	inline void operator=(const Ref& other)
 	{
+		if (other.payload == payload)
+			return;
+
 		invalidateSelf();
 
 		payload = other.payload;
@@ -35,6 +41,9 @@ public:
 
 	inline Ref(Ref&& other) noexcept
 	{
+		if (other.payload == payload)
+			return;
+
 		payload = other.payload;
 		ref_counter = other.ref_counter;
 		
@@ -44,6 +53,9 @@ public:
 
 	inline void operator=(Ref&& other) noexcept
 	{
+		if (other.payload == payload)
+			return;
+
 		invalidateSelf();
 
 		payload = other.payload;
@@ -55,6 +67,9 @@ public:
 
 	inline Ref(T* new_payload)
 	{
+		if (new_payload == payload)
+			return;
+
 		payload = new_payload;
 		if (payload != nullptr)
 		{
@@ -65,6 +80,9 @@ public:
 
 	inline void operator=(T* new_payload)
 	{
+		if (new_payload == payload)
+			return;
+
 		invalidateSelf();
 
 		payload = new_payload;
