@@ -63,7 +63,7 @@ public:
 
 	inline void setUintUniform(std::string name, glm::uint value) { setUniform(name, &value, sizeof(value)); }
 
-	inline void setBoolUniform(std::string name, bool value) { setUniform(name, &value, sizeof(value)); }
+	inline void setBoolUniform(std::string name, bool value) { VkBool32 expanded = value; setUniform(name, &expanded, sizeof(VkBool32)); }
 
 	inline void setMat2Uniform(std::string name, glm::mat2 value) { setUniform(name, &value, sizeof(value)); }
 	inline void setMat3Uniform(std::string name, glm::mat3 value) { setUniform(name, &value, sizeof(value)); }

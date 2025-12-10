@@ -185,7 +185,7 @@ vector<DescriptorBinding> Shader::getReflectedBindings(vector<uint8_t> blob)
 			for (size_t j = 0; j < binding->block.member_count; ++j)
 			{
 				SpvReflectBlockVariable member = binding->block.members[j];
-				db.variables.push_back({ member.name, member.padded_size, member.offset });
+				db.variables.push_back({ member.name, member.size, member.offset });
 			}
 			bindings.push_back(db);
 		}

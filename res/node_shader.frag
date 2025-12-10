@@ -6,6 +6,8 @@
 layout(set = 2, binding = 0) uniform MaterialUniforms
 {
     bool debug_segments;
+    int background_mode;
+    float background_factor;
     vec4 background_colour;
 };
 
@@ -64,7 +66,7 @@ void main()
             if (factor <= 0.001f)
                 discard;
             else if (factor <= 0.7f)
-                colour = vec4(background_colour.rgb, 1);
+                colour = vec4(background_mode == 0 ? background_colour.rgb : frag.tangent.rgb * background_factor, 1);
             else
                 colour = vec4(frag.tangent.rgb, 1);
         }

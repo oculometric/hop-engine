@@ -10,6 +10,8 @@
 namespace HopEngine
 {
 
+class Font;
+
 class NodeView : public Object
 {
 public:
@@ -52,16 +54,25 @@ public:
 		int palette_index = 1;
 	};
 
+	struct Style
+	{
+		std::vector<glm::vec3> palette;
+		bool use_dynamic_background = false;
+		float background_factor = 0.02f;
+		//size_t scale_factor = 2; // TODO:
+		Ref<Font> font = nullptr;
+		// TODO: other style textures
+	};
+
 public:
 	// TODO: eliminate reference counting and make this internally managed/allocated?
 	std::vector<Ref<Node>> nodes;
 	std::vector<Link> links;
-	std::vector<glm::vec3> palette;
 
 private:
 	std::vector<Vertex> vertices;
 	std::vector<uint16_t> indices;
-	glm::vec3 background_colour;
+	Style style;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(NodeView);
@@ -69,6 +80,8 @@ public:
 	NodeView();
 	inline ~NodeView() { };
 
+	inline Style getStyle() { return style; }
+	void setStyle(Style new_style);
 	void updateMesh();
 	Ref<Node> select(glm::vec2 world_position);
 
@@ -82,6 +95,7 @@ private:
 	void addText(std::string text, glm::vec2 start, glm::vec3 tint);
 	void addLinkElem(glm::vec2 position, glm::vec3 tint, int type);
 	void addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, glm::vec3 tint);
+	glm::vec3 getBackgroundColour(glm::vec3 fg_col);
 };
 
 }

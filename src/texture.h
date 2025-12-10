@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vulkan/vulkan.h>
+#include <glm/vec2.hpp>
 
 #include "common.h"
 
@@ -35,6 +36,7 @@ public:
 	void transitionLayout(VkImageLayout new_layout);
 	void copyBufferToImage(Ref<Buffer> buffer);
 	VkImageView getView();
+	inline glm::ivec2 getSize() { return { width, height }; }
 
 private:
 	void createImage();

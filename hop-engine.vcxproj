@@ -158,6 +158,7 @@
     <ClCompile Include="src\command_buffer.cpp" />
     <ClCompile Include="src\debug.cpp" />
     <ClCompile Include="src\exec.cpp" />
+    <ClCompile Include="src\font.cpp" />
     <ClCompile Include="src\graphics_environment.cpp" />
     <ClCompile Include="src\input.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -183,6 +184,7 @@
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\counted_ref.h" />
     <ClInclude Include="src\debug.h" />
+    <ClInclude Include="src\font.h" />
     <ClInclude Include="src\graphics_environment.h" />
     <ClInclude Include="src\hop_engine.h" />
     <ClInclude Include="src\input.h" />

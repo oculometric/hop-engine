@@ -168,17 +168,22 @@ void initNodeScene(Ref<Scene> scene)
 
     node_view->links.push_back({ node_view->nodes[2], 0, node_view->nodes[1], 0 });
 
-    //node_view->palette =
-    //{
-    //    { 0.018f, 0.018f, 0.018f },
-    //    { 0.863f, 0.624f, 0.068f },
-    //    { 0.694f, 0.091f, 0.019f },
-    //    { 0.604f, 0.044f, 0.025f },
-    //    { 0.337f, 0.025f, 0.058f },
-    //    //{ 0.159f, 0.037f, 0.078f },
-    //};
     node_view->material->setBoolUniform("debug_segments", false);
     node_view->updateMesh();
+
+    auto style = node_view->getStyle();
+    style.use_dynamic_background = true;
+    style.palette =
+    {
+        { 0.018f, 0.018f, 0.018f },
+        { 0.863f, 0.624f, 0.068f },
+        { 0.694f, 0.091f, 0.019f },
+        { 0.604f, 0.044f, 0.025f },
+        { 0.337f, 0.025f, 0.058f },
+        { 0.159f, 0.037f, 0.078f },
+    };
+    node_view->setStyle(style);
+
     scene->objects.push_back(node_view.cast<Object>());
 
     scene->camera->transform.lookAt({ 0, 0, 6 }, { 0, 0, 0 }, { 0, 1, 0 });
