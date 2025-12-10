@@ -213,7 +213,10 @@ void updateNodeScene(Ref<Scene> scene)
     float move_x = Input::getAxis(GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
     float move_y = Input::getAxis(GLFW_KEY_UP, GLFW_KEY_DOWN);
     if (Input::isMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
-        scene->camera->transform.translateLocal({ -mouse_delta.x * 0.5f, -mouse_delta.y * 0.5f, 0 });
+    {
+        glm::vec2 mouse_world_delta = glm::vec2{ -mouse_delta.x * 512.0f, -mouse_delta.y * 512.0f } / GraphicsEnvironment::get()->getFramebufferSize();
+        scene->camera->transform.translateLocal({ mouse_world_delta.x, mouse_world_delta.y, 0 });
+    }
     else if (Input::isMouseDown(GLFW_MOUSE_BUTTON_LEFT))
     {
         move_x = mouse_delta.x * 20.0f;
@@ -264,6 +267,8 @@ int main()
         window->pollEvents();
         if (window->isMinified())
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        if (window->isResized())
+            ge->resizeSwapchain();
         ge->drawFrame();
         updateNodeScene(ge->scene);
     }

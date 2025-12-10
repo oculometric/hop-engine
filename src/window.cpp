@@ -3,11 +3,13 @@
 using namespace HopEngine;
 using namespace std;
 
-Window::Window(uint32_t width, uint32_t height, string title)
+Window::Window(uint32_t _width, uint32_t _height, string title)
 {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
+    width = _width;
+    height = _height;
     window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
     DBG_INFO("created window at " + to_string(width) + "x" + to_string(height) + ", titled '" + title + "'");
 }
@@ -40,9 +42,23 @@ bool HopEngine::Window::isMinified()
     return glfwGetWindowAttrib(window, GLFW_ICONIFIED);
 }
 
+bool Window::isResized()
+{
+    int new_width;
+    int new_height;
+    glfwGetFramebufferSize(window, &new_width, &new_height);
+    if (new_width != width || new_height != height)
+    {
+        width = new_width;
+        height == new_height;
+        return true;
+    }
+
+    return false;
+}
+
 pair<uint32_t, uint32_t> Window::getSize()
 {
-    int width; int height;
     glfwGetFramebufferSize(window, &width, &height);
     return { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
 }

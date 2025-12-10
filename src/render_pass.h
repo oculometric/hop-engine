@@ -38,6 +38,11 @@ public:
 	inline VkRenderPass getRenderPass() { return render_pass; }
 	inline VkFramebuffer getFramebuffer(size_t index) { return framebuffers[index]; }
 	std::vector<VkClearValue> getClearValues();
+	void resize(Ref<Swapchain> swapchain);
+
+private:
+	void destroyResources();
+	void createResources(Ref<Swapchain> swapchain);
 };
 
 }

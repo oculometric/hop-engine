@@ -6,19 +6,22 @@
 #include <vulkan/vk_enum_string_helper.h>
 
 #include "graphics_environment.h"
+#include "render_pass.h"
 
 using namespace HopEngine;
 using namespace std;
 
-Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR surface)
+Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR _surface)
 {
+    surface = _surface;
+
     // calculate actual swapchain parameters
     const SwapchainSupportInfo support_info = Swapchain::getSupportInfo(GraphicsEnvironment::get()->getPhysicalDevice(), surface);
     VkSurfaceFormatKHR surface_format = Swapchain::getIdealSurfaceFormat(support_info);
     format = surface_format.format;
     extent = Swapchain::getIdealExtent(support_info, width, height);
 
-    VkSwapchainCreateInfoKHR create_info{ };
+    create_info = VkSwapchainCreateInfoKHR{ };
     create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     create_info.surface = surface;
     create_info.minImageCount = support_info.surface_capabilities.minImageCount + 1;
@@ -32,7 +35,8 @@ Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR surface)
 
     // get info about which present mode we're going to use
     GraphicsEnvironment::QueueFamilies indices = GraphicsEnvironment::get()->getQueueFamilies(GraphicsEnvironment::get()->getPhysicalDevice());
-    uint32_t queue_families[] = { indices.graphics_family.value(), indices.present_family.value() };
+    queue_families[0] = indices.graphics_family.value();
+    queue_families[1] = indices.present_family.value();
     if (indices.graphics_family != indices.present_family)
     {
         create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -55,46 +59,29 @@ Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR surface)
     // create the swapchain
     if (vkCreateSwapchainKHR(GraphicsEnvironment::get()->getDevice(), &create_info, nullptr, &swapchain) != VK_SUCCESS)
         DBG_FAULT("vkCreateSwapchainKHR failed");
+    createImageViews();
 
-    // retreive images
-    uint32_t image_count = 0;
-    vkGetSwapchainImagesKHR(GraphicsEnvironment::get()->getDevice(), swapchain, &image_count, nullptr);
-    images.resize(image_count);
-    vkGetSwapchainImagesKHR(GraphicsEnvironment::get()->getDevice(), swapchain, &image_count, images.data());
-
-    // create image views
-    image_views.resize(image_count);
-    for (size_t i = 0; i < image_views.size(); ++i)
-    {
-        VkImageViewCreateInfo view_create_info{ };
-        view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        view_create_info.image = images[i];
-        view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        view_create_info.format = format;
-        view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-        view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        view_create_info.subresourceRange.baseMipLevel = 0;
-        view_create_info.subresourceRange.levelCount = 1;
-        view_create_info.subresourceRange.baseArrayLayer = 0;
-        view_create_info.subresourceRange.layerCount = 1;
-
-        if (vkCreateImageView(GraphicsEnvironment::get()->getDevice(), &view_create_info, nullptr, &image_views[i]) != VK_SUCCESS)
-            DBG_FAULT("vkCreateImageView failed");
-    }
-
-    DBG_INFO("created swapchain at " + to_string(width) + "x" + to_string(height) + " with " + to_string(image_count) + " images in present mode " + string_VkPresentModeKHR(create_info.presentMode));
+    DBG_INFO("created swapchain at " + to_string(width) + "x" + to_string(height) + " with " + to_string(images.size()) + " images in present mode " + string_VkPresentModeKHR(create_info.presentMode));
 }
 
 Swapchain::~Swapchain()
 {
     DBG_INFO("destroying swapchain " + PTR(this));
-    for (auto image_view : image_views)
-        vkDestroyImageView(GraphicsEnvironment::get()->getDevice(), image_view, nullptr);
-    
-    vkDestroySwapchainKHR(GraphicsEnvironment::get()->getDevice(), swapchain, nullptr);
+    destroyResources();
+}
+
+void Swapchain::resize(uint32_t width, uint32_t height)
+{
+    DBG_INFO("resizing swapchain to " + to_string(width) + "x" + to_string(height));
+    destroyResources();
+
+    const SwapchainSupportInfo support_info = Swapchain::getSupportInfo(GraphicsEnvironment::get()->getPhysicalDevice(), surface);
+    extent = Swapchain::getIdealExtent(support_info, width, height);
+    create_info.imageExtent = extent;
+
+    if (vkCreateSwapchainKHR(GraphicsEnvironment::get()->getDevice(), &create_info, nullptr, &swapchain) != VK_SUCCESS)
+        DBG_FAULT("vkCreateSwapchainKHR failed");
+    createImageViews();
 }
 
 SwapchainSupportInfo Swapchain::getSupportInfo(VkPhysicalDevice device, VkSurfaceKHR surface)
@@ -155,4 +142,44 @@ VkExtent2D Swapchain::getIdealExtent(const SwapchainSupportInfo& info, uint32_t 
 
         return actual_extent;
     }
+}
+
+void Swapchain::createImageViews()
+{
+    // retreive images
+    uint32_t image_count = 0;
+    vkGetSwapchainImagesKHR(GraphicsEnvironment::get()->getDevice(), swapchain, &image_count, nullptr);
+    images.resize(image_count);
+    vkGetSwapchainImagesKHR(GraphicsEnvironment::get()->getDevice(), swapchain, &image_count, images.data());
+
+    // create image views
+    image_views.resize(image_count);
+    for (size_t i = 0; i < image_views.size(); ++i)
+    {
+        VkImageViewCreateInfo view_create_info{ };
+        view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        view_create_info.image = images[i];
+        view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        view_create_info.format = format;
+        view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+        view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        view_create_info.subresourceRange.baseMipLevel = 0;
+        view_create_info.subresourceRange.levelCount = 1;
+        view_create_info.subresourceRange.baseArrayLayer = 0;
+        view_create_info.subresourceRange.layerCount = 1;
+
+        if (vkCreateImageView(GraphicsEnvironment::get()->getDevice(), &view_create_info, nullptr, &image_views[i]) != VK_SUCCESS)
+            DBG_FAULT("vkCreateImageView failed");
+    }
+}
+
+void Swapchain::destroyResources()
+{
+    for (auto image_view : image_views)
+        vkDestroyImageView(GraphicsEnvironment::get()->getDevice(), image_view, nullptr);
+
+    vkDestroySwapchainKHR(GraphicsEnvironment::get()->getDevice(), swapchain, nullptr);
 }

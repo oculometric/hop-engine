@@ -261,6 +261,16 @@ void GraphicsEnvironment::drawFrame()
     vkQueuePresentKHR(present_queue, &present_info);
 }
 
+void GraphicsEnvironment::resizeSwapchain()
+{
+    vkDeviceWaitIdle(device);
+
+    auto new_size = window->getSize();
+
+    swapchain->resize(new_size.first, new_size.second);
+    render_pass->resize(swapchain);
+}
+
 void GraphicsEnvironment::createInstance()
 {
     // application info

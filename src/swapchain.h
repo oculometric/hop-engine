@@ -23,6 +23,9 @@ private:
 	VkFormat format;
 	VkExtent2D extent;
 	std::vector<VkImageView> image_views;
+	VkSurfaceKHR surface;
+	uint32_t queue_families[2];
+	VkSwapchainCreateInfoKHR create_info;
 
 public:
 	DELETE_CONSTRUCTORS(Swapchain);
@@ -35,11 +38,16 @@ public:
 	inline uint32_t getImageCount() { return static_cast<uint32_t>(image_views.size()); }
 	inline VkImageView getImage(size_t i) { return image_views[i]; }
 	inline VkSwapchainKHR getSwapchain() { return swapchain; }
+	void resize(uint32_t width, uint32_t height);
 
 	static SwapchainSupportInfo getSupportInfo(VkPhysicalDevice device, VkSurfaceKHR surface);
 	static VkSurfaceFormatKHR getIdealSurfaceFormat(const SwapchainSupportInfo& info);
 	static VkPresentModeKHR getIdealPresentMode(const SwapchainSupportInfo& info);
 	static VkExtent2D getIdealExtent(const SwapchainSupportInfo& info, uint32_t window_width, uint32_t window_height);
+
+private:
+	void createImageViews();
+	void destroyResources();
 };
 
 }

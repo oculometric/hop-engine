@@ -13,6 +13,8 @@ class Window
 {
 private:
 	GLFWwindow* window;
+	int width;
+	int height;
 	
 public:
 	DELETE_CONSTRUCTORS(Window);
@@ -26,6 +28,7 @@ public:
 	bool getShouldClose();
 	inline GLFWwindow* getWindow() { return window; }
 	bool isMinified();
+	bool isResized();
 	std::pair<uint32_t, uint32_t> getSize();
 
 	~Window();

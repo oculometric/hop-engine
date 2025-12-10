@@ -111,21 +111,61 @@ RenderPass::RenderPass(Ref<Swapchain> swapchain, RenderOutput config)
     if (vkCreateRenderPass(GraphicsEnvironment::get()->getDevice(), &render_pass_create_info, nullptr, &render_pass) != VK_SUCCESS)
         DBG_FAULT("vkCreateRenderPass failed");
 
+    createResources(swapchain);
+
+    DBG_INFO(string("created render pass with colour buffer, ") + (config.has_depth_attachment ? "depth buffer, " : "") + "and " + to_string(config.additional_attachments) + " data attachments");
+}
+
+RenderPass::~RenderPass()
+{
+    DBG_INFO("destroying render pass " + PTR(this));
+    destroyResources();
+    vkDestroyRenderPass(GraphicsEnvironment::get()->getDevice(), render_pass, nullptr);
+}
+
+vector<VkClearValue> RenderPass::getClearValues()
+{
+    vector<VkClearValue> values = { { VkClearColorValue{{1.0f, 0.0f, 1.0f, 1.0f}} } };
+    for (size_t i = 0; i < output_config.additional_attachments; ++i)
+        values.push_back({ VkClearColorValue{{0.0f, 0.0f, 0.0f, 1.0f}} });
+    if (output_config.has_depth_attachment)
+        values.push_back({ 1.0f, 0 });
+
+    return values;
+}
+
+void RenderPass::resize(Ref<Swapchain> swapchain)
+{
+    destroyResources();
+
+    createResources(swapchain);
+}
+
+void RenderPass::destroyResources()
+{
+    for (VkFramebuffer framebuffer : framebuffers)
+        vkDestroyFramebuffer(GraphicsEnvironment::get()->getDevice(), framebuffer, nullptr);
+    depth_texture = nullptr;
+    additional_textures.clear();
+}
+
+void RenderPass::createResources(Ref<Swapchain> swapchain)
+{
     // create texture buffers to back everything
     auto texture_extent = swapchain->getExtent();
-    if (config.has_depth_attachment)
+    if (output_config.has_depth_attachment)
         depth_texture = new Texture(texture_extent.width, texture_extent.height, Texture::depth_format, nullptr);
-    for (size_t i = 0; i < config.additional_attachments; ++i)
+    for (size_t i = 0; i < output_config.additional_attachments; ++i)
         additional_textures.push_back(new Texture(texture_extent.width, texture_extent.height, Texture::data_format, nullptr));
-    
+
     // create framebuffers to actually render into
     framebuffers.resize(swapchain->getImageCount());
     for (size_t i = 0; i < framebuffers.size(); ++i)
     {
         vector<VkImageView> image_attachments = { swapchain->getImage(i) };
-        for (size_t i = 0; i < config.additional_attachments; ++i)
+        for (size_t i = 0; i < output_config.additional_attachments; ++i)
             image_attachments.push_back(additional_textures[i]->getView());
-        if (config.has_depth_attachment)
+        if (output_config.has_depth_attachment)
             image_attachments.push_back(depth_texture->getView());
 
         VkFramebufferCreateInfo framebuffer_create_info{ };
@@ -140,27 +180,4 @@ RenderPass::RenderPass(Ref<Swapchain> swapchain, RenderOutput config)
         if (vkCreateFramebuffer(GraphicsEnvironment::get()->getDevice(), &framebuffer_create_info, nullptr, &framebuffers[i]) != VK_SUCCESS)
             DBG_FAULT("vkCreateFramebuffer failed");
     }
-
-    DBG_INFO(string("created render pass with colour buffer, ") + (config.has_depth_attachment ? "depth buffer, " : "") + "and " + to_string(config.additional_attachments) + " data attachments");
-}
-
-RenderPass::~RenderPass()
-{
-    DBG_INFO("destroying render pass " + PTR(this));
-    for (VkFramebuffer framebuffer : framebuffers)
-        vkDestroyFramebuffer(GraphicsEnvironment::get()->getDevice(), framebuffer, nullptr);
-    depth_texture = nullptr;
-    additional_textures.clear();
-    vkDestroyRenderPass(GraphicsEnvironment::get()->getDevice(), render_pass, nullptr);
-}
-
-vector<VkClearValue> RenderPass::getClearValues()
-{
-    vector<VkClearValue> values = { { VkClearColorValue{{1.0f, 0.0f, 1.0f, 1.0f}} } };
-    for (size_t i = 0; i < output_config.additional_attachments; ++i)
-        values.push_back({ VkClearColorValue{{0.0f, 0.0f, 0.0f, 1.0f}} });
-    if (output_config.has_depth_attachment)
-        values.push_back({ 1.0f, 0 });
-
-    return values;
 }

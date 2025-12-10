@@ -104,8 +104,8 @@ public:
 	std::pair<Ref<Texture>, Ref<Sampler>> getDefaultTextureSampler();
 	glm::vec2 getFramebufferSize();
 	static GraphicsEnvironment* get();
-	void drawImGui();
 	void drawFrame();
+	void resizeSwapchain();
 
 private:
 	void createInstance();
@@ -115,6 +115,7 @@ private:
 	void createSyncObjects();
 	void initImGui();
 
+	void drawImGui();
 	void recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index);
 };
 
