@@ -49,6 +49,7 @@ public:
 		int start_output = 0;
 		int end_node = 0;
 		int end_input = 0;
+		int palette_index = 1;
 	};
 
 public:

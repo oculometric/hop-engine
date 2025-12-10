@@ -10,6 +10,7 @@ constexpr float character_padding = 1.0f;
 constexpr float grid_size = 24.0f;
 constexpr float layer_offset = 0.01f;
 constexpr float character_top_inset = 4.0f;
+constexpr size_t v_i_buffer_rounding_size = 256;
 
 NodeView::NodeView() : Object(nullptr, nullptr)
 {
@@ -198,6 +199,8 @@ void NodeView::addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, float layer, 
     glm::ivec2 difference = grid_end - grid_start;
     if (difference.x <= 0)
         return;
+    if (difference.x <= 1 && difference.y != 0)
+        return;
 
     glm::vec2 position = glm::vec2(grid_start) * grid_size;
     addLinkElem(position, layer, tint, 0);
@@ -216,73 +219,82 @@ void NodeView::addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, float layer, 
 
     if (difference.x < abs(difference.y) + 2)
     {
+        bool positive = difference.y > 0;
+        int y_delta = positive ? -1 : 1;
         if (difference.x == 2)
         {
             grid_start.x++;
-            addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, (difference.y > 0) ? 4 : 5);
+            addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 4 : 5);
             difference.x--;
-            difference.y += (difference.y > 0 ? -1 : 1);
-            bool positive = difference.y > 0;
-            while (abs(difference.y) > 0)
+            while (abs(difference.y) > 1)
             {
-                grid_start.y -= (difference.y > 0 ? -1 : 1);
+                grid_start.y -= y_delta;
                 addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, 3);
-                difference.y += (difference.y > 0 ? -1 : 1);
+                difference.y += y_delta;
             }
             grid_start.y = grid_end.y;
             addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 7 : 6);
+            return;
         }
 
-
-        return; // TODO:
-    }
-
-    while (difference.x > abs(difference.y) + 2)
-    {
         grid_start.x++;
-        addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, 2);
+        addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 4 : 5);
         difference.x--;
-    }
 
-    if (difference.y > 0)
-    {
-        grid_start.x++;
-        addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, 10);
-        difference.x--;
-        while (difference.y > 1)
+        while (difference.x < abs(difference.y))
+        {
+            grid_start.y -= y_delta;
+            addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, 3);
+            difference.y += y_delta;
+        }
+
+        grid_start.y -= y_delta;
+        addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 14 : 16);
+        difference.y += y_delta;
+
+        while (abs(difference.x) > 2)
         {
             grid_start.x++;
-            grid_start.y++;
-            addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, 8);
+            grid_start.y -= y_delta;
+            addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 8 : 9);
             difference.x--;
-            difference.y--;
+            difference.y += y_delta;
         }
+
         grid_start.x++;
-        grid_start.y++;
-        addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, 13);
+        grid_start.y -= y_delta;
+        addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 13 : 11);
         return;
     }
     else
     {
-        grid_start.x++;
-        addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, 12);
-        difference.x--;
-        while (difference.y < -1)
+        while (difference.x > abs(difference.y) + 2)
         {
             grid_start.x++;
-            grid_start.y--;
-            addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, 9);
+            addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, 2);
             difference.x--;
-            difference.y++;
+        }
+
+        bool positive = difference.y > 0;
+        int y_delta = positive ? -1 : 1;
+        grid_start.x++;
+        addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 10 : 12);
+        difference.x--;
+        while (abs(difference.y) > 1)
+        {
+            grid_start.x++;
+            grid_start.y -= y_delta;
+            addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 8 : 9);
+            difference.x--;
+            difference.y += y_delta;
         }
         grid_start.x++;
-        grid_start.y--;
-        addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, 11);
+        grid_start.y -= y_delta;
+        addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 13 : 11);
         return;
     }
 }
 
-// TODO: connections between nodes
 // TODO: new font
 void NodeView::updateMesh()
 {
@@ -331,7 +343,6 @@ void NodeView::updateMesh()
         text_width = (size_t)(character_size.x) * box.title.size();
         addText(box.title, box_base + glm::vec2{ grid_size * 1.5f, 0 }, 2, box.highlighted ? background_colour : foreground_colour);
         addBlock(box_base + glm::vec2{ grid_size - 4.0f, 0 }, glm::vec2{ ((size_t)(text_width / grid_size) + 2), 1 } * grid_size, 1, foreground_colour, !box.highlighted);
-        //addBadge(box_base - glm::vec2{ 0, grid_size }, glm::vec2{ ((size_t)(text_width / grid_size) + 4), 3 } * grid_size, 1, box.highlighted ? foreground_colour : background_colour);
         box_height_lines++;
         if (!use_compact)
             box_height_lines++;
@@ -369,7 +380,6 @@ void NodeView::updateMesh()
         box.last_size = glm::vec2{ box_width, box_height_lines + 1 } * grid_size;
         addFrame(box_base, box.last_size, 0, foreground_colour);
         addBlock(box_base, box.last_size, -1, background_colour, false);
-
     }
 
     for (Link& link : links)
@@ -399,12 +409,18 @@ void NodeView::updateMesh()
                 break;
         }
         end_pos.y += (end.last_size.y / grid_size) - (end_offset + 3);
-        addLink(start_pos, end_pos, 1.5, { 1, 0, 1 });
+
+        glm::vec3 foreground_colour = (palette.size() < 2) ?
+            glm::vec3{ 1.000f, 0.319f, 0.000f }
+        : palette[glm::clamp(link.palette_index, 0, (int)palette.size() - 1)];
+        addLink(start_pos, end_pos, 1.5, foreground_colour);
     }
 
+    size_t vertices_rounded_up = ((vertices.size() / v_i_buffer_rounding_size) + 1) * v_i_buffer_rounding_size;
+    size_t indices_rounded_up = ((indices.size() / v_i_buffer_rounding_size) + 1) * v_i_buffer_rounding_size;
 
     if (mesh.isValid())
-        mesh->updateData(vertices, indices);
+        mesh->updateData(vertices, indices, vertices_rounded_up, indices_rounded_up);
     else
         mesh = new Mesh(vertices, indices, true);
 }

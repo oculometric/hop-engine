@@ -44,8 +44,9 @@ Mesh::Mesh(vector<Vertex> vertices, vector<uint16_t> indices, bool keep_accessib
         memcpy(index_buffer->mapMemory(), indices.data(), index_buffer->getSize());
         index_buffer->unmapMemory();
 
-        vertex_count = vertices.size();
-        index_count = indices.size();
+        vertex_space = vertices.size();
+        index_space = indices.size();
+        index_count = index_space;
     }
 
     DBG_INFO("created mesh from arrays with " + to_string(vertices.size()) + " vertices and " + to_string(indices.size()) + " indices");
@@ -68,7 +69,7 @@ VkBuffer HopEngine::Mesh::getIndexBuffer()
     return index_buffer->getBuffer();
 }
 
-void Mesh::updateData(vector<Vertex> vertices, vector<uint16_t> indices)
+void Mesh::updateData(vector<Vertex> vertices, vector<uint16_t> indices, size_t vertex_alloc, size_t index_alloc)
 {
     if (!accessible)
     {
@@ -76,38 +77,30 @@ void Mesh::updateData(vector<Vertex> vertices, vector<uint16_t> indices)
         return;
     }
 
-    if (vertices.size() == vertex_count)
+    vertex_alloc = max(vertex_alloc, vertices.size());
+    if (vertex_alloc != vertex_space)
     {
-        memcpy(vertex_buffer->mapMemory(), vertices.data(), vertex_buffer->getSize());
-        vertex_buffer->unmapMemory();
-    }
-    else
-    {
-        vertex_buffer = new Buffer(sizeof(Vertex) * vertices.size(),
+        vertex_buffer = new Buffer(sizeof(Vertex) * vertex_alloc,
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        memcpy(vertex_buffer->mapMemory(), vertices.data(), vertex_buffer->getSize());
-        vertex_buffer->unmapMemory();
-
-        vertex_count = vertices.size();
     }
 
-    if (indices.size() == index_count)
+    memcpy(vertex_buffer->mapMemory(), vertices.data(), vertices.size() * sizeof(Vertex));
+    vertex_buffer->unmapMemory();
+    vertex_space = vertex_alloc;
+
+    index_alloc = max(index_alloc, indices.size());
+    if (index_alloc != index_space)
     {
-        memcpy(index_buffer->mapMemory(), indices.data(), index_buffer->getSize());
-        index_buffer->unmapMemory();
-    }
-    else
-    {
-        index_buffer = new Buffer(sizeof(uint16_t) * indices.size(),
+        index_buffer = new Buffer(sizeof(uint16_t) * index_alloc,
             VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        memcpy(index_buffer->mapMemory(), indices.data(), index_buffer->getSize());
-        index_buffer->unmapMemory();
-
-        index_count = indices.size();
     }
 
+    memcpy(index_buffer->mapMemory(), indices.data(), indices.size() * sizeof(uint16_t));
+    index_buffer->unmapMemory();
+    index_space = index_alloc;
+    index_count = indices.size();
 }
 
 VkVertexInputBindingDescription Mesh::getBindingDescription()
@@ -413,6 +406,7 @@ void Mesh::createFromArrays(vector<Vertex> verts, vector<uint16_t> inds)
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     staging_buffer->copyToBuffer(index_buffer);
 
-    vertex_count = verts.size();
-    index_count = inds.size();
+    vertex_space = verts.size();
+    index_space = inds.size();
+    index_count = index_space;
 }
