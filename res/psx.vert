@@ -18,6 +18,6 @@ void main()
     frag.normal = vec4(normalize((object.model_to_world * vec4(normal.xyz, 0)).xyz), 0);
     frag.tangent = vec4(normalize((object.model_to_world * vec4(tangent.xyz, 0)).xyz), 0);
     frag.uv = uv;
-
-    gl_Position = snap(scene.view_to_clip * scene.world_to_view * object.model_to_world * vec4(position.xyz, 1.0));
+    //snap(
+    gl_Position = scene.view_to_clip * scene.world_to_view * object.model_to_world * vec4(position.xyz, 1.0);
 }

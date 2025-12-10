@@ -207,6 +207,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="res\common.glsl" />
+    <None Include="res\dither.glsl" />
     <None Include="res\node_shader.frag" />
     <None Include="res\node_shader.vert" />
     <None Include="res\post_process.frag" />

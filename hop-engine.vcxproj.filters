@@ -220,5 +220,8 @@
     <None Include="res\post_process.vert">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="res\dither.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

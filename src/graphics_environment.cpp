@@ -16,6 +16,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <filesystem>
+#include <random>
 
 #include "hop_engine.h"
 #include "swapchain.h"
@@ -83,7 +84,8 @@ RenderServer::RenderServer(Ref<Window> main_window)
         { { 1, 1, 0 }, {}, {}, {}, { 1, 1 } }
     }, { 0, 3, 1, 0, 2, 3 });
     // TODO: system for associating material with render pass, and for controlling render pass execution
-    offscreen_pass = new RenderPass(framebuffer_size.first / 4, framebuffer_size.second / 4, { 3, true });
+    // TODO: offscreen pass needs its own scene uniform buffers since viewport size is different!
+    offscreen_pass = new RenderPass(framebuffer_size.first, framebuffer_size.second, { 3, true });
     post_process = new Material(new Shader("res://post_process", false), VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE, VK_COMPARE_OP_ALWAYS, render_pass);
     Ref<Sampler> clamped_sampler = new Sampler(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
     post_process->setSampler("screen_texture", clamped_sampler);
@@ -96,6 +98,17 @@ RenderServer::RenderServer(Ref<Window> main_window)
     post_process->setTexture("params_texture", offscreen_pass->getImage(2));
     post_process->setTexture("custom_texture", offscreen_pass->getImage(3));
     post_process->setTexture("depth_texture", offscreen_pass->getImage(4));
+    glm::vec4 samples[64];
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    std::default_random_engine rand;
+    for (int i = 0; i < 64; ++i)
+    {
+        glm::vec4 s = glm::vec4((dist(rand) * 2.0f) - 1.0f, (dist(rand) * 2.0f) - 1.0f, -dist(rand), 0.0f);
+        float fi = (float)i / (float)64;
+        glm::vec4 v = glm::normalize(s) * (0.05f + ((1.0f - 0.05f) * fi * fi));
+        samples[i] = v;
+    }
+    post_process->setUniform("samples", samples, sizeof(glm::vec4) * 64);
     createSyncObjects();
 
     initImGui();
@@ -243,6 +256,8 @@ void RenderServer::drawFrame(float delta_time)
     }
     else
         DBG_WARNING("no scene attached to environment");
+
+    post_process->pushToDescriptorSet(image_index);
 
     vkResetCommandBuffer(command_buffers[image_index], 0);
     recordRenderCommands(command_buffers[image_index], image_index);

@@ -65,13 +65,13 @@ void initScene(Ref<Scene> scene)
     );
     bunny->material->setTexture("albedo", new Texture("res://bunny.png"));
     bunny->material->setSampler("albedo", sampler);
-    bunny->parent = asha; // TODO: setParent function
+    //bunny->parent = asha; // TODO: setParent function
     bunny->transform.updateWorldMatrix();
     bunny->transform.setLocalPosition({ 0, -0.5f, 0.9f });
     bunny->transform.scaleLocal({ 2, 2, 2 });
     scene->objects.push_back(bunny);
 
-    cube = new Object(
+    /*cube = new Object(
         new Mesh("res://cube.obj"), 
         new Material(new Shader("res://split", false), VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL)
     );
@@ -84,7 +84,7 @@ void initScene(Ref<Scene> scene)
     cube->material->setUniform("material", &material, sizeof(MaterialParams));
     cube->material->setUniform("light", &light, sizeof(LightParams));
     cube->material->setVec4Uniform("ambient_colour", ambient_colour);
-    scene->objects.push_back(cube);
+    scene->objects.push_back(cube);*/
 
     scene->camera->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
         glm::vec3(0.0f, 0.0f, 0.0f),
@@ -93,8 +93,8 @@ void initScene(Ref<Scene> scene)
 
 void updateScene(Ref<Scene> scene)
 {
-    asha->transform.rotateLocal({ 0, 0.01f, 0 });
-    cube->transform.rotateLocal({ 0, 0, 0.03f });
+    //asha->transform.rotateLocal({ 0, 0.01f, 0 });
+    //cube->transform.rotateLocal({ 0, 0, 0.03f });
 
     glm::vec2 mouse_delta = Input::getMouseDelta() * 0.004f;
     if (Input::isMouseDown(GLFW_MOUSE_BUTTON_2))
