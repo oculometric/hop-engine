@@ -53,7 +53,6 @@ void main()
             vec2 fraction = fract(scaled_uv);
             fraction *= border_ratio;
             fraction += border_fraction;
-            fraction = clamp(fraction, border_fraction, 1.0f - border_fraction);
             uv = fraction + 1.0f;
             uv -= vec2(lessThan(segment, ivec2(1, 1)));
             uv += vec2(greaterThan(segment, size_units - ivec2(2, 2)));
