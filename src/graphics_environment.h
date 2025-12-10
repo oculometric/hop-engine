@@ -78,6 +78,7 @@ private:
 	VkSurfaceKHR surface = VK_NULL_HANDLE;
 
 	Ref<Swapchain> swapchain = nullptr;
+    Ref<RenderPass> offscreen_pass = nullptr;
 	Ref<RenderPass> render_pass = nullptr;
 
 	VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
@@ -86,6 +87,8 @@ private:
 
 	Ref<Texture> default_image = nullptr;
 	Ref<Sampler> default_sampler = nullptr;
+	Ref<Mesh> quad = nullptr;
+	Ref<Material> post_process = nullptr;
 
 public:
 	GraphicsEnvironment(Ref<Window> main_window);

@@ -260,7 +260,7 @@ int main()
 
     ge->draw_imgui_function = imGuiDrawFunc;
     ge->scene = new Scene();
-    initNodeScene(ge->scene);
+    initScene(ge->scene);
 
     while (!window->getShouldClose())
     {
@@ -270,7 +270,7 @@ int main()
         if (window->isResized())
             ge->resizeSwapchain();
         ge->drawFrame();
-        updateNodeScene(ge->scene);
+        updateScene(ge->scene);
     }
 
     ge->scene = nullptr;

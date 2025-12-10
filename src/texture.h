@@ -22,6 +22,7 @@ private:
 	size_t height;
 	VkImageLayout current_layout;
 	VkFormat format;
+	VkImageUsageFlags usage;
 	VkImage image = VK_NULL_HANDLE;
 	VkDeviceMemory memory = VK_NULL_HANDLE;
 	VkImageView view = VK_NULL_HANDLE;
@@ -29,8 +30,8 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Texture);
 
-	Texture(size_t width, size_t height, VkFormat format, void* data);
-	Texture(std::string file);
+	Texture(size_t width, size_t height, VkFormat format, void* data = nullptr, VkImageUsageFlags usage = VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM);
+	Texture(std::string file, VkImageUsageFlags usage = VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM);
 	~Texture();
 
 	void transitionLayout(VkImageLayout new_layout);

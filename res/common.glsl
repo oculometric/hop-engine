@@ -5,13 +5,16 @@ layout(set = 0, binding = 0) uniform SceneUniforms
     ivec2 viewport_size;
     float time;
     vec3 eye_position;
+    vec2 near_far;
 } scene;
 
+#ifndef OMIT_OBJECT_SET
 layout(set = 1, binding = 0) uniform ObjectUniforms
 {
     mat4 model_to_world;
     int id;
 } object;
+#endif
 
 struct Frag
 {
@@ -35,10 +38,12 @@ layout(location = 0) out Frag frag;
 #ifdef FRAGMENT
 layout(location = 0) in Frag frag;
 
+#ifndef NONSTANDARD_FRAG_OUT
 layout(location = 0) out vec4 colour;
 layout(location = 1) out vec4 normal;
 layout(location = 2) out vec4 params;
 layout(location = 3) out vec4 custom;
+#endif
 #endif
 
 struct Light

@@ -13,9 +13,10 @@
 using namespace HopEngine;
 using namespace std;
 
-Texture::Texture(size_t _width, size_t _height, VkFormat _format, void* data)
+Texture::Texture(size_t _width, size_t _height, VkFormat _format, void* data, VkImageUsageFlags _usage)
 {
     format = _format;
+    usage = _usage;
     width = _width; height = _height;
 
     if (data != nullptr || width == 0 || height == 0)
@@ -40,12 +41,13 @@ Texture::Texture(size_t _width, size_t _height, VkFormat _format, void* data)
     }
 }
 
-Texture::Texture(string file)
+Texture::Texture(string file, VkImageUsageFlags _usage)
 {
     auto file_data = Package::tryLoadFile(file);
     int img_width, img_height, img_channels;
     stbi_uc* pixels = stbi_load_from_memory(file_data.data(), static_cast<int>(file_data.size()), &img_width, &img_height, &img_channels, STBI_rgb_alpha);
     format = VK_FORMAT_R8G8B8A8_SRGB;
+    usage = _usage;
     width = img_width; height = img_height;
 
     if (pixels == nullptr)
@@ -204,18 +206,16 @@ void Texture::createImage()
     image_create_info.format = format;
     image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    if (format == Texture::depth_format)
+    if ((usage & VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM) == VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM)
     {
-        image_create_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+        if (format == Texture::depth_format)
+            usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+        else if (format == Texture::data_format)
+            usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        else
+            usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
     }
-    else if (format == Texture::data_format)
-    {
-        image_create_info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    }
-    else
-    {
-        image_create_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-    }
+    image_create_info.usage = usage;
     image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
     if (vkCreateImage(GraphicsEnvironment::get()->getDevice(), &image_create_info, nullptr, &image) != VK_SUCCESS)

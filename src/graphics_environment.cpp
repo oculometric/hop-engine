@@ -83,11 +83,31 @@ GraphicsEnvironment::GraphicsEnvironment(Ref<Window> main_window)
     MAX_FRAMES_IN_FLIGHT = swapchain->getImageCount();
     DBG_VERBOSE("adjusted frames in flight to " + to_string(MAX_FRAMES_IN_FLIGHT));
     createCommandPool();
-    render_pass = new RenderPass(swapchain, { 3, true });
+    render_pass = new RenderPass(swapchain, { 0, false });
 
     uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
     default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, default_image_data);
     default_sampler = new Sampler(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+    quad = new Mesh({
+        { { -1, -1, 0 }, {}, {}, {}, { 0, 0 } },
+        { { 1, -1, 0 }, {}, {}, {}, { 1, 0 } },
+        { { -1, 1, 0 }, {}, {}, {}, { 0, 1 } },
+        { { 1, 1, 0 }, {}, {}, {}, { 1, 1 } }
+    }, { 0, 3, 1, 0, 2, 3 });
+    // TODO: system for associating material with render pass, and for controlling render pass execution
+    offscreen_pass = new RenderPass(framebuffer_size.first / 4, framebuffer_size.second / 4, { 3, true });
+    post_process = new Material(new Shader("res://post_process", false), VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE, VK_COMPARE_OP_ALWAYS, render_pass);
+    Ref<Sampler> clamped_sampler = new Sampler(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+    post_process->setSampler("screen_texture", clamped_sampler);
+    post_process->setSampler("normal_texture", clamped_sampler);
+    post_process->setSampler("params_texture", clamped_sampler);
+    post_process->setSampler("custom_texture", clamped_sampler);
+    post_process->setSampler("depth_texture", clamped_sampler);
+    post_process->setTexture("screen_texture", offscreen_pass->getImage(0));
+    post_process->setTexture("normal_texture", offscreen_pass->getImage(1));
+    post_process->setTexture("params_texture", offscreen_pass->getImage(2));
+    post_process->setTexture("custom_texture", offscreen_pass->getImage(3));
+    post_process->setTexture("depth_texture", offscreen_pass->getImage(4));
     createSyncObjects();
 
     initImGui();
@@ -119,6 +139,8 @@ GraphicsEnvironment::~GraphicsEnvironment()
     DBG_VERBOSE("destroying command pool");
     vkDestroyCommandPool(device, command_pool, nullptr);
 
+    post_process = nullptr;
+    quad = nullptr;
     default_image = nullptr;
     default_sampler = nullptr;
     scene = nullptr;
@@ -128,6 +150,7 @@ GraphicsEnvironment::~GraphicsEnvironment()
     vkDestroyDescriptorSetLayout(device, scene_descriptor_set_layout, nullptr);
     vkDestroyDescriptorSetLayout(device, object_descriptor_set_layout, nullptr);
 
+    offscreen_pass = nullptr;
     render_pass = nullptr;
     swapchain = nullptr;
 
@@ -145,7 +168,7 @@ GraphicsEnvironment::~GraphicsEnvironment()
     environment = nullptr;
 }
 
-Ref<RenderPass> GraphicsEnvironment::getRenderPass() { return render_pass; }
+Ref<RenderPass> GraphicsEnvironment::getRenderPass() { return offscreen_pass; }
 
 GraphicsEnvironment::QueueFamilies GraphicsEnvironment::getQueueFamilies(VkPhysicalDevice device)
 {
@@ -268,7 +291,13 @@ void GraphicsEnvironment::resizeSwapchain()
     auto new_size = window->getSize();
 
     swapchain->resize(new_size.first, new_size.second);
-    render_pass->resize(swapchain);
+    offscreen_pass->resize(new_size.first / 4, new_size.second / 4);
+    post_process->setTexture("screen_texture", offscreen_pass->getImage(0));
+    post_process->setTexture("normal_texture", offscreen_pass->getImage(1));
+    post_process->setTexture("params_texture", offscreen_pass->getImage(2));
+    post_process->setTexture("custom_texture", offscreen_pass->getImage(3));
+    post_process->setTexture("depth_texture", offscreen_pass->getImage(4));
+    render_pass->resize();
 }
 
 void GraphicsEnvironment::createInstance()
@@ -578,11 +607,11 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
 
     VkRenderPassBeginInfo render_pass_begin_info{ };
     render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    render_pass_begin_info.renderPass = render_pass->getRenderPass();
-    render_pass_begin_info.framebuffer = render_pass->getFramebuffer(image_index);
+    render_pass_begin_info.renderPass = offscreen_pass->getRenderPass();
+    render_pass_begin_info.framebuffer = offscreen_pass->getFramebuffer(0);
     render_pass_begin_info.renderArea.offset = { 0, 0 };
-    render_pass_begin_info.renderArea.extent = swapchain->getExtent();
-    vector<VkClearValue> clear_values = render_pass->getClearValues();
+    render_pass_begin_info.renderArea.extent = offscreen_pass->getExtent();
+    vector<VkClearValue> clear_values = offscreen_pass->getClearValues();
     if (scene.isValid())
         clear_values[0].color = { scene->background_colour.r, scene->background_colour.g, scene->background_colour.b };
     render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
@@ -590,18 +619,17 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
 
     vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
+    VkRect2D scissor{ };
+    scissor.offset = { 0, 0 };
+    scissor.extent = offscreen_pass->getExtent();
     VkViewport viewport{ };
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(swapchain->getExtent().width);
-    viewport.height = static_cast<float>(swapchain->getExtent().height);
+    viewport.width = static_cast<float>(scissor.extent.width);
+    viewport.height = static_cast<float>(scissor.extent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(command_buffer, 0, 1, &viewport);
-
-    VkRect2D scissor{ };
-    scissor.offset = { 0, 0 };
-    scissor.extent = swapchain->getExtent();
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
     if (scene.isValid())
@@ -630,6 +658,41 @@ void GraphicsEnvironment::recordRenderCommands(VkCommandBuffer command_buffer, u
             vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(object->mesh->getIndexCount()), 1, 0, 0, 0);
         }
     }
+
+    vkCmdEndRenderPass(command_buffer);
+
+
+
+
+    render_pass_begin_info = VkRenderPassBeginInfo{ };
+    render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    render_pass_begin_info.renderPass = render_pass->getRenderPass();
+    render_pass_begin_info.framebuffer = render_pass->getFramebuffer(image_index);
+    render_pass_begin_info.renderArea.offset = { 0, 0 };
+    render_pass_begin_info.renderArea.extent = render_pass->getExtent();
+    clear_values = render_pass->getClearValues();
+    render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
+    render_pass_begin_info.pClearValues = clear_values.data();
+
+    vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+
+    scissor.extent = render_pass->getExtent();
+    viewport.width = static_cast<float>(scissor.extent.width);
+    viewport.height = static_cast<float>(scissor.extent.height);
+    vkCmdSetViewport(command_buffer, 0, 1, &viewport);
+    vkCmdSetScissor(command_buffer, 0, 1, &scissor);
+
+    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, post_process->getPipeline());
+    VkDescriptorSet scene_descriptor_set = scene->camera->getDescriptorSet(image_index);
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, post_process->getPipelineLayout(), 0, 1, &scene_descriptor_set, 0, nullptr);
+    VkDescriptorSet material_descriptor_set = post_process->getDescriptorSet(image_index);
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, post_process->getPipelineLayout(), 2, 1, &material_descriptor_set, 0, nullptr);
+
+    VkBuffer vertex_buffers[] = { quad->getVertexBuffer() };
+    VkDeviceSize offsets[] = { 0 };
+    vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
+    vkCmdBindIndexBuffer(command_buffer, quad->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
+    vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(quad->getIndexCount()), 1, 0, 0, 0);
 
     ImDrawData* draw_data = ImGui::GetDrawData();
     ImGui_ImplVulkan_RenderDrawData(draw_data, command_buffer);

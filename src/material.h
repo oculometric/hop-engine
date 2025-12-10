@@ -7,6 +7,7 @@
 
 #include "common.h"
 #include "shader.h"
+#include "render_pass.h"
 
 namespace HopEngine
 {
@@ -24,6 +25,8 @@ class Pipeline;
 class UniformBlock;
 class Texture;
 class Sampler;
+class RenderPass;
+// TODO: forward defs header
 
 class Material
 {
@@ -38,7 +41,8 @@ public:
 	DELETE_CONSTRUCTORS(Material);
 
 	Material(Ref<Shader> shader, VkCullModeFlags culling_mode = VK_CULL_MODE_BACK_BIT, VkPolygonMode polygon_mode = VK_POLYGON_MODE_FILL,
-		VkBool32 depth_write_enable = VK_TRUE, VkBool32 depth_test_enable = VK_TRUE, VkCompareOp depth_compare_op = VK_COMPARE_OP_LESS_OR_EQUAL);
+		VkBool32 depth_write_enable = VK_TRUE, VkBool32 depth_test_enable = VK_TRUE, VkCompareOp depth_compare_op = VK_COMPARE_OP_LESS_OR_EQUAL,
+		Ref<RenderPass> render_pass = nullptr);
 	~Material();
 
 	VkPipeline getPipeline();
