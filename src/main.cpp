@@ -114,7 +114,6 @@ void updateScene(Ref<Scene> scene)
 void initNodeScene(Ref<Scene> scene)
 {
     node_view = new NodeView();
-    node_view->use_compact = true;
     node_view->nodes.push_back(
         { "Hello, World!",
         {

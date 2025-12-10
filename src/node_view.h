@@ -56,7 +56,6 @@ public:
 	std::vector<Node> nodes;
 	std::vector<Link> links;
 	std::vector<glm::vec3> palette;
-	bool use_compact = true;
 
 private:
 	std::vector<Vertex> vertices;

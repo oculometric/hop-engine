@@ -28,10 +28,11 @@ string getCullMode(VkCullModeFlags mode)
 	return result.substr(0, result.size() - 3);
 }
 
-Material::Material(Ref<Shader> _shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode)
+Material::Material(Ref<Shader> _shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode,
+	VkBool32 depth_write_enable, VkBool32 depth_test_enable, VkCompareOp depth_compare_op)
 {
 	shader = _shader;
-	pipeline = new Pipeline(shader, culling_mode, polygon_mode, GraphicsEnvironment::get()->getRenderPass());
+	pipeline = new Pipeline(shader, culling_mode, polygon_mode, depth_write_enable, depth_test_enable, depth_compare_op, GraphicsEnvironment::get()->getRenderPass());
 
 	auto layout = shader->getShaderLayout();
 	uniforms = new UniformBlock(layout);

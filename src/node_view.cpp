@@ -14,7 +14,7 @@ constexpr size_t v_i_buffer_rounding_size = 256;
 
 NodeView::NodeView() : Object(nullptr, nullptr)
 {
-    material = new Material(new Shader("res://node_shader", false), VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL);
+    material = new Material(new Shader("res://node_shader", false), VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE);
     Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
     material->setTexture("node_atlas", new Texture("res://newnodes.png"));
     material->setSampler("node_atlas", sampler);
@@ -314,6 +314,8 @@ void NodeView::updateMesh()
     
     vertices.clear();
     indices.clear();
+
+    // prepass to calculate node sizes
     for (Node& box : nodes)
     {
         size_t box_width = 3;
@@ -334,54 +336,11 @@ void NodeView::updateMesh()
             }
         }
 
-        glm::vec3 foreground_colour = (palette.size() < 2) ? 
-              glm::vec3{ 1.000f, 0.319f, 0.000f }
-            : palette[glm::clamp(box.palette_index, 0, (int)palette.size() - 1)];
-
-        size_t box_height_lines = 0;
-        glm::vec2 box_base = (glm::round(box.position) * grid_size);
-        text_width = (size_t)(character_size.x) * box.title.size();
-        addText(box.title, box_base + glm::vec2{ grid_size * 1.5f, 0 }, 2, box.highlighted ? background_colour : foreground_colour);
-        addBlock(box_base + glm::vec2{ grid_size - 4.0f, 0 }, glm::vec2{ ((size_t)(text_width / grid_size) + 2), 1 } * grid_size, 1, foreground_colour, !box.highlighted);
-        box_height_lines++;
-        if (!use_compact)
-            box_height_lines++;
-
-        for (const NodeElement& element : box.elements)
-        {
-            glm::vec2 line_pos_base = box_base + glm::vec2{0, box_height_lines * grid_size};
-            switch (element.type)
-            {
-            case ELEMENT_INPUT:
-                addPin(line_pos_base, 2, foreground_colour, element.pin_type, element.pin_solid);
-                addText(element.text, line_pos_base + glm::vec2{ 6.0f + grid_size, 0 }, 2, foreground_colour);
-                break;
-            case ELEMENT_OUTPUT:
-                addPin(line_pos_base + glm::vec2{ box_width - 1, 0 } * grid_size, 2, foreground_colour, element.pin_type, element.pin_solid);
-                text_width = (size_t)(character_size.x) * element.text.size();
-                addText(element.text, line_pos_base + glm::vec2{ (box_width * grid_size) - (6.0f + grid_size + text_width), 0.0f }, 2, foreground_colour);
-                break;
-            case ELEMENT_BLOCK:
-                addBlock(line_pos_base + glm::vec2{ grid_size / 2.0f, 0 }, glm::vec2{ box_width - 1, 1 } * grid_size, 1, foreground_colour, false);
-                addText(element.text, line_pos_base + glm::vec2{ 6.0f + grid_size, 0 }, 2, background_colour);
-                if (!use_compact)
-                    box_height_lines++;
-                break;
-            case ELEMENT_TEXT:
-                addText(element.text, line_pos_base + glm::vec2{ 6.0f + grid_size, 0 }, 2, foreground_colour);
-                break;
-            }
-
-            box_height_lines++;
-        }
-
-        if (!use_compact)
-            box_height_lines++;
-        box.last_size = glm::vec2{ box_width, box_height_lines + 1 } * grid_size;
-        addFrame(box_base, box.last_size, 0, foreground_colour);
-        addBlock(box_base, box.last_size, -1, background_colour, false);
+        size_t box_height_lines = box.elements.size() + 2;
+        box.last_size = glm::vec2{ box_width, box_height_lines } * grid_size;
     }
 
+    // draw links
     for (Link& link : links)
     {
         Node& start = nodes[link.start_node];
@@ -413,11 +372,56 @@ void NodeView::updateMesh()
         glm::vec3 foreground_colour = (palette.size() < 2) ?
             glm::vec3{ 1.000f, 0.319f, 0.000f }
         : palette[glm::clamp(link.palette_index, 0, (int)palette.size() - 1)];
-        addLink(start_pos, end_pos, 1.5, foreground_colour);
+        addLink(start_pos, end_pos, -1, foreground_colour);
     }
 
-    size_t vertices_rounded_up = ((vertices.size() / v_i_buffer_rounding_size) + 1) * v_i_buffer_rounding_size;
-    size_t indices_rounded_up = ((indices.size() / v_i_buffer_rounding_size) + 1) * v_i_buffer_rounding_size;
+    // draw nodes
+    for (Node& box : nodes)
+    {
+        size_t box_width = box.last_size.x / grid_size;
+        glm::vec2 box_base = (glm::round(box.position) * grid_size);
+
+        glm::vec3 foreground_colour = (palette.size() < 2) ?
+            glm::vec3{ 1.000f, 0.319f, 0.000f }
+        : palette[glm::clamp(box.palette_index, 0, (int)palette.size() - 1)];
+        addBlock(box_base, box.last_size, 0, background_colour, false);
+        addFrame(box_base, box.last_size, 0, foreground_colour);
+
+        size_t box_height_lines = 0;
+        size_t text_width = 0;
+        text_width = (size_t)(character_size.x) * box.title.size();
+        addBlock(box_base + glm::vec2{ grid_size - 4.0f, 0 }, glm::vec2{ ((size_t)(text_width / grid_size) + 2), 1 } * grid_size, 0, foreground_colour, !box.highlighted);
+        addText(box.title, box_base + glm::vec2{ grid_size * 1.5f, 0 }, 0, box.highlighted ? background_colour : foreground_colour);
+        box_height_lines++;
+
+        for (const NodeElement& element : box.elements)
+        {
+            glm::vec2 line_pos_base = box_base + glm::vec2{ 0, box_height_lines * grid_size };
+            switch (element.type)
+            {
+            case ELEMENT_INPUT:
+                addPin(line_pos_base, 2, foreground_colour, element.pin_type, element.pin_solid);
+                addText(element.text, line_pos_base + glm::vec2{ 6.0f + grid_size, 0 }, 0, foreground_colour);
+                break;
+            case ELEMENT_OUTPUT:
+                addPin(line_pos_base + glm::vec2{ box_width - 1, 0 } * grid_size, 0, foreground_colour, element.pin_type, element.pin_solid);
+                text_width = (size_t)(character_size.x) * element.text.size();
+                addText(element.text, line_pos_base + glm::vec2{ (box_width * grid_size) - (6.0f + grid_size + text_width), 0.0f }, 0, foreground_colour);
+                break;
+            case ELEMENT_BLOCK:
+                addBlock(line_pos_base + glm::vec2{ grid_size / 2.0f, 0 }, glm::vec2{ box_width - 1, 1 } * grid_size, 0, foreground_colour, false);
+                addText(element.text, line_pos_base + glm::vec2{ 6.0f + grid_size, 0 }, 0, background_colour);
+                break;
+            case ELEMENT_TEXT:
+                addText(element.text, line_pos_base + glm::vec2{ 6.0f + grid_size, 0 }, 0, foreground_colour);
+                break;
+            }
+            box_height_lines++;
+        }
+    }
+
+    size_t vertices_rounded_up = ((vertices.size() / v_i_buffer_rounding_size) + 2) * v_i_buffer_rounding_size;
+    size_t indices_rounded_up = ((indices.size() / v_i_buffer_rounding_size) + 2) * v_i_buffer_rounding_size;
 
     if (mesh.isValid())
         mesh->updateData(vertices, indices, vertices_rounded_up, indices_rounded_up);

@@ -12,7 +12,8 @@
 using namespace HopEngine;
 using namespace std;
 
-Pipeline::Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode, Ref<RenderPass> render_pass)
+Pipeline::Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode,
+    VkBool32 depth_write_enable, VkBool32 depth_test_enable, VkCompareOp depth_compare_op, Ref<RenderPass> render_pass)
 {
     array<VkDynamicState, 2> dynamic_states =
     {
@@ -61,9 +62,9 @@ Pipeline::Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMo
 
     VkPipelineDepthStencilStateCreateInfo depth{ };
     depth.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depth.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-    depth.depthWriteEnable = VK_TRUE;
-    depth.depthTestEnable = VK_TRUE;
+    depth.depthCompareOp = depth_compare_op;
+    depth.depthWriteEnable = depth_write_enable;
+    depth.depthTestEnable = depth_test_enable;
     depth.depthBoundsTestEnable = VK_FALSE;
     depth.stencilTestEnable = VK_FALSE;
 

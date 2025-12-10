@@ -37,7 +37,8 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Material);
 
-	Material(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode);
+	Material(Ref<Shader> shader, VkCullModeFlags culling_mode = VK_CULL_MODE_BACK_BIT, VkPolygonMode polygon_mode = VK_POLYGON_MODE_FILL,
+		VkBool32 depth_write_enable = VK_TRUE, VkBool32 depth_test_enable = VK_TRUE, VkCompareOp depth_compare_op = VK_COMPARE_OP_LESS_OR_EQUAL);
 	~Material();
 
 	VkPipeline getPipeline();
