@@ -37,11 +37,10 @@ NodeView::NodeView() : Object(nullptr, nullptr)
     updateMesh();
 }
 
-void NodeView::addQuad(glm::vec2 position, glm::vec2 size, float layer, glm::vec4 colour, glm::vec3 tint, bool clip_uv, int uv_index, vector<Vertex>& vertices, vector<uint16_t>& indices)
+void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec4 colour, glm::vec3 tint, bool clip_uv, int uv_index)
 {
     uint16_t v_off = static_cast<uint16_t>(vertices.size());
     glm::vec3 segment_size = { glm::ceil(size.x / grid_size), glm::ceil(size.y / grid_size), 0 };
-    float z_height = layer * layer_offset;
 
     glm::vec2 tl_uv = { 0, 1 };
     glm::vec2 tr_uv = { 1, 1 };
@@ -60,10 +59,10 @@ void NodeView::addQuad(glm::vec2 position, glm::vec2 size, float layer, glm::vec
         segment_size += glm::vec3{ 2.0f, 2.0f, 0.0f };
     }
 
-    vertices.push_back(Vertex{ { position.x, -position.y, z_height }, colour, segment_size, tint, tl_uv });
-    vertices.push_back(Vertex{ { position.x + size.x, -position.y, z_height }, colour, segment_size, tint, tr_uv });
-    vertices.push_back(Vertex{ { position.x, -position.y - size.y, z_height }, colour, segment_size, tint, bl_uv });
-    vertices.push_back(Vertex{ { position.x + size.x, -position.y - size.y, z_height }, colour, segment_size, tint, br_uv });
+    vertices.push_back(Vertex{ { position.x, -position.y, 0 }, colour, segment_size, tint, tl_uv });
+    vertices.push_back(Vertex{ { position.x + size.x, -position.y, 0 }, colour, segment_size, tint, tr_uv });
+    vertices.push_back(Vertex{ { position.x, -position.y - size.y, 0 }, colour, segment_size, tint, bl_uv });
+    vertices.push_back(Vertex{ { position.x + size.x, -position.y - size.y, 0 }, colour, segment_size, tint, br_uv });
 
     indices.push_back(v_off + 0);
     indices.push_back(v_off + 3);
@@ -73,26 +72,26 @@ void NodeView::addQuad(glm::vec2 position, glm::vec2 size, float layer, glm::vec
     indices.push_back(v_off + 3);
 }
 
-void NodeView::addFrame(glm::vec2 position, glm::vec2 size, float layer, glm::vec3 tint)
+void NodeView::addFrame(glm::vec2 position, glm::vec2 size, glm::vec3 tint)
 {
-    addQuad(position, size, layer, { 1, 0, 0, 0 }, tint, false, 0, vertices, indices);
+    addQuad(position, size, { 1, 0, 0, 0 }, tint, false, 0);
 }
 
-void NodeView::addBadge(glm::vec2 position, glm::vec2 size, float layer, glm::vec3 tint)
+void NodeView::addBadge(glm::vec2 position, glm::vec2 size, glm::vec3 tint)
 {
-    addQuad(position, size, layer, { 0, 1, 0, 0 }, tint, false, 0, vertices, indices);
+    addQuad(position, size, { 0, 1, 0, 0 }, tint, false, 0);
 }
 
-void NodeView::addBlock(glm::vec2 position, glm::vec2 size, float layer, glm::vec3 tint, bool outline)
+void NodeView::addBlock(glm::vec2 position, glm::vec2 size, glm::vec3 tint, bool outline)
 {
-    addQuad(position, size, layer, { 0, 4, 0, 0 }, tint, true, 4, vertices, indices);
+    addQuad(position, size, { 0, 4, 0, 0 }, tint, true, 4);
     if (outline)
-        addQuad(position + 2.0f, size - 4.0f, layer + 0.5f, { 0, 1, 0, 0 }, background_colour, true, 4, vertices, indices);
+        addQuad(position + 2.0f, size - 4.0f, { 0, 1, 0, 0 }, background_colour, true, 4);
 }
 
-void NodeView::addPin(glm::vec2 position, float layer, glm::vec3 tint, int type, bool filled)
+void NodeView::addPin(glm::vec2 position, glm::vec3 tint, int type, bool filled)
 {
-    addQuad(position, glm::vec2{ grid_size, grid_size }, layer, { 0, 0, filled ? 10 : 1, 0 }, tint, true, type, vertices, indices);
+    addQuad(position, glm::vec2{ grid_size, grid_size }, { 0, 0, filled ? 10 : 1, 0 }, tint, true, type);
 }
 
 static glm::vec2 flipUV(glm::vec2 v)
@@ -100,7 +99,7 @@ static glm::vec2 flipUV(glm::vec2 v)
     return { v.x, 1.0f - v.y };
 }
 
-void NodeView::addCharacter(char c, glm::vec2 position, float layer, glm::vec3 tint)
+void NodeView::addCharacter(char c, glm::vec2 position, glm::vec3 tint)
 {
     float chars_horizontal = 32.0f;
     float chars_height = 320.0f / 18.0f;
@@ -112,12 +111,11 @@ void NodeView::addCharacter(char c, glm::vec2 position, float layer, glm::vec3 t
     glm::vec2 uv_tl = flipUV(uv_base);
     glm::vec2 uv_tr = flipUV(uv_base + glm::vec2{ uv_size.x, 0 });
 
-    float z_height = layer * layer_offset;
     float top_inset = character_top_inset - character_padding;
-    glm::vec3 pos_bl = { position.x, (-position.y - character_size.y) - top_inset, z_height};
-    glm::vec3 pos_br = { position.x + character_size.x, (-position.y - character_size.y) - top_inset, z_height };
-    glm::vec3 pos_tl = { position.x, -position.y - top_inset, z_height };
-    glm::vec3 pos_tr = { position.x + character_size.x, -position.y - top_inset, z_height };
+    glm::vec3 pos_bl = { position.x, (-position.y - character_size.y) - top_inset, 0};
+    glm::vec3 pos_br = { position.x + character_size.x, (-position.y - character_size.y) - top_inset, 0 };
+    glm::vec3 pos_tl = { position.x, -position.y - top_inset, 0 };
+    glm::vec3 pos_tr = { position.x + character_size.x, -position.y - top_inset, 0 };
 
     uint16_t v_off = static_cast<uint16_t>(vertices.size());
     vertices.push_back(Vertex{ pos_bl, glm::vec4(tint, 1), { 0, 0, 0.5f }, {}, uv_bl });
@@ -133,17 +131,17 @@ void NodeView::addCharacter(char c, glm::vec2 position, float layer, glm::vec3 t
     indices.push_back(v_off + 3);
 }
 
-void NodeView::addText(std::string text, glm::vec2 start, float layer, glm::vec3 tint)
+void NodeView::addText(std::string text, glm::vec2 start, glm::vec3 tint)
 {
     glm::vec2 position = start;
     for (char c : text)
     {
-        addCharacter(c, position, layer, tint);
+        addCharacter(c, position, tint);
         position.x += character_size.x;
     }
 }
 
-void NodeView::addLinkElem(glm::vec2 position, float layer, glm::vec3 tint, int type)
+void NodeView::addLinkElem(glm::vec2 position, glm::vec3 tint, int type)
 {
     static const glm::vec2 uv_sets[18][4] =
     {   // tl       tr        bl        br
@@ -173,11 +171,10 @@ void NodeView::addLinkElem(glm::vec2 position, float layer, glm::vec3 tint, int 
         glm::vec2 uv_bl = uv_sets[type][2];
         glm::vec2 uv_br = uv_sets[type][3];
 
-        float z_height = layer * layer_offset;
-        glm::vec3 pos_tl = { position.x, -position.y, z_height };
-        glm::vec3 pos_tr = { position.x + grid_size, -position.y, z_height };
-        glm::vec3 pos_bl = { position.x, -position.y - grid_size, z_height };
-        glm::vec3 pos_br = { position.x + grid_size, -position.y - grid_size, z_height };
+        glm::vec3 pos_tl = { position.x, -position.y, 0 };
+        glm::vec3 pos_tr = { position.x + grid_size, -position.y, 0 };
+        glm::vec3 pos_bl = { position.x, -position.y - grid_size, 0 };
+        glm::vec3 pos_br = { position.x + grid_size, -position.y - grid_size, 0 };
 
         uint16_t v_off = static_cast<uint16_t>(vertices.size());
         vertices.push_back(Vertex{ pos_bl, glm::vec4(tint, 1), { 0, 0, 1 }, {}, uv_bl });
@@ -194,7 +191,7 @@ void NodeView::addLinkElem(glm::vec2 position, float layer, glm::vec3 tint, int 
     }
 }
 
-void NodeView::addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, float layer, glm::vec3 tint)
+void NodeView::addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, glm::vec3 tint)
 {
     glm::ivec2 difference = grid_end - grid_start;
     if (difference.x <= 0)
@@ -203,15 +200,15 @@ void NodeView::addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, float layer, 
         return;
 
     glm::vec2 position = glm::vec2(grid_start) * grid_size;
-    addLinkElem(position, layer, tint, 0);
-    addLinkElem(glm::vec2(grid_end) * grid_size, layer, tint, 1);
+    addLinkElem(position, tint, 0);
+    addLinkElem(glm::vec2(grid_end) * grid_size, tint, 1);
 
     if (difference.y == 0)
     {
         while (difference.x > 1)
         {
             grid_start.x++;
-            addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, 2);
+            addLinkElem(glm::vec2(grid_start) * grid_size, tint, 2);
             difference.x--;
         }
         return;
@@ -224,46 +221,46 @@ void NodeView::addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, float layer, 
         if (difference.x == 2)
         {
             grid_start.x++;
-            addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 4 : 5);
+            addLinkElem(glm::vec2(grid_start) * grid_size, tint, positive ? 4 : 5);
             difference.x--;
             while (abs(difference.y) > 1)
             {
                 grid_start.y -= y_delta;
-                addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, 3);
+                addLinkElem(glm::vec2(grid_start) * grid_size, tint, 3);
                 difference.y += y_delta;
             }
             grid_start.y = grid_end.y;
-            addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 7 : 6);
+            addLinkElem(glm::vec2(grid_start) * grid_size, tint, positive ? 7 : 6);
             return;
         }
 
         grid_start.x++;
-        addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 4 : 5);
+        addLinkElem(glm::vec2(grid_start) * grid_size, tint, positive ? 4 : 5);
         difference.x--;
 
         while (difference.x < abs(difference.y))
         {
             grid_start.y -= y_delta;
-            addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, 3);
+            addLinkElem(glm::vec2(grid_start) * grid_size, tint, 3);
             difference.y += y_delta;
         }
 
         grid_start.y -= y_delta;
-        addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 14 : 16);
+        addLinkElem(glm::vec2(grid_start) * grid_size, tint, positive ? 14 : 16);
         difference.y += y_delta;
 
         while (abs(difference.x) > 2)
         {
             grid_start.x++;
             grid_start.y -= y_delta;
-            addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 8 : 9);
+            addLinkElem(glm::vec2(grid_start) * grid_size, tint, positive ? 8 : 9);
             difference.x--;
             difference.y += y_delta;
         }
 
         grid_start.x++;
         grid_start.y -= y_delta;
-        addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 13 : 11);
+        addLinkElem(glm::vec2(grid_start) * grid_size, tint, positive ? 13 : 11);
         return;
     }
     else
@@ -271,26 +268,26 @@ void NodeView::addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, float layer, 
         while (difference.x > abs(difference.y) + 2)
         {
             grid_start.x++;
-            addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, 2);
+            addLinkElem(glm::vec2(grid_start) * grid_size, tint, 2);
             difference.x--;
         }
 
         bool positive = difference.y > 0;
         int y_delta = positive ? -1 : 1;
         grid_start.x++;
-        addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 10 : 12);
+        addLinkElem(glm::vec2(grid_start) * grid_size, tint, positive ? 10 : 12);
         difference.x--;
         while (abs(difference.y) > 1)
         {
             grid_start.x++;
             grid_start.y -= y_delta;
-            addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 8 : 9);
+            addLinkElem(glm::vec2(grid_start) * grid_size, tint, positive ? 8 : 9);
             difference.x--;
             difference.y += y_delta;
         }
         grid_start.x++;
         grid_start.y -= y_delta;
-        addLinkElem(glm::vec2(grid_start) * grid_size, layer, tint, positive ? 13 : 11);
+        addLinkElem(glm::vec2(grid_start) * grid_size, tint, positive ? 13 : 11);
         return;
     }
 }
@@ -356,7 +353,7 @@ void NodeView::updateMesh()
             if (output_num == link.start_output)
                 break;
         }
-        start_pos.y += (start.last_size.y / grid_size) - (start_offset + 1);
+        start_pos.y += (int)(start.last_size.y / grid_size) - (start_offset + 1);
 
         glm::ivec2 end_pos = glm::round(end.position);
         int end_offset = 0;
@@ -367,12 +364,12 @@ void NodeView::updateMesh()
             if (input_num == link.end_input)
                 break;
         }
-        end_pos.y += (end.last_size.y / grid_size) - (end_offset + 3);
+        end_pos.y += (int)(end.last_size.y / grid_size) - (end_offset + 3);
 
         glm::vec3 foreground_colour = (palette.size() < 2) ?
             glm::vec3{ 1.000f, 0.319f, 0.000f }
         : palette[glm::clamp(link.palette_index, 0, (int)palette.size() - 1)];
-        addLink(start_pos, end_pos, -1, foreground_colour);
+        addLink(start_pos, end_pos, foreground_colour);
     }
 
     // draw nodes
@@ -384,14 +381,14 @@ void NodeView::updateMesh()
         glm::vec3 foreground_colour = (palette.size() < 2) ?
             glm::vec3{ 1.000f, 0.319f, 0.000f }
         : palette[glm::clamp(box.palette_index, 0, (int)palette.size() - 1)];
-        addBlock(box_base, box.last_size, 0, background_colour, false);
-        addFrame(box_base, box.last_size, 0, foreground_colour);
+        addBlock(box_base, box.last_size, background_colour, false);
+        addFrame(box_base, box.last_size, foreground_colour);
 
         size_t box_height_lines = 0;
         size_t text_width = 0;
         text_width = (size_t)(character_size.x) * box.title.size();
-        addBlock(box_base + glm::vec2{ grid_size - 4.0f, 0 }, glm::vec2{ ((size_t)(text_width / grid_size) + 2), 1 } * grid_size, 0, foreground_colour, !box.highlighted);
-        addText(box.title, box_base + glm::vec2{ grid_size * 1.5f, 0 }, 0, box.highlighted ? background_colour : foreground_colour);
+        addBlock(box_base + glm::vec2{ grid_size - 4.0f, 0 }, glm::vec2{ ((size_t)(text_width / grid_size) + 2), 1 } * grid_size, foreground_colour, !box.highlighted);
+        addText(box.title, box_base + glm::vec2{ grid_size * 1.5f, 0 }, box.highlighted ? background_colour : foreground_colour);
         box_height_lines++;
 
         for (const NodeElement& element : box.elements)
@@ -400,20 +397,20 @@ void NodeView::updateMesh()
             switch (element.type)
             {
             case ELEMENT_INPUT:
-                addPin(line_pos_base, 2, foreground_colour, element.pin_type, element.pin_solid);
-                addText(element.text, line_pos_base + glm::vec2{ 6.0f + grid_size, 0 }, 0, foreground_colour);
+                addPin(line_pos_base, foreground_colour, element.pin_type, element.pin_solid);
+                addText(element.text, line_pos_base + glm::vec2{ 6.0f + grid_size, 0 }, foreground_colour);
                 break;
             case ELEMENT_OUTPUT:
-                addPin(line_pos_base + glm::vec2{ box_width - 1, 0 } * grid_size, 0, foreground_colour, element.pin_type, element.pin_solid);
+                addPin(line_pos_base + glm::vec2{ box_width - 1, 0 } * grid_size, foreground_colour, element.pin_type, element.pin_solid);
                 text_width = (size_t)(character_size.x) * element.text.size();
-                addText(element.text, line_pos_base + glm::vec2{ (box_width * grid_size) - (6.0f + grid_size + text_width), 0.0f }, 0, foreground_colour);
+                addText(element.text, line_pos_base + glm::vec2{ (box_width * grid_size) - (6.0f + grid_size + text_width), 0.0f }, foreground_colour);
                 break;
             case ELEMENT_BLOCK:
-                addBlock(line_pos_base + glm::vec2{ grid_size / 2.0f, 0 }, glm::vec2{ box_width - 1, 1 } * grid_size, 0, foreground_colour, false);
-                addText(element.text, line_pos_base + glm::vec2{ 6.0f + grid_size, 0 }, 0, background_colour);
+                addBlock(line_pos_base + glm::vec2{ grid_size / 2.0f, 0 }, glm::vec2{ box_width - 1, 1 } * grid_size, foreground_colour, false);
+                addText(element.text, line_pos_base + glm::vec2{ 6.0f + grid_size, 0 }, background_colour);
                 break;
             case ELEMENT_TEXT:
-                addText(element.text, line_pos_base + glm::vec2{ 6.0f + grid_size, 0 }, 0, foreground_colour);
+                addText(element.text, line_pos_base + glm::vec2{ 6.0f + grid_size, 0 }, foreground_colour);
                 break;
             }
             box_height_lines++;

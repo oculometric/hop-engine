@@ -71,15 +71,15 @@ public:
 	void updateMesh();
 
 private:
-	void addQuad(glm::vec2 position, glm::vec2 size, float layer, glm::vec4 colour, glm::vec3 tint, bool clip_uv, int uv_index, std::vector<Vertex>& vertices, std::vector<uint16_t>& indices);
-	void addFrame(glm::vec2 position, glm::vec2 size, float layer, glm::vec3 tint);
-	void addBadge(glm::vec2 position, glm::vec2 size, float layer, glm::vec3 tint);
-	void addBlock(glm::vec2 position, glm::vec2 size, float layer, glm::vec3 tint, bool outline);
-	void addPin(glm::vec2 position, float layer, glm::vec3 tint, int type, bool filled);
-	void addCharacter(char c, glm::vec2 position, float layer, glm::vec3 tint);
-	void addText(std::string text, glm::vec2 start, float layer, glm::vec3 tint);
-	void addLinkElem(glm::vec2 position, float layer, glm::vec3 tint, int type);
-	void addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, float layer, glm::vec3 tint);
+	void addQuad(glm::vec2 position, glm::vec2 size, glm::vec4 colour, glm::vec3 tint, bool clip_uv, int uv_index);
+	void addFrame(glm::vec2 position, glm::vec2 size, glm::vec3 tint);
+	void addBadge(glm::vec2 position, glm::vec2 size, glm::vec3 tint);
+	void addBlock(glm::vec2 position, glm::vec2 size, glm::vec3 tint, bool outline);
+	void addPin(glm::vec2 position, glm::vec3 tint, int type, bool filled);
+	void addCharacter(char c, glm::vec2 position, glm::vec3 tint);
+	void addText(std::string text, glm::vec2 start, glm::vec3 tint);
+	void addLinkElem(glm::vec2 position, glm::vec3 tint, int type);
+	void addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, glm::vec3 tint);
 };
 
 }
