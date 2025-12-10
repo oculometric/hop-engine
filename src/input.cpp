@@ -14,6 +14,7 @@ void Input::init(GLFWwindow* window)
 		application_instance = new Input();
 		application_instance->window = window;
 		glfwSetKeyCallback(window, Input::keyCallback);
+		glfwSetMouseButtonCallback(window, Input::mouseButtonCallback);
 	}
 }
 
@@ -53,15 +54,37 @@ glm::vec2 Input::getMouseDelta()
 	return difference;
 }
 
+glm::vec2 Input::getMousePosition()
+{
+	double new_x, new_y;
+	glfwGetCursorPos(application_instance->window, &new_x, &new_y);
+	return glm::vec2{ (float)new_x, (float)new_y };
+}
+
 bool Input::isMouseDown(int button)
 {
 	return glfwGetMouseButton(application_instance->window, button) == GLFW_PRESS;
+}
+
+bool Input::wasMousePressed(int button)
+{
+	auto it = application_instance->pressed_since_checked.find(button);
+	if (it == application_instance->pressed_since_checked.end())
+		return false;
+	application_instance->pressed_since_checked.erase(it);
+	return true;
 }
 
 void Input::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (action == GLFW_PRESS || action == GLFW_REPEAT)
 		application_instance->pressed_since_checked.insert(key);
+}
+
+void Input::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+{
+	if (action == GLFW_PRESS)
+		application_instance->pressed_since_checked.insert(button);
 }
 
 

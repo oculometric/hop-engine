@@ -176,6 +176,12 @@ pair<Ref<Texture>, Ref<Sampler>> GraphicsEnvironment::getDefaultTextureSampler()
     return { default_image, default_sampler };
 }
 
+glm::vec2 GraphicsEnvironment::getFramebufferSize()
+{
+    auto ext = swapchain->getExtent();
+    return glm::vec2{ ext.width, ext.height };
+}
+
 GraphicsEnvironment* GraphicsEnvironment::get()
 {
     return environment;

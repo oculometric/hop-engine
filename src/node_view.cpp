@@ -313,13 +313,13 @@ void NodeView::updateMesh()
     indices.clear();
 
     // prepass to calculate node sizes
-    for (Node& box : nodes)
+    for (Ref<Node> node : nodes)
     {
         size_t box_width = 3;
         size_t text_width = 0;
-        text_width = (size_t)(character_size.x) * box.title.size();
+        text_width = (size_t)(character_size.x) * node->title.size();
         box_width = glm::max(box_width, ((size_t)(text_width / grid_size) + 4));
-        for (const NodeElement& element : box.elements)
+        for (const NodeElement& element : node->elements)
         {
             switch (element.type)
             {
@@ -333,38 +333,38 @@ void NodeView::updateMesh()
             }
         }
 
-        size_t box_height_lines = box.elements.size() + 2;
-        box.last_size = glm::vec2{ box_width, box_height_lines } * grid_size;
+        size_t box_height_lines = node->elements.size() + 2;
+        node->last_size = glm::vec2{ box_width, box_height_lines } * grid_size;
     }
 
     // draw links
     for (Link& link : links)
     {
-        Node& start = nodes[link.start_node];
-        Node& end = nodes[link.end_node];
+        Ref<Node> start = link.start_node;
+        Ref<Node> end = link.end_node;
 
-        glm::ivec2 start_pos = glm::round(start.position) + ((start.last_size * glm::vec2{ 1, 0 }) / grid_size);
+        glm::ivec2 start_pos = glm::round(start->position) + ((start->last_size * glm::vec2{ 1, 0 }) / grid_size);
         start_pos.x--;
         int start_offset = 0;
-        for (int output_num = 0; start_offset < start.elements.size(); ++start_offset)
+        for (int output_num = 0; start_offset < start->elements.size(); ++start_offset)
         {
-            if (start.elements[start_offset].type == ELEMENT_OUTPUT)
+            if (start->elements[start_offset].type == ELEMENT_OUTPUT)
                 ++output_num;
             if (output_num == link.start_output)
                 break;
         }
-        start_pos.y += (int)(start.last_size.y / grid_size) - (start_offset + 1);
+        start_pos.y += (int)(start->last_size.y / grid_size) - (start_offset + 1);
 
-        glm::ivec2 end_pos = glm::round(end.position);
+        glm::ivec2 end_pos = glm::round(end->position);
         int end_offset = 0;
-        for (int input_num = 0; end_offset < end.elements.size(); ++end_offset)
+        for (int input_num = 0; end_offset < end->elements.size(); ++end_offset)
         {
-            if (end.elements[end_offset].type == ELEMENT_INPUT)
+            if (end->elements[end_offset].type == ELEMENT_INPUT)
                 ++input_num;
             if (input_num == link.end_input)
                 break;
         }
-        end_pos.y += (int)(end.last_size.y / grid_size) - (end_offset + 3);
+        end_pos.y += (int)(end->last_size.y / grid_size) - (end_offset + 3);
 
         glm::vec3 foreground_colour = (palette.size() < 2) ?
             glm::vec3{ 1.000f, 0.319f, 0.000f }
@@ -373,25 +373,26 @@ void NodeView::updateMesh()
     }
 
     // draw nodes
-    for (Node& box : nodes)
+    for (auto it = nodes.rbegin(); it != nodes.rend(); it++)
     {
-        size_t box_width = box.last_size.x / grid_size;
-        glm::vec2 box_base = (glm::round(box.position) * grid_size);
+        Ref<Node> node = *it;
+        size_t box_width = node->last_size.x / grid_size;
+        glm::vec2 box_base = (glm::round(node->position) * grid_size);
 
         glm::vec3 foreground_colour = (palette.size() < 2) ?
             glm::vec3{ 1.000f, 0.319f, 0.000f }
-        : palette[glm::clamp(box.palette_index, 0, (int)palette.size() - 1)];
-        addBlock(box_base, box.last_size, background_colour, false);
-        addFrame(box_base, box.last_size, foreground_colour);
+        : palette[glm::clamp(node->palette_index, 0, (int)palette.size() - 1)];
+        addBlock(box_base, node->last_size, background_colour, false);
+        addFrame(box_base, node->last_size, foreground_colour);
 
         size_t box_height_lines = 0;
         size_t text_width = 0;
-        text_width = (size_t)(character_size.x) * box.title.size();
-        addBlock(box_base + glm::vec2{ grid_size - 4.0f, 0 }, glm::vec2{ ((size_t)(text_width / grid_size) + 2), 1 } * grid_size, foreground_colour, !box.highlighted);
-        addText(box.title, box_base + glm::vec2{ grid_size * 1.5f, 0 }, box.highlighted ? background_colour : foreground_colour);
+        text_width = (size_t)(character_size.x) * node->title.size();
+        addBlock(box_base + glm::vec2{ grid_size - 4.0f, 0 }, glm::vec2{ ((size_t)(text_width / grid_size) + 2), 1 } * grid_size, foreground_colour, !node->highlighted);
+        addText(node->title, box_base + glm::vec2{ grid_size * 1.5f, 0 }, node->highlighted ? background_colour : foreground_colour);
         box_height_lines++;
 
-        for (const NodeElement& element : box.elements)
+        for (const NodeElement& element : node->elements)
         {
             glm::vec2 line_pos_base = box_base + glm::vec2{ 0, box_height_lines * grid_size };
             switch (element.type)
@@ -424,4 +425,30 @@ void NodeView::updateMesh()
         mesh->updateData(vertices, indices, vertices_rounded_up, indices_rounded_up);
     else
         mesh = new Mesh(vertices, indices, true);
+}
+
+Ref<NodeView::Node> NodeView::select(glm::vec2 world_position)
+{
+    size_t node_index = 0;
+    for (size_t node_index = 0; node_index < nodes.size(); ++node_index)
+    {
+        Ref<Node> node = nodes[node_index];
+        glm::vec2 node_position = node->position * grid_size;
+        if (world_position.x < node_position.x ||
+            world_position.y < node_position.y ||
+            world_position.x > node_position.x + node->last_size.x ||
+            world_position.y > node_position.y + node->last_size.y)
+        {
+            continue;
+        }
+
+        // re-order nodes list
+        nodes.erase(nodes.begin() + node_index);
+        nodes.insert(nodes.begin(), node);
+
+        return node;
+    }
+
+    return nullptr;
+
 }

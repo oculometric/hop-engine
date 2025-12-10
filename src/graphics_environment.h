@@ -3,6 +3,7 @@
 #include <optional>
 #include <vector>
 #include <vulkan/vulkan.h>
+#include <glm/vec2.hpp>
 
 #include "common.h"
 
@@ -101,6 +102,7 @@ public:
 	inline VkCommandPool getCommandPool() { return command_pool; }
 	inline VkQueue getGraphicsQueue() { return graphics_queue; }
 	std::pair<Ref<Texture>, Ref<Sampler>> getDefaultTextureSampler();
+	glm::vec2 getFramebufferSize();
 	static GraphicsEnvironment* get();
 	void drawImGui();
 	void drawFrame();

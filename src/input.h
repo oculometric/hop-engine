@@ -23,12 +23,15 @@ public:
 	static bool wasKeyPressed(int key);
 	static float getAxis(int key_negative, int key_positive);
 	static glm::vec2 getMouseDelta();
+	static glm::vec2 getMousePosition();
 	static bool isMouseDown(int button);
+	static bool wasMousePressed(int button);
 
 private:
 	Input() { };
 
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+	static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 };
 
 }

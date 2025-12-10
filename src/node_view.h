@@ -45,15 +45,16 @@ public:
 
 	struct Link
 	{
-		int start_node = 0;
+		Ref<Node> start_node = 0;
 		int start_output = 0;
-		int end_node = 0;
+		Ref<Node> end_node = nullptr;
 		int end_input = 0;
 		int palette_index = 1;
 	};
 
 public:
-	std::vector<Node> nodes;
+	// TODO: eliminate reference counting and make this internally managed/allocated?
+	std::vector<Ref<Node>> nodes;
 	std::vector<Link> links;
 	std::vector<glm::vec3> palette;
 
@@ -69,6 +70,7 @@ public:
 	inline ~NodeView() { };
 
 	void updateMesh();
+	Ref<Node> select(glm::vec2 world_position);
 
 private:
 	void addQuad(glm::vec2 position, glm::vec2 size, glm::vec4 colour, glm::vec3 tint, bool clip_uv, int uv_index);

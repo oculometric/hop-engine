@@ -9,6 +9,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <string>
 
 #include "hop_engine.h"
 #include "node_view.h"
@@ -19,6 +20,7 @@ Ref<Object> asha;
 Ref<Object> cube;
 size_t node_index = 0;
 Ref<NodeView> node_view;
+Ref<NodeView::Node> selected_node;
 
 struct LightParams
 {
@@ -113,7 +115,7 @@ void updateScene(Ref<Scene> scene)
 void initNodeScene(Ref<Scene> scene)
 {
     node_view = new NodeView();
-    node_view->nodes.push_back(
+    node_view->nodes.push_back(new NodeView::Node
         { "Hello, World!",
         {
             { "Outputs on right", NodeView::ELEMENT_OUTPUT },
@@ -124,22 +126,22 @@ void initNodeScene(Ref<Scene> scene)
             { "mixed-width font!", NodeView::ELEMENT_BLOCK },
             { "above is a banner", NodeView::ELEMENT_TEXT },
             { "extra bottom spacing", NodeView::ELEMENT_TEXT },
-        }, { 0, 0 }, 1, true });
-    node_view->nodes.push_back(
+        }, { 0, 0 }, 1 });
+    node_view->nodes.push_back(new NodeView::Node
         { "multiply",
         {
             { "result", NodeView::ELEMENT_OUTPUT },
             { "input a", NodeView::ELEMENT_INPUT },
             { "input b", NodeView::ELEMENT_INPUT },
         }, { 13, 4 }, 2 });
-    node_view->nodes.push_back(
+    node_view->nodes.push_back(new NodeView::Node
         { "add",
         {
             { "result", NodeView::ELEMENT_OUTPUT },
             { "input a", NodeView::ELEMENT_INPUT },
             { "input b", NodeView::ELEMENT_INPUT },
         }, { -6, 0 }, 3 });
-    node_view->nodes.push_back(
+    node_view->nodes.push_back(new NodeView::Node
         { "multiply add",
         {
             { "result", NodeView::ELEMENT_OUTPUT },
@@ -147,7 +149,7 @@ void initNodeScene(Ref<Scene> scene)
             { "input b", NodeView::ELEMENT_INPUT },
             { "input c", NodeView::ELEMENT_INPUT },
         }, { -6, 10 }, 4 });
-    node_view->nodes.push_back(
+    node_view->nodes.push_back(new NodeView::Node
         { "make vec3",
         {
             { "vector", NodeView::ELEMENT_OUTPUT, 1 },
@@ -157,7 +159,7 @@ void initNodeScene(Ref<Scene> scene)
             { "y", NodeView::ELEMENT_INPUT, 0, false },
             { "z", NodeView::ELEMENT_INPUT, 0, false },
         }, { -6, -10 }, 5 });
-    node_view->nodes.push_back(
+    node_view->nodes.push_back(new NodeView::Node
         { "kill john lennon",
         {
             { "", NodeView::ELEMENT_INPUT, 4, false },
@@ -165,7 +167,7 @@ void initNodeScene(Ref<Scene> scene)
             { "hello", NodeView::ELEMENT_INPUT, 0, false },
         }, { -6, -10 }, 6 });
 
-    node_view->links.push_back({ 2, 0, 1, 0 });
+    node_view->links.push_back({ node_view->nodes[2], 0, node_view->nodes[1], 0 });
 
     //node_view->palette =
     //{
@@ -186,6 +188,21 @@ void initNodeScene(Ref<Scene> scene)
 
 void updateNodeScene(Ref<Scene> scene)
 {
+    bool node_view_dirty = false;
+
+    if (Input::wasMousePressed(GLFW_MOUSE_BUTTON_LEFT))
+    {
+        if (selected_node.isValid())
+            selected_node->highlighted = false;
+        glm::vec2 camera_pos = scene->camera->transform.getLocalPosition();
+        glm::vec2 mouse_screen_pos = Input::getMousePosition() - (GraphicsEnvironment::get()->getFramebufferSize() * 0.5f);
+        glm::vec2 mouse_world_pos = mouse_screen_pos + (camera_pos * GraphicsEnvironment::get()->getFramebufferSize() * 0.5f);
+        selected_node = node_view->select(mouse_world_pos);
+        if (selected_node.isValid())
+            selected_node->highlighted = true;
+        node_view_dirty = true;
+    }
+
     glm::vec2 mouse_delta = Input::getMouseDelta() * 0.004f;
     float move_x = Input::getAxis(GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
     float move_y = Input::getAxis(GLFW_KEY_UP, GLFW_KEY_DOWN);
@@ -195,21 +212,21 @@ void updateNodeScene(Ref<Scene> scene)
     {
         move_x = mouse_delta.x * 20.0f;
         move_y = mouse_delta.y * 20.0f;
+        node_view_dirty = true;
     }
 
     if (move_x != 0 || move_y != 0)
     {
-        node_view->nodes[node_index].position += glm::vec2{ move_x, move_y } * 0.5f;
-        node_view->updateMesh();
+        if (selected_node.isValid())
+        {
+            selected_node->position += glm::vec2{ move_x, move_y } * 0.5f;
+            node_view_dirty = true;
+        }
     }
 
-    if (Input::wasKeyPressed(GLFW_KEY_TAB))
-    {
-        node_view->nodes[node_index].highlighted = false;
-        node_index = (node_index + 1) % node_view->nodes.size();
-        node_view->nodes[node_index].highlighted = true;
+    if (node_view_dirty)
         node_view->updateMesh();
-    }
+
 }
 
 void imGuiDrawFunc()
