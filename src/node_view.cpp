@@ -1,5 +1,7 @@
 #include "node_view.h"
 
+#include <glm/gtc/integer.hpp>
+
 #include "hop_engine.h"
 
 using namespace HopEngine;
@@ -420,7 +422,7 @@ void NodeView::updateMesh()
 
         glm::vec3 foreground_colour = (style.palette.size() < 2) ?
             glm::vec3{ 1.000f, 0.319f, 0.000f }
-        : style.palette[glm::clamp(link.palette_index, 0, (int)style.palette.size() - 1)];
+        : style.palette[(link.palette_index % (int)style.palette.size())];
         addLink(start_pos, end_pos, foreground_colour);
     }
 
@@ -432,7 +434,7 @@ void NodeView::updateMesh()
         glm::vec2 box_base = (glm::round(node->position) * style.grid_size);
         glm::vec3 foreground_colour = (style.palette.size() < 2) ?
             glm::vec3{ 1.000f, 0.319f, 0.000f }
-        : style.palette[glm::clamp(node->palette_index, 0, (int)style.palette.size() - 1)];
+        : style.palette[(node->palette_index % (int)style.palette.size())];
         glm::vec3 background_colour = getBackgroundColour(foreground_colour);
 
         addBlock(box_base, node->last_size, background_colour, false);

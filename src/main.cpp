@@ -166,9 +166,9 @@ void initNodeScene(Ref<Scene> scene)
             { "hello", NodeView::ELEMENT_INPUT, 0, false },
         }, { -6, -15 }, 6 });
 
-    node_view->links.push_back({ node_view->nodes[4], 1, node_view->nodes[1], 1 });
-    node_view->links.push_back({ node_view->nodes[2], 0, node_view->nodes[1], 0 });
-    node_view->links.push_back({ node_view->nodes[5], 0, node_view->nodes[0], 0 });
+    node_view->links.push_back({ node_view->nodes[4], 1, node_view->nodes[1], 1, 1 });
+    node_view->links.push_back({ node_view->nodes[2], 0, node_view->nodes[1], 0, 2 });
+    node_view->links.push_back({ node_view->nodes[5], 0, node_view->nodes[0], 0, 3 });
 
     node_view->material->setBoolUniform("debug_segments", false);
     node_view->updateMesh();
@@ -184,6 +184,13 @@ void initNodeScene(Ref<Scene> scene)
         { 0.337f, 0.025f, 0.058f },
         { 0.159f, 0.037f, 0.078f },
     };*/
+    style.palette =
+    {
+        { 0.010f, 0.010f, 0.010f },
+        { 0.091f, 0.610f, 0.973f },
+        { 1.000f, 1.000f, 1.000f },
+        { 0.930f, 0.392f, 0.479f }
+    };
     node_view->setStyle(style);
 
     scene->objects.push_back(node_view.cast<Object>());
@@ -260,7 +267,7 @@ int main()
 
     ge->draw_imgui_function = imGuiDrawFunc;
     ge->scene = new Scene();
-    initScene(ge->scene);
+    initNodeScene(ge->scene);
 
     auto last_frame = std::chrono::steady_clock::now();
     
@@ -275,7 +282,7 @@ int main()
         if (window->isResized())
             ge->resizeSwapchain();
         ge->drawFrame(delta.count());
-        updateScene(ge->scene);
+        updateNodeScene(ge->scene);
     }
 
     ge->scene = nullptr;

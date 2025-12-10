@@ -78,6 +78,7 @@ float calculateOcclusion()
 
 void main()
 {
-    vec3 col = texture(screen_texture, frag.uv).rgb;
-    colour = vec4(col * calculateOcclusion(), 1);
+    colour = vec4(texture(screen_texture, frag.uv).rgb, 1);
+    //vec3 col = texture(screen_texture, frag.uv).rgb;
+    //colour = vec4(col * calculateOcclusion(), 1);
 }

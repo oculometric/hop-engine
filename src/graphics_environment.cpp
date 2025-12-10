@@ -297,7 +297,7 @@ void RenderServer::resizeSwapchain()
     auto new_size = window->getSize();
 
     swapchain->resize(new_size.first, new_size.second);
-    offscreen_pass->resize(new_size.first / 4, new_size.second / 4);
+    offscreen_pass->resize(new_size.first, new_size.second);
     post_process->setTexture("screen_texture", offscreen_pass->getImage(0));
     post_process->setTexture("normal_texture", offscreen_pass->getImage(1));
     post_process->setTexture("params_texture", offscreen_pass->getImage(2));
