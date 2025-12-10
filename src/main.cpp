@@ -9,7 +9,6 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
-#include <Windows.h>
 
 #include "hop_engine.h"
 #include "node_view.h"

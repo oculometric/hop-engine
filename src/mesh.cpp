@@ -77,6 +77,8 @@ void Mesh::updateData(vector<Vertex> vertices, vector<uint16_t> indices, size_t 
         return;
     }
 
+    vkDeviceWaitIdle(GraphicsEnvironment::get()->getDevice());
+
     vertex_alloc = max(vertex_alloc, vertices.size());
     if (vertex_alloc != vertex_space)
     {
