@@ -265,11 +265,13 @@ void NodeView::addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, glm::vec3 tin
     }
     else
     {
-        while (difference.x > abs(difference.y) + 2)
+        int horizontal_space = (difference.x - (abs(difference.y) + 2)) / 2;
+        while (horizontal_space > 0)
         {
             grid_start.x++;
             addLinkElem(glm::vec2(grid_start) * grid_size, tint, 2);
             difference.x--;
+            horizontal_space--;
         }
 
         bool positive = difference.y > 0;
@@ -288,6 +290,14 @@ void NodeView::addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, glm::vec3 tin
         grid_start.x++;
         grid_start.y -= y_delta;
         addLinkElem(glm::vec2(grid_start) * grid_size, tint, positive ? 13 : 11);
+
+        while (difference.x > 1)
+        {
+            grid_start.x++;
+            addLinkElem(glm::vec2(grid_start) * grid_size, tint, 2);
+            difference.x--;
+        }
+
         return;
     }
 }
