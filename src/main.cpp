@@ -254,7 +254,7 @@ int main()
 
     ge->draw_imgui_function = imGuiDrawFunc;
     ge->scene = new Scene();
-    initScene(ge->scene);
+    initNodeScene(ge->scene);
 
     while (!window->getShouldClose())
     {
@@ -262,7 +262,7 @@ int main()
         if (window->isMinified())
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         ge->drawFrame();
-        updateScene(ge->scene);
+        updateNodeScene(ge->scene);
     }
 
     ge->scene = nullptr;
