@@ -247,6 +247,7 @@ void NodeView::addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, glm::vec3 tin
 
         grid_start.y -= y_delta;
         addLinkElem(glm::vec2(grid_start) * grid_size, tint, positive ? 14 : 16);
+        addLinkElem((glm::vec2(grid_start) + glm::vec2{ 0.5f, -y_delta * 0.5f }) * grid_size, tint, positive ? 8 : 9);
         difference.y += y_delta;
 
         while (abs(difference.x) > 2)
@@ -254,6 +255,7 @@ void NodeView::addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, glm::vec3 tin
             grid_start.x++;
             grid_start.y -= y_delta;
             addLinkElem(glm::vec2(grid_start) * grid_size, tint, positive ? 8 : 9);
+            addLinkElem((glm::vec2(grid_start) + glm::vec2{ 0.5f, -y_delta * 0.5f }) * grid_size, tint, positive ? 8 : 9);
             difference.x--;
             difference.y += y_delta;
         }
@@ -278,12 +280,14 @@ void NodeView::addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, glm::vec3 tin
         int y_delta = positive ? -1 : 1;
         grid_start.x++;
         addLinkElem(glm::vec2(grid_start) * grid_size, tint, positive ? 10 : 12);
+        addLinkElem((glm::vec2(grid_start) + glm::vec2{ 0.5f, -y_delta * 0.5f }) * grid_size, tint, positive ? 8 : 9);
         difference.x--;
         while (abs(difference.y) > 1)
         {
             grid_start.x++;
             grid_start.y -= y_delta;
             addLinkElem(glm::vec2(grid_start) * grid_size, tint, positive ? 8 : 9);
+            addLinkElem((glm::vec2(grid_start) + glm::vec2{ 0.5f, -y_delta * 0.5f }) * grid_size, tint, positive ? 8 : 9);
             difference.x--;
             difference.y += y_delta;
         }
