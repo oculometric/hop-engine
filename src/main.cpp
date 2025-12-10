@@ -266,7 +266,7 @@ int main()
     {
         window->pollEvents();
         if (window->isMinified())
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            continue;
         if (window->isResized())
             ge->resizeSwapchain();
         ge->drawFrame();

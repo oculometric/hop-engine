@@ -216,7 +216,9 @@ static glm::vec3 computeTangent(glm::vec3 co_a, glm::vec3 co_b, glm::vec3 co_c, 
 bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>& inds)
 {
     auto file_data = Package::tryLoadFile(path);
-    stringstream file(string((char*)(file_data.data())));
+    auto string_data = string((char*)(file_data.data()));
+    string_data.push_back('\0');
+    auto stream = stringstream(string_data);
 
     // vectors to load data into
     vector<glm::vec3> tmp_co;
@@ -231,8 +233,10 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
     glm::vec3 tmp2;
 
     // repeat for every line in the file
-    while (!file.eof())
+    string line;
+    while (getline(stream, line))
     {
+        auto file = stringstream(line);
         file >> tmps;
         if (tmps == "v")
         {
@@ -280,7 +284,6 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
 
             swap(tmp_fc[tmp_fc.size() - 1], tmp_fc[tmp_fc.size() - 3]);
         }
-        file.ignore(SIZE_MAX, '\n');
     }
 
     // swap the first and last face corner of each triangle, to flip the face order

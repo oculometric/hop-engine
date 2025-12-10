@@ -111,12 +111,12 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\glm-1.0.2;$(ProjectDir)lib;$(ProjectDir)lib\spirv_reflect;$(ProjectDir)lib\imgui;$(ProjectDir)lib\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\glm-1.0.2;$(ProjectDir)lib;$(ProjectDir)lib\spirv_reflect;$(ProjectDir)lib\imgui;$(ProjectDir)lib\imgui\backends;$(USERPROFILE)\Documents\1.4.335.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\lib-vc2019;C:\VulkanSDK\1.4.313.0\Lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\lib-vc2019;C:\VulkanSDK\1.4.313.0\Lib;$(USERPROFILE)\Documents\1.4.335.0\Lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -133,12 +133,12 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\glm-1.0.2;$(ProjectDir)lib;$(ProjectDir)lib\spirv_reflect;$(ProjectDir)lib\imgui;$(ProjectDir)lib\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\glm-1.0.2;$(ProjectDir)lib;$(ProjectDir)lib\spirv_reflect;$(ProjectDir)lib\imgui;$(ProjectDir)lib\imgui\backends;$(USERPROFILE)\Documents\1.4.335.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\lib-vc2019;C:\VulkanSDK\1.4.313.0\Lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\lib-vc2019;C:\VulkanSDK\1.4.313.0\Lib;$(USERPROFILE)\Documents\1.4.335.0\Lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
