@@ -10,10 +10,6 @@
 namespace HopEngine
 {
 
-class Buffer;
-class Texture;
-class Sampler;
-
 class UniformBlock
 {
 private:

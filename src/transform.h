@@ -9,8 +9,6 @@
 namespace HopEngine
 {
 
-class Object;
-
 struct Transform
 {
 private:

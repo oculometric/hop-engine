@@ -19,14 +19,6 @@ namespace HopEngine
 
 // the shader tells us about the layout, but the first 2 sets will NOT be read from the shader
 // we create the layouts for the first two sets when the environment loads, since they are the same for all shaders
-class Shader;
-class Buffer;
-class Pipeline;
-class UniformBlock;
-class Texture;
-class Sampler;
-class RenderPass;
-// TODO: forward defs header
 
 class Material
 {

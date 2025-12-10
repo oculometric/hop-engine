@@ -7,9 +7,6 @@
 namespace HopEngine
 {
 
-class Shader;
-class RenderPass;
-
 class Pipeline
 {
 private:

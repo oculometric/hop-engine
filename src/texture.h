@@ -9,8 +9,6 @@
 namespace HopEngine
 {
 
-class Buffer;
-
 class Texture
 {
 public:

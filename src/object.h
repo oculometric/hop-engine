@@ -9,10 +9,6 @@
 namespace HopEngine
 {
 
-class Material;
-class Mesh;
-class UniformBlock;
-
 class Object
 {
 public:

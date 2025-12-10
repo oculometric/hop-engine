@@ -10,9 +10,6 @@
 namespace HopEngine
 {
 
-class Font;
-class Texture;
-
 class NodeView : public Object
 {
 public:

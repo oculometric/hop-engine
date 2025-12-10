@@ -10,20 +10,6 @@
 namespace HopEngine
 {
 
-class Window;
-class Swapchain;
-class RenderPass;
-class Pipeline;
-class Shader;
-class Mesh;
-class Material;
-class Buffer;
-class UniformBlock;
-class Object;
-class Texture;
-class Sampler;
-class Scene;
-
 class GraphicsEnvironment
 {
 public:

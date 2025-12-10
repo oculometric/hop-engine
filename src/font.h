@@ -8,8 +8,6 @@
 namespace HopEngine
 {
 
-class Texture;
-
 class Font
 {
 private:

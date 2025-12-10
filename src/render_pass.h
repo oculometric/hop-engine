@@ -8,9 +8,6 @@
 namespace HopEngine
 {
 
-class Swapchain;
-class Texture;
-
 struct RenderOutput
 {
 	size_t additional_attachments = 0;

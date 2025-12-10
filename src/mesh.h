@@ -20,8 +20,6 @@ struct Vertex
 	glm::vec2 uv;
 };
 
-class Buffer;
-
 class Mesh
 {
 private:
