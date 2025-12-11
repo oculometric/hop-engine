@@ -317,7 +317,7 @@ glm::vec3 NodeView::getForegroundColour(int index)
     static const glm::vec3 default_col = glm::vec3{ 1.000f, 0.319f, 0.000f };
     if (style.palette.empty())
         return default_col;
-    if (index < style.palette.size() == 1)
+    if (index < (int)style.palette.size())
         return style.palette[index];
     return style.palette[(index % ((int)style.palette.size() - 1)) + 1];
 }

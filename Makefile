@@ -3,7 +3,7 @@ BIN_DIR			:= bin/
 OBJ_DIR			:= bin/obj/
 
 CC				:= g++
-CC_FLAGS		:= -std=c++20 -g -O0 -Wall
+CC_FLAGS		:= -std=c++20 -g -Wall# -O3 -D NDEBUG
 CC_INCLUDE		:= -I/usr/include/ -Ilib -Ilib/imgui -Ilib/glm-1.0.2 -Ilib/imgui/backends
 
 LD				:= g++
