@@ -3,7 +3,7 @@
 #include <array>
 #include <string>
 #include <vector>
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 #include <glm/glm.hpp>
 
 #include "common.h"
@@ -23,8 +23,8 @@ struct Vertex
 class Mesh
 {
 private:
-	Ref<Buffer> vertex_buffer = nullptr;
-	Ref<Buffer> index_buffer = nullptr;
+	Ref<Buffer> vertex_buffer;
+	Ref<Buffer> index_buffer;
 	size_t vertex_space = 0;
 	size_t index_space = 0;
 	size_t index_count = 0;

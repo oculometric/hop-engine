@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 #include <vector>
 
 #include "common.h"
@@ -19,11 +19,11 @@ class RenderPass
 private:
 	VkRenderPass render_pass = VK_NULL_HANDLE;
 	RenderOutput output_config;
-	Ref<Texture> depth_texture = nullptr;
+	Ref<Texture> depth_texture;
 	std::vector<Ref<Texture>> additional_textures;
 	std::vector<VkFramebuffer> framebuffers;
 	VkExtent2D extent;
-	Ref<Swapchain> swapchain = nullptr;
+	Ref<Swapchain> swapchain;
 
 public:
 	DELETE_CONSTRUCTORS(RenderPass);

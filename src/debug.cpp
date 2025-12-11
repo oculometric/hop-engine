@@ -78,8 +78,12 @@ void Debug::write(string description, DebugLevel severity)
 
 	auto time_now = std::time(0);
 	tm time;
+#if defined(_WIN32)
 	localtime_s(&time, &time_now);
-
+#else
+	auto tmp = localtime(&time_now);
+	time = *tmp;
+#endif
 	string log_line = format("[{: >8} ]: {:0>2}:{:0>2}:{:0>2} - {}", log_type, time.tm_hour, time.tm_min, time.tm_sec, description);
 	string term_line = format("{}[{}{: >8} {}]{}: {}{:0>2}:{:0>2}:{:0>2}{} - {}", 
 		bracket_col, type_col, log_type, bracket_col, standard_col,
@@ -129,7 +133,12 @@ Debug::Debug()
 #if defined(DEBUG_LOGFILE)
 	auto time_now = std::time(0);
 	tm time;
+#if defined(_WIN32)
 	localtime_s(&time, &time_now);
+#else
+	auto tmp = localtime(&time_now);
+	time = *tmp;
+#endif
 	string file_name = format("{}engine_{:0>2}_{:0>2}_{:0>2}.log", DEBUG_LOGFILE, time.tm_hour, time.tm_min, time.tm_sec);
 	filesystem::create_directory(DEBUG_LOGFILE);
 	file_output.open(file_name);

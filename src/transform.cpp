@@ -44,7 +44,7 @@ glm::vec3 getPoint(const Spline& s, int p)
 	if (s.loop)
 		return s.points[(p + s.points.size()) % s.points.size()];
 	else
-		return s.points[p < 0 ? 0 : (p >= s.points.size() ? s.points.size() - 1 : p)];
+		return s.points[p < 0 ? 0 : (p >= (int)s.points.size() ? (int)s.points.size() - 1 : p)];
 }
 
 glm::vec3 Spline::operator[](float t)

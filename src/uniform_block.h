@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <map>
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 
 #include "shader.h"
 #include "common.h"

@@ -7,8 +7,6 @@ Window::Window(uint32_t _width, uint32_t _height, string title)
 {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(0);
 
     width = _width;
     height = _height;

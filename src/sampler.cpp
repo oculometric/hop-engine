@@ -1,7 +1,7 @@
 #include "sampler.h"
 
 #include <stdexcept>
-#include <vulkan/vk_enum_string_helper.h>
+#include <vulkan/vulkan_to_string.hpp>
 
 #include "graphics_environment.h"
 
@@ -32,7 +32,7 @@ Sampler::Sampler(VkFilter filtering_mode, VkSamplerAddressMode address_mode)
 	if (vkCreateSampler(RenderServer::get()->getDevice(), &create_info, nullptr, &sampler) != VK_SUCCESS)
 		DBG_FAULT("vkCreateSampler failed");
 
-	DBG_INFO("created sampler for " + string(string_VkFilter(filtering_mode)) + ", " + string_VkSamplerAddressMode(address_mode));
+	DBG_INFO("created sampler for " + vk::to_string((vk::Filter)filtering_mode) + ", " + vk::to_string((vk::SamplerAddressMode)address_mode));
 }
 
 Sampler::~Sampler()

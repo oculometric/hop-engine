@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <cstdint>
 
 #include "common.h"
 
@@ -27,7 +28,11 @@ public:
 	static void storeData(std::string identifier, std::vector<uint8_t> data);
 	static std::vector<uint8_t> tryLoadFile(std::string path_or_identifier);
 	static void tryWriteFile(std::string path, std::vector<uint8_t> data);
+#if defined(_WIN32)
 	static inline std::string getTempPath() { return "C:/tmp/"; }
+#else
+	static inline std::string getTempPath() { return "/tmp/"; }
+#endif
 
 private:
 	Package();

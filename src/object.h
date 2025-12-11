@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 #include <glm/vec3.hpp>
 
 #include "common.h"
@@ -13,12 +13,12 @@ class Object
 {
 public:
 	Transform transform;
-	Ref<Mesh> mesh = nullptr;
-	Ref<Material> material = nullptr;
-	Ref<Object> parent = nullptr;
+	Ref<Mesh> mesh;
+	Ref<Material> material;
+	Ref<Object> parent;
 
 private:
-	Ref<UniformBlock> uniforms = nullptr;
+	Ref<UniformBlock> uniforms;
 
 public:
 	DELETE_CONSTRUCTORS(Object);
@@ -41,7 +41,7 @@ public:
 	float far_clip = 100.0f;
 
 private:
-	Ref<UniformBlock> uniforms = nullptr;
+	Ref<UniformBlock> uniforms;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Camera);

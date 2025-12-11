@@ -312,6 +312,16 @@ void NodeView::addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, glm::vec3 tin
     }
 }
 
+glm::vec3 NodeView::getForegroundColour(int index)
+{
+    static const glm::vec3 default_col = glm::vec3{ 1.000f, 0.319f, 0.000f };
+    if (style.palette.empty())
+        return default_col;
+    if (index < style.palette.size() == 1)
+        return style.palette[index];
+    return style.palette[(index % ((int)style.palette.size() - 1)) + 1];
+}
+
 glm::vec3 NodeView::getBackgroundColour(glm::vec3 fg_col)
 {
     if (style.use_dynamic_background)
@@ -380,6 +390,7 @@ void NodeView::updateMesh()
                 text_width = (size_t)(style.font->getCharacterSize().x) * element.text.size();
                 box_width = glm::max(box_width, ((size_t)(text_width / style.grid_size) + 4));
                 break;
+            case ELEMENT_SPACE: break;
             }
         }
 
@@ -396,7 +407,7 @@ void NodeView::updateMesh()
         glm::ivec2 start_pos = glm::round(start->position);
         start_pos.x += (int)(start->last_size.x / style.grid_size) - 1;
         int start_offset = 0;
-        for (int output_num = 0; start_offset < start->elements.size(); ++start_offset)
+        for (int output_num = 0; start_offset < (int)start->elements.size(); ++start_offset)
         {
             if (start->elements[start_offset].type == ELEMENT_OUTPUT)
             {
@@ -409,7 +420,7 @@ void NodeView::updateMesh()
 
         glm::ivec2 end_pos = glm::round(end->position);
         int end_offset = 0;
-        for (int input_num = 0; end_offset < end->elements.size(); ++end_offset)
+        for (int input_num = 0; end_offset < (int)end->elements.size(); ++end_offset)
         {
             if (end->elements[end_offset].type == ELEMENT_INPUT)
             {
@@ -420,10 +431,8 @@ void NodeView::updateMesh()
         }
         end_pos.y += end_offset + 1;
 
-        glm::vec3 foreground_colour = (style.palette.size() < 2) ?
-            glm::vec3{ 1.000f, 0.319f, 0.000f }
-        : style.palette[(link.palette_index % (int)style.palette.size())];
-        addLink(start_pos, end_pos, foreground_colour);
+        
+        addLink(start_pos, end_pos, getForegroundColour(link.palette_index));
     }
 
     // draw nodes
@@ -432,9 +441,7 @@ void NodeView::updateMesh()
         Ref<Node> node = *it;
         size_t box_width = (size_t)(node->last_size.x / style.grid_size);
         glm::vec2 box_base = (glm::round(node->position) * style.grid_size);
-        glm::vec3 foreground_colour = (style.palette.size() < 2) ?
-            glm::vec3{ 1.000f, 0.319f, 0.000f }
-        : style.palette[(node->palette_index % (int)style.palette.size())];
+        glm::vec3 foreground_colour = getForegroundColour(node->palette_index);
         glm::vec3 background_colour = getBackgroundColour(foreground_colour);
 
         addBlock(box_base, node->last_size, background_colour, false);
@@ -468,6 +475,7 @@ void NodeView::updateMesh()
             case ELEMENT_TEXT:
                 addText(element.text, line_pos_base + glm::vec2{ style.text_left_inset + style.grid_size, 0 }, foreground_colour);
                 break;
+            case ELEMENT_SPACE: break;
             }
             box_height_lines++;
         }
@@ -484,7 +492,6 @@ void NodeView::updateMesh()
 
 Ref<NodeView::Node> NodeView::select(glm::vec2 world_position)
 {
-    size_t node_index = 0;
     for (size_t node_index = 0; node_index < nodes.size(); ++node_index)
     {
         Ref<Node> node = nodes[node_index];

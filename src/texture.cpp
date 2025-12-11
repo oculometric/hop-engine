@@ -3,7 +3,7 @@
 #include <stdexcept>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-#include <vulkan/vk_enum_string_helper.h>
+#include <vulkan/vulkan_to_string.hpp>
 
 #include "buffer.h"
 #include "graphics_environment.h"
@@ -22,7 +22,7 @@ Texture::Texture(size_t _width, size_t _height, VkFormat _format, void* data, Vk
     if (data != nullptr || width == 0 || height == 0)
     {
         loadFromMemory(data);
-        DBG_INFO("created image from memory with size " + to_string(width) + "x" + to_string(height) + " and format " + string_VkFormat(format));
+        DBG_INFO("created image from memory with size " + to_string(width) + "x" + to_string(height) + " and format " + vk::to_string((vk::Format)format));
     }
     else
     {
@@ -37,7 +37,7 @@ Texture::Texture(size_t _width, size_t _height, VkFormat _format, void* data, Vk
             height = 1;
         }
         createImage();
-        DBG_INFO("created blank image with size " + to_string(width) + "x" + to_string(height) + " and format " + string_VkFormat(format));
+        DBG_INFO("created blank image with size " + to_string(width) + "x" + to_string(height) + " and format " + vk::to_string((vk::Format)format));
     }
 }
 
@@ -70,7 +70,7 @@ Texture::Texture(string file, VkImageUsageFlags _usage)
         loadFromMemory(pixels);
         stbi_image_free(pixels);
 
-        DBG_INFO("created image from " + file + " with size " + to_string(width) + "x" + to_string(height) + " and format " + string_VkFormat(format));
+        DBG_INFO("created image from " + file + " with size " + to_string(width) + "x" + to_string(height) + " and format " + vk::to_string((vk::Format)format));
     }
 }
 
@@ -85,7 +85,7 @@ Texture::~Texture()
 
 void Texture::transitionLayout(VkImageLayout new_layout)
 {
-    DBG_VERBOSE("transitioning image " + PTR(this) + " layout from " + string_VkImageLayout(current_layout) + " to " + string_VkImageLayout(new_layout));
+    DBG_VERBOSE("transitioning image " + PTR(this) + " layout from " + vk::to_string((vk::ImageLayout)current_layout) + " to " + vk::to_string((vk::ImageLayout)new_layout));
 
     VkImageMemoryBarrier memory_barrier{ };
     memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;

@@ -254,7 +254,9 @@ void imGuiDrawFunc()
 
 int main()
 {
+#if defined(_WIN32)
     system("package-builder.exe res -c resources.hop");
+#endif
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     Debug::init(Debug::DEBUG_FAULT);

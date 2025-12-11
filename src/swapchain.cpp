@@ -3,7 +3,7 @@
 #include <limits>
 #include <algorithm>
 #include <stdexcept>
-#include <vulkan/vk_enum_string_helper.h>
+#include <vulkan/vulkan_to_string.hpp>
 
 #include "graphics_environment.h"
 #include "render_pass.h"
@@ -61,7 +61,7 @@ Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR _surface)
         DBG_FAULT("vkCreateSwapchainKHR failed");
     createImageViews();
 
-    DBG_INFO("created swapchain at " + to_string(width) + "x" + to_string(height) + " with " + to_string(images.size()) + " images in present mode " + string_VkPresentModeKHR(create_info.presentMode));
+    DBG_INFO("created swapchain at " + to_string(width) + "x" + to_string(height) + " with " + to_string(images.size()) + " images in present mode " + vk::to_string((vk::PresentModeKHR)create_info.presentMode));
 }
 
 Swapchain::~Swapchain()

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstring>
+
 namespace HopEngine
 {
 
@@ -104,7 +106,7 @@ public:
 	inline Ref<S> cast()
 	{
 		Ref<S> ref;
-		memcpy(&ref, this, sizeof(*this));
+		memcpy((void*)&ref, (void*)this, sizeof(*this));
 		(*ref_counter)++;
 		return ref;
 	}

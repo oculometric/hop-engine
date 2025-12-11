@@ -2,7 +2,7 @@
 
 #include <map>
 #include <vector>
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 #include <glm/glm.hpp>
 
 #include "common.h"
@@ -23,9 +23,9 @@ namespace HopEngine
 class Material
 {
 private:
-	Ref<Shader> shader = nullptr;
-	Ref<Pipeline> pipeline = nullptr;
-	Ref<UniformBlock> uniforms = nullptr;
+	Ref<Shader> shader;
+	Ref<Pipeline> pipeline;
+	Ref<UniformBlock> uniforms;
 	std::map<std::string, uint32_t> texture_name_to_binding;
 	std::map<std::string, UniformVariable> variable_name_to_binding;
 

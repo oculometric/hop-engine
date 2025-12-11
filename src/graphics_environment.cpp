@@ -46,6 +46,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
         DBG_ERROR("[ VALIDATION ]: " + string(callback_data->pMessage));
         break;
+    default: break;
     }
 
     return VK_FALSE;
@@ -59,8 +60,10 @@ RenderServer::RenderServer(Ref<Window> main_window)
     
     window = main_window;
 
+#if defined(_WIN32)
     auto data = Package::tryLoadFile("res://glslc.exe");
     Package::tryWriteFile(Shader::compiler_path, data);
+#endif
 
 	createInstance();
     if (glfwCreateWindowSurface(instance, window->getWindow(), nullptr, &surface) != VK_SUCCESS)
@@ -407,6 +410,8 @@ void RenderServer::createDevice()
         case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU: score += 200; break;
         case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU: score += 200; break;
         case VK_PHYSICAL_DEVICE_TYPE_CPU: score += 100; break;
+        default:
+            break;
         }
 
         score += properties.limits.maxImageDimension2D;
@@ -567,7 +572,7 @@ void RenderServer::createSyncObjects()
     render_finished_semaphores.resize(MAX_FRAMES_IN_FLIGHT);
     in_flight_fences.resize(MAX_FRAMES_IN_FLIGHT);
 
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         if (vkCreateSemaphore(device, &semaphore_create_info, nullptr, &image_available_semaphores[i]) != VK_SUCCESS ||
             vkCreateSemaphore(device, &semaphore_create_info, nullptr, &render_finished_semaphores[i]) != VK_SUCCESS ||

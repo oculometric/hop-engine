@@ -14,7 +14,6 @@ UniformBlock::UniformBlock(ShaderLayout layout_info)
 {
     layout = layout_info;
     size = 0;
-    size_t texture_count = 0;
     for (const auto& binding : layout_info.bindings)
     {
         if (binding.type == UNIFORM)

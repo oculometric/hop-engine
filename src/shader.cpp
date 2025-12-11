@@ -15,7 +15,11 @@
 using namespace HopEngine;
 using namespace std;
 
+#if defined(_WIN32)
 const char* Shader::compiler_path = "C:/tmp/glslc.exe";
+#else
+const char* Shader::compiler_path = "glslc";
+#endif
 
 Shader::Shader(string base_path, bool is_precompiled)
 {
@@ -129,7 +133,6 @@ vector<DescriptorBinding> Shader::mergeBindings(vector<DescriptorBinding> list_a
 
 	vector<DescriptorBinding> resolved_bindings;
 
-	uint32_t last_binding_index = 0;
 	auto binding_it = bindings.begin();
 	while (binding_it != bindings.end())
 	{

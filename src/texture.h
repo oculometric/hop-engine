@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 #include <glm/vec2.hpp>
 
 #include "common.h"

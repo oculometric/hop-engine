@@ -12,17 +12,17 @@ namespace HopEngine
 struct Transform
 {
 private:
-	Object* object;
 	glm::vec3 local_position;
 	glm::vec3 local_euler;
 	glm::quat local_quaternion;
 	glm::vec3 local_scale;
+	Object* object = nullptr;
 	glm::mat4 local_matrix;
 	bool world_matrix_dirty = true;
 	glm::mat4 world_matrix;
 
 public:
-	Transform() : local_position({ 0, 0, 0 }), local_euler({ 0, 0, 0 }), local_quaternion({ 1, 0, 0, 0 }), local_scale({ 1, 1, 1 }), object(nullptr) { updateMatrix(); };
+	Transform() : local_position({ 0, 0, 0 }), local_euler({ 0, 0, 0 }), local_quaternion({ 1, 0, 0, 0 }), local_scale({ 1, 1, 1 }) { updateMatrix(); };
 	Transform(glm::vec3 position, glm::vec3 euler, glm::vec3 scale) : local_position(position), local_euler(euler), local_quaternion({ 1, 0, 0, 0 }), local_scale(scale) { updateMatrix(); }
 	Transform(Object* owner) : local_position({ 0, 0, 0 }), local_euler({ 0, 0, 0 }), local_quaternion({ 1, 0, 0, 0 }), local_scale({ 1, 1, 1 }), object(owner) { updateMatrix(); };
 	

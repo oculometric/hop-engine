@@ -97,6 +97,7 @@ private:
 	void addText(std::string text, glm::vec2 start, glm::vec3 tint);
 	void addLinkElem(glm::vec2 position, glm::vec3 tint, int type);
 	void addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, glm::vec3 tint);
+	glm::vec3 getForegroundColour(int index);
 	glm::vec3 getBackgroundColour(glm::vec3 fg_col);
 };
 

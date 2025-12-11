@@ -351,7 +351,6 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
 
             glm::vec3 e01 = v1 - v0;
             glm::vec3 e02 = v2 - v0;
-            glm::vec3 e12 = v2 - v1;
             glm::vec3 normal = glm::cross(e01, e02);
 
             verts[i0].normal += normal;

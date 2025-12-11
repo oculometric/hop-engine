@@ -2,7 +2,7 @@
 
 #include <optional>
 #include <vector>
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 #include <glm/vec2.hpp>
 
 #include "common.h"
@@ -42,11 +42,11 @@ private:
 	int MAX_FRAMES_IN_FLIGHT = 2;
 
 public:
-	Ref<Scene> scene = nullptr;
+	Ref<Scene> scene;
 	void(* draw_imgui_function)() = nullptr;
 
 private:
-	Ref<Window> window = nullptr;
+	Ref<Window> window;
 
 	VkInstance instance = VK_NULL_HANDLE;
 #if !defined(NDEBUG)
@@ -63,18 +63,18 @@ private:
 	std::vector<VkFence> in_flight_fences;
 	VkSurfaceKHR surface = VK_NULL_HANDLE;
 
-	Ref<Swapchain> swapchain = nullptr;
-    Ref<RenderPass> offscreen_pass = nullptr;
-	Ref<RenderPass> render_pass = nullptr;
+	Ref<Swapchain> swapchain;
+    Ref<RenderPass> offscreen_pass;
+	Ref<RenderPass> render_pass;
 
 	VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
 	VkDescriptorSetLayout scene_descriptor_set_layout = VK_NULL_HANDLE;
 	VkDescriptorSetLayout object_descriptor_set_layout = VK_NULL_HANDLE;
 
-	Ref<Texture> default_image = nullptr;
-	Ref<Sampler> default_sampler = nullptr;
-	Ref<Mesh> quad = nullptr;
-	Ref<Material> post_process = nullptr;
+	Ref<Texture> default_image;
+	Ref<Sampler> default_sampler;
+	Ref<Mesh> quad;
+	Ref<Material> post_process;
 
 public:
 	RenderServer(Ref<Window> main_window);

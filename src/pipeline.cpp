@@ -2,7 +2,6 @@
 
 #include <array>
 #include <stdexcept>
-#include <vulkan/vk_enum_string_helper.h>
 
 #include "graphics_environment.h"
 #include "shader.h"

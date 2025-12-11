@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <cstring>
 
 using namespace HopEngine;
 using namespace std;
@@ -87,7 +88,14 @@ bool Package::loadPackage(string load_path)
 		return false;
 	}
 	if (header.version == 2)
+	{
 		content = loadCompressedPackage(content);
+		if (content.empty())
+		{
+			DBG_ERROR("failed to load package: " + load_path + "; error during decompression");
+			return false;
+		}
+	}
 	else if (header.version != 1)
 	{
 		DBG_ERROR("failed to load package: " + load_path + "; invalid version");
@@ -175,14 +183,14 @@ bool Package::storeCompressedPackage(string store_path)
 		return false;
 	}
 
-	string command = "tar";
+	string command = "zip -r ";
 #if defined(_WIN32)
-	command = "tar.exe";
+	command = "tar.exe -a -c -f ";
 #endif
 
 	string temp_address = Package::getTempPath() + "hop_package_tmp.zip";
 	filesystem::create_directories(Package::getTempPath());
-	command = command + " -a -c -f " + temp_address + ' ' + store_path;
+	command = command + temp_address + ' ' + store_path;
 	string output;
 
 	int result = exec(command, output);
@@ -259,14 +267,20 @@ vector<uint8_t> Package::loadCompressedPackage(vector<uint8_t> data)
 	file.write((char*)(data.data()) + sizeof(PackageHeader), header.file_size - sizeof(PackageHeader));
 	file.close();
 
-	string command = "tar";
+	string command = "unzip ";
 #if defined(_WIN32)
-	command = "tar.exe";
+	command = "tar.exe -x -f ";
 #endif
-
+	
 	string unpack_dir = Package::getTempPath() + "hop";
 	filesystem::create_directory(unpack_dir);
-	command = command + " -x -f " + temp_address + " -C " + unpack_dir;
+	command = command + temp_address + 
+#if defined(_WIN32)
+" -C "
+#else
+" -d "
+#endif
+	 + unpack_dir;
 	string output;
 
 	int result = exec(command, output);

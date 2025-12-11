@@ -1,7 +1,9 @@
 #pragma once
 
+#if defined(_WIN32)
 #pragma warning(push)
 #pragma warning(disable: 4005)
+#endif
 
 #if defined(NDEBUG)
 #define DEBUG_LEVEL 2
@@ -25,26 +27,35 @@
 #define DEBUG_LOGFILE "log/"
 
 #if DEBUG_LEVEL == 0
+#undef DBG_BABBLE
 #define DBG_BABBLE(str) Debug::write(str, Debug::DEBUG_BABBLE)
 #endif
 #if DEBUG_LEVEL <= 1
+#undef DBG_VERBOSE
 #define DBG_VERBOSE(str) Debug::write(str, Debug::DEBUG_VERBOSE)
 #endif
 #if DEBUG_LEVEL <= 2
+#undef DBG_INFO
 #define DBG_INFO(str) Debug::write(str, Debug::DEBUG_INFO)
 #endif
 #if DEBUG_LEVEL <= 3
+#undef DBG_WARNING
 #define DBG_WARNING(str) Debug::write(str, Debug::DEBUG_WARNING)
 #endif
 #if DEBUG_LEVEL <= 4
+#undef DBG_ERROR
 #define DBG_ERROR(str) Debug::write(str, Debug::DEBUG_ERROR)
 #endif
 #if DEBUG_LEVEL <= 5
+#undef DBG_FAULT
 #define DBG_FAULT(str) Debug::write(str, Debug::DEBUG_FAULT)
 #endif
 
 #endif
+
+#if defined(_WIN32)
 #pragma warning(pop)
+#endif
 
 #include <string>
 
