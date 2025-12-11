@@ -10,7 +10,9 @@
 #include <chrono>
 #include <thread>
 #include <string>
+#if defined(_WIN32)
 #include <Windows.h>
+#endif
 #include "../resource.h"
 
 #include "hop_engine.h"
@@ -74,6 +76,14 @@ void initScene(Ref<Scene> scene)
     bunny->transform.setLocalPosition({ 0, -0.5f, 0.9f });
     bunny->transform.scaleLocal({ 2, 2, 2 });
     scene->objects.push_back(bunny);
+
+    Ref<Object> tux = new Object(
+        new Mesh("res://tux.obj"),
+        new Material(shader, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL)
+    );
+    tux->material->setTexture("albedo", new Texture("res://tux.png"));
+    tux->material->setSampler("albedo", sampler);
+    scene->objects.push_back(tux);
 
     camera_spline.loop = true;
     camera_spline.points = { { 0, -1, 0.5f }, { 1, 0, 0.5f }, { 0, 1, 0.5f }, { -1, 0, 0.5f } };
@@ -304,6 +314,7 @@ static std::vector<SceneFuncSet> scenes =
 };
 static int selected_scene = 0;
 
+#if defined(_WIN32)
 INT_PTR dialogFunc(HWND handle, UINT message, WPARAM unnamedParam3, LPARAM unnamedParam4)
 {
     HWND list = GetDlgItem(handle, IDC_LIST1);
@@ -333,6 +344,7 @@ INT_PTR dialogFunc(HWND handle, UINT message, WPARAM unnamedParam3, LPARAM unnam
 
     return false;
 }
+#endif
 
 int main()
 {
@@ -343,8 +355,9 @@ int main()
 
     while (true)
     {
+#if defined(_WIN32)
         DialogBox(NULL, MAKEINTRESOURCE(IDD_DIALOG1), NULL, dialogFunc);
-
+#endif
         Engine::init();
         const auto& scene = scenes[selected_scene];
         Engine::setup(scene.init_func, scene.update_func, scene.imgui_func);
