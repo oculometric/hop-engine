@@ -269,8 +269,8 @@ void initMaterialScene(Ref<Scene> scene)
     obj->material->setTexture("normal_map", new Texture("res://crt_monitor_n.png"));
     MaterialParams material;
     LightParams light;
-    light.position = { 0, 0, 1, 0 };
-    glm::vec4 ambient_colour = { 0.1f, 0.1f, 0.1f, 0.0f };
+    light.position = { 1, 1, 1, 0 };
+    glm::vec4 ambient_colour = { 0.01f, 0.01f, 0.01f, 0.0f };
     obj->material->setUniform("material", &material, sizeof(MaterialParams));
     obj->material->setUniform("light", &light, sizeof(LightParams));
     obj->material->setVec4Uniform("ambient_colour", ambient_colour);

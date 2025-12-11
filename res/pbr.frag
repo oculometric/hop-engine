@@ -16,7 +16,8 @@ layout(set = 2, binding = 2) uniform sampler2D normal_map;
 
 vec3 to_linear(vec3 srgb)
 {
-    return pow((srgb + 0.055f) / 1.055f, vec3(2.4f));
+    return (pow(srgb, vec3(1.0f / 2.4f)) * 1.055f) -0.055f;
+    //pow((srgb + 0.055f) / 1.055f, vec3(2.4f));
 }
 
 float saturate(float f) { return clamp(f, 0, 1); }
@@ -29,16 +30,13 @@ void main()
     pixel_to_light = normalize(pixel_to_light);
 
     vec4 albedo_val = texture(albedo, frag.uv);
-    vec3 normal_val = normalize((texture(normal_map, frag.uv).rgb * 2.0f - 1.0f));
+    vec3 normal_val = normalize((to_linear(texture(normal_map, frag.uv).rgb) * 2.0f - 1.0f));
     vec3 bitangent = normalize(cross(frag.tangent.xyz, frag.normal.xyz));
-    vec3 inverter = vec3(-1,1,1);
-    mat3 tbn = mat3(frag.tangent.xyz * inverter, bitangent * inverter, frag.normal.xyz * inverter);
+    mat3 tbn = mat3(frag.tangent.xyz, bitangent, frag.normal.xyz);
     vec3 perturbed_normal = normalize(tbn * normal_val.xyz);
-    perturbed_normal.x *= -1;
 
-    //perturbed_normal = perturbed_normal.xyz * vec3(1, -1, 1);
     vec3 col = albedo_val.rgb * saturate(dot(pixel_to_light, perturbed_normal.xyz));
-    //col += ambient_colour.rgb;
+    col += ambient_colour.rgb;
 
     //if (light.light_type == 0)
     //{
@@ -64,5 +62,4 @@ void main()
     //}
     normal = vec4(perturbed_normal.xyz, 1);
     colour = vec4(col, 1);
-    //colour = vec4(perturbed_normal.xyz, 1);
 }
