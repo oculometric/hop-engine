@@ -120,7 +120,7 @@ array<VkVertexInputAttributeDescription, 5> Mesh::getAttributeDescriptions()
     array<VkVertexInputAttributeDescription, 5> attributes;
     attributes[0].binding = 0;
     attributes[0].location = 0;
-    attributes[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attributes[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
     attributes[0].offset = offsetof(Vertex, position);
 
     attributes[1].binding = 0;
@@ -130,12 +130,12 @@ array<VkVertexInputAttributeDescription, 5> Mesh::getAttributeDescriptions()
 
     attributes[2].binding = 0;
     attributes[2].location = 2;
-    attributes[2].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attributes[2].format = VK_FORMAT_R32G32B32A32_SFLOAT;
     attributes[2].offset = offsetof(Vertex, normal);
 
     attributes[3].binding = 0;
     attributes[3].location = 3;
-    attributes[3].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attributes[3].format = VK_FORMAT_R32G32B32A32_SFLOAT;
     attributes[3].offset = offsetof(Vertex, tangent);
 
     attributes[4].binding = 0;
@@ -181,19 +181,9 @@ static glm::vec3 computeTangent(glm::vec3 co_a, glm::vec3 co_b, glm::vec3 co_c, 
     // delta uv between target and third
     glm::vec2 uv_ac = { uv_c.x - uv_a.x, uv_c.y - uv_a.y };
     // matrix representing UVs
-    glm::mat3 uv_mat = glm::mat3
-    (
-        uv_ab.x, uv_ac.x, 0,
-        uv_ab.y, uv_ac.y, 0,
-        0, 0, 1
-    );
+    glm::mat3 uv_mat = glm::mat3(glm::vec3(uv_ab, 0), glm::vec3(uv_ac, 0), { 0, 0, 1 });
     // matrix representing vectors between vertices
-    glm::mat3 vec_mat = glm::mat3
-    (
-        ab.x, ac.x, 0,
-        ab.y, ac.y, 0,
-        ab.z, ac.z, 0
-    );
+    glm::mat3 vec_mat = glm::mat3(ab, ac, { 0,0,0 });
 
     // we should be able to express the vectors from A->B and A->C with reference to the difference in UV coordinate and the tangent and bitangent:
     //
@@ -208,7 +198,7 @@ static glm::vec3 computeTangent(glm::vec3 co_a, glm::vec3 co_b, glm::vec3 co_c, 
     // [ AB.z  AC.z  0 ]     [ T.z  B.z  N.z ]   [ 0         0         1 ]
     //
 
-    vec_mat = vec_mat * glm::inverse(uv_mat);
+    vec_mat = (vec_mat) * glm::inverse((uv_mat));
 
     return glm::normalize(glm::vec3{ vec_mat[0] }); // extract tangent
 }
@@ -245,7 +235,8 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
             file >> tmp3.y;
             file >> tmp3.z;
             tmp_co.push_back(tmp3);
-            if (file.peek() != '\n')
+            auto peeked = file.peek();
+            if (peeked != -1)
             {
                 file >> tmp3.x;
                 file >> tmp3.y;
@@ -281,17 +272,7 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
             tmp_fc.push_back(splitOBJFaceCorner(tmps));
             file >> tmps;
             tmp_fc.push_back(splitOBJFaceCorner(tmps));
-
-            swap(tmp_fc[tmp_fc.size() - 1], tmp_fc[tmp_fc.size() - 3]);
         }
-    }
-
-    // swap the first and last face corner of each triangle, to flip the face order
-    for (uint32_t i = 0; i < tmp_fc.size() - 2; i += 3)
-    {
-        FaceCorner fc_i = tmp_fc[i];
-        tmp_fc[i] = tmp_fc[i + 2];
-        tmp_fc[i + 2] = fc_i;
     }
 
     // for each coordinate, stores a list of all the times it has been used by a face corner, and what the normal/uv index was for that face corner
@@ -322,11 +303,11 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
         else
         {
             Vertex new_vert;
-            new_vert.position = tmp_co[fc.co];
+            new_vert.position = glm::vec4(tmp_co[fc.co], 1);
             new_vert.colour = glm::vec4(tmp_cl[fc.co], 0);
-            if (tmp_vn.size() > fc.uv)
-                new_vert.normal = tmp_vn[fc.vn];
-            if (tmp_uv.size() > fc.uv)
+            if (fc.vn < tmp_vn.size())
+                new_vert.normal = glm::vec4(tmp_vn[fc.vn], 0);
+            if (fc.uv < tmp_uv.size())
                 new_vert.uv = tmp_uv[fc.uv];
 
             uint16_t new_index = static_cast<uint16_t>(verts.size());
@@ -351,7 +332,7 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
 
             glm::vec3 e01 = v1 - v0;
             glm::vec3 e02 = v2 - v0;
-            glm::vec3 normal = glm::cross(e01, e02);
+            glm::vec4 normal = glm::vec4(glm::cross(e01, e02), 0);
 
             verts[i0].normal += normal;
             verts[i1].normal += normal;
@@ -370,9 +351,9 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
         uint16_t v1 = inds[(tri * 3) + 1]; Vertex f1 = verts[v1];
         uint16_t v2 = inds[(tri * 3) + 2]; Vertex f2 = verts[v2];
 
-        if (!touched[v1]) verts[v1].tangent = computeTangent(f1.position, f0.position, f2.position, f1.uv, f0.uv, f2.uv);
-        if (!touched[v2]) verts[v2].tangent = computeTangent(f2.position, f0.position, f1.position, f2.uv, f0.uv, f1.uv);
-        if (!touched[v0]) verts[v0].tangent = computeTangent(f0.position, f1.position, f2.position, f0.uv, f1.uv, f2.uv);
+        if (!touched[v1]) verts[v1].tangent = glm::vec4(computeTangent(f1.position, f0.position, f2.position, f1.uv, f0.uv, f2.uv), 1);
+        if (!touched[v2]) verts[v2].tangent = glm::vec4(computeTangent(f2.position, f0.position, f1.position, f2.uv, f0.uv, f1.uv), 1);
+        if (!touched[v0]) verts[v0].tangent = glm::vec4(computeTangent(f0.position, f1.position, f2.position, f0.uv, f1.uv, f2.uv), 1);
 
         touched[v0] = true; touched[v1] = true; touched[v2] = true;
     }
@@ -380,9 +361,9 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
     // transform from Z back Y up space into Z up Y forward space
     for (Vertex& fv : verts)
     {
-        fv.position = { fv.position.x, -fv.position.z, fv.position.y };
-        fv.normal = { fv.normal.x, -fv.normal.z, fv.normal.y };
-        fv.tangent = { fv.tangent.x, -fv.tangent.z, fv.tangent.y };
+        fv.position = { fv.position.x, -fv.position.z, fv.position.y, 1 };
+        fv.normal = { fv.normal.x, -fv.normal.z, fv.normal.y, 0 };
+        fv.tangent = { fv.tangent.x, -fv.tangent.z, fv.tangent.y, 0 };
     }
 
     return true;

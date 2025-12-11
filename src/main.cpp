@@ -102,8 +102,6 @@ void updateScene(Ref<Scene> scene, float delta_time)
 {
     static float total_time = 0;
     total_time += delta_time;
-    //asha->transform.rotateLocal({ 0, 0.01f, 0 });
-    //cube->transform.rotateLocal({ 0, 0, 0.03f });
 
     glm::vec2 mouse_delta = Input::getMouseDelta() * 0.004f;
     if (Input::isMouseDown(GLFW_MOUSE_BUTTON_2))
@@ -119,9 +117,9 @@ void updateScene(Ref<Scene> scene, float delta_time)
         local_move_vector *= 3.0f;
     scene->camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
 
-    scene->camera->transform.lookAt(camera_spline[total_time / 6.0f] * 1.5f,
+    /*scene->camera->transform.lookAt(camera_spline[total_time / 6.0f] * 1.5f,
         glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 0.0f, 1.0f));
+        glm::vec3(0.0f, 0.0f, 1.0f));*/
 }
 
 void initNodeScene(Ref<Scene> scene)
@@ -258,6 +256,31 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
 
 }
 
+void initMaterialScene(Ref<Scene> scene)
+{
+    Ref<Shader> shader = new Shader("res://pbr", false);
+    Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+    Ref<Object> obj = new Object(
+        new Mesh("res://crt_monitor.obj"),
+        new Material(
+            shader, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL
+        ));
+    obj->material->setTexture("albedo", new Texture("res://crt_monitor_t.png"));
+    obj->material->setTexture("normal_map", new Texture("res://crt_monitor_n.png"));
+    MaterialParams material;
+    LightParams light;
+    light.position = { 0, 0, 1, 0 };
+    glm::vec4 ambient_colour = { 0.1f, 0.1f, 0.1f, 0.0f };
+    obj->material->setUniform("material", &material, sizeof(MaterialParams));
+    obj->material->setUniform("light", &light, sizeof(LightParams));
+    obj->material->setVec4Uniform("ambient_colour", ambient_colour);
+    scene->objects.push_back(obj);
+
+    scene->camera->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f));
+}
+
 void imGuiDrawFunc()
 {
     ImGui::Begin("test");
@@ -276,7 +299,8 @@ struct SceneFuncSet
 static std::vector<SceneFuncSet> scenes =
 {
     { L"bunnygirl", initScene, updateScene, imGuiDrawFunc },
-    { L"nodes", initNodeScene, updateNodeScene, imGuiDrawFunc }
+    { L"nodes", initNodeScene, updateNodeScene, imGuiDrawFunc },
+    { L"material", initMaterialScene, updateScene, imGuiDrawFunc },
 };
 static int selected_scene = 0;
 
@@ -333,6 +357,9 @@ int main()
         asha = nullptr;
 
         Engine::destroy();
+
+
+        return 0;
     }
 
     return 0;

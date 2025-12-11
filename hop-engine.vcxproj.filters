@@ -235,6 +235,12 @@
     <None Include="res\dither.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="res\pbr.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\pbr.vert">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="hop-engine.rc">

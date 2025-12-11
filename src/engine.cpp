@@ -54,7 +54,8 @@ void Engine::mainLoop()
             ImGui::Render();
         }
         RenderServer::draw(delta.count());
-        engine->update_func(engine->scene, delta.count());
+        if (engine->update_func)
+            engine->update_func(engine->scene, delta.count());
     }
 }
 

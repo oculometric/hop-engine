@@ -41,7 +41,7 @@ NodeView::NodeView() : Object(nullptr, nullptr)
 void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec4 colour, glm::vec3 tint, bool clip_uv, int uv_index)
 {
     uint16_t v_off = static_cast<uint16_t>(vertices.size());
-    glm::vec3 segment_size = { glm::ceil(size.x / style.grid_size), glm::ceil(size.y / style.grid_size), 0 };
+    glm::vec4 segment_size = { glm::ceil(size.x / style.grid_size), glm::ceil(size.y / style.grid_size), 0, 0 };
 
     glm::vec2 tl_uv = { 0, 1 };
     glm::vec2 tr_uv = { 1, 1 };
@@ -57,13 +57,13 @@ void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec4 colour, glm
         bl_uv = (bl_uv + slice_offset) / 3.0f;
         br_uv = (br_uv + slice_offset) / 3.0f;
 
-        segment_size += glm::vec3{ 2.0f, 2.0f, 0.0f };
+        segment_size += glm::vec4{ 2.0f, 2.0f, 0.0f, 0.0f };
     }
 
-    vertices.push_back(Vertex{ { position.x, -position.y, 0 }, colour, segment_size, tint, tl_uv });
-    vertices.push_back(Vertex{ { position.x + size.x, -position.y, 0 }, colour, segment_size, tint, tr_uv });
-    vertices.push_back(Vertex{ { position.x, -position.y - size.y, 0 }, colour, segment_size, tint, bl_uv });
-    vertices.push_back(Vertex{ { position.x + size.x, -position.y - size.y, 0 }, colour, segment_size, tint, br_uv });
+    vertices.push_back(Vertex{ { position.x, -position.y, 0, 1 }, colour, segment_size, glm::vec4(tint, 0), tl_uv });
+    vertices.push_back(Vertex{ { position.x + size.x, -position.y, 0, 1 }, colour, segment_size, glm::vec4(tint, 0), tr_uv });
+    vertices.push_back(Vertex{ { position.x, -position.y - size.y, 0, 1 }, colour, segment_size, glm::vec4(tint, 0), bl_uv });
+    vertices.push_back(Vertex{ { position.x + size.x, -position.y - size.y, 0, 1 }, colour, segment_size, glm::vec4(tint, 0), br_uv });
 
     indices.push_back(v_off + 0);
     indices.push_back(v_off + 3);
@@ -112,16 +112,16 @@ void NodeView::addCharacter(char c, glm::vec2 position, glm::vec3 tint)
 
     glm::vec2 char_size = style.font->getCharacterSize();
     float top_inset = style.text_top_inset - character_padding;
-    glm::vec3 pos_bl = { position.x, (-position.y - char_size.y) - top_inset, 0};
-    glm::vec3 pos_br = { position.x + char_size.x, (-position.y - char_size.y) - top_inset, 0 };
-    glm::vec3 pos_tl = { position.x, -position.y - top_inset, 0 };
-    glm::vec3 pos_tr = { position.x + char_size.x, -position.y - top_inset, 0 };
+    glm::vec4 pos_bl = { position.x, (-position.y - char_size.y) - top_inset, 0, 1 };
+    glm::vec4 pos_br = { position.x + char_size.x, (-position.y - char_size.y) - top_inset, 0, 1 };
+    glm::vec4 pos_tl = { position.x, -position.y - top_inset, 0, 1 };
+    glm::vec4 pos_tr = { position.x + char_size.x, -position.y - top_inset, 0, 1 };
 
     uint16_t v_off = static_cast<uint16_t>(vertices.size());
-    vertices.push_back(Vertex{ pos_bl, glm::vec4(tint, 1), { 0, 0, 0.5f }, {}, uv_bl });
-    vertices.push_back(Vertex{ pos_br, glm::vec4(tint, 1), { 0, 0, 0.5f }, {}, uv_br });
-    vertices.push_back(Vertex{ pos_tl, glm::vec4(tint, 1), { 0, 0, 0.5f }, {}, uv_tl });
-    vertices.push_back(Vertex{ pos_tr, glm::vec4(tint, 1), { 0, 0, 0.5f }, {}, uv_tr });
+    vertices.push_back(Vertex{ pos_bl, glm::vec4(tint, 1), { 0, 0, 0.5f, 0 }, {}, uv_bl });
+    vertices.push_back(Vertex{ pos_br, glm::vec4(tint, 1), { 0, 0, 0.5f, 0 }, {}, uv_br });
+    vertices.push_back(Vertex{ pos_tl, glm::vec4(tint, 1), { 0, 0, 0.5f, 0 }, {}, uv_tl });
+    vertices.push_back(Vertex{ pos_tr, glm::vec4(tint, 1), { 0, 0, 0.5f, 0 }, {}, uv_tr });
 
     indices.push_back(v_off + 0);
     indices.push_back(v_off + 3);
@@ -171,16 +171,16 @@ void NodeView::addLinkElem(glm::vec2 position, glm::vec3 tint, int type)
         glm::vec2 uv_bl = uv_sets[type][2];
         glm::vec2 uv_br = uv_sets[type][3];
 
-        glm::vec3 pos_tl = { position.x, -position.y, 0 };
-        glm::vec3 pos_tr = { position.x + style.grid_size, -position.y, 0 };
-        glm::vec3 pos_bl = { position.x, -position.y - style.grid_size, 0 };
-        glm::vec3 pos_br = { position.x + style.grid_size, -position.y - style.grid_size, 0 };
+        glm::vec4 pos_tl = { position.x, -position.y, 0, 1 };
+        glm::vec4 pos_tr = { position.x + style.grid_size, -position.y, 0, 1 };
+        glm::vec4 pos_bl = { position.x, -position.y - style.grid_size, 0, 1 };
+        glm::vec4 pos_br = { position.x + style.grid_size, -position.y - style.grid_size, 0, 1 };
 
         uint16_t v_off = static_cast<uint16_t>(vertices.size());
-        vertices.push_back(Vertex{ pos_bl, glm::vec4(tint, 1), { 0, 0, 1 }, {}, uv_bl });
-        vertices.push_back(Vertex{ pos_br, glm::vec4(tint, 1), { 0, 0, 1 }, {}, uv_br });
-        vertices.push_back(Vertex{ pos_tl, glm::vec4(tint, 1), { 0, 0, 1 }, {}, uv_tl });
-        vertices.push_back(Vertex{ pos_tr, glm::vec4(tint, 1), { 0, 0, 1 }, {}, uv_tr });
+        vertices.push_back(Vertex{ pos_bl, glm::vec4(tint, 1), { 0, 0, 1, 0 }, {}, uv_bl });
+        vertices.push_back(Vertex{ pos_br, glm::vec4(tint, 1), { 0, 0, 1, 0 }, {}, uv_br });
+        vertices.push_back(Vertex{ pos_tl, glm::vec4(tint, 1), { 0, 0, 1, 0 }, {}, uv_tl });
+        vertices.push_back(Vertex{ pos_tr, glm::vec4(tint, 1), { 0, 0, 1, 0 }, {}, uv_tr });
 
         indices.push_back(v_off + 0);
         indices.push_back(v_off + 3);

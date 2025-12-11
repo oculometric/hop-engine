@@ -191,10 +191,10 @@ RenderServer::RenderServer(Ref<Window> main_window)
     default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, default_image_data);
     default_sampler = new Sampler(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
     quad = new Mesh({
-        { { -1, -1, 0 }, {}, {}, {}, { 0, 0 } },
-        { { 1, -1, 0 }, {}, {}, {}, { 1, 0 } },
-        { { -1, 1, 0 }, {}, {}, {}, { 0, 1 } },
-        { { 1, 1, 0 }, {}, {}, {}, { 1, 1 } }
+        { { -1, -1, 0, 1 }, {}, {}, {}, { 0, 0 } },
+        { { 1, -1, 0, 1 }, {}, {}, {}, { 1, 0 } },
+        { { -1, 1, 0, 1 }, {}, {}, {}, { 0, 1 } },
+        { { 1, 1, 0, 1 }, {}, {}, {}, { 1, 1 } }
         }, { 0, 3, 1, 0, 2, 3 });
     // TODO: system for associating material with render pass, and for controlling render pass execution
     // TODO: offscreen pass needs its own scene uniform buffers since viewport size is different!
