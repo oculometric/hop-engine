@@ -13,7 +13,7 @@ CommandBuffer::CommandBuffer()
     allocate_info.commandPool = RenderServer::get()->getCommandPool();
     allocate_info.commandBufferCount = 1;
 
-    vkAllocateCommandBuffers(RenderServer::get()->getDevice(), &allocate_info, &buffer);
+    vkAllocateCommandBuffers(RenderServer::getDevice(), &allocate_info, &buffer);
 
     VkCommandBufferBeginInfo begin_info{ };
     begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -27,7 +27,7 @@ CommandBuffer::~CommandBuffer()
 {
     submit();
     DBG_BABBLE("destroying command buffer " + PTR(this));
-    vkFreeCommandBuffers(RenderServer::get()->getDevice(), RenderServer::get()->getCommandPool(), 1, &buffer);
+    vkFreeCommandBuffers(RenderServer::getDevice(), RenderServer::get()->getCommandPool(), 1, &buffer);
 }
 
 void CommandBuffer::submit()

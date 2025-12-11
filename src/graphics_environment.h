@@ -80,10 +80,11 @@ public:
 	RenderServer(Ref<Window> main_window);
 	~RenderServer();
 
+	static void waitIdle();
 	Ref<RenderPass> getRenderPass();
 	QueueFamilies getQueueFamilies(VkPhysicalDevice device);
 	inline VkPhysicalDevice getPhysicalDevice() { return physical_device; }
-	inline VkDevice getDevice() { return device; }
+	static VkDevice getDevice();
 	inline VkDescriptorSetLayout getSceneDescriptorSetLayout() { return scene_descriptor_set_layout; }
 	inline VkDescriptorSetLayout getObjectDescriptorSetLayout() { return object_descriptor_set_layout; }
 	inline size_t getFramesInFlight() { return MAX_FRAMES_IN_FLIGHT; }

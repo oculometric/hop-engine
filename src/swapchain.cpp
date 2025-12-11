@@ -57,7 +57,7 @@ Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR _surface)
     create_info.oldSwapchain = VK_NULL_HANDLE;
 
     // create the swapchain
-    if (vkCreateSwapchainKHR(RenderServer::get()->getDevice(), &create_info, nullptr, &swapchain) != VK_SUCCESS)
+    if (vkCreateSwapchainKHR(RenderServer::getDevice(), &create_info, nullptr, &swapchain) != VK_SUCCESS)
         DBG_FAULT("vkCreateSwapchainKHR failed");
     createImageViews();
 
@@ -79,7 +79,7 @@ void Swapchain::resize(uint32_t width, uint32_t height)
     extent = Swapchain::getIdealExtent(support_info, width, height);
     create_info.imageExtent = extent;
 
-    if (vkCreateSwapchainKHR(RenderServer::get()->getDevice(), &create_info, nullptr, &swapchain) != VK_SUCCESS)
+    if (vkCreateSwapchainKHR(RenderServer::getDevice(), &create_info, nullptr, &swapchain) != VK_SUCCESS)
         DBG_FAULT("vkCreateSwapchainKHR failed");
     createImageViews();
 }
@@ -148,9 +148,9 @@ void Swapchain::createImageViews()
 {
     // retreive images
     uint32_t image_count = 0;
-    vkGetSwapchainImagesKHR(RenderServer::get()->getDevice(), swapchain, &image_count, nullptr);
+    vkGetSwapchainImagesKHR(RenderServer::getDevice(), swapchain, &image_count, nullptr);
     images.resize(image_count);
-    vkGetSwapchainImagesKHR(RenderServer::get()->getDevice(), swapchain, &image_count, images.data());
+    vkGetSwapchainImagesKHR(RenderServer::getDevice(), swapchain, &image_count, images.data());
 
     // create image views
     image_views.resize(image_count);
@@ -171,7 +171,7 @@ void Swapchain::createImageViews()
         view_create_info.subresourceRange.baseArrayLayer = 0;
         view_create_info.subresourceRange.layerCount = 1;
 
-        if (vkCreateImageView(RenderServer::get()->getDevice(), &view_create_info, nullptr, &image_views[i]) != VK_SUCCESS)
+        if (vkCreateImageView(RenderServer::getDevice(), &view_create_info, nullptr, &image_views[i]) != VK_SUCCESS)
             DBG_FAULT("vkCreateImageView failed");
     }
 }
@@ -179,7 +179,7 @@ void Swapchain::createImageViews()
 void Swapchain::destroyResources()
 {
     for (auto image_view : image_views)
-        vkDestroyImageView(RenderServer::get()->getDevice(), image_view, nullptr);
+        vkDestroyImageView(RenderServer::getDevice(), image_view, nullptr);
 
-    vkDestroySwapchainKHR(RenderServer::get()->getDevice(), swapchain, nullptr);
+    vkDestroySwapchainKHR(RenderServer::getDevice(), swapchain, nullptr);
 }

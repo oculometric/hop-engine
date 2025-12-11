@@ -34,7 +34,7 @@ RenderPass::~RenderPass()
 {
     DBG_INFO("destroying render pass " + PTR(this));
     destroyResources();
-    vkDestroyRenderPass(RenderServer::get()->getDevice(), render_pass, nullptr);
+    vkDestroyRenderPass(RenderServer::getDevice(), render_pass, nullptr);
 }
 
 vector<VkClearValue> RenderPass::getClearValues()
@@ -176,14 +176,14 @@ void RenderPass::createRenderPass(VkFormat main_colour_format, VkImageLayout fin
     render_pass_create_info.dependencyCount = static_cast<uint32_t>(dependencies.size());
     render_pass_create_info.pDependencies = dependencies.data();
 
-    if (vkCreateRenderPass(RenderServer::get()->getDevice(), &render_pass_create_info, nullptr, &render_pass) != VK_SUCCESS)
+    if (vkCreateRenderPass(RenderServer::getDevice(), &render_pass_create_info, nullptr, &render_pass) != VK_SUCCESS)
         DBG_FAULT("vkCreateRenderPass failed");
 }
 
 void RenderPass::destroyResources()
 {
     for (VkFramebuffer framebuffer : framebuffers)
-        vkDestroyFramebuffer(RenderServer::get()->getDevice(), framebuffer, nullptr);
+        vkDestroyFramebuffer(RenderServer::getDevice(), framebuffer, nullptr);
     depth_texture = nullptr;
     additional_textures.clear();
 }
@@ -217,7 +217,7 @@ void RenderPass::createResources(Ref<Swapchain> swapchain)
         framebuffer_create_info.height = swapchain->getExtent().height;
         framebuffer_create_info.layers = 1;
 
-        if (vkCreateFramebuffer(RenderServer::get()->getDevice(), &framebuffer_create_info, nullptr, &framebuffers[i]) != VK_SUCCESS)
+        if (vkCreateFramebuffer(RenderServer::getDevice(), &framebuffer_create_info, nullptr, &framebuffers[i]) != VK_SUCCESS)
             DBG_FAULT("vkCreateFramebuffer failed");
     }
 }
@@ -252,6 +252,6 @@ void RenderPass::createResources(VkFormat main_colour_format, uint32_t width, ui
     framebuffer_create_info.height = height;
     framebuffer_create_info.layers = 1;
 
-    if (vkCreateFramebuffer(RenderServer::get()->getDevice(), &framebuffer_create_info, nullptr, &framebuffers[0]) != VK_SUCCESS)
+    if (vkCreateFramebuffer(RenderServer::getDevice(), &framebuffer_create_info, nullptr, &framebuffers[0]) != VK_SUCCESS)
         DBG_FAULT("vkCreateFramebuffer failed");
 }

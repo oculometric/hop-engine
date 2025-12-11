@@ -121,7 +121,9 @@ RenderServer::RenderServer(Ref<Window> main_window)
 
 RenderServer::~RenderServer()
 {
+#if defined(_WIN32)
     filesystem::remove(Shader::compiler_path);
+#endif
 
     DBG_INFO("destroying graphics environment");
 
@@ -172,6 +174,11 @@ RenderServer::~RenderServer()
     environment = nullptr;
 }
 
+void RenderServer::waitIdle()
+{
+    vkDeviceWaitIdle(environment->device);
+}
+
 Ref<RenderPass> RenderServer::getRenderPass() { return offscreen_pass; }
 
 RenderServer::QueueFamilies RenderServer::getQueueFamilies(VkPhysicalDevice device)
@@ -196,6 +203,11 @@ RenderServer::QueueFamilies RenderServer::getQueueFamilies(VkPhysicalDevice devi
     }
 
     return families;
+}
+
+VkDevice RenderServer::getDevice()
+{
+    return environment->device;
 }
 
 pair<Ref<Texture>, Ref<Sampler>> RenderServer::getDefaultTextureSampler()

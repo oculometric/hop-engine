@@ -147,20 +147,22 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="lib\imgui\backends\imgui_impl_glfw.cpp" />
-    <ClCompile Include="lib\imgui\backends\imgui_impl_vulkan.cpp" />
-    <ClCompile Include="lib\imgui\imgui.cpp" />
-    <ClCompile Include="lib\imgui\imgui_demo.cpp" />
-    <ClCompile Include="lib\imgui\imgui_draw.cpp" />
-    <ClCompile Include="lib\imgui\imgui_tables.cpp" />
-    <ClCompile Include="lib\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\buffer.cpp" />
     <ClCompile Include="src\command_buffer.cpp" />
     <ClCompile Include="src\debug.cpp" />
+    <ClCompile Include="src\engine.cpp" />
     <ClCompile Include="src\exec.cpp" />
     <ClCompile Include="src\font.cpp" />
     <ClCompile Include="src\graphics_environment.cpp" />
     <ClCompile Include="src\input.cpp" />
+    <ClCompile Include="src\lib\imgui.cpp" />
+    <ClCompile Include="src\lib\imgui_demo.cpp" />
+    <ClCompile Include="src\lib\imgui_draw.cpp" />
+    <ClCompile Include="src\lib\imgui_impl_glfw.cpp" />
+    <ClCompile Include="src\lib\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="src\lib\imgui_tables.cpp" />
+    <ClCompile Include="src\lib\imgui_widgets.cpp" />
+    <ClCompile Include="src\lib\spirv_reflect.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\material.cpp" />
     <ClCompile Include="src\mesh.cpp" />
@@ -171,7 +173,6 @@
     <ClCompile Include="src\render_pass.cpp" />
     <ClCompile Include="src\sampler.cpp" />
     <ClCompile Include="src\shader.cpp" />
-    <ClCompile Include="src\spirv_compile.cpp" />
     <ClCompile Include="src\swapchain.cpp" />
     <ClCompile Include="src\texture.cpp" />
     <ClCompile Include="src\transform.cpp" />
@@ -184,6 +185,7 @@
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\counted_ref.h" />
     <ClInclude Include="src\debug.h" />
+    <ClInclude Include="src\engine.h" />
     <ClInclude Include="src\font.h" />
     <ClInclude Include="src\graphics_environment.h" />
     <ClInclude Include="src\hop_forward.h" />

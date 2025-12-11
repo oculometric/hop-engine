@@ -63,7 +63,7 @@ Shader::Shader(string base_path, bool is_precompiled)
 	set_layout_create_info.bindingCount = static_cast<uint32_t>(layout_bindings.size());
 	set_layout_create_info.pBindings = layout_bindings.data();
 
-	if (vkCreateDescriptorSetLayout(RenderServer::get()->getDevice(), &set_layout_create_info, nullptr, &descriptor_set_layout) != VK_SUCCESS)
+	if (vkCreateDescriptorSetLayout(RenderServer::getDevice(), &set_layout_create_info, nullptr, &descriptor_set_layout) != VK_SUCCESS)
 		DBG_FAULT("vkCreateDescriptorSetLayout failed");
 
 	VkPipelineLayoutCreateInfo layout_create_info{ };
@@ -78,7 +78,7 @@ Shader::Shader(string base_path, bool is_precompiled)
 	};
 	layout_create_info.pSetLayouts = layouts;
 
-	if (vkCreatePipelineLayout(RenderServer::get()->getDevice(), &layout_create_info, nullptr, &pipeline_layout) != VK_SUCCESS)
+	if (vkCreatePipelineLayout(RenderServer::getDevice(), &layout_create_info, nullptr, &pipeline_layout) != VK_SUCCESS)
 		DBG_FAULT("vkCreatePipelineLayout failed");
 
 	DBG_INFO("created shader from " + base_path);
@@ -88,11 +88,11 @@ Shader::~Shader()
 {
 	DBG_INFO("destroyed shader " + PTR(this));
 
-	vkDestroyPipelineLayout(RenderServer::get()->getDevice(), pipeline_layout, nullptr);
-	vkDestroyDescriptorSetLayout(RenderServer::get()->getDevice(), descriptor_set_layout, nullptr);
+	vkDestroyPipelineLayout(RenderServer::getDevice(), pipeline_layout, nullptr);
+	vkDestroyDescriptorSetLayout(RenderServer::getDevice(), descriptor_set_layout, nullptr);
 
-	vkDestroyShaderModule(RenderServer::get()->getDevice(), vert_module, nullptr);
-	vkDestroyShaderModule(RenderServer::get()->getDevice(), frag_module, nullptr);
+	vkDestroyShaderModule(RenderServer::getDevice(), vert_module, nullptr);
+	vkDestroyShaderModule(RenderServer::getDevice(), frag_module, nullptr);
 }
 
 vector<VkPipelineShaderStageCreateInfo> Shader::getShaderStageCreateInfos()
@@ -243,7 +243,7 @@ VkShaderModule Shader::createShaderModule(const vector<uint8_t>& blob)
 	create_info.pCode = reinterpret_cast<const uint32_t*>(blob.data());
 
 	VkShaderModule shader_module;
-	if (vkCreateShaderModule(RenderServer::get()->getDevice(), &create_info, nullptr, &shader_module) != VK_SUCCESS)
+	if (vkCreateShaderModule(RenderServer::getDevice(), &create_info, nullptr, &shader_module) != VK_SUCCESS)
 		DBG_FAULT("vkCreateShaderModule failed");
 
 	return shader_module;

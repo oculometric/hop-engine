@@ -91,7 +91,7 @@ void initScene(Ref<Scene> scene)
         glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
-void updateScene(Ref<Scene> scene)
+void updateScene(Ref<Scene> scene, float delta_time)
 {
     //asha->transform.rotateLocal({ 0, 0.01f, 0 });
     //cube->transform.rotateLocal({ 0, 0, 0.03f });
@@ -199,7 +199,7 @@ void initNodeScene(Ref<Scene> scene)
     scene->background_colour = { 0, 0, 0 };
 }
 
-void updateNodeScene(Ref<Scene> scene)
+void updateNodeScene(Ref<Scene> scene, float delta_time)
 {
     bool node_view_dirty = false;
 
@@ -259,45 +259,18 @@ int main()
 #endif
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    Debug::init(Debug::DEBUG_FAULT);
-    Window::initEnvironment();
-    Ref<Window> window = new Window(1024, 1024, "hop!");
-    Input::init(window->getWindow());
-    Package::init();
-    Package::loadPackage("resources.hop");
-    Ref<RenderServer> ge = new RenderServer(window);
+    Engine::init();
+    Engine::setup(initNodeScene, updateNodeScene, imGuiDrawFunc);
 
-    ge->draw_imgui_function = imGuiDrawFunc;
-    ge->scene = new Scene();
-    initNodeScene(ge->scene);
+    Engine::mainLoop();
 
-    auto last_frame = std::chrono::steady_clock::now();
-    
-    while (!window->getShouldClose())
-    {
-        auto this_frame = std::chrono::steady_clock::now();
-        std::chrono::duration<float> delta = this_frame - last_frame;
-        last_frame = this_frame;
-        window->pollEvents();
-        if (window->isMinified())
-            continue;
-        if (window->isResized())
-            ge->resizeSwapchain();
-        ge->drawFrame(delta.count());
-        updateNodeScene(ge->scene);
-    }
-
-    ge->scene = nullptr;
-
-    node_view = nullptr;
+    Engine::setup(nullptr, nullptr, nullptr);
+    selected_node = nullptr;
+    node_view = nullptr; // FIXME: seems like this destructor isnt being called properly - maybe that cast isnt a good idea....
     cube = nullptr;
     asha = nullptr;
 
-    ge = nullptr;
-    window = nullptr;
-    Window::terminateEnvironment();
-
-    Debug::close();
+    Engine::destroy();
 
     return 0;
 }

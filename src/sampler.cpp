@@ -29,7 +29,7 @@ Sampler::Sampler(VkFilter filtering_mode, VkSamplerAddressMode address_mode)
 	create_info.mipLodBias = 0.0f;
 	create_info.minLod = 0.0f;
 	create_info.maxLod = 0.0f;
-	if (vkCreateSampler(RenderServer::get()->getDevice(), &create_info, nullptr, &sampler) != VK_SUCCESS)
+	if (vkCreateSampler(RenderServer::getDevice(), &create_info, nullptr, &sampler) != VK_SUCCESS)
 		DBG_FAULT("vkCreateSampler failed");
 
 	DBG_INFO("created sampler for " + vk::to_string((vk::Filter)filtering_mode) + ", " + vk::to_string((vk::SamplerAddressMode)address_mode));
@@ -38,5 +38,5 @@ Sampler::Sampler(VkFilter filtering_mode, VkSamplerAddressMode address_mode)
 Sampler::~Sampler()
 {
 	DBG_INFO("destroying sampler " + PTR(this));
-	vkDestroySampler(RenderServer::get()->getDevice(), sampler, nullptr);
+	vkDestroySampler(RenderServer::getDevice(), sampler, nullptr);
 }

@@ -33,7 +33,7 @@ UniformBlock::UniformBlock(ShaderLayout layout_info)
     descriptor_set_alloc_info.descriptorSetCount = static_cast<uint32_t>(uniform_buffers.size());
     descriptor_set_alloc_info.pSetLayouts = set_layouts.data();
     descriptor_sets.resize(uniform_buffers.size());
-    if (vkAllocateDescriptorSets(RenderServer::get()->getDevice(), &descriptor_set_alloc_info, descriptor_sets.data()) != VK_SUCCESS)
+    if (vkAllocateDescriptorSets(RenderServer::getDevice(), &descriptor_set_alloc_info, descriptor_sets.data()) != VK_SUCCESS)
         DBG_FAULT("vkAllocateDescriptorSets failed");
 
     applyDescriptorBindings();
@@ -46,8 +46,8 @@ UniformBlock::UniformBlock(ShaderLayout layout_info)
 UniformBlock::~UniformBlock()
 {
     DBG_VERBOSE("destroying uniform block " + PTR(this));
-    vkDeviceWaitIdle(RenderServer::get()->getDevice());
-    vkFreeDescriptorSets(RenderServer::get()->getDevice(), RenderServer::get()->getDescriptorPool(), static_cast<uint32_t>(descriptor_sets.size()), descriptor_sets.data());
+    RenderServer::waitIdle();
+    vkFreeDescriptorSets(RenderServer::getDevice(), RenderServer::get()->getDescriptorPool(), static_cast<uint32_t>(descriptor_sets.size()), descriptor_sets.data());
     textures_in_use.clear();
     descriptor_sets.clear();
     uniform_buffers.clear();
@@ -105,7 +105,7 @@ void UniformBlock::applyDescriptorBindings()
                 descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 descriptor_write.pImageInfo = &image_info;
             }
-            vkUpdateDescriptorSets(RenderServer::get()->getDevice(), 1, &descriptor_write, 0, nullptr);
+            vkUpdateDescriptorSets(RenderServer::getDevice(), 1, &descriptor_write, 0, nullptr);
         }
     }
 }

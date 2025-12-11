@@ -78,9 +78,9 @@ Texture::~Texture()
 {
     DBG_INFO("destroying image " + PTR(this));
     if (view != VK_NULL_HANDLE)
-        vkDestroyImageView(RenderServer::get()->getDevice(), view, nullptr);
-    vkDestroyImage(RenderServer::get()->getDevice(), image, nullptr);
-    vkFreeMemory(RenderServer::get()->getDevice(), memory, nullptr);
+        vkDestroyImageView(RenderServer::getDevice(), view, nullptr);
+    vkDestroyImage(RenderServer::getDevice(), image, nullptr);
+    vkFreeMemory(RenderServer::getDevice(), memory, nullptr);
 }
 
 void Texture::transitionLayout(VkImageLayout new_layout)
@@ -187,7 +187,7 @@ VkImageView Texture::getView()
     view_create_info.subresourceRange.baseArrayLayer = 0;
     view_create_info.subresourceRange.layerCount = 1;
 
-    if (vkCreateImageView(RenderServer::get()->getDevice(), &view_create_info, nullptr, &view) != VK_SUCCESS)
+    if (vkCreateImageView(RenderServer::getDevice(), &view_create_info, nullptr, &view) != VK_SUCCESS)
         DBG_ERROR("vkCreateImageView failed");
 
     return view;
@@ -218,20 +218,20 @@ void Texture::createImage()
     image_create_info.usage = usage;
     image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
-    if (vkCreateImage(RenderServer::get()->getDevice(), &image_create_info, nullptr, &image) != VK_SUCCESS)
+    if (vkCreateImage(RenderServer::getDevice(), &image_create_info, nullptr, &image) != VK_SUCCESS)
         DBG_FAULT("vkCreateImage failed");
     current_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
     VkMemoryRequirements memory_requirements;
-    vkGetImageMemoryRequirements(RenderServer::get()->getDevice(), image, &memory_requirements);
+    vkGetImageMemoryRequirements(RenderServer::getDevice(), image, &memory_requirements);
 
     VkMemoryAllocateInfo allocate_info{ };
     allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocate_info.allocationSize = memory_requirements.size;
     allocate_info.memoryTypeIndex = Buffer::findMemoryType(memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    if (vkAllocateMemory(RenderServer::get()->getDevice(), &allocate_info, nullptr, &memory) != VK_SUCCESS)
+    if (vkAllocateMemory(RenderServer::getDevice(), &allocate_info, nullptr, &memory) != VK_SUCCESS)
         DBG_FAULT("vkAllocateMemory failed");
-    vkBindImageMemory(RenderServer::get()->getDevice(), image, memory, 0);
+    vkBindImageMemory(RenderServer::getDevice(), image, memory, 0);
 }
 
 void Texture::loadFromMemory(void* data)

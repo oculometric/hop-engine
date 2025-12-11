@@ -112,7 +112,7 @@ Pipeline::Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMo
     pipeline_create_info.renderPass = render_pass->getRenderPass();
     pipeline_create_info.subpass = 0;
 
-    if (vkCreateGraphicsPipelines(RenderServer::get()->getDevice(), VK_NULL_HANDLE, 1, &pipeline_create_info, nullptr, &pipeline) != VK_SUCCESS)
+    if (vkCreateGraphicsPipelines(RenderServer::getDevice(), VK_NULL_HANDLE, 1, &pipeline_create_info, nullptr, &pipeline) != VK_SUCCESS)
         DBG_FAULT("vkCreateGraphicsPipelines failed");
 
     DBG_VERBOSE("created pipeline for shader " + PTR(shader.get()));
@@ -121,5 +121,5 @@ Pipeline::Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMo
 Pipeline::~Pipeline()
 {
     DBG_VERBOSE("destroying pipeline " + PTR(this));
-    vkDestroyPipeline(RenderServer::get()->getDevice(), pipeline, nullptr);
+    vkDestroyPipeline(RenderServer::getDevice(), pipeline, nullptr);
 }
