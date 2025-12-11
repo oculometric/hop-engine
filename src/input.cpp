@@ -5,20 +5,26 @@ using namespace std;
 
 static Input* application_instance = nullptr;
 
-
-void Input::init(GLFWwindow* window)
+void Input::init(Ref<Window> window)
 {
-	DBG_INFO("initialising input for window " + PTR(window));
+	DBG_INFO("initialising input for window " + PTR(window.get()));
 	if (application_instance == nullptr)
-		application_instance = new Input();
-	application_instance->window = window;
-	glfwSetKeyCallback(window, Input::keyCallback);
-	glfwSetMouseButtonCallback(window, Input::mouseButtonCallback);
+		application_instance = new Input(window);
+}
+
+void Input::destroy()
+{
+	DBG_INFO("destroying input");
+	if (application_instance != nullptr)
+	{
+		delete application_instance;
+		application_instance = nullptr;
+	}
 }
 
 bool Input::isKeyDown(int key)
 {
-	return glfwGetKey(application_instance->window, key) == GLFW_PRESS;
+	return glfwGetKey(application_instance->window->getWindow(), key) == GLFW_PRESS;
 }
 
 bool Input::wasKeyPressed(int key)
@@ -45,7 +51,7 @@ glm::vec2 Input::getMouseDelta()
 {
 	static double last_x = 0, last_y = 0;
 	double new_x, new_y;
-	glfwGetCursorPos(application_instance->window, &new_x, &new_y);
+	glfwGetCursorPos(application_instance->window->getWindow(), &new_x, &new_y);
 	glm::vec2 difference = { new_x - last_x, new_y - last_y };
 	last_x = new_x;
 	last_y = new_y;
@@ -55,13 +61,13 @@ glm::vec2 Input::getMouseDelta()
 glm::vec2 Input::getMousePosition()
 {
 	double new_x, new_y;
-	glfwGetCursorPos(application_instance->window, &new_x, &new_y);
+	glfwGetCursorPos(application_instance->window->getWindow(), &new_x, &new_y);
 	return glm::vec2{ (float)new_x, (float)new_y };
 }
 
 bool Input::isMouseDown(int button)
 {
-	return glfwGetMouseButton(application_instance->window, button) == GLFW_PRESS;
+	return glfwGetMouseButton(application_instance->window->getWindow(), button) == GLFW_PRESS;
 }
 
 bool Input::wasMousePressed(int button)
@@ -71,6 +77,18 @@ bool Input::wasMousePressed(int button)
 		return false;
 	application_instance->pressed_since_checked.erase(it);
 	return true;
+}
+
+Input::Input(Ref<Window> _window)
+{
+	window = _window;
+	glfwSetKeyCallback(window->getWindow(), Input::keyCallback);
+	glfwSetMouseButtonCallback(window->getWindow(), Input::mouseButtonCallback);
+}
+
+Input::~Input()
+{
+	window = nullptr;
 }
 
 void Input::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)

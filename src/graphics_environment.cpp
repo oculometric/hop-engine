@@ -19,7 +19,6 @@
 #include <random>
 
 #include "hop_engine.h"
-#include "swapchain.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -53,11 +52,122 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
 }
 #endif
 
-RenderServer::RenderServer(Ref<Window> main_window)
+void RenderServer::init(Ref<Window> main_window)
 {
     DBG_INFO("initialising graphics environment");
+    if (environment == nullptr)
+        environment = new RenderServer(main_window);
+}
+
+void RenderServer::destroy()
+{
+    DBG_INFO("destroying graphics environment");
+    if (environment != nullptr)
+    {
+        delete environment;
+        environment = nullptr;
+    }
+}
+
+void RenderServer::waitIdle()
+{
+    vkDeviceWaitIdle(environment->device);
+}
+
+Ref<RenderPass> RenderServer::getMainRenderPass()
+{
+    return environment->offscreen_pass;
+}
+
+RenderServer::QueueFamilies RenderServer::getQueueFamilies(VkPhysicalDevice device)
+{
+    QueueFamilies families;
+
+    uint32_t queue_family_count = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
+    vector<VkQueueFamilyProperties> queue_families(queue_family_count);
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
+    int i = 0;
+    for (const auto& queueFamily : queue_families)
+    {
+        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+            families.graphics_family = i;
+        VkBool32 queue_has_present_support = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, environment->surface, &queue_has_present_support);
+        if (queue_has_present_support)
+            families.present_family = i;
+
+        ++i;
+    }
+
+    return families;
+}
+
+VkPhysicalDevice RenderServer::getPhysicalDevice()
+{
+    return environment->physical_device;
+}
+
+VkDevice RenderServer::getDevice()
+{
+    return environment->device;
+}
+
+VkDescriptorSetLayout RenderServer::getSceneDescriptorSetLayout()
+{
+    return environment->scene_descriptor_set_layout;
+}
+
+VkDescriptorSetLayout RenderServer::getObjectDescriptorSetLayout()
+{
+    return environment->object_descriptor_set_layout;
+}
+
+size_t RenderServer::getFramesInFlight()
+{
+    return environment->MAX_FRAMES_IN_FLIGHT;
+}
+
+VkDescriptorPool RenderServer::getDescriptorPool()
+{
+    return environment->descriptor_pool;
+}
+
+VkCommandPool RenderServer::getCommandPool()
+{
+    return environment->command_pool;
+}
+
+VkQueue RenderServer::getGraphicsQueue()
+{
+    return environment->graphics_queue;
+}
+
+pair<Ref<Texture>, Ref<Sampler>> RenderServer::getDefaultTextureSampler()
+{
+    return { environment->default_image, environment->default_sampler };
+}
+
+glm::vec2 RenderServer::getFramebufferSize()
+{
+    auto ext = environment->swapchain->getExtent();
+    return glm::vec2{ ext.width, ext.height };
+}
+
+void RenderServer::draw(float delta_time)
+{
+    environment->drawFrame(delta_time);
+}
+
+void RenderServer::resize()
+{
+    environment->resizeSwapchain();
+}
+
+RenderServer::RenderServer(Ref<Window> main_window)
+{
     environment = this;
-    
+
     window = main_window;
 
 #if defined(_WIN32)
@@ -65,7 +175,7 @@ RenderServer::RenderServer(Ref<Window> main_window)
     Package::tryWriteFile(Shader::compiler_path, data);
 #endif
 
-	createInstance();
+    createInstance();
     if (glfwCreateWindowSurface(instance, window->getWindow(), nullptr, &surface) != VK_SUCCESS)
         DBG_FAULT("glfwCreateWindowSurface failed");
     createDevice();
@@ -85,7 +195,7 @@ RenderServer::RenderServer(Ref<Window> main_window)
         { { 1, -1, 0 }, {}, {}, {}, { 1, 0 } },
         { { -1, 1, 0 }, {}, {}, {}, { 0, 1 } },
         { { 1, 1, 0 }, {}, {}, {}, { 1, 1 } }
-    }, { 0, 3, 1, 0, 2, 3 });
+        }, { 0, 3, 1, 0, 2, 3 });
     // TODO: system for associating material with render pass, and for controlling render pass execution
     // TODO: offscreen pass needs its own scene uniform buffers since viewport size is different!
     offscreen_pass = new RenderPass(framebuffer_size.first, framebuffer_size.second, { 3, true });
@@ -124,9 +234,6 @@ RenderServer::~RenderServer()
 #if defined(_WIN32)
     filesystem::remove(Shader::compiler_path);
 #endif
-
-    DBG_INFO("destroying graphics environment");
-
     vkDeviceWaitIdle(device);
 
     DBG_VERBOSE("\033[31mkilling imgui with a gun\033[0m");
@@ -149,7 +256,6 @@ RenderServer::~RenderServer()
     quad = nullptr;
     default_image = nullptr;
     default_sampler = nullptr;
-    scene = nullptr;
 
     DBG_VERBOSE("destroying descriptors");
     vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
@@ -172,153 +278,6 @@ RenderServer::~RenderServer()
     vkDestroyInstance(instance, nullptr);
 
     environment = nullptr;
-}
-
-void RenderServer::waitIdle()
-{
-    vkDeviceWaitIdle(environment->device);
-}
-
-Ref<RenderPass> RenderServer::getRenderPass() { return offscreen_pass; }
-
-RenderServer::QueueFamilies RenderServer::getQueueFamilies(VkPhysicalDevice device)
-{
-    QueueFamilies families;
-
-    uint32_t queue_family_count = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
-    vector<VkQueueFamilyProperties> queue_families(queue_family_count);
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
-    int i = 0;
-    for (const auto& queueFamily : queue_families)
-    {
-        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-            families.graphics_family = i;
-        VkBool32 queue_has_present_support = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &queue_has_present_support);
-        if (queue_has_present_support)
-            families.present_family = i;
-
-        ++i;
-    }
-
-    return families;
-}
-
-VkDevice RenderServer::getDevice()
-{
-    return environment->device;
-}
-
-pair<Ref<Texture>, Ref<Sampler>> RenderServer::getDefaultTextureSampler()
-{
-    return { default_image, default_sampler };
-}
-
-glm::vec2 RenderServer::getFramebufferSize()
-{
-    auto ext = swapchain->getExtent();
-    return glm::vec2{ ext.width, ext.height };
-}
-
-RenderServer* RenderServer::get()
-{
-    return environment;
-}
-
-void RenderServer::drawImGui()
-{
-    ImGui_ImplVulkan_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-
-    if (draw_imgui_function)
-        draw_imgui_function();
-
-    ImGui::Render();
-}
-
-void RenderServer::drawFrame(float delta_time)
-{
-    static size_t frame_index = 0;
-    // FIXME: frame index being incremented breaks everything?
-    DBG_BABBLE("drawing frame " + to_string(frame_index));
-    static auto start_time = chrono::steady_clock::now();
-    auto now_time = chrono::steady_clock::now();
-    chrono::duration<float> since_start = now_time - start_time;
-
-    window->setTitle(format("hop-engine   -   {:>4.2f}ms   -   {:>6.2f} fps", delta_time * 1000.0f, 1.0f / delta_time));
-
-    drawImGui();
-
-    vkWaitForFences(device, 1, &in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT], VK_TRUE, UINT64_MAX);
-    vkResetFences(device, 1, &in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT]);
-
-    uint32_t image_index;
-    vkAcquireNextImageKHR(device, swapchain->getSwapchain(), UINT64_MAX, image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT], VK_NULL_HANDLE, &image_index);
-    DBG_BABBLE("acquired image " + to_string(image_index));
-
-    if (scene.isValid())
-    {
-        VkExtent2D framebuffer_size = swapchain->getExtent();
-        scene->camera->pushToDescriptorSet(image_index, { framebuffer_size.width, framebuffer_size.height }, since_start.count());
-
-        for (Ref<Object>& object : scene->objects)
-        {
-            object->pushToDescriptorSet(image_index);
-            object->material->pushToDescriptorSet(image_index);
-        }
-    }
-    else
-        DBG_WARNING("no scene attached to environment");
-
-    post_process->pushToDescriptorSet(image_index);
-
-    vkResetCommandBuffer(command_buffers[image_index], 0);
-    recordRenderCommands(command_buffers[image_index], image_index);
-
-    VkSubmitInfo submit_info{ };
-    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    VkSemaphore wait_semaphores[] = { image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT] };
-    VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    submit_info.waitSemaphoreCount = 1;
-    submit_info.pWaitSemaphores = wait_semaphores;
-    submit_info.pWaitDstStageMask = wait_stages;
-    submit_info.commandBufferCount = 1;
-    submit_info.pCommandBuffers = &(command_buffers[image_index]);
-    VkSemaphore signal_semaphores[] = { render_finished_semaphores[image_index] };
-    submit_info.signalSemaphoreCount = 1;
-    submit_info.pSignalSemaphores = signal_semaphores;
-    DBG_BABBLE("submitting command buffer");
-    if (vkQueueSubmit(graphics_queue, 1, &submit_info, in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT]) != VK_SUCCESS)
-        DBG_FAULT("vkQueueSubmit failed");
-
-    VkPresentInfoKHR present_info{ };
-    present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-    present_info.waitSemaphoreCount = 1;
-    present_info.pWaitSemaphores = signal_semaphores;
-    VkSwapchainKHR swapchains[] = { swapchain->getSwapchain() };
-    present_info.swapchainCount = 1;
-    present_info.pSwapchains = swapchains;
-    present_info.pImageIndices = &image_index;
-    DBG_BABBLE("submitting present");
-    vkQueuePresentKHR(present_queue, &present_info);
-}
-
-void RenderServer::resizeSwapchain()
-{
-    vkDeviceWaitIdle(device);
-
-    auto new_size = window->getSize();
-
-    swapchain->resize(new_size.first, new_size.second);
-    offscreen_pass->resize(new_size.first, new_size.second);
-    post_process->setTexture("screen_texture", offscreen_pass->getImage(0));
-    post_process->setTexture("normal_texture", offscreen_pass->getImage(1));
-    post_process->setTexture("params_texture", offscreen_pass->getImage(2));
-    post_process->setTexture("custom_texture", offscreen_pass->getImage(3));
-    post_process->setTexture("depth_texture", offscreen_pass->getImage(4));
-    render_pass->resize();
 }
 
 void RenderServer::createInstance()
@@ -619,6 +578,88 @@ void RenderServer::initImGui()
     ImGui_ImplVulkan_Init(&init_info);
 }
 
+void RenderServer::drawFrame(float delta_time)
+{
+    static size_t frame_index = 0;
+    // FIXME: frame index being incremented breaks everything?
+    DBG_BABBLE("drawing frame " + to_string(frame_index));
+    static auto start_time = chrono::steady_clock::now();
+    auto now_time = chrono::steady_clock::now();
+    chrono::duration<float> since_start = now_time - start_time;
+
+    window->setTitle(format("hop-engine   -   {:>4.2f}ms   -   {:>6.2f} fps", delta_time * 1000.0f, 1.0f / delta_time));
+
+    vkWaitForFences(device, 1, &in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT], VK_TRUE, UINT64_MAX);
+    vkResetFences(device, 1, &in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT]);
+
+    uint32_t image_index;
+    vkAcquireNextImageKHR(device, swapchain->getSwapchain(), UINT64_MAX, image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT], VK_NULL_HANDLE, &image_index);
+    DBG_BABBLE("acquired image " + to_string(image_index));
+
+    Ref<Scene> scene = Engine::getScene();
+    if (scene.isValid())
+    {
+        VkExtent2D framebuffer_size = swapchain->getExtent();
+        scene->camera->pushToDescriptorSet(image_index, { framebuffer_size.width, framebuffer_size.height }, since_start.count());
+
+        for (Ref<Object>& object : scene->objects)
+        {
+            object->pushToDescriptorSet(image_index);
+            object->material->pushToDescriptorSet(image_index);
+        }
+    }
+    else
+        DBG_WARNING("no scene attached to environment");
+
+    post_process->pushToDescriptorSet(image_index);
+
+    vkResetCommandBuffer(command_buffers[image_index], 0);
+    recordRenderCommands(command_buffers[image_index], image_index);
+
+    VkSubmitInfo submit_info{ };
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    VkSemaphore wait_semaphores[] = { image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT] };
+    VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    submit_info.waitSemaphoreCount = 1;
+    submit_info.pWaitSemaphores = wait_semaphores;
+    submit_info.pWaitDstStageMask = wait_stages;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &(command_buffers[image_index]);
+    VkSemaphore signal_semaphores[] = { render_finished_semaphores[image_index] };
+    submit_info.signalSemaphoreCount = 1;
+    submit_info.pSignalSemaphores = signal_semaphores;
+    DBG_BABBLE("submitting command buffer");
+    if (vkQueueSubmit(graphics_queue, 1, &submit_info, in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT]) != VK_SUCCESS)
+        DBG_FAULT("vkQueueSubmit failed");
+
+    VkPresentInfoKHR present_info{ };
+    present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    present_info.waitSemaphoreCount = 1;
+    present_info.pWaitSemaphores = signal_semaphores;
+    VkSwapchainKHR swapchains[] = { swapchain->getSwapchain() };
+    present_info.swapchainCount = 1;
+    present_info.pSwapchains = swapchains;
+    present_info.pImageIndices = &image_index;
+    DBG_BABBLE("submitting present");
+    vkQueuePresentKHR(present_queue, &present_info);
+}
+
+void RenderServer::resizeSwapchain()
+{
+    vkDeviceWaitIdle(device);
+
+    auto new_size = window->getSize();
+
+    swapchain->resize(new_size.first, new_size.second);
+    offscreen_pass->resize(new_size.first, new_size.second);
+    post_process->setTexture("screen_texture", offscreen_pass->getImage(0));
+    post_process->setTexture("normal_texture", offscreen_pass->getImage(1));
+    post_process->setTexture("params_texture", offscreen_pass->getImage(2));
+    post_process->setTexture("custom_texture", offscreen_pass->getImage(3));
+    post_process->setTexture("depth_texture", offscreen_pass->getImage(4));
+    render_pass->resize();
+}
+
 void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index)
 {
     DBG_BABBLE("recording command buffer");
@@ -627,6 +668,8 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
 
     if (vkBeginCommandBuffer(command_buffer, &cmd_buffer_begin_info) != VK_SUCCESS)
         DBG_FAULT("vkBeginCommandBuffer failed");
+
+    Ref<Scene> scene = Engine::getScene();
 
     VkRenderPassBeginInfo render_pass_begin_info{ };
     render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -683,9 +726,6 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
     }
 
     vkCmdEndRenderPass(command_buffer);
-
-
-
 
     render_pass_begin_info = VkRenderPassBeginInfo{ };
     render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;

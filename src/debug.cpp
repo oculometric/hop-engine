@@ -14,15 +14,6 @@ static Debug* application_debug = nullptr;
 static ofstream file_output;
 #endif
 
-Debug::~Debug()
-{
-	Debug::flush();
-#if defined(DEBUG_LOGFILE)
-	if (file_output.is_open())
-		file_output.close();
-#endif
-}
-
 void Debug::init(DebugLevel crash_level)
 {
 	if (application_debug == nullptr)
@@ -142,5 +133,14 @@ Debug::Debug()
 	string file_name = format("{}engine_{:0>2}_{:0>2}_{:0>2}.log", DEBUG_LOGFILE, time.tm_hour, time.tm_min, time.tm_sec);
 	filesystem::create_directory(DEBUG_LOGFILE);
 	file_output.open(file_name);
+#endif
+}
+
+Debug::~Debug()
+{
+	Debug::flush();
+#if defined(DEBUG_LOGFILE)
+	if (file_output.is_open())
+		file_output.close();
 #endif
 }

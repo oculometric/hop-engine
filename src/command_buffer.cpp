@@ -10,7 +10,7 @@ CommandBuffer::CommandBuffer()
     VkCommandBufferAllocateInfo allocate_info{ };
     allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocate_info.commandPool = RenderServer::get()->getCommandPool();
+    allocate_info.commandPool = RenderServer::getCommandPool();
     allocate_info.commandBufferCount = 1;
 
     vkAllocateCommandBuffers(RenderServer::getDevice(), &allocate_info, &buffer);
@@ -27,7 +27,7 @@ CommandBuffer::~CommandBuffer()
 {
     submit();
     DBG_BABBLE("destroying command buffer " + PTR(this));
-    vkFreeCommandBuffers(RenderServer::getDevice(), RenderServer::get()->getCommandPool(), 1, &buffer);
+    vkFreeCommandBuffers(RenderServer::getDevice(), RenderServer::getCommandPool(), 1, &buffer);
 }
 
 void CommandBuffer::submit()
@@ -44,6 +44,6 @@ void CommandBuffer::submit()
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &buffer;
 
-    vkQueueSubmit(RenderServer::get()->getGraphicsQueue(), 1, &submit_info, VK_NULL_HANDLE);
-    vkQueueWaitIdle(RenderServer::get()->getGraphicsQueue());
+    vkQueueSubmit(RenderServer::getGraphicsQueue(), 1, &submit_info, VK_NULL_HANDLE);
+    vkQueueWaitIdle(RenderServer::getGraphicsQueue());
 }

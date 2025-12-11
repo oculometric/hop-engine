@@ -19,17 +19,17 @@ UniformBlock::UniformBlock(ShaderLayout layout_info)
         if (binding.type == UNIFORM)
             size += binding.buffer_size;
         else if (binding.type == TEXTURE)
-            textures_in_use[binding.binding] = RenderServer::get()->getDefaultTextureSampler();
+            textures_in_use[binding.binding] = RenderServer::getDefaultTextureSampler();
     }
 
-    uniform_buffers.resize(RenderServer::get()->getFramesInFlight());
+    uniform_buffers.resize(RenderServer::getFramesInFlight());
     for (size_t i = 0; i < uniform_buffers.size(); ++i)
         uniform_buffers[i] = new Buffer(size + 4, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     vector<VkDescriptorSetLayout> set_layouts(uniform_buffers.size(), layout_info.layout);
     VkDescriptorSetAllocateInfo descriptor_set_alloc_info{ };
     descriptor_set_alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    descriptor_set_alloc_info.descriptorPool = RenderServer::get()->getDescriptorPool();
+    descriptor_set_alloc_info.descriptorPool = RenderServer::getDescriptorPool();
     descriptor_set_alloc_info.descriptorSetCount = static_cast<uint32_t>(uniform_buffers.size());
     descriptor_set_alloc_info.pSetLayouts = set_layouts.data();
     descriptor_sets.resize(uniform_buffers.size());
@@ -47,7 +47,7 @@ UniformBlock::~UniformBlock()
 {
     DBG_VERBOSE("destroying uniform block " + PTR(this));
     RenderServer::waitIdle();
-    vkFreeDescriptorSets(RenderServer::getDevice(), RenderServer::get()->getDescriptorPool(), static_cast<uint32_t>(descriptor_sets.size()), descriptor_sets.data());
+    vkFreeDescriptorSets(RenderServer::getDevice(), RenderServer::getDescriptorPool(), static_cast<uint32_t>(descriptor_sets.size()), descriptor_sets.data());
     textures_in_use.clear();
     descriptor_sets.clear();
     uniform_buffers.clear();

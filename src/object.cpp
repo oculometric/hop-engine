@@ -22,7 +22,7 @@ Object::Object(Ref<Mesh> _mesh, Ref<Material> _material)
 	transform = Transform(this);
 	mesh = _mesh;
 	material = _material;
-	uniforms = new UniformBlock(ShaderLayout{ RenderServer::get()->getObjectDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(ObjectUniforms) }} });
+	uniforms = new UniformBlock(ShaderLayout{ RenderServer::getObjectDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(ObjectUniforms) }} });
 	
 	DBG_VERBOSE("created object");
 }
@@ -62,7 +62,7 @@ struct SceneUniforms
 
 Camera::Camera()
 {
-	uniforms = new UniformBlock(ShaderLayout{ RenderServer::get()->getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
+	uniforms = new UniformBlock(ShaderLayout{ RenderServer::getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
 	DBG_VERBOSE("created camera");
 }
 

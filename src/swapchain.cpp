@@ -16,7 +16,7 @@ Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR _surface)
     surface = _surface;
 
     // calculate actual swapchain parameters
-    const SwapchainSupportInfo support_info = Swapchain::getSupportInfo(RenderServer::get()->getPhysicalDevice(), surface);
+    const SwapchainSupportInfo support_info = Swapchain::getSupportInfo(RenderServer::getPhysicalDevice(), surface);
     VkSurfaceFormatKHR surface_format = Swapchain::getIdealSurfaceFormat(support_info);
     format = surface_format.format;
     extent = Swapchain::getIdealExtent(support_info, width, height);
@@ -34,7 +34,7 @@ Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR _surface)
     create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     // get info about which present mode we're going to use
-    RenderServer::QueueFamilies indices = RenderServer::get()->getQueueFamilies(RenderServer::get()->getPhysicalDevice());
+    RenderServer::QueueFamilies indices = RenderServer::getQueueFamilies(RenderServer::getPhysicalDevice());
     queue_families[0] = indices.graphics_family.value();
     queue_families[1] = indices.present_family.value();
     if (indices.graphics_family != indices.present_family)
@@ -75,7 +75,7 @@ void Swapchain::resize(uint32_t width, uint32_t height)
     DBG_INFO("resizing swapchain to " + to_string(width) + "x" + to_string(height));
     destroyResources();
 
-    const SwapchainSupportInfo support_info = Swapchain::getSupportInfo(RenderServer::get()->getPhysicalDevice(), surface);
+    const SwapchainSupportInfo support_info = Swapchain::getSupportInfo(RenderServer::getPhysicalDevice(), surface);
     extent = Swapchain::getIdealExtent(support_info, width, height);
     create_info.imageExtent = extent;
 

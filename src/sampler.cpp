@@ -18,7 +18,7 @@ Sampler::Sampler(VkFilter filtering_mode, VkSamplerAddressMode address_mode)
 	create_info.addressModeV = address_mode;
 	create_info.addressModeW = address_mode;
 	VkPhysicalDeviceProperties properties{ };
-	vkGetPhysicalDeviceProperties(RenderServer::get()->getPhysicalDevice(), &properties);
+	vkGetPhysicalDeviceProperties(RenderServer::getPhysicalDevice(), &properties);
 	create_info.anisotropyEnable = VK_TRUE;
 	create_info.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
 	create_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;

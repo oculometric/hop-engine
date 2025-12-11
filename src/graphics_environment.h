@@ -41,10 +41,6 @@ private:
 
 	int MAX_FRAMES_IN_FLIGHT = 2;
 
-public:
-	Ref<Scene> scene;
-	void(* draw_imgui_function)() = nullptr;
-
 private:
 	Ref<Window> window;
 
@@ -77,27 +73,30 @@ private:
 	Ref<Material> post_process;
 
 public:
+	static void init(Ref<Window> main_window);
+	static void destroy();
+
+	static void waitIdle();
+	static Ref<RenderPass> getMainRenderPass();
+	static QueueFamilies getQueueFamilies(VkPhysicalDevice device);
+	static VkPhysicalDevice getPhysicalDevice();
+	static VkDevice getDevice();
+	static VkDescriptorSetLayout getSceneDescriptorSetLayout();
+	static VkDescriptorSetLayout getObjectDescriptorSetLayout();
+	static size_t getFramesInFlight();
+	static VkDescriptorPool getDescriptorPool();
+	static VkCommandPool getCommandPool();
+	static VkQueue getGraphicsQueue();
+	static std::pair<Ref<Texture>, Ref<Sampler>> getDefaultTextureSampler();
+	static glm::vec2 getFramebufferSize();
+
+	static void draw(float delta_time);
+	static void resize();
+
+private:
 	RenderServer(Ref<Window> main_window);
 	~RenderServer();
 
-	static void waitIdle();
-	Ref<RenderPass> getRenderPass();
-	QueueFamilies getQueueFamilies(VkPhysicalDevice device);
-	inline VkPhysicalDevice getPhysicalDevice() { return physical_device; }
-	static VkDevice getDevice();
-	inline VkDescriptorSetLayout getSceneDescriptorSetLayout() { return scene_descriptor_set_layout; }
-	inline VkDescriptorSetLayout getObjectDescriptorSetLayout() { return object_descriptor_set_layout; }
-	inline size_t getFramesInFlight() { return MAX_FRAMES_IN_FLIGHT; }
-	inline VkDescriptorPool getDescriptorPool() { return descriptor_pool; }
-	inline VkCommandPool getCommandPool() { return command_pool; }
-	inline VkQueue getGraphicsQueue() { return graphics_queue; }
-	std::pair<Ref<Texture>, Ref<Sampler>> getDefaultTextureSampler();
-	glm::vec2 getFramebufferSize();
-	static RenderServer* get();
-	void drawFrame(float delta_time);
-	void resizeSwapchain();
-
-private:
 	void createInstance();
 	void createDevice();
 	void createDescriptorPoolAndSets();
@@ -105,7 +104,9 @@ private:
 	void createSyncObjects();
 	void initImGui();
 
-	void drawImGui();
+	void drawFrame(float delta_time);
+	void resizeSwapchain();
+
 	void recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index);
 };
 

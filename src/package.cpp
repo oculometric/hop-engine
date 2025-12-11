@@ -9,18 +9,21 @@ using namespace std;
 
 static Package* application_package = nullptr;
 
-Package::Package() { }
-
-Package::~Package()
-{
-	database.clear();
-}
-
 void Package::init()
 {
 	DBG_INFO("initialising package manager");
 	if (application_package == nullptr)
 		application_package = new Package();
+}
+
+void Package::destroy()
+{
+	DBG_INFO("destroying package manager");
+	if (application_package != nullptr)
+	{
+		delete application_package;
+		application_package = nullptr;
+	}
 }
 
 constexpr uint32_t SIGNATURE = 0xCA55E77E;
@@ -390,4 +393,11 @@ void Package::tryWriteFile(string path, vector<uint8_t> data)
 	}
 	file.write((char*)(data.data()), data.size());
 	file.close();
+}
+
+Package::Package() {}
+
+Package::~Package()
+{
+	database.clear();
 }

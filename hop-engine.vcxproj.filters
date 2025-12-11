@@ -16,6 +16,9 @@
     <Filter Include="Source Files\External">
       <UniqueIdentifier>{01f5b27a-50fa-4f0b-913b-bf5b27f86c46}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Resource Types">
+      <UniqueIdentifier>{8fb14e16-80ce-4c13-826e-93851900b388}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -116,49 +119,10 @@
     <ClInclude Include="src\graphics_environment.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\swapchain.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\shader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\pipeline.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\render_pass.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mesh.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\buffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\counted_ref.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\material.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\object.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\uniform_block.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\texture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\sampler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\command_buffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\hop_engine.h">
@@ -167,22 +131,10 @@
     <ClInclude Include="src\package.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\transform.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\node_view.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\debug.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\window.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\font.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\hop_forward.h">
@@ -193,6 +145,57 @@
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\buffer.h">
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\command_buffer.h">
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\font.h">
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\material.h">
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mesh.h">
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\object.h">
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\uniform_block.h">
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\texture.h">
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\node_view.h">
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render_pass.h">
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pipeline.h">
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sampler.h">
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scene.h">
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\shader.h">
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\swapchain.h">
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\transform.h">
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\window.h">
+      <Filter>Header Files\Resource Types</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

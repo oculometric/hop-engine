@@ -2,8 +2,6 @@
 
 #include <cstring>
 
-#include "debug.h"
-
 namespace HopEngine
 {
 

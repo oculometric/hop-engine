@@ -8,22 +8,20 @@ namespace HopEngine
 class Engine
 {
 private:
+	Ref<Scene> scene;
 	Ref<Window> window;
-	Ref<RenderServer> render_server;
-	void(* update_func)(Ref<Scene>, float);
+	void(* update_func)(Ref<Scene>, float) = nullptr;
+	void(* imgui_func)() = nullptr;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Engine);
 
-	// TODO: make it so that this class manages all the other singleton classes internally
-	// TODO: move static get() functions into here?
-	// TODO: make destructors for other singletons private
-	// TODO: move RenderServer scene into here
-
 	static void init();
+	static void destroy();
+
 	static void setup(void(* init_func)(Ref<Scene>), void(* update_func)(Ref<Scene>, float), void(* imgui_func)());
 	static void mainLoop();
-	static void destroy();
+	static Ref<Scene> getScene();
 
 private:
 	Engine();

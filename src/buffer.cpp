@@ -75,7 +75,7 @@ void Buffer::unmapMemory()
 uint32_t Buffer::findMemoryType(uint32_t type_bits, VkMemoryPropertyFlags properties)
 {
     VkPhysicalDeviceMemoryProperties memory_properties;
-    vkGetPhysicalDeviceMemoryProperties(RenderServer::get()->getPhysicalDevice(), &memory_properties);
+    vkGetPhysicalDeviceMemoryProperties(RenderServer::getPhysicalDevice(), &memory_properties);
 
     for (uint32_t i = 0; i < memory_properties.memoryTypeCount; i++)
     {

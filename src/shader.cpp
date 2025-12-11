@@ -71,8 +71,8 @@ Shader::Shader(string base_path, bool is_precompiled)
 	layout_create_info.setLayoutCount = 3;
 	VkDescriptorSetLayout layouts[3] =
 	{
-		RenderServer::get()->getSceneDescriptorSetLayout(),
-		RenderServer::get()->getObjectDescriptorSetLayout(),
+		RenderServer::getSceneDescriptorSetLayout(),
+		RenderServer::getObjectDescriptorSetLayout(),
 		descriptor_set_layout
 		
 	};

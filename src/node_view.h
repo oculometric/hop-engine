@@ -67,7 +67,6 @@ public:
 	};
 
 public:
-	// TODO: eliminate reference counting and make this internally managed/allocated?
 	std::vector<Ref<Node>> nodes;
 	std::vector<Link> links;
 

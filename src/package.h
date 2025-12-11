@@ -19,7 +19,7 @@ public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Package);
 
 	static void init();
-	static Package* get();
+	static void destroy();
 
 	static bool loadPackage(std::string load_path);
 	static bool storePackage(std::string store_path);

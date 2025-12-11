@@ -47,6 +47,8 @@ struct MaterialParams
     glm::vec3 padding;
 };
 
+Spline camera_spline;
+
 void initScene(Ref<Scene> scene)
 {
     Ref<Shader> shader = new Shader("res://psx", false);
@@ -67,11 +69,14 @@ void initScene(Ref<Scene> scene)
     );
     bunny->material->setTexture("albedo", new Texture("res://bunny.png"));
     bunny->material->setSampler("albedo", sampler);
-    //bunny->parent = asha; // TODO: setParent function
+    bunny->parent = asha; // TODO: setParent function
     bunny->transform.updateWorldMatrix();
     bunny->transform.setLocalPosition({ 0, -0.5f, 0.9f });
     bunny->transform.scaleLocal({ 2, 2, 2 });
     scene->objects.push_back(bunny);
+
+    camera_spline.loop = true;
+    camera_spline.points = { { 0, -1, 0.5f }, { 1, 0, 0.5f }, { 0, 1, 0.5f }, { -1, 0, 0.5f } };
 
     /*cube = new Object(
         new Mesh("res://cube.obj"), 
@@ -95,6 +100,8 @@ void initScene(Ref<Scene> scene)
 
 void updateScene(Ref<Scene> scene, float delta_time)
 {
+    static float total_time = 0;
+    total_time += delta_time;
     //asha->transform.rotateLocal({ 0, 0.01f, 0 });
     //cube->transform.rotateLocal({ 0, 0, 0.03f });
 
@@ -111,6 +118,10 @@ void updateScene(Ref<Scene> scene, float delta_time)
     if (Input::isKeyDown(GLFW_KEY_LEFT_SHIFT))
         local_move_vector *= 3.0f;
     scene->camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
+
+    scene->camera->transform.lookAt(camera_spline[total_time / 6.0f] * 1.5f,
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
 void initNodeScene(Ref<Scene> scene)
@@ -210,8 +221,8 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
         if (selected_node.isValid())
             selected_node->highlighted = false;
         glm::vec2 camera_pos = scene->camera->transform.getLocalPosition();
-        glm::vec2 mouse_screen_pos = Input::getMousePosition() - (RenderServer::get()->getFramebufferSize() * 0.5f);
-        glm::vec2 mouse_world_pos = mouse_screen_pos + (camera_pos * RenderServer::get()->getFramebufferSize() * 0.5f);
+        glm::vec2 mouse_screen_pos = Input::getMousePosition() - (RenderServer::getFramebufferSize() * 0.5f);
+        glm::vec2 mouse_world_pos = mouse_screen_pos + (camera_pos * RenderServer::getFramebufferSize() * 0.5f);
         selected_node = node_view->select(mouse_world_pos);
         if (selected_node.isValid())
             selected_node->highlighted = true;
@@ -223,7 +234,7 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
     float move_y = Input::getAxis(GLFW_KEY_UP, GLFW_KEY_DOWN);
     if (Input::isMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
     {
-        glm::vec2 mouse_world_delta = glm::vec2{ -mouse_delta.x * 512.0f, -mouse_delta.y * 512.0f } / RenderServer::get()->getFramebufferSize();
+        glm::vec2 mouse_world_delta = glm::vec2{ -mouse_delta.x * 512.0f, -mouse_delta.y * 512.0f } / RenderServer::getFramebufferSize();
         scene->camera->transform.translateLocal({ mouse_world_delta.x, mouse_world_delta.y, 0 });
     }
     else if (Input::isMouseDown(GLFW_MOUSE_BUTTON_LEFT))
