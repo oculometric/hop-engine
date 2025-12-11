@@ -10,12 +10,10 @@ void Input::init(GLFWwindow* window)
 {
 	DBG_INFO("initialising input for window " + PTR(window));
 	if (application_instance == nullptr)
-	{
 		application_instance = new Input();
-		application_instance->window = window;
-		glfwSetKeyCallback(window, Input::keyCallback);
-		glfwSetMouseButtonCallback(window, Input::mouseButtonCallback);
-	}
+	application_instance->window = window;
+	glfwSetKeyCallback(window, Input::keyCallback);
+	glfwSetMouseButtonCallback(window, Input::mouseButtonCallback);
 }
 
 bool Input::isKeyDown(int key)

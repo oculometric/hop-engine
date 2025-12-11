@@ -180,6 +180,7 @@
     <ClCompile Include="src\window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="resource.h" />
     <ClInclude Include="src\buffer.h" />
     <ClInclude Include="src\command_buffer.h" />
     <ClInclude Include="src\common.h" />
@@ -220,6 +221,9 @@
     <None Include="res\shader.vert" />
     <None Include="res\split.frag" />
     <None Include="res\split.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="hop-engine.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

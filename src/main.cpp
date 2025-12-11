@@ -10,6 +10,8 @@
 #include <chrono>
 #include <thread>
 #include <string>
+#include <Windows.h>
+#include "../resource.h"
 
 #include "hop_engine.h"
 #include "node_view.h"
@@ -252,6 +254,51 @@ void imGuiDrawFunc()
     ImGui::End();
 }
 
+struct SceneFuncSet
+{
+    std::wstring name;
+    void(*init_func)(Ref<Scene>);
+    void(*update_func)(Ref<Scene>, float);
+    void(*imgui_func)();
+};
+
+static std::vector<SceneFuncSet> scenes =
+{
+    { L"bunnygirl", initScene, updateScene, imGuiDrawFunc },
+    { L"nodes", initNodeScene, updateNodeScene, imGuiDrawFunc }
+};
+static int selected_scene = 0;
+
+INT_PTR dialogFunc(HWND handle, UINT message, WPARAM unnamedParam3, LPARAM unnamedParam4)
+{
+    HWND list = GetDlgItem(handle, IDC_LIST1);
+    switch (message)
+    {
+    case WM_INITDIALOG:
+        for (const auto& scene : scenes)
+        {
+            SendMessage(list, LB_ADDSTRING, 0, (LPARAM)scene.name.c_str());
+        }
+        return true;
+    case WM_COMMAND:
+        if (unnamedParam3 == 2)
+            exit(0);
+        if (unnamedParam3 == 1)
+            EndDialog(handle, true);
+        else
+        {
+            auto param = (unnamedParam3 & 0xFFFF0000) >> 16;
+            if (param == 1)
+                selected_scene = (int)SendMessage(list, LB_GETCURSEL, 0, 0);
+            else if (param == 2)
+                EndDialog(handle, true);
+        }
+        return true;
+    }
+
+    return false;
+}
+
 int main()
 {
 #if defined(_WIN32)
@@ -259,18 +306,24 @@ int main()
 #endif
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    Engine::init();
-    Engine::setup(initNodeScene, updateNodeScene, imGuiDrawFunc);
+    while (true)
+    {
+        DialogBox(NULL, MAKEINTRESOURCE(IDD_DIALOG1), NULL, dialogFunc);
 
-    Engine::mainLoop();
+        Engine::init();
+        const auto& scene = scenes[selected_scene];
+        Engine::setup(scene.init_func, scene.update_func, scene.imgui_func);
 
-    Engine::setup(nullptr, nullptr, nullptr);
-    selected_node = nullptr;
-    node_view = nullptr; // FIXME: seems like this destructor isnt being called properly - maybe that cast isnt a good idea....
-    cube = nullptr;
-    asha = nullptr;
+        Engine::mainLoop();
 
-    Engine::destroy();
+        Engine::setup(nullptr, nullptr, nullptr);
+        selected_node = nullptr;
+        node_view = nullptr; // FIXME: seems like this destructor isnt being called properly - maybe that cast isnt a good idea....
+        cube = nullptr;
+        asha = nullptr;
+
+        Engine::destroy();
+    }
 
     return 0;
 }
