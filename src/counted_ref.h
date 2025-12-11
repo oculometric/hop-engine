@@ -2,6 +2,8 @@
 
 #include <cstring>
 
+#include "debug.h"
+
 namespace HopEngine
 {
 
@@ -48,7 +50,7 @@ public:
 
 		payload = other.payload;
 		ref_counter = other.ref_counter;
-		
+
 		other.payload = nullptr;
 		other.ref_counter = nullptr;
 	}

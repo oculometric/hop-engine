@@ -316,9 +316,8 @@ int main()
 
         Engine::mainLoop();
 
-        Engine::setup(nullptr, nullptr, nullptr);
         selected_node = nullptr;
-        node_view = nullptr; // FIXME: seems like this destructor isnt being called properly - maybe that cast isnt a good idea....
+        node_view = nullptr;
         cube = nullptr;
         asha = nullptr;
 

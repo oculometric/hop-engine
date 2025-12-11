@@ -38,12 +38,6 @@ NodeView::NodeView() : Object(nullptr, nullptr)
     setStyle(style);
 }
 
-NodeView::~NodeView()
-{
-    style.font = nullptr;
-    material = nullptr;
-}
-
 void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec4 colour, glm::vec3 tint, bool clip_uv, int uv_index)
 {
     uint16_t v_off = static_cast<uint16_t>(vertices.size());
@@ -331,6 +325,16 @@ glm::vec3 NodeView::getBackgroundColour(glm::vec3 fg_col)
         glm::vec3{ 0.005f, 0.005f, 0.005f }
     : style.palette[0];
     return background_colour;
+}
+
+NodeView::~NodeView()
+{
+    style.font = nullptr;
+    style.node_atlas = nullptr;
+    style.link_atlas = nullptr;
+    material = nullptr;
+    nodes.clear();
+    links.clear();
 }
 
 void NodeView::setStyle(Style new_style)

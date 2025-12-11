@@ -28,7 +28,7 @@ public:
 	void pushToDescriptorSet(size_t index);
 	VkDescriptorSet getDescriptorSet(size_t index);
 
-	~Object();
+	virtual ~Object();
 };
 
 // TODO: make camera an object so it can be parented...
