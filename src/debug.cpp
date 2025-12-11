@@ -30,6 +30,9 @@ string makeANSIColour(int fgcol, int bgcol)
 
 void Debug::write(string description, DebugLevel severity)
 {
+	if (application_debug == nullptr)
+		Debug::init(Debug::DEBUG_FAULT);
+
 	if (severity < application_debug->log_level)
 		return;
 

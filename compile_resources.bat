@@ -1,2 +1,2 @@
-.\package-builder.exe res -c resources.hop
+.\package-builder\x64\Release\package-builder.exe res -c resources.hop
 pause

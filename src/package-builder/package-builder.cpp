@@ -24,6 +24,7 @@ vector<uint8_t> readFile(string path)
 
 int main(const int nargs, const char** vargs)
 {
+	HopEngine::Debug::init(HopEngine::Debug::DEBUG_FAULT);
 	if (nargs < 2)
 	{
 		cout << "usage: package-builder SOURCE_DIRECTORY [options] [OUTPUT_FILE]" << endl;
@@ -67,23 +68,15 @@ int main(const int nargs, const char** vargs)
 			for (char& c : identifier)
 				if (c == '\\')
 					c = '/';
-			cout << "storing '" << path << "' as '" << identifier << "'" << endl;
 			HopEngine::Package::storeData(identifier, readFile(path));
 			++entries;
 		}
 	}
 
-	cout << "stored " << entries << " package entries." << endl;
-	cout << "writing to version " << (compressed ? 2 : 1) << " package file to '" << output_hop << "'...";
-	bool result;
 	if (compressed)
-		result = HopEngine::Package::storeCompressedPackage(output_hop);
+		HopEngine::Package::storeCompressedPackage(output_hop);
 	else
-		result = HopEngine::Package::storePackage(output_hop);
-	if (!result)
-		cout << "failed! oh fuck!" << endl;
-	else
-		cout << "done." << endl;
+		HopEngine::Package::storePackage(output_hop);
 
 	return 0;
 }
