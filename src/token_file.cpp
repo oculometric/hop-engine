@@ -5,7 +5,7 @@
 using namespace HopEngine;
 using namespace std;
 
-vector<TokenReader::Token> TokenReader::tokenise(const string& content)
+vector<TokenReader::Token> TokenReader::tokenise(const string& content, bool trim_comments, bool trim_whitespace)
 {
     string trimmed_content;
     trimmed_content.reserve(content.size());
@@ -133,7 +133,12 @@ vector<TokenReader::Token> TokenReader::tokenise(const string& content)
                 return { };
             }
         case VECTOR:
-            if (char_type == INT || char_type == WHITESPACE || char_type == FLOAT || char_type == COMMA)
+            if (char_type == WHITESPACE)
+            {
+                append_chr = false;
+                break;
+            }
+            else if (char_type == INT || char_type == FLOAT || char_type == COMMA)
                 break;
             else if (char_type == END_VECTOR)
             {
@@ -194,7 +199,13 @@ vector<TokenReader::Token> TokenReader::tokenise(const string& content)
 
         if (reset_token)
         {
-            if (current_type != TokenType::INVALID && current_type != WHITESPACE && current_type != NEWLINE)
+            if (current_type == TokenType::INVALID
+                || (trim_whitespace && (current_type == WHITESPACE || current_type == NEWLINE))
+                || (trim_comments && (current_type == COMMENT)))
+            {
+                // ignore the token
+            }
+            else
                 tokens.push_back(finished_token);
             current_token = "";
             start_offset = offset;
@@ -260,8 +271,37 @@ size_t TokenReader::findClosingBrace(const vector<Token>& tokens, size_t open_in
 
 glm::vec4 TokenReader::deserialiseVectorToken(string str, size_t offset, const string& original_content)
 {
-    // TODO: fixme this!
-    return { 0, 0, 0, 0 };
+    vector<float> values;
+    
+    try
+    {
+        size_t next_comma = -1;
+        do
+        {
+            size_t last_comma = next_comma + 1;
+            next_comma = str.find(',', last_comma);
+            values.push_back(stof(str.substr(last_comma, next_comma - last_comma)));
+        } while (next_comma != string::npos);
+    }
+    catch (invalid_argument e)
+    {
+        reportError("invalid vector literal", offset, original_content);
+        return { 0, 0, 0, 0 };
+    }
+
+    if (values.size() > 4)
+    {
+        reportError("too many values in vector literal", offset, original_content);
+        return { 0, 0, 0, 0 };
+    }
+
+    glm::vec4 value = { 0, 0, 0, 0 };
+    for (int i = 0; i < values.size(); ++i)
+    {
+        value[i] = values[i];
+    }
+
+    return value;
 }
 
 size_t TokenReader::reportError(const string err, size_t off, const string& str)

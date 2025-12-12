@@ -146,11 +146,20 @@ private:
         }
     };
 
+    struct Statement
+    {
+        std::string keyword;
+        std::string identifier;
+        std::vector<std::pair<std::string, Token>> arguments;
+        std::vector<Statement> children;
+    };
+
 public:
     DELETE_CONSTRUCTORS(TokenReader);
 
-    static std::vector<Token> tokenise(const std::string& content);
+    static std::vector<Token> tokenise(const std::string& content, bool trim_comments = true, bool trim_whitespace = true);
     static size_t findClosingBrace(const std::vector<Token>& tokens, size_t open_index, const std::string& original_content);
+    static std::vector<Statement> extractSyntaxTree(const std::vector<Token>& tokens);
 
 private:
     static inline bool isAlphabetic(const char c)

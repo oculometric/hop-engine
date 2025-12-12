@@ -256,6 +256,9 @@
     <None Include="res\test_mat.hmat">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="res\test_scene.hscn">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="hop-engine.rc">

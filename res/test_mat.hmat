@@ -9,8 +9,8 @@ Shader(resource = @shader);
 
 Uniform(binding = 0)
 {
-    colour = [ 1.0, 1.0, 1.0, 1.0 ],
-    roughness = 0.6
+    vec4("colour", [ 1.0, 1.0, 1.0, 1.0 ]);
+    float("roughness", 0.6);
 };
 
-Texture(binding = "albedo", resource = @albedo, filter = "NEAREST");"test"
+Texture(binding = "albedo", resource = @albedo, filter = "NEAREST");

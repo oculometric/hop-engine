@@ -227,6 +227,7 @@
     <None Include="res\split.frag" />
     <None Include="res\split.vert" />
     <None Include="res\test_mat.hmat" />
+    <None Include="res\test_scene.hscn" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="hop-engine.rc" />
