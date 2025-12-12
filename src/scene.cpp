@@ -19,7 +19,7 @@ void Scene::removeObject(Ref<Object> obj)
 			break;
 		}
 	}
-	DBG_WARNING("attempt to remove object " + PTR(obj.get()) + " from scene " + PTR(this) + " but it is not present in the tree!");
+	DBG_ERROR("attempt to remove object " + PTR(obj.get()) + " from scene " + PTR(this) + " but it is not present in the tree!");
 }
 
 vector<Ref<Object>> Scene::getAllObjects()

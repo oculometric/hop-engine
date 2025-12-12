@@ -39,16 +39,22 @@ public:
 template<class T>
 inline Ref<T> Scene::insertObject(Ref<T> obj)
 {
+	if (obj.get() == root.get())
+	{
+		DBG_ERROR("attempt to insert object " + PTR(obj.get()) + " into scene " + PTR(this) + " but it is already present in the tree!");
+		return nullptr;
+	}
+
 	for (auto& test_obj : objects)
 	{
 		if (test_obj.get() == obj.get())
 		{
-			DBG_WARNING("attempt to insert object " + PTR(obj.get()) + " into scene " + PTR(this) + " but it is already present in the tree!");
+			DBG_ERROR("attempt to insert object " + PTR(obj.get()) + " into scene " + PTR(this) + " but it is already present in the tree!");
 			return obj;
 		}
 	}
 
-	auto ref = obj.cast<Object>();
+	auto ref = obj.template cast<Object>();
 	objects.push_back(ref);
 	ref->setParent(root);
 	return obj;

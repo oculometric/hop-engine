@@ -296,7 +296,7 @@ glm::vec4 TokenReader::deserialiseVectorToken(string str, size_t offset, const s
     }
 
     glm::vec4 value = { 0, 0, 0, 0 };
-    for (int i = 0; i < values.size(); ++i)
+    for (size_t i = 0; i < values.size(); ++i)
     {
         value[i] = values[i];
     }

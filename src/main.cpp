@@ -344,14 +344,14 @@ INT_PTR dialogFunc(HWND handle, UINT message, WPARAM unnamedParam3, LPARAM unnam
 
 int main()
 {
-    Engine::init();
+    // Engine::init();
 
-    auto token_data = Package::tryLoadFile("res/test_mat.hmat");
-    std::string token_str((char*)token_data.data(), token_data.size());
-    auto tokens = TokenReader::tokenise(token_str);
-    auto syntax_tree = TokenReader::extractSyntaxTree(tokens);
+    // auto token_data = Package::tryLoadFile("res/test_mat.hmat");
+    // std::string token_str((char*)token_data.data(), token_data.size());
+    // auto tokens = TokenReader::tokenise(token_str);
+    // auto syntax_tree = TokenReader::extractSyntaxTree(tokens);
 
-    return 0;
+    // return 0;
 
 
 
