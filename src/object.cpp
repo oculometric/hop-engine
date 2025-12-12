@@ -19,12 +19,23 @@ struct ObjectUniforms
 
 Object::Object(Ref<Mesh> _mesh, Ref<Material> _material)
 {
-	transform = Transform(this);
+	transform = Transform();
 	mesh = _mesh;
 	material = _material;
 	uniforms = new UniformBlock(ShaderLayout{ RenderServer::getObjectDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(ObjectUniforms) }} });
 	
 	DBG_VERBOSE("created object");
+}
+
+void Object::setParent(Ref<Object> new_parent)
+{
+	glm::mat4 world_transform = transform.getMatrix();
+	parent = new_parent;
+	if (parent.isValid())
+		transform.parent_transform = &parent->transform;
+	else
+		transform.parent_transform = nullptr;
+	transform.setMatrix(world_transform);
 }
 
 void Object::pushToDescriptorSet(size_t index)

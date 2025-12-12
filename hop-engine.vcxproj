@@ -172,6 +172,7 @@
     <ClCompile Include="src\pipeline.cpp" />
     <ClCompile Include="src\render_pass.cpp" />
     <ClCompile Include="src\sampler.cpp" />
+    <ClCompile Include="src\scene.cpp" />
     <ClCompile Include="src\shader.cpp" />
     <ClCompile Include="src\swapchain.cpp" />
     <ClCompile Include="src\texture.cpp" />

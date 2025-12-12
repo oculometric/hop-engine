@@ -55,35 +55,32 @@ void initScene(Ref<Scene> scene)
 {
     Ref<Shader> shader = new Shader("res://psx", false);
     Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-    asha = new Object(
+    asha = scene->insertObject<Object>(new Object(
         new Mesh("res://asha/asha.obj"),
         new Material(
             shader, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL
-        ));
+        )));
     asha->material->setTexture("albedo", new Texture("res://asha/asha.png"));
     asha->material->setSampler("albedo", sampler);
     asha->transform.setLocalPosition({ 0, 0, -0.9f });
-    scene->objects.push_back(asha);
 
-    Ref<Object> bunny = new Object(
+    Ref<Object> bunny = scene->insertObject<Object>(new Object(
         new Mesh("res://bunny.obj"),
         new Material(shader, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL)
-    );
+    ));
     bunny->material->setTexture("albedo", new Texture("res://bunny.png"));
     bunny->material->setSampler("albedo", sampler);
-    bunny->parent = asha; // TODO: setParent function
-    bunny->transform.updateWorldMatrix();
+    bunny->setParent(asha);
     bunny->transform.setLocalPosition({ 0, -0.5f, 0.9f });
     bunny->transform.scaleLocal({ 2, 2, 2 });
-    scene->objects.push_back(bunny);
 
-    Ref<Object> tux = new Object(
+    Ref<Object> tux = scene->insertObject<Object>(new Object(
         new Mesh("res://tux.obj"),
         new Material(shader, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL)
-    );
+    ));
     tux->material->setTexture("albedo", new Texture("res://tux.png"));
     tux->material->setSampler("albedo", sampler);
-    scene->objects.push_back(tux);
+    tux->transform.translateLocal({ 2, 0, 0 });
 
     camera_spline.loop = true;
     camera_spline.points = { { 0, -1, 0.5f }, { 1, 0, 0.5f }, { 0, 1, 0.5f }, { -1, 0, 0.5f } };
@@ -103,7 +100,7 @@ void initScene(Ref<Scene> scene)
     cube->material->setVec4Uniform("ambient_colour", ambient_colour);
     scene->objects.push_back(cube);*/
 
-    scene->camera->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
+    scene->getCamera()->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f));
 }
@@ -115,9 +112,9 @@ void updateScene(Ref<Scene> scene, float delta_time)
 
     glm::vec2 mouse_delta = Input::getMouseDelta() * 0.004f;
     if (Input::isMouseDown(GLFW_MOUSE_BUTTON_2))
-        scene->camera->transform.rotateLocal({ -mouse_delta.y, 0, -mouse_delta.x });
+        scene->getCamera()->transform.rotateLocal({-mouse_delta.y, 0, -mouse_delta.x});
 
-    glm::mat4 camera_matrix = scene->camera->transform.getMatrix();
+    glm::mat4 camera_matrix = scene->getCamera()->transform.getMatrix();
     glm::vec3 local_move_vector = glm::vec3{
         Input::getAxis('A', 'D'),
         Input::getAxis('Q', 'E'),
@@ -125,7 +122,7 @@ void updateScene(Ref<Scene> scene, float delta_time)
     } * 0.02f;
     if (Input::isKeyDown(GLFW_KEY_LEFT_SHIFT))
         local_move_vector *= 3.0f;
-    scene->camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
+    scene->getCamera()->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
 
     /*scene->camera->transform.lookAt(camera_spline[total_time / 6.0f] * 1.5f,
         glm::vec3(0.0f, 0.0f, 0.0f),
@@ -134,7 +131,7 @@ void updateScene(Ref<Scene> scene, float delta_time)
 
 void initNodeScene(Ref<Scene> scene)
 {
-    node_view = new NodeView();
+    node_view = scene->insertObject<NodeView>(new NodeView());
     node_view->nodes.push_back(new NodeView::Node
         { "Hello, World!",
         {
@@ -214,9 +211,7 @@ void initNodeScene(Ref<Scene> scene)
     };
     node_view->setStyle(style);
 
-    scene->objects.push_back(node_view.cast<Object>());
-
-    scene->camera->transform.lookAt({ 0, 0, 6 }, { 0, 0, 0 }, { 0, 1, 0 });
+    scene->getCamera()->transform.lookAt({ 0, 0, 6 }, { 0, 0, 0 }, { 0, 1, 0 });
     scene->background_colour = { 0, 0, 0 };
 }
 
@@ -228,7 +223,7 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
     {
         if (selected_node.isValid())
             selected_node->highlighted = false;
-        glm::vec2 camera_pos = scene->camera->transform.getLocalPosition();
+        glm::vec2 camera_pos = scene->getCamera()->transform.getLocalPosition();
         glm::vec2 mouse_screen_pos = Input::getMousePosition() - (RenderServer::getFramebufferSize() * 0.5f);
         glm::vec2 mouse_world_pos = mouse_screen_pos + (camera_pos * RenderServer::getFramebufferSize() * 0.5f);
         selected_node = node_view->select(mouse_world_pos);
@@ -243,7 +238,7 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
     if (Input::isMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
     {
         glm::vec2 mouse_world_delta = glm::vec2{ -mouse_delta.x * 512.0f, -mouse_delta.y * 512.0f } / RenderServer::getFramebufferSize();
-        scene->camera->transform.translateLocal({ mouse_world_delta.x, mouse_world_delta.y, 0 });
+        scene->getCamera()->transform.translateLocal({mouse_world_delta.x, mouse_world_delta.y, 0});
     }
     else if (Input::isMouseDown(GLFW_MOUSE_BUTTON_LEFT))
     {
@@ -270,11 +265,11 @@ void initMaterialScene(Ref<Scene> scene)
 {
     Ref<Shader> shader = new Shader("res://pbr", false);
     Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-    Ref<Object> obj = new Object(
+    Ref<Object> obj = scene->insertObject<Object>(new Object(
         new Mesh("res://crt_monitor.obj"),
         new Material(
             shader, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL
-        ));
+        )));
     obj->material->setTexture("albedo", new Texture("res://crt_monitor_t.png"));
     obj->material->setTexture("normal_map", new Texture("res://crt_monitor_n.png"));
     MaterialParams material;
@@ -284,9 +279,8 @@ void initMaterialScene(Ref<Scene> scene)
     obj->material->setUniform("material", &material, sizeof(MaterialParams));
     obj->material->setUniform("light", &light, sizeof(LightParams));
     obj->material->setVec4Uniform("ambient_colour", ambient_colour);
-    scene->objects.push_back(obj);
 
-    scene->camera->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
+    scene->getCamera()->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f));
 }
