@@ -488,7 +488,7 @@ void NodeView::updateMesh()
     size_t vertices_rounded_up = ((vertices.size() / v_i_buffer_rounding_size) + 2) * v_i_buffer_rounding_size;
     size_t indices_rounded_up = ((indices.size() / v_i_buffer_rounding_size) + 2) * v_i_buffer_rounding_size;
 
-    if (mesh.isValid())
+    if (mesh)
         mesh->updateData(vertices, indices, vertices_rounded_up, indices_rounded_up);
     else
         mesh = new Mesh(vertices, indices, true);

@@ -31,7 +31,7 @@ void Object::setParent(Ref<Object> new_parent)
 {
 	glm::mat4 world_transform = transform.getMatrix();
 	parent = new_parent;
-	if (parent.isValid())
+	if (parent)
 		transform.parent_transform = &parent->transform;
 	else
 		transform.parent_transform = nullptr;

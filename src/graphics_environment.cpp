@@ -597,7 +597,7 @@ void RenderServer::drawFrame(float delta_time)
     DBG_BABBLE("acquired image " + to_string(image_index));
 
     Ref<Scene> scene = Engine::getScene();
-    if (scene.isValid())
+    if (scene)
     {
         VkExtent2D framebuffer_size = swapchain->getExtent();
         scene->getCamera()->pushToDescriptorSet(image_index, {framebuffer_size.width, framebuffer_size.height}, since_start.count());
@@ -678,7 +678,7 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
     render_pass_begin_info.renderArea.offset = { 0, 0 };
     render_pass_begin_info.renderArea.extent = offscreen_pass->getExtent();
     vector<VkClearValue> clear_values = offscreen_pass->getClearValues();
-    if (scene.isValid())
+    if (scene)
         clear_values[0].color = { scene->background_colour.r, scene->background_colour.g, scene->background_colour.b };
     render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
     render_pass_begin_info.pClearValues = clear_values.data();
@@ -698,11 +698,11 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
     vkCmdSetViewport(command_buffer, 0, 1, &viewport);
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
-    if (scene.isValid())
+    if (scene)
     {
         for (Ref<Object>& object : scene->getAllObjects())
         {
-            if (!object->material.isValid() || !object->mesh.isValid())
+            if (!object->material || !object->mesh)
             {
                 DBG_WARNING("object " + PTR(object.get()) + " had invalid material or mesh");
                 continue;

@@ -22,10 +22,10 @@
 
 using namespace HopEngine;
 
-Ref<Object> asha;
-Ref<Object> cube;
-Ref<NodeView> node_view;
-Ref<NodeView::Node> selected_node;
+WeakRef<Object> asha;
+WeakRef<Object> cube;
+WeakRef<NodeView> node_view;
+WeakRef<NodeView::Node> selected_node;
 
 struct LightParams
 {
@@ -223,13 +223,13 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
 
     if (Input::wasMousePressed(GLFW_MOUSE_BUTTON_LEFT))
     {
-        if (selected_node.isValid())
+        if (selected_node)
             selected_node->highlighted = false;
         glm::vec2 camera_pos = scene->getCamera()->transform.getLocalPosition();
         glm::vec2 mouse_screen_pos = Input::getMousePosition() - (RenderServer::getFramebufferSize() * 0.5f);
         glm::vec2 mouse_world_pos = mouse_screen_pos + (camera_pos * RenderServer::getFramebufferSize() * 0.5f);
         selected_node = node_view->select(mouse_world_pos);
-        if (selected_node.isValid())
+        if (selected_node)
             selected_node->highlighted = true;
         node_view_dirty = true;
     }
@@ -251,7 +251,7 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
 
     if (move_x != 0 || move_y != 0)
     {
-        if (selected_node.isValid())
+        if (selected_node)
         {
             selected_node->position += glm::vec2{ move_x, move_y } * 0.5f;
             node_view_dirty = true;
@@ -344,14 +344,14 @@ INT_PTR dialogFunc(HWND handle, UINT message, WPARAM unnamedParam3, LPARAM unnam
 
 int main()
 {
-    Engine::init();
+   /* Engine::init();
 
     auto token_data = Package::tryLoadFile("res/test_scene.hscn");
     std::string token_str((char*)token_data.data(), token_data.size());
     auto tokens = TokenReader::tokenise(token_str);
     auto syntax_tree = TokenReader::extractSyntaxTree(tokens, token_str);
 
-    return 0;
+    return 0;*/
 
 
 
@@ -371,11 +371,6 @@ int main()
         Engine::setup(scene.init_func, scene.update_func, scene.imgui_func);
 
         Engine::mainLoop();
-
-        selected_node = nullptr;
-        node_view = nullptr;
-        cube = nullptr;
-        asha = nullptr;
 
         Engine::destroy();
 

@@ -51,7 +51,7 @@ vector<VkClearValue> RenderPass::getClearValues()
 void RenderPass::resize(uint32_t width, uint32_t height)
 {
     destroyResources();
-    if (swapchain.isValid())
+    if (swapchain)
         createResources(swapchain);
     else
         createResources(VK_FORMAT_R8G8B8A8_SRGB, width, height);

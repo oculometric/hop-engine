@@ -67,6 +67,8 @@ public:
 
 	void setUniform(std::string name, void* data, size_t size);
 
+	static Ref<Material> deserialise(std::string name);
+
 private:
 };
 
