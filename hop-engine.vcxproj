@@ -172,9 +172,11 @@
     <ClCompile Include="src\pipeline.cpp" />
     <ClCompile Include="src\render_pass.cpp" />
     <ClCompile Include="src\sampler.cpp" />
+    <ClCompile Include="src\scene.cpp" />
     <ClCompile Include="src\shader.cpp" />
     <ClCompile Include="src\swapchain.cpp" />
     <ClCompile Include="src\texture.cpp" />
+    <ClCompile Include="src\token_file.cpp" />
     <ClCompile Include="src\transform.cpp" />
     <ClCompile Include="src\uniform_block.cpp" />
     <ClCompile Include="src\window.cpp" />
@@ -204,6 +206,7 @@
     <ClInclude Include="src\render_pass.h" />
     <ClInclude Include="src\shader.h" />
     <ClInclude Include="src\swapchain.h" />
+    <ClInclude Include="src\token_file.h" />
     <ClInclude Include="src\transform.h" />
     <ClInclude Include="src\uniform_block.h" />
     <ClInclude Include="src\window.h" />
@@ -223,6 +226,8 @@
     <None Include="res\shader.vert" />
     <None Include="res\split.frag" />
     <None Include="res\split.vert" />
+    <None Include="res\test_mat.hmat" />
+    <None Include="res\test_scene.hscn" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="hop-engine.rc" />

@@ -600,9 +600,9 @@ void RenderServer::drawFrame(float delta_time)
     if (scene.isValid())
     {
         VkExtent2D framebuffer_size = swapchain->getExtent();
-        scene->camera->pushToDescriptorSet(image_index, { framebuffer_size.width, framebuffer_size.height }, since_start.count());
+        scene->getCamera()->pushToDescriptorSet(image_index, {framebuffer_size.width, framebuffer_size.height}, since_start.count());
 
-        for (Ref<Object>& object : scene->objects)
+        for (Ref<Object>& object : scene->getAllObjects())
         {
             object->pushToDescriptorSet(image_index);
             object->material->pushToDescriptorSet(image_index);
@@ -700,7 +700,7 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
 
     if (scene.isValid())
     {
-        for (Ref<Object>& object : scene->objects)
+        for (Ref<Object>& object : scene->getAllObjects())
         {
             if (!object->material.isValid() || !object->mesh.isValid())
             {
@@ -710,7 +710,7 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
 
             vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipeline());
 
-            VkDescriptorSet scene_descriptor_set = scene->camera->getDescriptorSet(image_index);
+            VkDescriptorSet scene_descriptor_set = scene->getCamera()->getDescriptorSet(image_index);
             vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipelineLayout(), 0, 1, &scene_descriptor_set, 0, nullptr);
             VkDescriptorSet material_descriptor_set = object->material->getDescriptorSet(image_index);
             vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipelineLayout(), 2, 1, &material_descriptor_set, 0, nullptr);
@@ -746,7 +746,7 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
     vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, post_process->getPipeline());
-    VkDescriptorSet scene_descriptor_set = scene->camera->getDescriptorSet(image_index);
+    VkDescriptorSet scene_descriptor_set = scene->getCamera()->getDescriptorSet(image_index);
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, post_process->getPipelineLayout(), 0, 1, &scene_descriptor_set, 0, nullptr);
     VkDescriptorSet material_descriptor_set = post_process->getDescriptorSet(image_index);
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, post_process->getPipelineLayout(), 2, 1, &material_descriptor_set, 0, nullptr);

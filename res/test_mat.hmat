@@ -1,0 +1,16 @@
+Resource(shader, "res/psx") : shader;
+Resource(image, "res/asha/asha.png") : albedo;
+
+Depth(operation = LESS, test = TRUE, write = TRUE);
+Culling(mode = NONE);
+Polygon(mode = FILL); // this is a comment
+
+Shader(resource = @shader);
+
+Uniform(binding = 0)
+{
+    vec4("colour", [ 1.0, 1.0, 1.0, 1.0 ]);
+    float("roughness", 0.6);
+};
+
+Texture(binding = "albedo", resource = @albedo, filter = "NEAREST");

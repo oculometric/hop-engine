@@ -19,6 +19,9 @@
     <Filter Include="Header Files\Resource Types">
       <UniqueIdentifier>{8fb14e16-80ce-4c13-826e-93851900b388}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Singletons">
+      <UniqueIdentifier>{2305ce4f-e3d2-46c0-873a-0c26f74e3b47}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -114,11 +117,14 @@
     <ClCompile Include="src\engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\token_file.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\graphics_environment.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -128,19 +134,7 @@
     <ClInclude Include="src\hop_engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\package.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\input.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\debug.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\hop_forward.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
@@ -161,16 +155,10 @@
     <ClInclude Include="src\mesh.h">
       <Filter>Header Files\Resource Types</Filter>
     </ClInclude>
-    <ClInclude Include="src\object.h">
-      <Filter>Header Files\Resource Types</Filter>
-    </ClInclude>
     <ClInclude Include="src\uniform_block.h">
       <Filter>Header Files\Resource Types</Filter>
     </ClInclude>
     <ClInclude Include="src\texture.h">
-      <Filter>Header Files\Resource Types</Filter>
-    </ClInclude>
-    <ClInclude Include="src\node_view.h">
       <Filter>Header Files\Resource Types</Filter>
     </ClInclude>
     <ClInclude Include="src\render_pass.h">
@@ -182,20 +170,44 @@
     <ClInclude Include="src\sampler.h">
       <Filter>Header Files\Resource Types</Filter>
     </ClInclude>
-    <ClInclude Include="src\scene.h">
-      <Filter>Header Files\Resource Types</Filter>
-    </ClInclude>
     <ClInclude Include="src\shader.h">
       <Filter>Header Files\Resource Types</Filter>
     </ClInclude>
     <ClInclude Include="src\swapchain.h">
       <Filter>Header Files\Resource Types</Filter>
     </ClInclude>
-    <ClInclude Include="src\transform.h">
-      <Filter>Header Files\Resource Types</Filter>
-    </ClInclude>
     <ClInclude Include="src\window.h">
       <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\debug.h">
+      <Filter>Header Files\Singletons</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine.h">
+      <Filter>Header Files\Singletons</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphics_environment.h">
+      <Filter>Header Files\Singletons</Filter>
+    </ClInclude>
+    <ClInclude Include="src\input.h">
+      <Filter>Header Files\Singletons</Filter>
+    </ClInclude>
+    <ClInclude Include="src\package.h">
+      <Filter>Header Files\Singletons</Filter>
+    </ClInclude>
+    <ClInclude Include="src\object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\node_view.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\transform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\token_file.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -239,6 +251,12 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="res\pbr.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\test_mat.hmat">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\test_scene.hscn">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

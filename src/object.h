@@ -12,18 +12,21 @@ namespace HopEngine
 class Object
 {
 public:
+	std::string name;
 	Transform transform;
 	Ref<Mesh> mesh;
 	Ref<Material> material;
-	Ref<Object> parent;
 
 private:
 	Ref<UniformBlock> uniforms;
+	Ref<Object> parent;
 
 public:
 	DELETE_CONSTRUCTORS(Object);
 
 	Object(Ref<Mesh> mesh, Ref<Material> material);
+
+	void setParent(Ref<Object> new_parent);
 
 	void pushToDescriptorSet(size_t index);
 	VkDescriptorSet getDescriptorSet(size_t index);
