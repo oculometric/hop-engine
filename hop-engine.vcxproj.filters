@@ -120,6 +120,9 @@
     <ClCompile Include="src\scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\token_file.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h">
@@ -203,6 +206,9 @@
     <ClInclude Include="src\scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\token_file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shader.frag">
@@ -245,6 +251,9 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="res\pbr.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\test_mat.hmat">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

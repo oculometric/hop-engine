@@ -18,6 +18,8 @@
 #include "hop_engine.h"
 #include "node_view.h"
 
+#include "token_file.h"
+
 using namespace HopEngine;
 
 Ref<Object> asha;
@@ -342,6 +344,16 @@ INT_PTR dialogFunc(HWND handle, UINT message, WPARAM unnamedParam3, LPARAM unnam
 
 int main()
 {
+    Engine::init();
+
+    auto token_data = Package::tryLoadFile("res/test_mat.hmat");
+    std::string token_str((char*)token_data.data(), token_data.size());
+    auto tokens = TokenReader::tokenise(token_str);
+
+    return 0;
+
+
+
 #if defined(_WIN32)
     system("package-builder.exe res -c resources.hop");
 #endif
@@ -353,6 +365,7 @@ int main()
         DialogBox(NULL, MAKEINTRESOURCE(IDD_DIALOG1), NULL, dialogFunc);
 #endif
         Engine::init();
+
         const auto& scene = scenes[selected_scene];
         Engine::setup(scene.init_func, scene.update_func, scene.imgui_func);
 
