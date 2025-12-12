@@ -159,7 +159,7 @@ public:
 
     static std::vector<Token> tokenise(const std::string& content, bool trim_comments = true, bool trim_whitespace = true);
     static size_t findClosingBrace(const std::vector<Token>& tokens, size_t open_index, const std::string& original_content);
-    static std::vector<Statement> extractSyntaxTree(const std::vector<Token>& tokens);
+    static std::vector<Statement> extractSyntaxTree(const std::vector<Token>& tokens, const std::string& original_content);
 
 private:
     static inline bool isAlphabetic(const char c)
@@ -217,6 +217,7 @@ private:
     }
 
     static glm::vec4 deserialiseVectorToken(std::string str, size_t offset, const std::string& original_content);
+    static std::vector<std::pair<std::string, HopEngine::TokenReader::Token>> parseArguments(std::vector<Token>::const_iterator start, std::vector<Token>::const_iterator end, std::string original_content);
 
     static size_t reportError(const std::string err, size_t off, const std::string& str);
 };

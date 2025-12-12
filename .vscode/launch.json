@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/hop-engine",
-            "args": [],
+            "preLaunchTask": "build",
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

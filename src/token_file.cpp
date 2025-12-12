@@ -88,6 +88,11 @@ vector<TokenReader::Token> TokenReader::tokenise(const string& content, bool tri
                 new_type = FLOAT;
                 break;
             }
+            else if (char_type == TEXT)
+            {
+                new_type = TEXT;
+                break;
+            }
             else if (isSeparator(char_type))
             {
                 finished_token.i_value = stoi(current_token);
@@ -269,6 +274,162 @@ size_t TokenReader::findClosingBrace(const vector<Token>& tokens, size_t open_in
     return index;
 }
 
+vector<TokenReader::Statement> TokenReader::extractSyntaxTree(const vector<Token>& tokens, const string& original_content)
+{
+    vector<Statement> statements;
+
+    auto statement_start_it = tokens.begin();
+    while (statement_start_it != tokens.end())
+    {
+        auto arg_start_it = tokens.end();
+        auto arg_end_it = tokens.end();
+        auto identifier_it = tokens.end();
+        auto children_start_it = tokens.end();
+        auto children_end_it = tokens.end();
+        auto statement_end_it = tokens.end();
+        auto current_it = statement_start_it;
+        int stage = 0;
+        while (current_it != tokens.end() && stage <= 5)
+        {
+            if (current_it->type == WHITESPACE || current_it->type == COMMENT || current_it->type == NEWLINE)
+            {
+                ++current_it;
+                continue;
+            }
+            
+            if (current_it->type == SEMICOLON)
+            {
+                statement_end_it = current_it;
+                break;
+            }
+
+            switch (stage)
+            {
+            case 0: // looking for the keyword
+                if (current_it->type == TEXT)
+                {
+                    statement_start_it = current_it;
+                    stage = 1;
+                }
+                else
+                {
+                    reportError("expected keyword", current_it->start_offset, original_content);
+                    return { };
+                }
+                break;
+            case 1: // looking for the argument list
+                if (current_it->type == OPEN_ROUND)
+                {
+                    arg_start_it = current_it;
+                    arg_end_it = tokens.begin() + findClosingBrace(tokens, current_it - tokens.begin(), original_content);
+                    current_it = arg_end_it;
+                    stage = 2;
+                }
+                else if (current_it->type == COLON)
+                {
+                    stage = 3;
+                }
+                else if (current_it->type == OPEN_CURLY)
+                {
+                    stage = 5;
+                    --current_it;
+                }
+                else
+                {
+                    reportError("unexpected token", current_it->start_offset, original_content);
+                    return { };
+                }
+                break;
+            case 2: // looking for the colon
+                if (current_it->type == COLON)
+                {
+                    stage = 3;
+                }
+                else if (current_it->type == OPEN_CURLY)
+                {
+                    stage = 4;
+                    --current_it;
+                }
+                else
+                {
+                    reportError("unexpected token", current_it->start_offset, original_content);
+                    return { };
+                }
+                break;
+            case 3: // looking for the identifier
+                if (current_it->type == TEXT)
+                {
+                    identifier_it = current_it;
+                    stage = 4;
+                }
+                else
+                {
+                    reportError("expected identifier", current_it->start_offset, original_content);
+                    return { };
+                }
+                break;
+            case 4: // looking for the child list
+                if (current_it->type == OPEN_CURLY)
+                {
+                    children_start_it = current_it;
+                    children_end_it = tokens.begin() + findClosingBrace(tokens, current_it - tokens.begin(), original_content);
+                    current_it = children_end_it;
+                    stage = 5;
+                }
+                else
+                {
+                    reportError("unexpected token", current_it->start_offset, original_content);
+                    return { };
+                }
+                break;
+            case 5: // looking for the semicolon
+                if (current_it->type == SEMICOLON)
+                {
+                    statement_end_it = current_it;
+                    break;
+                }
+                else
+                {
+                    reportError("unexpected token", current_it->start_offset, original_content);
+                    return { };
+                }
+                break;
+            default:
+                reportError("unexpected token", current_it->start_offset, original_content);
+                return { };
+                break;
+            }
+
+            ++current_it;
+        }
+
+        if (statement_start_it == tokens.end())
+            break;
+
+        Statement statement;
+        statement.keyword = statement_start_it->s_value;
+        if (arg_start_it != arg_end_it)
+            statement.arguments = parseArguments(arg_start_it, arg_end_it, original_content);
+        if (identifier_it != tokens.end())
+            statement.identifier = identifier_it->s_value;
+        if (children_start_it != children_end_it)
+        {
+            vector<Token> child_tokens;
+            child_tokens.insert(child_tokens.begin(), children_start_it + 1, children_end_it - 1);
+            statement.children = extractSyntaxTree(child_tokens, original_content);
+        }
+        statements.push_back(statement);
+
+        statement_start_it = statement_end_it;
+        if (statement_start_it == tokens.end())
+            break;
+
+        ++statement_start_it;
+    }
+
+    return statements;
+}
+
 glm::vec4 TokenReader::deserialiseVectorToken(string str, size_t offset, const string& original_content)
 {
     vector<float> values;
@@ -302,6 +463,95 @@ glm::vec4 TokenReader::deserialiseVectorToken(string str, size_t offset, const s
     }
 
     return value;
+}
+
+vector<pair<string, TokenReader::Token>> TokenReader::parseArguments(vector<Token>::const_iterator start, vector<Token>::const_iterator end, string original_content)
+{
+    auto current = start + 1;
+
+    vector<pair<string, Token>> arguments;
+    Token keyword_token(TEXT);
+    int stage = 0;
+
+    while (current != end)
+    {
+        if (current->type == WHITESPACE || current->type == COMMENT || current->type == NEWLINE)
+        {
+            ++current;
+            continue;
+        }
+
+        switch (stage)
+        {
+        case 0: // looking for the argument identifier or value
+            switch (current->type)
+            {
+            case TEXT:
+                stage = 1;
+                keyword_token = *current;
+                break;
+            case VECTOR:
+            case STRING:
+            case INT:
+            case FLOAT:
+            case IDENTIFIER:
+                keyword_token = Token(TEXT);
+                arguments.push_back({ "", *current });
+                stage = 3;
+                break;
+            default:
+                reportError("unexpected token", current->start_offset, original_content);
+                return { };
+            }
+            break;
+        case 1: // looking for the equals sign
+            if (current->type == COMMA)
+            {
+                arguments.push_back({ "", keyword_token });
+                keyword_token = Token(TEXT);
+                stage = 0;
+            }
+            else if (current->type == EQUALS)
+                stage = 2;
+            else
+            {
+                reportError("unexpected token", current->start_offset, original_content);
+                return { };
+            }
+            break;
+        case 2: // looking for the argument value
+            switch (current->type)
+            {
+            case TEXT:
+            case VECTOR:
+            case STRING:
+            case INT:
+            case FLOAT:
+            case IDENTIFIER:
+                arguments.push_back({ keyword_token.s_value, *current });
+                keyword_token = Token(TEXT);
+                stage = 3;
+                break;
+            default:
+                reportError("unexpected token", current->start_offset, original_content);
+                return { };
+            }
+            break;
+        case 3: // looking for comma
+            if (current->type == COMMA)
+                stage = 0;
+            else
+            {
+                reportError("unexpected token", current->start_offset, original_content);
+                return { };
+            }
+            break;
+        }
+
+        ++current;
+    }
+
+    return arguments;
 }
 
 size_t TokenReader::reportError(const string err, size_t off, const string& str)
