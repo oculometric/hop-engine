@@ -562,13 +562,13 @@ size_t TokenReader::reportError(const string err, size_t off, const string& str)
     {
         size_t find = str.find('\n', extract_start);
         if (find >= off) break;
-        extract_start = find + 1;
+        extract_start = (int32_t)find + 1;
     }
     size_t find = str.find('\n', off);
     if (find != string::npos)
     {
         if ((int32_t)find < extract_end)
-            extract_end = find;
+            extract_end = (int32_t)find;
     }
     string extract = str.substr(extract_start, extract_end - extract_start);
 

@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <string>
 
-#include "../src/package.h"
+#include "../package.h"
 
 using namespace std;
 

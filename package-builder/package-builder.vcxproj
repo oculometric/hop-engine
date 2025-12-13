@@ -135,8 +135,8 @@
   <ItemGroup>
     <ClCompile Include="..\src\debug.cpp" />
     <ClCompile Include="..\src\exec.cpp" />
+    <ClCompile Include="..\src\package-builder\package-builder.cpp" />
     <ClCompile Include="..\src\package.cpp" />
-    <ClCompile Include="package-builder.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

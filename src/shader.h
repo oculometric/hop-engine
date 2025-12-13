@@ -52,7 +52,6 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Shader);
 		
-	// TODO: direct string shader constructor
 	Shader(std::string base_path, bool is_precompiled);
 	~Shader();
 
