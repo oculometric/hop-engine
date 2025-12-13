@@ -11,7 +11,7 @@ namespace HopEngine
 
 class TokenReader
 {
-private:
+public:
     enum TokenType
     {
         TEXT,

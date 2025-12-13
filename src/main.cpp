@@ -344,17 +344,6 @@ INT_PTR dialogFunc(HWND handle, UINT message, WPARAM unnamedParam3, LPARAM unnam
 
 int main()
 {
-   /* Engine::init();
-
-    auto token_data = Package::tryLoadFile("res/test_scene.hscn");
-    std::string token_str((char*)token_data.data(), token_data.size());
-    auto tokens = TokenReader::tokenise(token_str);
-    auto syntax_tree = TokenReader::extractSyntaxTree(tokens, token_str);
-
-    return 0;*/
-
-
-
 #if defined(_WIN32)
     system("package-builder.exe res -c resources.hop");
 #endif
