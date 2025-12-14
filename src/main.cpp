@@ -11,6 +11,7 @@
 #include <thread>
 #include <string>
 #if defined(_WIN32)
+#undef APIENTRY
 #include <Windows.h>
 #endif
 #include "../resource.h"
