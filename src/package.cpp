@@ -59,6 +59,9 @@ struct PackageDataHeader
 
 bool Package::loadPackage(string load_path)
 {
+	if (!application_package)
+		Package::init();
+
 	DBG_INFO("loading package: " + load_path);
 	ifstream file(load_path, ios::ate | ios::binary);
 	if (!file.is_open())
@@ -131,6 +134,9 @@ bool Package::loadPackage(string load_path)
 
 bool Package::storePackage(string store_path)
 {
+	if (!application_package)
+		Package::init();
+
 	DBG_INFO("storing package: " + store_path);
 	ofstream file(store_path, ios::binary);
 	if (!file.is_open())
@@ -179,6 +185,9 @@ bool Package::storePackage(string store_path)
 
 bool Package::storeCompressedPackage(string store_path)
 {
+	if (!application_package)
+		Package::init();
+
 	DBG_INFO("storing compressed package: " + store_path);
 	if (!storePackage(store_path))
 	{
@@ -240,6 +249,9 @@ bool Package::storeCompressedPackage(string store_path)
 
 vector<uint8_t> Package::loadCompressedPackage(vector<uint8_t> data)
 {
+	if (!application_package)
+		Package::init();
+
 	PackageHeader header = *((PackageHeader*)data.data());
 	DBG_INFO("loading compressed package");
 
@@ -339,6 +351,9 @@ vector<uint8_t> Package::loadCompressedPackage(vector<uint8_t> data)
 
 vector<uint8_t> Package::loadData(string identifier)
 {
+	if (!application_package)
+		Package::init();
+
 	DBG_VERBOSE("loading '" + identifier + "'");
 	auto it = application_package->database.find(identifier);
 	if (it != application_package->database.end())
@@ -349,12 +364,18 @@ vector<uint8_t> Package::loadData(string identifier)
 
 void Package::storeData(string identifier, vector<uint8_t> data)
 {
+	if (!application_package)
+		Package::init();
+
 	DBG_VERBOSE("storing '" + identifier + "'; " + to_string(data.size()) + " bytes");
 	application_package->database[identifier] = data;
 }
 
 vector<uint8_t> Package::tryLoadFile(string path_or_identifier)
 {
+	if (!application_package)
+		Package::init();
+
 	static string res_prefix = "res://";
 	if (path_or_identifier.substr(0, res_prefix.size()) == res_prefix)
 	{
@@ -384,6 +405,9 @@ vector<uint8_t> Package::tryLoadFile(string path_or_identifier)
 
 void Package::tryWriteFile(string path, vector<uint8_t> data)
 {
+	if (!application_package)
+		Package::init();
+
 	DBG_VERBOSE("storing '" + path + "' to file; " + to_string(data.size()) + " bytes");
 	ofstream file(path, ios::binary);
 	if (!file.is_open())

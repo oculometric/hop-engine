@@ -430,6 +430,126 @@ vector<TokenReader::Statement> TokenReader::extractSyntaxTree(const vector<Token
     return statements;
 }
 
+bool TokenReader::readStatement(const Statement& statement, bool children_allowed, bool requires_identifier, const vector<TokenType> expected_args, vector<Token>& extracted_args, string error_base)
+{
+    // check if there are children
+    if (!statement.children.empty() && !children_allowed)
+    {
+        DBG_ERROR(error_base + ": children are not allowed in a '" + statement.keyword + "' statement");
+        return false;
+    }
+    // check if there is an identifier
+    if (statement.identifier.empty() && requires_identifier)
+    {
+        DBG_ERROR(error_base + ": an identifier is required in a '" + statement.keyword + "' statement");
+        return false;
+    }
+    // check if enough args are present
+    if (statement.arguments.size() > expected_args.size())
+    {
+        DBG_ERROR(error_base + ": too many arguments in '" + statement.keyword + "' statement, requires " + to_string(expected_args.size()));
+        return false;
+    }
+    if (statement.arguments.size() < expected_args.size())
+    {
+        DBG_ERROR(error_base + ": not enough arguments in '" + statement.keyword + "' statement, requires " + to_string(expected_args.size()));
+        return false;
+    }
+    // check if there are named arguments (not allowed)
+    if (!checkNamedArgs(statement, false))
+    {
+        DBG_ERROR(error_base + ": named arguments are not allowed in a '" + statement.keyword + "' statement");
+        return false;
+    }
+    // check if all the args have the expected types
+    vector<Token> extracted;
+    size_t index = 0;
+    for (const auto& arg : statement.arguments)
+    {
+        if (arg.second.type != expected_args[index])
+        {
+            DBG_ERROR(error_base + ": argument " + to_string(index) + " in a '" + statement.keyword + "' statement must be a " + typeToString(expected_args[index]));
+            return false;
+        }
+        extracted.push_back(arg.second);
+        ++index;
+    }
+
+    extracted_args = extracted;
+
+    return true;
+}
+
+bool TokenReader::readStatement(const Statement& statement, bool children_allowed, bool requires_identifier, const std::map<std::string, std::pair<TokenType, bool>> expected_args, std::map<std::string, Token>& extracted_args, std::string error_base)
+{
+    // check if there are children
+    if (!statement.children.empty() && !children_allowed)
+    {
+        DBG_ERROR(error_base + ": children are not allowed in a '" + statement.keyword + "' statement");
+        return false;
+    }
+    // check if there is an identifier
+    if (statement.identifier.empty() && requires_identifier)
+    {
+        DBG_ERROR(error_base + ": an identifier is required in a '" + statement.keyword + "' statement");
+        return false;
+    }
+    // check if there are non-named arguments (not allowed)
+    if (!checkNamedArgs(statement, true))
+    {
+        DBG_ERROR(error_base + ": only named arguments are allowed in a '" + statement.keyword + "' statement");
+        return false;
+    }
+    // for each arg, check if it is present, throw error if it is not present and required, or if it is the wrong type
+    // check for duplicate args, and unrecognised args
+    for (const auto& arg : statement.arguments)
+    {
+        auto it = expected_args.find(arg.first);
+        if (it == expected_args.end())
+        {
+            DBG_ERROR(error_base + ": invalid argument '" + arg.first + "' in '" + statement.keyword + "' statement");
+            return false;
+        }
+        auto is_found = extracted_args.find(arg.first);
+        if (is_found != extracted_args.end())
+        {
+            DBG_ERROR(error_base + ": duplicate argument '" + arg.first + "' in '" + statement.keyword + "' statement");
+            return false;
+        }
+        if (arg.second.type != it->second.first)
+        {
+            DBG_ERROR(error_base + ": argument '" + arg.first + "' has wrong type for '" + statement.keyword + "' statement, must be a " + typeToString(it->second.first));
+            return false;
+        }
+        extracted_args[arg.first] = arg.second;
+    }
+    // check if all args are present
+    for (const auto& expected : expected_args)
+    {
+        if (expected.second.second)
+        {
+            auto is_found = extracted_args.find(expected.first);
+            if (is_found == extracted_args.end())
+            {
+                DBG_ERROR(error_base + ": argument '" + expected.first + "' is required for '" + statement.keyword + "' statement, must be a " + typeToString(expected.second.first));
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+bool TokenReader::checkNamedArgs(const Statement& statement, bool named)
+{
+    for (const auto& arg : statement.arguments)
+    {
+        if (arg.first.empty() == named)
+            return false;
+    }
+    return true;
+}
+
 glm::vec4 TokenReader::deserialiseVectorToken(string str, size_t offset, const string& original_content)
 {
     vector<float> values;

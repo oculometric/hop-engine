@@ -136,180 +136,132 @@ Ref<Material> Material::deserialise(string name)
 	};
 
 	vector<TokenReader::Statement> uniforms;
+	vector<map<string, TokenReader::Token>> texture_bindings;
 
 	for (const TokenReader::Statement& statement : syntax_tree)
 	{
 		if (statement.keyword == "Resource")
 		{
-			if (statement.identifier.empty())
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid resource descriptor, resources must have an identifier");
+			vector<TokenReader::Token> args;
+			if (!TokenReader::readStatement(statement, false, true,
+				{
+					TokenReader::TEXT,
+					TokenReader::STRING
+				}, args, "error deserialising material '" + name + "'"))
 				return nullptr;
-			}
-			if (statement.arguments.size() != 2)
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid resource descriptor, not enough arguments");
-				return nullptr;
-			}
-			if (statement.arguments[0].first != "" || statement.arguments[1].first != "")
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid resource descriptor, no named arguments expected");
-				return nullptr;
-			}
-			if (statement.arguments[0].second.type != TokenReader::TEXT)
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid resource descriptor, invalid resource type");
-				return nullptr;
-			}
-			if (statement.arguments[1].second.type != TokenReader::STRING)
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid resource descriptor, expected resource path");
-				return nullptr;
-			}
-			if (statement.arguments[0].second.s_value == "shader")
-			{
-				shaders[statement.identifier] = new Shader(statement.arguments[1].second.s_value, false);
-			}
-			else if (statement.arguments[0].second.s_value == "texture")
-			{
-				textures[statement.identifier] = new Texture(statement.arguments[1].second.s_value);
-			}
+			if (args[0].s_value == "shader")
+				shaders[statement.identifier] = new Shader(args[1].s_value, false);
+			else if (args[0].s_value == "texture")
+				textures[statement.identifier] = new Texture(args[1].s_value);
 			else
 			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid resource descriptor, invalid resource type");
+				DBG_ERROR("error deserialising material '" + name + "': invalid resource type");
 				return nullptr;
 			}
 		}
 		else if (statement.keyword == "Depth")
 		{
-			for (const auto& arg : statement.arguments)
+			map<string, TokenReader::Token> args;
+			if (!TokenReader::readStatement(statement, false, false,
+				{
+					{ "operation", { TokenReader::TEXT, false } },
+					{ "test", { TokenReader::TEXT, false } },
+					{ "write", { TokenReader::TEXT, false } }
+				}, args, "error deserialising material '" + name + "'"))
+				return nullptr;
+			auto it = args.find("operation");
+			if (it != args.end())
 			{
-				if (arg.second.type != TokenReader::TEXT)
-				{
-					DBG_ERROR("error deserialising material '" + name + "': invalid depth argument");
-					return nullptr;
-				}
-
-				if (arg.first == "operation")
-				{
-					if (op_map.contains(arg.second.s_value))
-						operation = op_map[arg.second.s_value];
-					else
-					{
-						DBG_ERROR("error deserialising material '" + name + "': invalid depth operation value");
-						return nullptr;
-					}
-				}
-				else if (arg.first == "test")
-				{
-					if (bool_map.contains(arg.second.s_value))
-						test = bool_map[arg.second.s_value];
-					else
-					{
-						DBG_ERROR("error deserialising material '" + name + "': invalid depth test value");
-						return nullptr;
-					}
-				}
-				else if (arg.first == "write")
-				{
-					if (bool_map.contains(arg.second.s_value))
-						write = bool_map[arg.second.s_value];
-					else
-					{
-						DBG_ERROR("error deserialising material '" + name + "': invalid depth write value");
-						return nullptr;
-					}
-				}
+				if (op_map.contains(it->second.s_value))
+					operation = op_map[it->second.s_value];
 				else
 				{
-					DBG_ERROR("error deserialising material '" + name + "': invalid depth argument");
+					DBG_ERROR("error deserialising material '" + name + "': invalid depth operation value");
+					return nullptr;
+				}
+			}
+			it = args.find("test");
+			if (it != args.end())
+			{
+				if (bool_map.contains(it->second.s_value))
+					test = bool_map[it->second.s_value];
+				else
+				{
+					DBG_ERROR("error deserialising material '" + name + "': invalid depth test value");
+					return nullptr;
+				}
+			}
+			it = args.find("write");
+			if (it != args.end())
+			{
+				if (bool_map.contains(it->second.s_value))
+					write = bool_map[it->second.s_value];
+				else
+				{
+					DBG_ERROR("error deserialising material '" + name + "': invalid depth write value");
 					return nullptr;
 				}
 			}
 		}
 		else if (statement.keyword == "Culling")
 		{
-			for (const auto& arg : statement.arguments)
+			map<string, TokenReader::Token> args;
+			if (!TokenReader::readStatement(statement, false, false,
+				{
+					{ "mode", { TokenReader::TEXT, false } },
+				}, args, "error deserialising material '" + name + "'"))
+				return nullptr;
+			auto it = args.find("mode");
+			if (it != args.end())
 			{
-				if (arg.second.type != TokenReader::TEXT)
-				{
-					DBG_ERROR("error deserialising material '" + name + "': invalid culling argument");
-					return nullptr;
-				}
-
-				if (arg.first == "mode")
-				{
-					if (cull_map.contains(arg.second.s_value))
-						cull = cull_map[arg.second.s_value];
-					else
-					{
-						DBG_ERROR("error deserialising material '" + name + "': invalid culling mode value");
-						return nullptr;
-					}
-				}
+				if (cull_map.contains(it->second.s_value))
+					cull = cull_map[it->second.s_value];
 				else
 				{
-					DBG_ERROR("error deserialising material '" + name + "': invalid culling argument");
+					DBG_ERROR("error deserialising material '" + name + "': invalid culling mode value");
 					return nullptr;
 				}
 			}
 		}
 		else if (statement.keyword == "Polygon")
 		{
-			for (const auto& arg : statement.arguments)
+			map<string, TokenReader::Token> args;
+			if (!TokenReader::readStatement(statement, false, false,
+				{
+					{ "mode", { TokenReader::TEXT, false } },
+				}, args, "error deserialising material '" + name + "'"))
+				return nullptr;
+			auto it = args.find("mode");
+			if (it != args.end())
 			{
-				if (arg.second.type != TokenReader::TEXT)
-				{
-					DBG_ERROR("error deserialising material '" + name + "': invalid polygon argument");
-					return nullptr;
-				}
-
-				if (arg.first == "mode")
-				{
-					if (polygon_map.contains(arg.second.s_value))
-						polygon = polygon_map[arg.second.s_value];
-					else
-					{
-						DBG_ERROR("error deserialising material '" + name + "': invalid polygon mode value");
-						return nullptr;
-					}
-				}
+				if (polygon_map.contains(it->second.s_value))
+					polygon = polygon_map[it->second.s_value];
 				else
 				{
-					DBG_ERROR("error deserialising material '" + name + "': invalid polygon argument");
+					DBG_ERROR("error deserialising material '" + name + "': invalid polygon mode value");
 					return nullptr;
 				}
 			}
 		}
 		else if (statement.keyword == "Shader")
 		{
-			if (statement.arguments.empty())
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid shader descriptor, missing resource argument");
+			map<string, TokenReader::Token> args;
+			if (!TokenReader::readStatement(statement, false, false,
+				{
+					{ "resource", { TokenReader::IDENTIFIER, true } },
+				}, args, "error deserialising material '" + name + "'"))
 				return nullptr;
-			}
-			if (statement.arguments.size() > 1)
+			auto it = args.find("resource");
+			if (it != args.end())
 			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid shader descritor, too many arguments");
-				return nullptr;
+				auto shader_it = shaders.find(it->second.s_value);
+				if (shader_it == shaders.end())
+				{
+					DBG_ERROR("error deserialising material '" + name + "': invalid shader descriptor, no such resource loaded");
+					return nullptr;
+				}
+				main_shader = shader_it->second;
 			}
-			if (statement.arguments[0].first != "resource")
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid shader descriptor, missing resource argument");
-				return nullptr;
-			}
-			if (statement.arguments[0].second.type != TokenReader::IDENTIFIER)
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid shader descriptor, invalid resource value");
-				return nullptr;
-			}
-			auto shader_it = shaders.find(statement.arguments[0].second.s_value);
-			if (shader_it == shaders.end())
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid shader descriptor, no such resource loaded");
-				return nullptr;
-			}
-			main_shader = shader_it->second;
 		}
 		else if (statement.keyword == "Uniform")
 		{
@@ -325,17 +277,16 @@ Ref<Material> Material::deserialise(string name)
 		}
 		else if (statement.keyword == "Texture")
 		{
-			if (statement.arguments.size() < 2)
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor, not enough arguments");
+			map<string, TokenReader::Token> args;
+			if (!TokenReader::readStatement(statement, false, false,
+				{
+					{ "resource", { TokenReader::IDENTIFIER, true } },
+					{ "binding", { TokenReader::STRING, true } },
+					{ "filter", { TokenReader::TEXT, false } },
+					{ "address", { TokenReader::TEXT, false } },
+				}, args, "error deserialising material '" + name + "'"))
 				return nullptr;
-			}
-			if (statement.arguments.size() > 3)
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor, too many arguments");
-				return nullptr;
-			}
-			uniforms.push_back(statement);
+			texture_bindings.push_back(args);
 		}
 		else
 		{
@@ -350,82 +301,51 @@ Ref<Material> Material::deserialise(string name)
 	if (!material)
 		return nullptr;
 
-	for (const TokenReader::Statement& statement : uniforms)
+	for (const auto args : texture_bindings)
 	{
-		if (statement.keyword == "Texture")
+		auto it = args.find("resource");
+		auto texture_it = textures.find(it->second.s_value);
+		if (texture_it == textures.end())
 		{
-			string binding;
-			int result = getArgument("binding", binding, TokenReader::STRING, statement.arguments);
-			if (result == 1)
-			{
-				DBG_ERROR("error deserialising material '" + name + "': texture descriptor requires binding argument");
-				return nullptr;
-			}
-			if (result == 2)
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor binding value");
-				return nullptr;
-			}
-			string texture_ident;
-			result = getArgument("resource", texture_ident, TokenReader::IDENTIFIER, statement.arguments);
-			if (result == 1)
-			{
-				DBG_ERROR("error deserialising material '" + name + "': texture descriptor requires resource argument");
-				return nullptr;
-			}
-			if (result == 2)
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor resource value");
-				return nullptr;
-			}
-			auto texture_it = textures.find(texture_ident);
-			if (texture_it == textures.end())
-			{
-				DBG_ERROR("error deserialising material '" + name + "': texture descriptor resource is not loaded");
-				return nullptr;
-			}
-			VkFilter filter = VK_FILTER_LINEAR;
-			string filter_mode;
-			result = getArgument("filter", filter_mode, TokenReader::TEXT, statement.arguments);
-			if (result == 2)
+			DBG_ERROR("error deserialising material '" + name + "': texture descriptor resource is not loaded");
+			return nullptr;
+		}
+		string binding;
+		binding = args.find("binding")->second.s_value;
+		VkFilter filter = VK_FILTER_LINEAR;
+		it = args.find("filter");
+		if (it != args.end())
+		{
+			auto filter_it = filter_map.find(it->second.s_value);
+			if (filter_it == filter_map.end())
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor filter value");
 				return nullptr;
 			}
-			if (result == 0)
-			{
-				if (!filter_map.contains(filter_mode))
-				{
-					DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor filter value");
-					return nullptr;
-				}
-				else
-					filter = filter_map[filter_mode];
-			}
-			VkSamplerAddressMode address = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-			string address_mode;
-			result = getArgument("address", filter_mode, TokenReader::TEXT, statement.arguments);
-			if (result == 2)
+			else
+				filter = filter_it->second;
+		}
+		VkSamplerAddressMode address = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		it = args.find("address");
+		if (it != args.end())
+		{
+			auto address_it = address_map.find(it->second.s_value);
+			if (address_it == address_map.end())
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor address value");
 				return nullptr;
 			}
-			if (result == 0)
-			{
-				if (!address_map.contains(address_mode))
-				{
-					DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor address value");
-					return nullptr;
-				}
-				else
-					address = address_map[address_mode];
-			}
-
-			material->setTexture(binding, texture_it->second);
-			if (address != VK_SAMPLER_ADDRESS_MODE_REPEAT || filter != VK_FILTER_LINEAR)
-				material->setSampler(binding, new Sampler(filter, address));
+			else
+				address = address_it->second;
 		}
-		else if (statement.keyword == "vec4")
+		material->setTexture(binding, texture_it->second);
+		if (address != VK_SAMPLER_ADDRESS_MODE_REPEAT || filter != VK_FILTER_LINEAR)
+			material->setSampler(binding, new Sampler(filter, address));
+	}
+
+	for (const TokenReader::Statement& statement : uniforms)
+	{
+		if (statement.keyword == "vec4")
 		{
 			string binding;
 			if (!getAnonArgument(0, binding, TokenReader::STRING, statement.arguments))

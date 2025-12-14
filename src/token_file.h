@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <glm/vec4.hpp>
+#include <map>
 
 #include "common.h"
 
@@ -37,41 +38,25 @@ public:
 
     struct Token
     {
-        TokenType type;
+        TokenType type = VECTOR;
         union
         {
-            std::string s_value = "";
+            glm::vec4 c_value = { 0, 0, 0, 0 };
             int i_value;
             float f_value;
-            glm::vec4 c_value;
         };
+        std::string s_value = "";
         size_t start_offset = 0;
+
+        inline Token()
+        {
+            i_value = 0;
+            type = INT;
+        }
 
         inline Token(TokenType ttype)
         {
             type = ttype;
-            start_offset = 0;
-
-            switch (ttype)
-            {
-            case TEXT:
-            case STRING:
-            case IDENTIFIER:
-            case COMMENT:
-                s_value = "";
-                break;
-            case VECTOR:
-                c_value = { 0, 0, 0, 0 };
-                break;
-            case INT:
-                i_value = 0;
-                break;
-            case FLOAT:
-                f_value = 0.0f;
-                break;
-            default:
-                break;
-            }
         }
 
         inline Token(const Token& other)
@@ -130,19 +115,33 @@ public:
             return *this;
         }
 
-        inline ~Token()
+        inline Token operator=(Token&& other) noexcept
         {
+            type = other.type;
+            start_offset = other.start_offset;
+
             switch (type)
             {
+            case IDENTIFIER:
             case TEXT:
             case STRING:
-            case IDENTIFIER:
             case COMMENT:
-                s_value.~basic_string();
+                s_value = other.s_value;
+                break;
+            case VECTOR:
+                c_value = other.c_value;
+                break;
+            case INT:
+                i_value = other.i_value;
+                break;
+            case FLOAT:
+                f_value = other.f_value;
                 break;
             default:
                 break;
-            };
+            }
+
+            return *this;
         }
     };
 
@@ -160,6 +159,10 @@ public:
     static std::vector<Token> tokenise(const std::string& content, bool trim_comments = true, bool trim_whitespace = true);
     static size_t findClosingBrace(const std::vector<Token>& tokens, size_t open_index, const std::string& original_content);
     static std::vector<Statement> extractSyntaxTree(const std::vector<Token>& tokens, const std::string& original_content);
+
+    static bool readStatement(const Statement& statement, bool children_allowed, bool requires_identifier, const std::vector<TokenType> expected_args, std::vector<Token>& extracted_args, std::string error_base);
+    static bool readStatement(const Statement& statement, bool children_allowed, bool requires_identifier, const std::map<std::string, std::pair<TokenType, bool>> expected_args, std::map<std::string, Token>& extracted_args, std::string error_base);
+    static bool checkNamedArgs(const Statement& statement, bool named);
 
 private:
     static inline bool isAlphabetic(const char c)
@@ -214,6 +217,27 @@ private:
             return WHITESPACE;
         }
         return INVALID;
+    }
+
+    static inline std::string typeToString(TokenType t)
+    {
+        switch (t)
+        {
+        case TEXT:
+            return "keyword";
+        case STRING:
+            return "string";
+        case INT:
+            return "int";
+        case IDENTIFIER:
+            return "identifier";
+        case VECTOR:
+            return "vector";
+        case FLOAT:
+            return "float";
+        default:
+            return "";
+        }
     }
 
     static glm::vec4 deserialiseVectorToken(std::string str, size_t offset, const std::string& original_content);
