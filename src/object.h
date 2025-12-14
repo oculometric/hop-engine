@@ -75,7 +75,7 @@ public:
 template<class T>
 inline void Object::setParent(Ref<T> new_parent)
 {
-	// TODO: force T to be a subclass of Object
+	static_assert(std::is_convertible<T*, Object*>::value, "parent must be a HopEngine::Object subclass");
 	auto cast = new_parent.cast<Object>();
 	_setParent(cast);
 }
@@ -83,6 +83,7 @@ inline void Object::setParent(Ref<T> new_parent)
 template<class T>
 inline void Object::setParent(WeakRef<T> new_parent)
 {
+	static_assert(std::is_convertible<T*, Object*>::value, "parent must be a HopEngine::Object subclass");
 	Ref<T> strong_ref = new_parent;
 	setParent(strong_ref);
 }

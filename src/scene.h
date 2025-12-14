@@ -39,6 +39,7 @@ public:
 template<class T>
 inline Ref<T> Scene::insertObject(Ref<T> obj)
 {
+	static_assert(std::is_convertible<T*, Object*>::value, "object must be a HopEngine::Object subclass");
 	if (obj.get() == root.get())
 	{
 		DBG_ERROR("attempt to insert object " + PTR(obj.get()) + " into scene " + PTR(this) + " but it is already present in the tree!");
@@ -63,6 +64,7 @@ inline Ref<T> Scene::insertObject(Ref<T> obj)
 template<class T>
 inline Ref<T> Scene::findObject(std::string name)
 {
+	static_assert(std::is_convertible<T*, Object*>::value, "expected type must be a HopEngine::Object subclass");
 	for (auto& test_obj : objects)
 	{
 		if (test_obj->name == name)
