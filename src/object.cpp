@@ -17,17 +17,15 @@ struct ObjectUniforms
 	int id;
 };
 
-Object::Object(Ref<Mesh> _mesh, Ref<Material> _material)
+Object::Object()
 {
 	transform = Transform();
-	mesh = _mesh;
-	material = _material;
 	uniforms = new UniformBlock(ShaderLayout{ RenderServer::getObjectDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(ObjectUniforms) }} });
 	
 	DBG_VERBOSE("created object");
 }
 
-void Object::setParent(Ref<Object> new_parent)
+void Object::_setParent(Ref<Object> new_parent)
 {
 	glm::mat4 world_transform = transform.getMatrix();
 	parent = new_parent;
@@ -50,8 +48,6 @@ void Object::pushToDescriptorSet(size_t index)
 
 vector<DrawCommand> Object::getDrawCommands() const
 {
-	if (material && mesh && uniforms)
-		return { { material, mesh, uniforms } };
 	return { };
 }
 
@@ -73,10 +69,9 @@ struct SceneUniforms
 	glm::vec2 near_far;
 };
 
-Camera::Camera()
+Camera::Camera() : Object()
 {
 	uniforms = new UniformBlock(ShaderLayout{ RenderServer::getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
-	DBG_VERBOSE("created camera");
 }
 
 void Camera::pushToDescriptorSet(size_t index, glm::ivec2 viewport_size, float time)
@@ -100,7 +95,21 @@ VkDescriptorSet Camera::getDescriptorSet(size_t index)
 	return uniforms->getDescriptorSet(index);
 }
 
-Camera::~Camera()
+StaticMesh::StaticMesh(Ref<Mesh> _mesh, Ref<Material> _material) : Object()
 {
-	DBG_VERBOSE("destroying camera " + PTR(this));
+	mesh = _mesh;
+	material = _material;
+}
+
+void StaticMesh::pushToDescriptorSet(size_t index)
+{
+	Object::pushToDescriptorSet(index);
+	material->pushToDescriptorSet(index);
+}
+
+vector<DrawCommand> StaticMesh::getDrawCommands() const
+{
+	if (material && mesh && uniforms)
+		return { { material, mesh, uniforms } };
+	return { };
 }

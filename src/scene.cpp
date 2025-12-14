@@ -30,4 +30,5 @@ vector<Ref<Object>> Scene::getAllObjects()
 Scene::Scene()
 {
 	camera = new Camera();
+	root = new Object();
 }

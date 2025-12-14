@@ -605,7 +605,6 @@ void RenderServer::drawFrame(float delta_time)
         for (Ref<Object>& object : scene->getAllObjects())
         {
             object->pushToDescriptorSet(image_index);
-            object->material->pushToDescriptorSet(image_index);
         }
     }
     else

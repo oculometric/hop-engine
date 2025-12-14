@@ -15,38 +15,38 @@ class Object
 public:
 	std::string name;
 	Transform transform;
-	Ref<Mesh> mesh;
-	Ref<Material> material;
+
+protected:
+	Ref<UniformBlock> uniforms;
 
 private:
-	Ref<UniformBlock> uniforms;
 	Ref<Object> parent;
 
 public:
-	DELETE_CONSTRUCTORS(Object);
+	DELETE_NOT_ALL_CONSTRUCTORS(Object);
 
-	Object(Ref<Mesh> mesh, Ref<Material> material);
+	Object();
 
-	void setParent(Ref<Object> new_parent);
+	template <class T>
+	void setParent(Ref<T> new_parent);
+	template <class T>
+	void setParent(WeakRef<T> new_parent);
 
-	void pushToDescriptorSet(size_t index);
-
+	virtual void pushToDescriptorSet(size_t index);
 	virtual std::vector<DrawCommand> getDrawCommands() const;
 
 	virtual ~Object();
+
+private:
+	void _setParent(Ref<Object> new_parent);
 };
 
-// TODO: make camera an object so it can be parented...
-class Camera
+class Camera : public Object
 {
 public:
-	Transform transform;
 	float fov = 90.0f;
 	float near_clip = 0.01f;
 	float far_clip = 100.0f;
-
-private:
-	Ref<UniformBlock> uniforms;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Camera);
@@ -55,8 +55,36 @@ public:
 
 	void pushToDescriptorSet(size_t index, glm::ivec2 viewport_size, float time);
 	VkDescriptorSet getDescriptorSet(size_t index);
-
-	~Camera();
 };
+
+class StaticMesh : public Object
+{
+public:
+	Ref<Mesh> mesh;
+	Ref<Material> material;
+
+public:
+	DELETE_CONSTRUCTORS(StaticMesh);
+
+	StaticMesh(Ref<Mesh> mesh, Ref<Material> material);
+
+	void pushToDescriptorSet(size_t index) override;
+	std::vector<DrawCommand> getDrawCommands() const override;
+};
+
+template<class T>
+inline void Object::setParent(Ref<T> new_parent)
+{
+	// TODO: force T to be a subclass of Object
+	auto cast = new_parent.cast<Object>();
+	_setParent(cast);
+}
+
+template<class T>
+inline void Object::setParent(WeakRef<T> new_parent)
+{
+	Ref<T> strong_ref = new_parent;
+	setParent(strong_ref);
+}
 
 }

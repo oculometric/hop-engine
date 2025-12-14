@@ -10,7 +10,7 @@ using namespace std;
 constexpr float character_padding = 1.0f;
 constexpr size_t v_i_buffer_rounding_size = 256;
 
-NodeView::NodeView() : Object(nullptr, nullptr)
+NodeView::NodeView() : StaticMesh(nullptr, nullptr)
 {
     material = new Material(new Shader("res://node_shader", false), VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE);
     Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);

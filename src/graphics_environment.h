@@ -13,7 +13,6 @@ namespace HopEngine
 struct DrawCommand
 { // TODO: priority
 	// TODO: control of which render pass to draw into
-	// TODO: comparator
 	Ref<Material> material;
 	Ref<Mesh> mesh;
 	Ref<UniformBlock> uniforms;

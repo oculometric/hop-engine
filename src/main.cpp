@@ -22,8 +22,7 @@
 
 using namespace HopEngine;
 
-WeakRef<Object> asha;
-WeakRef<Object> cube;
+WeakRef<StaticMesh> asha;
 WeakRef<NodeView> node_view;
 WeakRef<NodeView::Node> selected_node;
 
@@ -57,7 +56,7 @@ void initScene(Ref<Scene> scene)
 {
     Ref<Shader> shader = new Shader("res://psx", false);
     Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-    asha = scene->insertObject<Object>(new Object(
+    asha = scene->insertObject<StaticMesh>(new StaticMesh(
         new Mesh("res://asha/asha.obj"),
         new Material(
             shader, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL
@@ -66,7 +65,7 @@ void initScene(Ref<Scene> scene)
     asha->material->setSampler("albedo", sampler);
     asha->transform.setLocalPosition({ 0, 0, -0.9f });
 
-    Ref<Object> bunny = scene->insertObject<Object>(new Object(
+    Ref<StaticMesh> bunny = scene->insertObject<StaticMesh>(new StaticMesh(
         new Mesh("res://bunny.obj"),
         new Material(shader, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL)
     ));
@@ -76,7 +75,7 @@ void initScene(Ref<Scene> scene)
     bunny->transform.setLocalPosition({ 0, -0.5f, 0.9f });
     bunny->transform.scaleLocal({ 2, 2, 2 });
 
-    Ref<Object> tux = scene->insertObject<Object>(new Object(
+    Ref<StaticMesh> tux = scene->insertObject<StaticMesh>(new StaticMesh(
         new Mesh("res://tux.obj"),
         new Material(shader, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL)
     ));
@@ -86,21 +85,6 @@ void initScene(Ref<Scene> scene)
 
     camera_spline.loop = true;
     camera_spline.points = { { 0, -1, 0.5f }, { 1, 0, 0.5f }, { 0, 1, 0.5f }, { -1, 0, 0.5f } };
-
-    /*cube = new Object(
-        new Mesh("res://cube.obj"), 
-        new Material(new Shader("res://split", false), VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL)
-    );
-    cube->material->setTexture("tex", new Texture("res://stone.png"));
-    cube->material->setTexture("tex2", new Texture("res://tex2.png"));
-    cube->transform.scaleLocal({ 0.5f, 0.5f, 0.5f });
-    MaterialParams material;
-    LightParams light;
-    glm::vec4 ambient_colour = { 0.1f, 0.1f, 0.1f, 0.0f };
-    cube->material->setUniform("material", &material, sizeof(MaterialParams));
-    cube->material->setUniform("light", &light, sizeof(LightParams));
-    cube->material->setVec4Uniform("ambient_colour", ambient_colour);
-    scene->objects.push_back(cube);*/
 
     scene->getCamera()->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
         glm::vec3(0.0f, 0.0f, 0.0f),
@@ -190,7 +174,6 @@ void initNodeScene(Ref<Scene> scene)
     node_view->links.push_back({ node_view->nodes[2], 0, node_view->nodes[1], 0, 2 });
     node_view->links.push_back({ node_view->nodes[5], 0, node_view->nodes[0], 0, 3 });
 
-    node_view->material->setBoolUniform("debug_segments", false);
     node_view->updateMesh();
 
     auto style = node_view->getStyle();
@@ -267,7 +250,7 @@ void initMaterialScene(Ref<Scene> scene)
 {
     Ref<Shader> shader = new Shader("res://pbr", false);
     Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-    Ref<Object> obj = scene->insertObject<Object>(new Object(
+    Ref<StaticMesh> obj = scene->insertObject<StaticMesh>(new StaticMesh(
         new Mesh("res://crt_monitor.obj"),
         new Material(
             shader, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL

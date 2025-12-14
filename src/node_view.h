@@ -10,7 +10,7 @@
 namespace HopEngine
 {
 
-class NodeView : public Object
+class NodeView : public StaticMesh
 {
 public:
 	enum NodeElementType
