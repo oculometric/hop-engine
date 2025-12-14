@@ -69,6 +69,11 @@ VkDescriptorSet Material::getDescriptorSet(size_t index)
 	return uniforms->getDescriptorSet(index);
 }
 
+Ref<Shader> Material::getShader() const
+{
+	return shader;
+}
+
 void Material::setTexture(uint32_t binding, Ref<Texture> texture)
 {
 	DBG_VERBOSE("material " + PTR(this) + " assigned texture " + PTR(texture.get()) + " to binding " + to_string(binding));

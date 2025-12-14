@@ -21,5 +21,6 @@ class Camera;
 class Scene;
 class Font;
 class NodeView;
+struct DrawCommand;
 
 }

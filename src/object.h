@@ -2,6 +2,7 @@
 
 #include <vulkan/vulkan.hpp>
 #include <glm/vec3.hpp>
+#include <vector>
 
 #include "common.h"
 #include "transform.h"
@@ -29,7 +30,8 @@ public:
 	void setParent(Ref<Object> new_parent);
 
 	void pushToDescriptorSet(size_t index);
-	VkDescriptorSet getDescriptorSet(size_t index);
+
+	virtual std::vector<DrawCommand> getDrawCommands() const;
 
 	virtual ~Object();
 };

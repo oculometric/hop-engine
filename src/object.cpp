@@ -48,9 +48,11 @@ void Object::pushToDescriptorSet(size_t index)
 	uniforms->pushToDescriptorSet(index);
 }
 
-VkDescriptorSet Object::getDescriptorSet(size_t index)
+vector<DrawCommand> Object::getDrawCommands() const
 {
-	return uniforms->getDescriptorSet(index);
+	if (material && mesh && uniforms)
+		return { { material, mesh, uniforms } };
+	return { };
 }
 
 Object::~Object()

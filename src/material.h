@@ -41,6 +41,7 @@ public:
 	VkPipelineLayout getPipelineLayout();
 	void pushToDescriptorSet(size_t index);
 	VkDescriptorSet getDescriptorSet(size_t index);
+	Ref<Shader> getShader() const;
 
 	void setTexture(uint32_t binding, Ref<Texture> texture);
 	void setSampler(uint32_t binding, Ref<Sampler> sampler);

@@ -700,28 +700,89 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
 
     if (scene)
     {
+        auto comparator = [](const DrawCommand a, const DrawCommand b)
+            {
+                if (a.material->getShader() < a.material->getShader())
+                    return true;
+                if (a.material < b.material)
+                    return true;
+                if (a.uniforms < b.uniforms)
+                    return true;
+                if (a.mesh < b.mesh)
+                    return true;
+                return false;
+            };
+        multiset<DrawCommand, decltype(comparator)> draw_commands;
         for (Ref<Object>& object : scene->getAllObjects())
         {
-            if (!object->material || !object->mesh)
+            auto obj_commands = object->getDrawCommands();
+            draw_commands.insert(obj_commands.begin(), obj_commands.end());
+        }
+
+        Ref<Shader> last_used_shader;
+        Ref<Material> last_used_material;
+        Ref<Mesh> last_used_mesh;
+        Ref<UniformBlock> last_used_uniforms;
+
+        VkDescriptorSet descriptor_sets[3] =
+        {
+            scene->getCamera()->getDescriptorSet(image_index),
+            VK_NULL_HANDLE,
+            VK_NULL_HANDLE
+        };
+
+        for (DrawCommand command : draw_commands)
+        {
+            if (!command.material || !command.mesh)
             {
-                DBG_WARNING("object " + PTR(object.get()) + " had invalid material or mesh");
+                DBG_WARNING("skipping draw command with invalid mesh or material");
                 continue;
             }
 
-            vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipeline());
+            bool rebind_material = false;
+            bool rebind_object = false;
+            bool rebind_pipeline = false;
+            bool rebind_layout = false;
+            bool rebind_mesh = false;
+            if (command.material->getShader() != last_used_shader)
+            {
+                last_used_shader = command.material->getShader();
+                rebind_layout = true;
+            }
+            if (command.material != last_used_material)
+            {
+                last_used_material = command.material;
+                rebind_material = true;
+                rebind_pipeline = true;
+            }
+            if (command.mesh != last_used_mesh)
+            {
+                last_used_mesh = command.mesh;
+                rebind_mesh = true;
+            }
+            if (command.uniforms != last_used_uniforms)
+            {
+                last_used_uniforms = command.uniforms;
+                rebind_object = true;
+            }
 
-            VkDescriptorSet scene_descriptor_set = scene->getCamera()->getDescriptorSet(image_index);
-            vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipelineLayout(), 0, 1, &scene_descriptor_set, 0, nullptr);
-            VkDescriptorSet material_descriptor_set = object->material->getDescriptorSet(image_index);
-            vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipelineLayout(), 2, 1, &material_descriptor_set, 0, nullptr);
-            VkDescriptorSet object_descriptor_set = object->getDescriptorSet(image_index);
-            vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object->material->getPipelineLayout(), 1, 1, &object_descriptor_set, 0, nullptr);
+            if (rebind_material || rebind_layout)
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, last_used_material->getPipeline());
+            if (rebind_layout || rebind_material)
+                descriptor_sets[2] = last_used_material->getDescriptorSet(image_index);
+            if (rebind_layout || rebind_object)
+                descriptor_sets[1] = last_used_uniforms->getDescriptorSet(image_index);
+            if (rebind_layout || rebind_material || rebind_object)
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, last_used_material->getPipelineLayout(), 0, 3, descriptor_sets, 0, nullptr);
 
-            VkBuffer vertex_buffers[] = { object->mesh->getVertexBuffer() };
-            VkDeviceSize offsets[] = { 0 };
-            vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
-            vkCmdBindIndexBuffer(command_buffer, object->mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
-            vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(object->mesh->getIndexCount()), 1, 0, 0, 0);
+            if (rebind_mesh)
+            {
+                VkBuffer vertex_buffers[] = { last_used_mesh->getVertexBuffer() };
+                VkDeviceSize offsets[] = { 0 };
+                vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
+                vkCmdBindIndexBuffer(command_buffer, last_used_mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
+            }
+            vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(last_used_mesh->getIndexCount()), 1, 0, 0, 0);
         }
     }
 
