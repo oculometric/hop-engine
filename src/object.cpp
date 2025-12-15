@@ -7,6 +7,7 @@
 #include "material.h"
 #include "uniform_block.h"
 #include "graphics_environment.h"
+#include "pbr.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -62,11 +63,13 @@ struct SceneUniforms
 	glm::mat4 view_to_clip;
 	glm::mat4 clip_to_view;
 	glm::ivec2 viewport_size;
-	float time;
-	float _pad3;
+	glm::vec2 padding;
 	glm::vec3 eye_position;
-	float _pad1;
+	float time;
 	glm::vec2 near_far;
+	glm::vec2 padding2;
+	LightParams lights[8];
+	glm::vec4 ambient_light = { 0, 0.05f, 0.05f, 0 };
 };
 
 Camera::Camera() : Object()
@@ -85,6 +88,7 @@ void Camera::pushToDescriptorSet(size_t index, glm::ivec2 viewport_size, float t
 	scene_uniforms.view_to_clip[1][1] *= -1;
 	scene_uniforms.clip_to_view = glm::inverse(scene_uniforms.view_to_clip);
 	scene_uniforms.near_far = { near_clip, far_clip };
+	scene_uniforms.lights[0] = LightParams{ { 2, 0, 2, 0 } };
 
 	memcpy(uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
 	uniforms->pushToDescriptorSet(index);

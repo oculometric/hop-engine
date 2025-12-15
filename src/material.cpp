@@ -97,11 +97,11 @@ void Material::setTexture(string name, Ref<Texture> texture)
 	auto it = texture_name_to_binding.find(name);
 	if (it != texture_name_to_binding.end())
 	{
-		DBG_VERBOSE("material " + PTR(this) + " assigned texture " + PTR(texture.get()) + " to binding " + name);
+		DBG_VERBOSE("material " + PTR(this) + " assigned texture " + PTR(texture.get()) + " to binding '" + name + '\'');
 		uniforms->setTexture(it->second, texture);
 	}
 	else
-		DBG_WARNING("material " + PTR(this) + " has no such binding " + name);
+		DBG_WARNING("material " + PTR(this) + " has no such binding '" + name + '\'');
 }
 
 void Material::setSampler(string name, Ref<Sampler> sampler)
@@ -109,11 +109,11 @@ void Material::setSampler(string name, Ref<Sampler> sampler)
 	auto it = texture_name_to_binding.find(name);
 	if (it != texture_name_to_binding.end())
 	{
-		DBG_VERBOSE("material " + PTR(this) + " assigned sampler " + PTR(sampler.get()) + " to binding " + name);
+		DBG_VERBOSE("material " + PTR(this) + " assigned sampler " + PTR(sampler.get()) + " to binding '" + name + '\'');
 		uniforms->setSampler(it->second, sampler);
 	}
 	else
-		DBG_WARNING("material " + PTR(this) + " has no such binding " + name);
+		DBG_WARNING("material " + PTR(this) + " has no such binding '" + name + '\'');
 }
 
 void Material::setUniform(string name, void* data, size_t size)
@@ -121,13 +121,13 @@ void Material::setUniform(string name, void* data, size_t size)
 	auto it = variable_name_to_binding.find(name);
 	if (it == variable_name_to_binding.end())
 	{
-		DBG_WARNING("material " + PTR(this) + " has no such uniform " + name);
+		DBG_WARNING("material " + PTR(this) + " has no such uniform '" + name + '\'');
 		return;
 	}
 	UniformVariable var = it->second;
 	if (size != var.size)
-		DBG_WARNING("material " + PTR(this) + " uniform " + name + " size mismatch (given " + to_string(size) + ", expected " + to_string(var.size) + ")");
+		DBG_WARNING("material " + PTR(this) + " uniform '" + name + "' size mismatch (given " + to_string(size) + ", expected " + to_string(var.size) + ")");
 	size_t clamped_size = min(size, var.size);
 	memcpy(((uint8_t*)uniforms->getBuffer()) + var.offset, data, clamped_size);
-	DBG_VERBOSE("material " + PTR(this) + " updated uniform " + name);
+	DBG_VERBOSE("material " + PTR(this) + " updated uniform '" + name + '\'');
 }

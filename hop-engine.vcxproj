@@ -197,6 +197,7 @@
     <ClInclude Include="src\input.h" />
     <ClInclude Include="src\node_view.h" />
     <ClInclude Include="src\package.h" />
+    <ClInclude Include="src\pbr.h" />
     <ClInclude Include="src\sampler.h" />
     <ClInclude Include="src\scene.h" />
     <ClInclude Include="src\texture.h" />
@@ -213,6 +214,9 @@
     <ClInclude Include="src\window.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="res\engine\common.glsl" />
+    <None Include="res\engine\shader.frag" />
+    <None Include="res\engine\shader.vert" />
     <None Include="res\pbr.frag" />
     <None Include="res\pbr.vert" />
     <None Include="res\psx.frag" />

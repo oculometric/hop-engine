@@ -1,12 +1,34 @@
+struct Light
+{
+    vec4 position;
+    vec4 direction;
+    vec4 colour;
+    float spot_angle;
+    int light_type;
+    bool enabled;
+    float padding;
+};
+
+struct Material
+{
+    vec4 diffuse;
+    vec4 specular;
+    vec4 ambient;
+    vec4 emissive;
+    float specular_exponent;
+};
+
 layout(set = 0, binding = 0) uniform SceneUniforms
 {
     mat4 world_to_view;
     mat4 view_to_clip;
     mat4 clip_to_view;
     ivec2 viewport_size;
-    float time;
     vec3 eye_position;
+    float time;
     vec2 near_far;
+    Light lights[8];
+    vec4 ambient_light;
 } scene;
 
 #ifndef OMIT_OBJECT_SET
@@ -46,27 +68,3 @@ layout(location = 2) out vec4 params;
 layout(location = 3) out vec4 custom;
 #endif
 #endif
-
-struct Light
-{
-    vec4 position;
-    vec4 direction;
-    vec4 colour;
-    float spot_angle;
-    float constant_attenuation;
-    float linear_attenuation;
-    float quadratic_attenuation;
-    int light_type;
-    bool enabled;
-    ivec2 padding;
-};
-
-struct Material
-{
-    vec4 diffuse;
-    vec4 specular;
-    vec4 ambient;
-    vec4 emissive;
-    float specular_exponent;
-    vec3 padding;
-};

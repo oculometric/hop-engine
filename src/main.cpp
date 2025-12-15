@@ -20,6 +20,7 @@
 #include "node_view.h"
 
 #include "token_file.h"
+#include "pbr.h"
 
 using namespace HopEngine;
 
@@ -27,30 +28,6 @@ WeakRef<StaticMesh> asha;
 WeakRef<StaticMesh> obj;
 WeakRef<NodeView> node_view;
 WeakRef<NodeView::Node> selected_node;
-
-struct LightParams
-{
-    glm::vec4 position = { 0, -3, 0, 0 };
-    glm::vec4 direction = { 0, 0, 0, 0 };
-    glm::vec4 colour = { 1, 0, 0, 0 };
-    float spot_angle = 0.0f;
-    float constant_attenuation = 0.0f;
-    float linear_attenuation = 0.0f;
-    float quadratic_attenuation = 1.0f;
-    int light_type = 0;
-    bool enabled = true;
-    glm::ivec2 padding;
-};
-
-struct MaterialParams
-{
-    glm::vec4 diffuse = { 1, 1, 1, 0 };
-    glm::vec4 specular = { 1, 1, 1, 0 };
-    glm::vec4 ambient = { 1, 1, 1, 0 };
-    glm::vec4 emissive = { 0, 0, 0, 0 };
-    float specular_exponent = 32.0f;
-    glm::vec3 padding;
-};
 
 Spline camera_spline;
 
@@ -262,12 +239,7 @@ void initMaterialScene(Ref<Scene> scene)
     //obj->material->setTexture("albedo", new Texture("res://crt_monitor_t.png"));
     obj->material->setTexture("normal_map", new Texture("res://BlackBricks_n.png"));
     MaterialParams material;
-    LightParams light;
-    light.position = { 2, 0, 2, 0 };
-    glm::vec4 ambient_colour = { 0.01f, 0.01f, 0.01f, 0.0f };
     obj->material->setUniform("material", &material, sizeof(MaterialParams));
-    obj->material->setUniform("light", &light, sizeof(LightParams));
-    obj->material->setVec4Uniform("ambient_colour", ambient_colour);
 
     scene->getCamera()->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
         glm::vec3(0.0f, 0.0f, 0.0f),

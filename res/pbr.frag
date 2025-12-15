@@ -6,13 +6,10 @@
 layout(set = 2, binding = 0) uniform MaterialInfo
 {
     Material material;
-    Light light;
-    vec4 ambient_colour;
 };
 
 layout(set = 2, binding = 1) uniform sampler2D albedo;
 layout(set = 2, binding = 2) uniform sampler2D normal_map;
-
 
 vec3 to_linear(vec3 srgb)
 {
@@ -24,7 +21,7 @@ float saturate(float f) { return clamp(f, 0, 1); }
 
 void main()
 {
-    vec3 pixel_to_light = light.position.xyz - frag.position.xyz;
+    vec3 pixel_to_light = scene.lights[0].position.xyz - frag.position.xyz;
     //vec3 pixel_to_eye = normalize(scene.eye_position - frag.position.xyz);
     //float light_distance = length(pixel_to_light);
     pixel_to_light = normalize(pixel_to_light);
@@ -36,8 +33,8 @@ void main()
     mat3 tbn = mat3(frag.tangent.xyz, bitangent, frag.normal.xyz);
     vec3 perturbed_normal = normalize(tbn * normal_val.xyz);
 
-    vec3 col = albedo_val.rgb * saturate(dot(pixel_to_light, perturbed_normal.xyz));
-    col += ambient_colour.rgb;
+    vec3 col = albedo_val.rgb * saturate(dot(pixel_to_light, perturbed_normal.xyz)) * material.diffuse.rgb;
+    col += scene.ambient_light.rgb;
 
     //if (light.light_type == 0)
     //{
