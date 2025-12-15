@@ -12,7 +12,7 @@ constexpr size_t v_i_buffer_rounding_size = 256;
 
 NodeView::NodeView() : StaticMesh(nullptr, nullptr)
 {
-    material = new Material(new Shader("res://node_shader", false), VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE);
+    material = new Material(new Shader("res://engine/node_shader", false), VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE);
     Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
     material->setSampler("node_atlas", sampler);
     material->setSampler("text_atlas", sampler);
@@ -20,9 +20,9 @@ NodeView::NodeView() : StaticMesh(nullptr, nullptr)
     material->setIntUniform("background_mode", 0);
     material->setFloatUniform("background_factor", style.background_factor);
 
-    style.node_atlas = new Texture("res://newnodes.png");
-    style.link_atlas = new Texture("res://nodelinks.png");
-    style.font = new Font("res://font.bmp", glm::ivec2{ 10, 18 });
+    style.node_atlas = new Texture("res://engine/newnodes.png");
+    style.link_atlas = new Texture("res://engine/nodelinks.png");
+    style.font = new Font("res://engine/font.bmp", glm::ivec2{ 10, 18 });
 
     style.palette =
     {

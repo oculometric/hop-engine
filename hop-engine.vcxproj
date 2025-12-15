@@ -213,20 +213,10 @@
     <ClInclude Include="src\window.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\common.glsl" />
-    <None Include="res\dither.glsl" />
-    <None Include="res\node_shader.frag" />
-    <None Include="res\node_shader.vert" />
     <None Include="res\pbr.frag" />
     <None Include="res\pbr.vert" />
-    <None Include="res\post_process.frag" />
-    <None Include="res\post_process.vert" />
     <None Include="res\psx.frag" />
     <None Include="res\psx.vert" />
-    <None Include="res\shader.frag" />
-    <None Include="res\shader.vert" />
-    <None Include="res\split.frag" />
-    <None Include="res\split.vert" />
     <None Include="res\test_mat.hmat" />
     <None Include="res\test_scene.hscn" />
   </ItemGroup>

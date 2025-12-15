@@ -1,7 +1,7 @@
 #version 450
 
 #define FRAGMENT
-#include "common.glsl"
+#include "engine/common.glsl"
 
 layout(set = 2, binding = 0) uniform MaterialInfo
 {
@@ -31,6 +31,7 @@ void main()
 
     vec4 albedo_val = texture(albedo, frag.uv);
     vec3 normal_val = normalize((to_linear(texture(normal_map, frag.uv).rgb) * 2.0f - 1.0f));
+    normal_val.y *= -1;
     vec3 bitangent = normalize(cross(frag.tangent.xyz, frag.normal.xyz));
     mat3 tbn = mat3(frag.tangent.xyz, bitangent, frag.normal.xyz);
     vec3 perturbed_normal = normalize(tbn * normal_val.xyz);

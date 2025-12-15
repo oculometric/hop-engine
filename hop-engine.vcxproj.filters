@@ -214,40 +214,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\shader.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\shader.vert">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="res\psx.vert">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="res\common.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="res\psx.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\split.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\split.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\node_shader.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\node_shader.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\post_process.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\post_process.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\dither.glsl">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="res\pbr.frag">

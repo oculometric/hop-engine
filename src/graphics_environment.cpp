@@ -187,7 +187,7 @@ RenderServer::RenderServer(Ref<Window> main_window)
     window = main_window;
 
 #if defined(_WIN32)
-    auto data = Package::tryLoadFile("res://glslc.exe");
+    auto data = Package::tryLoadFile("res://engine/glslc.exe");
     Package::tryWriteFile(Shader::compiler_path, data);
 #endif
 
@@ -215,7 +215,7 @@ RenderServer::RenderServer(Ref<Window> main_window)
     // TODO: system for associating material with render pass, and for controlling render pass execution
     // TODO: offscreen pass needs its own scene uniform buffers since viewport size is different!
     offscreen_pass = new RenderPass(framebuffer_size.first, framebuffer_size.second, { 3, true });
-    post_process = new Material(new Shader("res://post_process", false), VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE, VK_COMPARE_OP_ALWAYS, render_pass);
+    post_process = new Material(new Shader("res://engine/post_process", false), VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE, VK_COMPARE_OP_ALWAYS, render_pass);
     Ref<Sampler> clamped_sampler = new Sampler(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
     post_process->setSampler("screen_texture", clamped_sampler);
     post_process->setSampler("normal_texture", clamped_sampler);
@@ -240,8 +240,8 @@ RenderServer::RenderServer(Ref<Window> main_window)
     post_process->setUniform("samples", samples, sizeof(glm::vec4) * 64);
     createSyncObjects();
     
-    gizmo_material = new Material(new Shader("res://gizmo", false), VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS, render_pass);
-    axes_gizmo = new Mesh("res://axes_gizmo.obj");
+    gizmo_material = new Material(new Shader("res://engine/gizmo", false), VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS, render_pass);
+    axes_gizmo = new Mesh("res://engine/axes_gizmo.obj");
 
     initImGui();
 
@@ -604,7 +604,7 @@ void RenderServer::initImGui()
 void RenderServer::drawFrame(float delta_time)
 {
     static size_t frame_index = 0;
-    // FIXME: frame index being incremented breaks everything?
+    ++frame_index;
     DBG_BABBLE("drawing frame " + to_string(frame_index));
     static auto start_time = chrono::steady_clock::now();
     auto now_time = chrono::steady_clock::now();

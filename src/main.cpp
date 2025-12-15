@@ -24,6 +24,7 @@
 using namespace HopEngine;
 
 WeakRef<StaticMesh> asha;
+WeakRef<StaticMesh> obj;
 WeakRef<NodeView> node_view;
 WeakRef<NodeView::Node> selected_node;
 
@@ -111,6 +112,8 @@ void updateScene(Ref<Scene> scene, float delta_time)
         local_move_vector *= 3.0f;
     scene->getCamera()->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
 
+    if (obj)
+        obj->transform.rotateLocal({ 0, 0, 0.5f * delta_time });
     /*scene->camera->transform.lookAt(camera_spline[total_time / 6.0f] * 1.5f,
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f));*/
@@ -251,16 +254,16 @@ void initMaterialScene(Ref<Scene> scene)
 {
     Ref<Shader> shader = new Shader("res://pbr", false);
     Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-    Ref<StaticMesh> obj = scene->insertObject<StaticMesh>(new StaticMesh(
-        new Mesh("res://crt_monitor.obj"),
+    obj = scene->insertObject<StaticMesh>(new StaticMesh(
+        new Mesh("res://cube.obj"),
         new Material(
             shader, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL
         )));
-    obj->material->setTexture("albedo", new Texture("res://crt_monitor_t.png"));
-    obj->material->setTexture("normal_map", new Texture("res://crt_monitor_n.png"));
+    //obj->material->setTexture("albedo", new Texture("res://crt_monitor_t.png"));
+    obj->material->setTexture("normal_map", new Texture("res://BlackBricks_n.png"));
     MaterialParams material;
     LightParams light;
-    light.position = { 1, 1, 1, 0 };
+    light.position = { 2, 0, 2, 0 };
     glm::vec4 ambient_colour = { 0.01f, 0.01f, 0.01f, 0.0f };
     obj->material->setUniform("material", &material, sizeof(MaterialParams));
     obj->material->setUniform("light", &light, sizeof(LightParams));
