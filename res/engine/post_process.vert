@@ -5,10 +5,10 @@
 
 void main()
 {
-    frag.position = vec4(position.xyz, 1);
-    frag.colour = colour;
-    frag.normal = normal;
-    frag.tangent = tangent;
-    frag.uv = uv;
+    frag.position = vec4(in_position.xyz, 1);
+    frag.colour = in_colour;
+    frag.normal = in_normal;
+    frag.tangent = in_tangent;
+    frag.uv = in_uv;
     gl_Position = frag.position;
 }

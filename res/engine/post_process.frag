@@ -5,7 +5,7 @@
 #define OMIT_OBJECT_SET
 #include "common.glsl"
 
-layout(location = 0) out vec4 colour;
+layout(location = 0) out vec4 out_colour;
 
 layout(set = 2, binding = 0) uniform sampler2D screen_texture;
 layout(set = 2, binding = 1) uniform sampler2D normal_texture;
@@ -78,7 +78,7 @@ float calculateOcclusion()
 
 void main()
 {
-    colour = vec4(texture(screen_texture, frag.uv).rgb, 1);
+    out_colour = vec4(texture(screen_texture, frag.uv).rgb, 1);
     //vec3 col = texture(screen_texture, frag.uv).rgb;
     //colour = vec4(col * calculateOcclusion(), 1);
 }

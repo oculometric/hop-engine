@@ -10,7 +10,7 @@ void main()
     vec4 col = texture(albedo, frag.uv);
     if (col.a < 0.5f)
         discard;
-    colour = vec4(col.rgb, 1);
-    normal = vec4(frag.normal.xyz, 0);
-    custom = vec4(frag.position.xyz, 0);
+    out_colour = vec4(col.rgb, 1);
+    out_normal = vec4(frag.normal.xyz, 0);
+    out_custom = vec4(frag.position.xyz, 0);
 }

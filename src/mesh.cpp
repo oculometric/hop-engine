@@ -244,7 +244,7 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
             }
             else
             {
-                tmp_cl.push_back({ 0, 0, 0 });
+                tmp_cl.push_back({ 1, 1, 1 });
             }
         }
         else if (tmps == "vn")

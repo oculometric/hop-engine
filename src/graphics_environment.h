@@ -81,6 +81,7 @@ private:
 
 	Ref<Texture> default_image;
 	Ref<Sampler> default_sampler;
+	Ref<Material> default_material;
 
 	Ref<Material> gizmo_material;
 	Ref<Mesh> axes_gizmo;
@@ -109,6 +110,8 @@ public:
 	static std::pair<Ref<Texture>, Ref<Sampler>> getDefaultTextureSampler();
 	static Ref<Material> getGizmoMaterial();
 	static Ref<Mesh> getGizmoMesh(int type);
+	static Ref<Material> getDefaultMaterial();
+	static Ref<Mesh> getQuad();
 
 	static void draw(float delta_time);
 	static void resize();

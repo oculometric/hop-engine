@@ -13,11 +13,13 @@ class Scene
 {
 public:
 	glm::vec3 background_colour = { 0.004f, 0.509f, 0.506f };
+	glm::vec3 ambient_colour = { 0.01f, 0.01f, 0.01f };
 
 private:
 	std::vector<Ref<Object>> objects;
 	Ref<Camera> camera;
 	Ref<Object> root;
+	std::vector<Ref<Light>> lights;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Scene);
@@ -31,6 +33,7 @@ public:
 	template <class T>
 	inline Ref<T> findObject(std::string name) const;
 	std::vector<Ref<Object>> getAllObjects() const;
+	std::vector<LightParams> getLightParams() const;
 
 	Scene();
 	inline ~Scene() { };
@@ -57,7 +60,12 @@ inline Ref<T> Scene::insertObject(Ref<T> obj)
 
 	auto ref = obj.template cast<Object>();
 	objects.push_back(ref);
-	ref->setParent(root);
+	if (!ref->getParent()) ref->setParent(root);
+	if (std::is_convertible<T*, Light*>::value)
+	{
+		auto ref2 = obj.template cast<Light>();
+		lights.push_back(ref2);
+	}
 	return obj;
 }
 

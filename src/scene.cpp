@@ -27,6 +27,22 @@ vector<Ref<Object>> Scene::getAllObjects() const
 	return objects;
 }
 
+vector<LightParams> Scene::getLightParams() const
+{
+	vector<LightParams> lights_params(8);
+	
+	size_t index = 0;
+	for (const auto& light : lights)
+	{
+		lights_params[index] = light->getParamsStructure();
+		++index;
+		if (index >= 8)
+			break;
+	}
+
+	return lights_params;
+}
+
 Scene::Scene()
 {
 	camera = new Camera();

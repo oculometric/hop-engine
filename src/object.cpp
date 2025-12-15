@@ -37,6 +37,11 @@ void Object::_setParent(Ref<Object> new_parent)
 	transform.setMatrix(world_transform);
 }
 
+Ref<Object> Object::getParent()
+{
+	return parent;
+}
+
 void Object::pushToDescriptorSet(size_t index)
 {
 	ObjectUniforms* object_uniforms = (ObjectUniforms*)(uniforms->getBuffer());
@@ -62,12 +67,12 @@ struct SceneUniforms
 	glm::mat4 world_to_view;
 	glm::mat4 view_to_clip;
 	glm::mat4 clip_to_view;
-	glm::ivec2 viewport_size;
-	glm::vec2 padding;
-	glm::vec3 eye_position;
-	float time;
-	glm::vec2 near_far;
-	glm::vec2 padding2;
+	glm::ivec2 viewport_size = { 0, 0 };
+	glm::vec2 padding = { 0, 0 };
+	glm::vec3 eye_position = { 0, 0, 0 };
+	float time = 0;
+	glm::vec2 near_far = { 0, 0 };
+	glm::vec2 padding2 = { 0, 0 };
 	LightParams lights[8];
 	glm::vec4 ambient_light = { 0, 0.05f, 0.05f, 0 };
 };
@@ -77,7 +82,7 @@ Camera::Camera() : Object()
 	uniforms = new UniformBlock(ShaderLayout{ RenderServer::getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
 }
 
-void Camera::pushToDescriptorSet(size_t index, glm::ivec2 viewport_size, float time)
+void Camera::pushToDescriptorSet(size_t index, glm::ivec2 viewport_size, float time, vector<LightParams> lights, glm::vec4 ambient)
 {
 	SceneUniforms scene_uniforms;
 	scene_uniforms.time = time;
@@ -88,7 +93,8 @@ void Camera::pushToDescriptorSet(size_t index, glm::ivec2 viewport_size, float t
 	scene_uniforms.view_to_clip[1][1] *= -1;
 	scene_uniforms.clip_to_view = glm::inverse(scene_uniforms.view_to_clip);
 	scene_uniforms.near_far = { near_clip, far_clip };
-	scene_uniforms.lights[0] = LightParams{ { 2, 0, 2, 0 } };
+	memcpy(scene_uniforms.lights, lights.data(), lights.size() * sizeof(LightParams));
+	scene_uniforms.ambient_light = ambient;
 
 	memcpy(uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
 	uniforms->pushToDescriptorSet(index);
@@ -118,4 +124,21 @@ vector<DrawCommand> StaticMesh::getDrawCommands() const
 		commands.push_back({ material, mesh, uniforms });
 	commands.push_back(Object::getDrawCommands()[0]);
 	return commands;
+}
+
+Light::Light(LightType _type)
+{
+	type = _type;
+}
+
+LightParams Light::getParamsStructure() const
+{
+	LightParams params{ };
+	params.colour = colour;
+	params.enabled = true;
+	params.spot_angle = spot_angle;
+	params.light_type = type;
+	params.position = glm::vec4(transform.getPosition(), 0);
+	params.direction = glm::normalize(transform.getMatrix() * glm::vec4{ 0, 0, -1, 0 });
+	return params;
 }

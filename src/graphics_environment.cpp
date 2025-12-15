@@ -164,6 +164,16 @@ Ref<Mesh> RenderServer::getGizmoMesh(int type)
     return nullptr;
 }
 
+Ref<Material> RenderServer::getDefaultMaterial()
+{
+    return environment->default_material;
+}
+
+Ref<Mesh> RenderServer::getQuad()
+{
+    return environment->quad;
+}
+
 glm::vec2 RenderServer::getFramebufferSize()
 {
     auto ext = environment->swapchain->getExtent();
@@ -215,6 +225,7 @@ RenderServer::RenderServer(Ref<Window> main_window)
     // TODO: system for associating material with render pass, and for controlling render pass execution
     // TODO: offscreen pass needs its own scene uniform buffers since viewport size is different!
     offscreen_pass = new RenderPass(framebuffer_size.first, framebuffer_size.second, { 3, true });
+    default_material = new Material(new Shader("res://engine/shader", false));
     post_process = new Material(new Shader("res://engine/post_process", false), VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_FALSE, VK_FALSE, VK_COMPARE_OP_ALWAYS, render_pass);
     Ref<Sampler> clamped_sampler = new Sampler(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
     post_process->setSampler("screen_texture", clamped_sampler);
@@ -271,6 +282,7 @@ RenderServer::~RenderServer()
     DBG_VERBOSE("destroying command pool");
     vkDestroyCommandPool(device, command_pool, nullptr);
 
+    default_material = nullptr;
     gizmo_material = nullptr;
     axes_gizmo = nullptr;
     rotations_gizmo = nullptr;
@@ -623,7 +635,7 @@ void RenderServer::drawFrame(float delta_time)
     if (scene)
     {
         VkExtent2D framebuffer_size = swapchain->getExtent();
-        scene->getCamera()->pushToDescriptorSet(image_index, {framebuffer_size.width, framebuffer_size.height}, since_start.count());
+        scene->getCamera()->pushToDescriptorSet(image_index, { framebuffer_size.width, framebuffer_size.height }, since_start.count(), scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
 
         for (Ref<Object>& object : scene->getAllObjects())
         {

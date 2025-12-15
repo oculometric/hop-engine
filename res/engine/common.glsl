@@ -4,7 +4,7 @@ struct Light
     vec4 direction;
     vec4 colour;
     float spot_angle;
-    int light_type;
+    int type;
     bool enabled;
     float padding;
 };
@@ -13,7 +13,6 @@ struct Material
 {
     vec4 diffuse;
     vec4 specular;
-    vec4 ambient;
     vec4 emissive;
     float specular_exponent;
 };
@@ -49,11 +48,11 @@ struct Frag
 };
 
 #ifdef VERTEX
-layout(location = 0) in vec4 position;
-layout(location = 1) in vec4 colour;
-layout(location = 2) in vec4 normal;
-layout(location = 3) in vec4 tangent;
-layout(location = 4) in vec2 uv;
+layout(location = 0) in vec4 in_position;
+layout(location = 1) in vec4 in_colour;
+layout(location = 2) in vec4 in_normal;
+layout(location = 3) in vec4 in_tangent;
+layout(location = 4) in vec2 in_uv;
 
 layout(location = 0) out Frag frag;
 #endif
@@ -62,9 +61,9 @@ layout(location = 0) out Frag frag;
 layout(location = 0) in Frag frag;
 
 #ifndef NONSTANDARD_FRAG_OUT
-layout(location = 0) out vec4 colour;
-layout(location = 1) out vec4 normal;
-layout(location = 2) out vec4 params;
-layout(location = 3) out vec4 custom;
+layout(location = 0) out vec4 out_colour;
+layout(location = 1) out vec4 out_normal;
+layout(location = 2) out vec4 out_params;
+layout(location = 3) out vec4 out_custom;
 #endif
 #endif

@@ -2,10 +2,12 @@
 
 #include <vulkan/vulkan.hpp>
 #include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 #include <vector>
 
 #include "common.h"
 #include "transform.h"
+#include "pbr.h"
 
 namespace HopEngine
 {
@@ -18,7 +20,7 @@ public:
 
 protected:
 	Ref<UniformBlock> uniforms;
-
+	
 private:
 	Ref<Object> parent;
 
@@ -31,6 +33,7 @@ public:
 	void setParent(Ref<T> new_parent);
 	template <class T>
 	void setParent(WeakRef<T> new_parent);
+	Ref<Object> getParent();
 
 	virtual void pushToDescriptorSet(size_t index);
 	virtual std::vector<DrawCommand> getDrawCommands() const;
@@ -53,7 +56,7 @@ public:
 
 	Camera();
 
-	void pushToDescriptorSet(size_t index, glm::ivec2 viewport_size, float time);
+	void pushToDescriptorSet(size_t index, glm::ivec2 viewport_size, float time, std::vector<LightParams> lights, glm::vec4 ambient);
 	VkDescriptorSet getDescriptorSet(size_t index) const;
 };
 
@@ -70,6 +73,29 @@ public:
 
 	void pushToDescriptorSet(size_t index) override;
 	std::vector<DrawCommand> getDrawCommands() const override;
+};
+
+class Light : public Object
+{
+public:
+	enum LightType
+	{
+		POINT,
+		SPOT,
+		DIRECTIONAL
+	};
+
+public:
+	LightType type;
+	glm::vec4 colour = { 1, 0, 0, 0 };
+	float spot_angle = 0.0f;
+
+public:
+	DELETE_CONSTRUCTORS(Light);
+
+	Light(LightType type);
+
+	LightParams getParamsStructure() const;
 };
 
 template<class T>

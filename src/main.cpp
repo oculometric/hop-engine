@@ -75,7 +75,7 @@ void updateScene(Ref<Scene> scene, float delta_time)
     static float total_time = 0;
     total_time += delta_time;
 
-    glm::vec2 mouse_delta = Input::getMouseDelta() * 0.004f;
+    glm::vec2 mouse_delta = Input::getMouseDelta() * 0.25f;
     if (Input::isMouseDown(GLFW_MOUSE_BUTTON_2))
         scene->getCamera()->transform.rotateLocal({-mouse_delta.y, 0, -mouse_delta.x});
 
@@ -90,7 +90,7 @@ void updateScene(Ref<Scene> scene, float delta_time)
     scene->getCamera()->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
 
     if (obj)
-        obj->transform.rotateLocal({ 0, 0, 0.5f * delta_time });
+        obj->transform.rotateLocal({ 0, 0, 20 * delta_time });
     /*scene->camera->transform.lookAt(camera_spline[total_time / 6.0f] * 1.5f,
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f));*/
@@ -198,7 +198,7 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
         node_view_dirty = true;
     }
 
-    glm::vec2 mouse_delta = Input::getMouseDelta() * 0.004f;
+    glm::vec2 mouse_delta = Input::getMouseDelta() * 0.25f;
     float move_x = Input::getAxis(GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
     float move_y = Input::getAxis(GLFW_KEY_UP, GLFW_KEY_DOWN);
     if (Input::isMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
@@ -236,10 +236,21 @@ void initMaterialScene(Ref<Scene> scene)
         new Material(
             shader, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL
         )));
-    //obj->material->setTexture("albedo", new Texture("res://crt_monitor_t.png"));
+    obj->material->setTexture("albedo_tex", new Texture("res://icon.png"));
     obj->material->setTexture("normal_map", new Texture("res://BlackBricks_n.png"));
     MaterialParams material;
     obj->material->setUniform("material", &material, sizeof(MaterialParams));
+
+    auto sun_lamp = scene->insertObject<Light>(new Light(Light::DIRECTIONAL));
+    sun_lamp->transform.setLocalPosition({ 1, 0, 2 });
+    sun_lamp->transform.rotateLocal({ 20.0f, 30.0f, 0.0f });
+    sun_lamp->colour = { 0.4f, 0.4f, 0.4f, 0.0f };
+
+    auto other_lamp = scene->insertObject<Light>(new Light(Light::SPOT));
+    other_lamp->transform.setLocalPosition({ 0, -2, 2 });
+    other_lamp->colour = { 200.0f, 0.0f, 0.0f, 0.0f };
+    other_lamp->spot_angle = 15.0f;
+    other_lamp->transform.rotateLocal({ 45.0f, 0.0f, 0.0f });
 
     scene->getCamera()->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
         glm::vec3(0.0f, 0.0f, 0.0f),
@@ -321,7 +332,6 @@ int main()
         Engine::mainLoop();
 
         Engine::destroy();
-
 
         return 0;
     }

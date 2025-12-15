@@ -4,9 +4,9 @@
 #define FRAGMENT
 #include "common.glsl"
 
-layout(location = 0) out vec4 colour;
+layout(location = 0) out vec4 out_colour;
 
 void main()
 {
-    colour = vec4(frag.colour.rgb, 1);
+    out_colour = vec4(frag.colour.rgb, 1);
 }

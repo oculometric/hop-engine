@@ -33,13 +33,13 @@ void main()
         uv = (fraction + floor(uv)) / 4.0f;
         if (texture(link_atlas, vec2(uv.x, 1.0f - uv.y)).a < 0.5f)
             discard;
-        colour = vec4(frag.colour.rgb, 1);
+        out_colour = vec4(frag.colour.rgb, 1);
     }
     else if (frag.normal.z > 0.0f)
     {
         if (texture(text_atlas, uv).r < 0.5f)
             discard;
-        colour = vec4(frag.colour.rgb, 1);
+        out_colour = vec4(frag.colour.rgb, 1);
     }
     else
     {
@@ -66,9 +66,9 @@ void main()
             if (factor <= 0.001f)
                 discard;
             else if (factor <= 0.7f)
-                colour = vec4(background_mode == 0 ? background_colour.rgb : frag.tangent.rgb * background_factor, 1);
+                out_colour = vec4(background_mode == 0 ? background_colour.rgb : frag.tangent.rgb * background_factor, 1);
             else
-                colour = vec4(frag.tangent.rgb, 1);
+                out_colour = vec4(frag.tangent.rgb, 1);
         }
     }
 }

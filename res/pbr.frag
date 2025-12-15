@@ -8,56 +8,85 @@ layout(set = 2, binding = 0) uniform MaterialInfo
     Material material;
 };
 
-layout(set = 2, binding = 1) uniform sampler2D albedo;
+layout(set = 2, binding = 1) uniform sampler2D albedo_tex;
 layout(set = 2, binding = 2) uniform sampler2D normal_map;
 
-vec3 to_linear(vec3 srgb)
+vec3 toLinear(vec3 srgb)
 {
     return (pow(srgb, vec3(1.0f / 2.4f)) * 1.055f) -0.055f;
-    //pow((srgb + 0.055f) / 1.055f, vec3(2.4f));
 }
 
 float saturate(float f) { return clamp(f, 0, 1); }
 
+vec3 sampleLight(Light light, vec3 alb, vec3 norm, vec3 pixel_to_eye)
+{
+    if (!light.enabled)
+        return vec3(0);
+
+    vec3 pixel_to_light = vec3(0);
+    float distance_to_light = 1.0f;
+    float attenuation = 1.0f;
+
+    if (light.type == 0) // point light
+    {
+        pixel_to_light = light.position.xyz - frag.position.xyz;
+        distance_to_light = length(pixel_to_light);
+        pixel_to_light = normalize(pixel_to_light);
+        attenuation = 1.0f / (distance_to_light * distance_to_light);
+    }
+    else if (light.type == 1)
+    {
+        pixel_to_light = light.position.xyz - frag.position.xyz;
+        distance_to_light = length(pixel_to_light);
+        pixel_to_light = normalize(pixel_to_light);
+        attenuation = 1.0f / (distance_to_light * distance_to_light);
+
+        float l_dot_d = saturate(-dot(pixel_to_light, light.direction.xyz));
+        if (acos(l_dot_d) > light.spot_angle * (3.1415f / 180.0f))
+            attenuation = 0;
+    }
+    else if (light.type == 2) // directional
+    {
+        pixel_to_light = -light.direction.xyz;
+    }
+    else
+        return vec3(0);
+
+    float n_dot_l = 0;
+    if (dot(pixel_to_light, frag.normal.xyz) > 0.0f)
+        n_dot_l = saturate(dot(pixel_to_light, norm));
+    float specular = 0.0f;
+    if (n_dot_l > 0.0f)
+    {
+        vec3 reflection = reflect(-pixel_to_light, norm);
+        float d = dot(reflection, pixel_to_eye);
+        specular = pow(saturate(d / distance_to_light), material.specular_exponent);
+    }
+
+    vec3 result = material.emissive.rgb
+                + (alb * material.diffuse.rgb * light.colour.rgb * frag.colour.rgb * n_dot_l * attenuation)
+                + (material.specular.rgb * light.colour.rgb * specular * attenuation);
+
+    return result;
+}
+
 void main()
 {
-    vec3 pixel_to_light = scene.lights[0].position.xyz - frag.position.xyz;
-    //vec3 pixel_to_eye = normalize(scene.eye_position - frag.position.xyz);
-    //float light_distance = length(pixel_to_light);
-    pixel_to_light = normalize(pixel_to_light);
+    vec3 pixel_to_eye = normalize(scene.eye_position - frag.position.xyz);
 
-    vec4 albedo_val = texture(albedo, frag.uv);
-    vec3 normal_val = normalize((to_linear(texture(normal_map, frag.uv).rgb) * 2.0f - 1.0f));
+    vec4 albedo = texture(albedo_tex, frag.uv);
+    vec3 normal_val = normalize((toLinear(texture(normal_map, frag.uv).rgb) * 2.0f - 1.0f));
     normal_val.y *= -1;
     vec3 bitangent = normalize(cross(frag.tangent.xyz, frag.normal.xyz));
     mat3 tbn = mat3(frag.tangent.xyz, bitangent, frag.normal.xyz);
     vec3 perturbed_normal = normalize(tbn * normal_val.xyz);
 
-    vec3 col = albedo_val.rgb * saturate(dot(pixel_to_light, perturbed_normal.xyz)) * material.diffuse.rgb;
-    col += scene.ambient_light.rgb;
+    vec3 col = scene.ambient_light.rgb * albedo.rgb * frag.colour.rgb;
+    for (uint i = 0; i < 8; ++i)
+    {
+        col += sampleLight(scene.lights[i], albedo.rgb, perturbed_normal, pixel_to_eye);
+    }
 
-    //if (light.light_type == 0)
-    //{
-    //    float attenuation = 1.0f / (light.constant_attenuation
-    //                              + (light.linear_attenuation * light_distance) 
-    //                              + (light.quadratic_attenuation * light_distance * light_distance));
-    //    float n_dot_l = max(0, dot(frag.normal.xyz, pixel_to_light));
-    //    vec3 diffuse_contribution = light.colour.rgb * n_dot_l * attenuation;
-    //    float light_intensity = saturate(dot(frag.normal.xyz, pixel_to_light));
-    //    float specular = 0.0f;
-    //    if (light_intensity > 0.0f)
-    //    {
-    //        vec3 reflection = reflect(-pixel_to_light, frag.normal.xyz);
-    //        float d = dot(reflection, pixel_to_eye);
-    //        specular = pow(saturate(d * light_distance), material.specular_exponent);
-    //    }
-    //    float specular_contribution = specular * attenuation;
-    //    
-    //    col += material.emissive.rgb * albedo.rgb;
-    //    col += material.specular.rgb * specular_contribution * albedo.rgb;
-    //    col += material.diffuse.rgb * diffuse_contribution * albedo.rgb;
-    //    col += material.ambient.rgb * ambient_colour.rgb * albedo.rgb;
-    //}
-    normal = vec4(perturbed_normal.xyz, 1);
-    colour = vec4(col, 1);
+    out_colour = vec4(col, 1);
+    out_normal = vec4(perturbed_normal, 1);
 }
