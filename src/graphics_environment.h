@@ -4,6 +4,8 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 #include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <set>
 
 #include "common.h"
 
@@ -11,11 +13,13 @@ namespace HopEngine
 {
 
 struct DrawCommand
-{ // TODO: priority
-	// TODO: control of which render pass to draw into
+{
+	// TODO: priority
 	Ref<Material> material;
 	Ref<Mesh> mesh;
 	Ref<UniformBlock> uniforms;
+
+	bool operator()(const DrawCommand& a, const DrawCommand& b) const;
 };
 
 class RenderServer
@@ -77,6 +81,12 @@ private:
 
 	Ref<Texture> default_image;
 	Ref<Sampler> default_sampler;
+
+	Ref<Material> gizmo_material;
+	Ref<Mesh> axes_gizmo;
+	Ref<Mesh> rotations_gizmo;
+	Ref<Mesh> scale_gizmo;
+
 	Ref<Mesh> quad;
 	Ref<Material> post_process;
 
@@ -85,18 +95,20 @@ public:
 	static void destroy();
 
 	static void waitIdle();
-	static Ref<RenderPass> getMainRenderPass();
-	static QueueFamilies getQueueFamilies(VkPhysicalDevice device);
-	static VkPhysicalDevice getPhysicalDevice();
 	static VkDevice getDevice();
+	static VkPhysicalDevice getPhysicalDevice();
+	static Ref<RenderPass> getMainRenderPass();
+	static glm::vec2 getFramebufferSize();
+	static size_t getFramesInFlight();
+	static QueueFamilies getQueueFamilies(VkPhysicalDevice device);
+	static VkQueue getGraphicsQueue();
+	static VkCommandPool getCommandPool();
+	static VkDescriptorPool getDescriptorPool();
 	static VkDescriptorSetLayout getSceneDescriptorSetLayout();
 	static VkDescriptorSetLayout getObjectDescriptorSetLayout();
-	static size_t getFramesInFlight();
-	static VkDescriptorPool getDescriptorPool();
-	static VkCommandPool getCommandPool();
-	static VkQueue getGraphicsQueue();
 	static std::pair<Ref<Texture>, Ref<Sampler>> getDefaultTextureSampler();
-	static glm::vec2 getFramebufferSize();
+	static Ref<Material> getGizmoMaterial();
+	static Ref<Mesh> getGizmoMesh(int type);
 
 	static void draw(float delta_time);
 	static void resize();
@@ -116,6 +128,7 @@ private:
 	void resizeSwapchain();
 
 	void recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index);
+	void recordRenderCommandsForPass(VkCommandBuffer command_buffer, uint32_t image_index, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands, glm::vec3 clear_colour, VkDescriptorSet scene_descriptor_set, bool leave_open = false);
 };
 
 }

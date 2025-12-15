@@ -37,7 +37,7 @@ RenderPass::~RenderPass()
     vkDestroyRenderPass(RenderServer::getDevice(), render_pass, nullptr);
 }
 
-vector<VkClearValue> RenderPass::getClearValues()
+vector<VkClearValue> RenderPass::getClearValues() const
 {
     vector<VkClearValue> values = { { VkClearColorValue{{1.0f, 0.0f, 1.0f, 1.0f}} } };
     for (size_t i = 0; i < output_config.additional_attachments; ++i)
@@ -57,7 +57,7 @@ void RenderPass::resize(uint32_t width, uint32_t height)
         createResources(VK_FORMAT_R8G8B8A8_SRGB, width, height);
 }
 
-Ref<Texture> RenderPass::getImage(size_t attachment)
+Ref<Texture> RenderPass::getImage(size_t attachment) const
 {
     if (attachment < additional_textures.size())
         return additional_textures[attachment];

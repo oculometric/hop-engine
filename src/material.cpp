@@ -16,8 +16,9 @@ using namespace HopEngine;
 using namespace std;
 
 Material::Material(Ref<Shader> _shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode,
-	VkBool32 depth_write_enable, VkBool32 depth_test_enable, VkCompareOp depth_compare_op, Ref<RenderPass> render_pass)
+	VkBool32 depth_write_enable, VkBool32 depth_test_enable, VkCompareOp depth_compare_op, Ref<RenderPass> _render_pass)
 {
+	render_pass = _render_pass;
 	shader = _shader;
 	pipeline = new Pipeline(shader, culling_mode, polygon_mode, depth_write_enable, depth_test_enable, depth_compare_op, render_pass.isValid() ? render_pass : RenderServer::getMainRenderPass());
 
@@ -48,12 +49,12 @@ Material::~Material()
 	shader = nullptr;
 }
 
-VkPipeline Material::getPipeline()
+VkPipeline Material::getPipeline() const
 {
 	return pipeline->getPipeline();
 }
 
-VkPipelineLayout Material::getPipelineLayout()
+VkPipelineLayout Material::getPipelineLayout() const
 {
 	return shader->getPipelineLayout();
 }
@@ -64,7 +65,7 @@ void Material::pushToDescriptorSet(size_t index)
 	uniforms->pushToDescriptorSet(index);
 }
 
-VkDescriptorSet Material::getDescriptorSet(size_t index)
+VkDescriptorSet Material::getDescriptorSet(size_t index) const
 {
 	return uniforms->getDescriptorSet(index);
 }
@@ -72,6 +73,11 @@ VkDescriptorSet Material::getDescriptorSet(size_t index)
 Ref<Shader> Material::getShader() const
 {
 	return shader;
+}
+
+Ref<RenderPass> Material::getRenderPass() const
+{
+	return render_pass;
 }
 
 void Material::setTexture(uint32_t binding, Ref<Texture> texture)

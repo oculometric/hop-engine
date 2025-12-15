@@ -24,16 +24,16 @@ public:
 	Transform() : local_position({ 0, 0, 0 }), local_euler({ 0, 0, 0 }), local_scale({ 1, 1, 1 }) { updateMatrix(); };
 	Transform(glm::vec3 position, glm::vec3 euler, glm::vec3 scale) : local_position(position), local_euler(euler), local_scale(scale) { updateMatrix(); }
 	
-	inline glm::vec3 getLocalPosition() { return local_position; }
+	inline glm::vec3 getLocalPosition() const { return local_position; }
 	inline void setLocalPosition(glm::vec3 position) { local_position = position; updateMatrix(); }
-	inline glm::vec3 getLocalEuler() { return local_euler; }
+	inline glm::vec3 getLocalEuler() const { return local_euler; }
 	inline void setLocalEuler(glm::vec3 euler) { local_euler = euler; updateMatrix(); }
-	inline glm::vec3 getLocalScale() { return local_scale; }
+	inline glm::vec3 getLocalScale() const { return local_scale; }
 	inline void setLocalScale(glm::vec3 scale) { local_scale = scale; updateMatrix(); }
 
-	inline glm::vec3 getPosition() { return world_matrix[3]; }
+	inline glm::vec3 getPosition() const { return world_matrix[3]; }
 	inline void setPosition(glm::vec3 position) { world_matrix[3] = glm::vec4(position, 1); correctLocalMatrix(); }
-	glm::vec3 getEuler();
+	glm::vec3 getEuler() const;
 	inline void setEuler(glm::vec3 euler);
 
 	inline void translateLocal(glm::vec3 offset) { local_position += offset; updateMatrix(); }
@@ -45,8 +45,8 @@ public:
 	inline void rotate(glm::vec3 euler_offset);
 	inline void scale(float factor);
 
-	inline glm::mat4 getLocalMatrix() { return local_matrix; }
-	inline glm::mat4 getMatrix() { return world_matrix; }
+	inline glm::mat4 getLocalMatrix() const { return local_matrix; }
+	inline glm::mat4 getMatrix() const { return world_matrix; }
 	inline void setMatrix(glm::mat4 matrix) { world_matrix = matrix; correctLocalMatrix(); }
 
 	// TODO: world space transforms

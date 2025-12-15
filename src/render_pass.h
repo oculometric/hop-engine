@@ -32,13 +32,13 @@ public:
 	RenderPass(uint32_t width, uint32_t height, RenderOutput config);
 	~RenderPass();
 
-	inline RenderOutput getOutputConfig() { return output_config; }
-	inline VkRenderPass getRenderPass() { return render_pass; }
-	inline VkFramebuffer getFramebuffer(size_t index) { return framebuffers[index]; }
-	std::vector<VkClearValue> getClearValues();
+	inline RenderOutput getOutputConfig() const { return output_config; }
+	inline VkRenderPass getRenderPass() const { return render_pass; }
+	inline VkFramebuffer getFramebuffer(size_t index) const { return framebuffers[index % framebuffers.size()]; }
+	std::vector<VkClearValue> getClearValues() const;
 	void resize(uint32_t width = 0, uint32_t height = 0);
-	inline VkExtent2D getExtent() { return extent; }
-	Ref<Texture> getImage(size_t attachment);
+	inline VkExtent2D getExtent() const { return extent; }
+	Ref<Texture> getImage(size_t attachment) const;
 
 private:
 	void createRenderPass(VkFormat main_colour_format, VkImageLayout final_main_colour_layout, bool make_readable);

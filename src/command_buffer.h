@@ -19,7 +19,7 @@ public:
 	CommandBuffer();
 	~CommandBuffer();
 
-	inline VkCommandBuffer getBuffer() { return buffer; }
+	inline VkCommandBuffer getBuffer() const { return buffer; }
 	void submit();
 };
 

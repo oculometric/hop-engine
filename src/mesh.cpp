@@ -59,12 +59,12 @@ Mesh::~Mesh()
     index_buffer = nullptr;
 }
 
-VkBuffer Mesh::getVertexBuffer()
+VkBuffer Mesh::getVertexBuffer() const
 {
     return vertex_buffer->getBuffer();
 }
 
-VkBuffer HopEngine::Mesh::getIndexBuffer()
+VkBuffer Mesh::getIndexBuffer() const
 {
     return index_buffer->getBuffer();
 }
@@ -206,8 +206,7 @@ static glm::vec3 computeTangent(glm::vec3 co_a, glm::vec3 co_b, glm::vec3 co_c, 
 bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>& inds)
 {
     auto file_data = Package::tryLoadFile(path);
-    auto string_data = string((char*)(file_data.data()));
-    string_data.push_back('\0');
+    auto string_data = string((char*)(file_data.data()), file_data.size());
     auto stream = stringstream(string_data);
 
     // vectors to load data into

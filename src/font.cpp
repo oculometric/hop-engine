@@ -23,12 +23,12 @@ Font::~Font()
     atlas = nullptr;
 }
 
-Ref<Texture> Font::getAtlas()
+Ref<Texture> Font::getAtlas() const
 {
     return atlas;
 }
 
-glm::vec2 Font::getCharUVOffset(char c)
+glm::vec2 Font::getCharUVOffset(char c) const
 {
     return { glm::fract(c / (float)chars_resolution.x), glm::floor(c / (float)chars_resolution.x) / (float)chars_resolution.y };
 }

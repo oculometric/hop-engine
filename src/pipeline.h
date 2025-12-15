@@ -19,7 +19,7 @@ public:
 		VkBool32 depth_write_enable, VkBool32 depth_test_enable, VkCompareOp depth_compare_op, Ref<RenderPass> render_pass);
 	~Pipeline();
 
-	inline VkPipeline getPipeline() { return pipeline; }
+	inline VkPipeline getPipeline() const { return pipeline; }
 };
 
 }

@@ -23,8 +23,8 @@ public:
 
 	void* mapMemory();
 	void unmapMemory();
-	inline VkBuffer getBuffer() { return buffer; }
-	inline VkDeviceSize getSize() { return buffer_size; }
+	inline VkBuffer getBuffer() const { return buffer; }
+	inline VkDeviceSize getSize() const { return buffer_size; }
 	static uint32_t findMemoryType(uint32_t type_bits, VkMemoryPropertyFlags properties);
 	void copyToBuffer(Ref<Buffer> other);
 };

@@ -24,10 +24,10 @@ public:
 	static void initEnvironment();
 	static void terminateEnvironment();
 
-	void pollEvents();
-	bool getShouldClose();
-	inline GLFWwindow* getWindow() { return window; }
-	bool isMinified();
+	void pollEvents() const;
+	bool getShouldClose() const;
+	inline GLFWwindow* getWindow() const { return window; }
+	bool isMinified() const;
 	bool isResized();
 	std::pair<uint32_t, uint32_t> getSize();
 	void setTitle(std::string title);

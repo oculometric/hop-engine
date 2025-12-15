@@ -22,10 +22,10 @@ public:
 	Font(std::string atlas, glm::ivec2 character_bitmap_size);
 	~Font();
 
-	inline glm::vec2 getCharacterSize() { return character_size; }
-	Ref<Texture> getAtlas();
-	glm::vec2 getCharUVOffset(char c);
-	inline glm::vec2 getCharUVSize() { return char_uv_size; }
+	inline glm::vec2 getCharacterSize() const { return character_size; }
+	Ref<Texture> getAtlas() const;
+	glm::vec2 getCharUVOffset(char c) const;
+	inline glm::vec2 getCharUVSize() const { return char_uv_size; }
 };
 
 }

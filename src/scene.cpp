@@ -3,7 +3,7 @@
 using namespace HopEngine;
 using namespace std;
 
-Ref<Camera> Scene::getCamera()
+Ref<Camera> Scene::getCamera() const
 {
 	return camera;
 }
@@ -22,7 +22,7 @@ void Scene::removeObject(Ref<Object> obj)
 	DBG_ERROR("attempt to remove object " + PTR(obj.get()) + " from scene " + PTR(this) + " but it is not present in the tree!");
 }
 
-vector<Ref<Object>> Scene::getAllObjects()
+vector<Ref<Object>> Scene::getAllObjects() const
 {
 	return objects;
 }

@@ -12,20 +12,13 @@
 namespace HopEngine
 {
 
-// shader uniform layout:
-// set 0 -> scene uniforms (time, world to view, view to clip): 1 per frame-in-flight (managed by the environment)
-// set 1 -> object uniforms (object id, object to world): 1 per object, per frame-in-flight (managed by the object)
-// set 2 -> material uniforms (these are customisable): 1 per material, per frame-in-flight (managed by the material)
-
-// the shader tells us about the layout, but the first 2 sets will NOT be read from the shader
-// we create the layouts for the first two sets when the environment loads, since they are the same for all shaders
-
 class Material
 {
 private:
 	Ref<Shader> shader;
 	Ref<Pipeline> pipeline;
 	Ref<UniformBlock> uniforms;
+	Ref<RenderPass> render_pass;
 	std::map<std::string, uint32_t> texture_name_to_binding;
 	std::map<std::string, UniformVariable> variable_name_to_binding;
 
@@ -37,12 +30,13 @@ public:
 		Ref<RenderPass> render_pass = nullptr);
 	~Material();
 
-	VkPipeline getPipeline();
-	VkPipelineLayout getPipelineLayout();
+	VkPipeline getPipeline() const;
+	VkPipelineLayout getPipelineLayout() const;
 	void pushToDescriptorSet(size_t index);
-	VkDescriptorSet getDescriptorSet(size_t index);
+	VkDescriptorSet getDescriptorSet(size_t index) const;
 	Ref<Shader> getShader() const;
-
+	Ref<RenderPass> getRenderPass() const;
+	
 	void setTexture(uint32_t binding, Ref<Texture> texture);
 	void setSampler(uint32_t binding, Ref<Sampler> sampler);
 	void setTexture(std::string name, Ref<Texture> texture);

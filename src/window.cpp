@@ -26,18 +26,18 @@ void Window::terminateEnvironment()
     glfwTerminate();
 }
 
-void Window::pollEvents()
+void Window::pollEvents() const
 {
     DBG_BABBLE("polling window events");
     glfwPollEvents();
 }
 
-bool Window::getShouldClose()
+bool Window::getShouldClose() const
 {
     return glfwWindowShouldClose(window);
 }
 
-bool HopEngine::Window::isMinified()
+bool HopEngine::Window::isMinified() const
 {
     return glfwGetWindowAttrib(window, GLFW_ICONIFIED);
 }

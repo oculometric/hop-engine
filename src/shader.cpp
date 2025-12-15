@@ -95,7 +95,7 @@ Shader::~Shader()
 	vkDestroyShaderModule(RenderServer::getDevice(), frag_module, nullptr);
 }
 
-vector<VkPipelineShaderStageCreateInfo> Shader::getShaderStageCreateInfos()
+vector<VkPipelineShaderStageCreateInfo> Shader::getShaderStageCreateInfos() const
 {
 	VkPipelineShaderStageCreateInfo vert_stage_create_info{ };
 	vert_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -112,7 +112,7 @@ vector<VkPipelineShaderStageCreateInfo> Shader::getShaderStageCreateInfos()
 	return { vert_stage_create_info, frag_stage_create_info };
 }
 
-ShaderLayout Shader::getShaderLayout()
+ShaderLayout Shader::getShaderLayout() const
 {
 	return { descriptor_set_layout, bindings };
 }

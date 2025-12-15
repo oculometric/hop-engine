@@ -55,9 +55,9 @@ public:
 	Shader(std::string base_path, bool is_precompiled);
 	~Shader();
 
-	inline VkPipelineLayout getPipelineLayout() { return pipeline_layout; }
-	std::vector<VkPipelineShaderStageCreateInfo> getShaderStageCreateInfos();
-	ShaderLayout getShaderLayout();
+	inline VkPipelineLayout getPipelineLayout() const { return pipeline_layout; }
+	std::vector<VkPipelineShaderStageCreateInfo> getShaderStageCreateInfos() const;
+	ShaderLayout getShaderLayout() const;
 
 private:
 	static std::vector<DescriptorBinding> mergeBindings(std::vector<DescriptorBinding> list_a, std::vector<DescriptorBinding> list_b);

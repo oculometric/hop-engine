@@ -5,7 +5,6 @@
 #include <vector>
 #include <array>
 #include <map>
-#include <set>
 #include <chrono>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -148,6 +147,23 @@ pair<Ref<Texture>, Ref<Sampler>> RenderServer::getDefaultTextureSampler()
     return { environment->default_image, environment->default_sampler };
 }
 
+Ref<Material> RenderServer::getGizmoMaterial()
+{
+    return environment->gizmo_material;
+}
+
+Ref<Mesh> RenderServer::getGizmoMesh(int type)
+{
+    switch (type)
+    {
+    case 0: return environment->axes_gizmo;
+    case 1: return environment->rotations_gizmo;
+    case 2: return environment->scale_gizmo;
+    }
+
+    return nullptr;
+}
+
 glm::vec2 RenderServer::getFramebufferSize()
 {
     auto ext = environment->swapchain->getExtent();
@@ -185,7 +201,7 @@ RenderServer::RenderServer(Ref<Window> main_window)
     MAX_FRAMES_IN_FLIGHT = swapchain->getImageCount();
     DBG_VERBOSE("adjusted frames in flight to " + to_string(MAX_FRAMES_IN_FLIGHT));
     createCommandPool();
-    render_pass = new RenderPass(swapchain, { 0, false });
+    render_pass = new RenderPass(swapchain, { 0, true });
 
     uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
     default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, default_image_data);
@@ -223,6 +239,9 @@ RenderServer::RenderServer(Ref<Window> main_window)
     }
     post_process->setUniform("samples", samples, sizeof(glm::vec4) * 64);
     createSyncObjects();
+    
+    gizmo_material = new Material(new Shader("res://gizmo", false), VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL, VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS, render_pass);
+    axes_gizmo = new Mesh("res://axes_gizmo.obj");
 
     initImGui();
 
@@ -252,6 +271,10 @@ RenderServer::~RenderServer()
     DBG_VERBOSE("destroying command pool");
     vkDestroyCommandPool(device, command_pool, nullptr);
 
+    gizmo_material = nullptr;
+    axes_gizmo = nullptr;
+    rotations_gizmo = nullptr;
+    scale_gizmo = nullptr;
     post_process = nullptr;
     quad = nullptr;
     default_image = nullptr;
@@ -670,15 +693,48 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
 
     Ref<Scene> scene = Engine::getScene();
 
+    multiset<DrawCommand, DrawCommand> second_pass_commands;
+    multiset<DrawCommand, DrawCommand> draw_commands;
+    if (scene)
+    {
+        for (const Ref<Object>& object : scene->getAllObjects())
+        {
+            auto obj_commands = object->getDrawCommands();
+            for (const auto& cmd : obj_commands)
+            {
+                if (cmd.material->getRenderPass() == render_pass)
+                    second_pass_commands.insert(cmd);
+                else
+                    draw_commands.insert(cmd);
+            }
+        }
+    }
+    second_pass_commands.insert({ post_process, quad });
+
+    if (scene)
+        recordRenderCommandsForPass(command_buffer, image_index, offscreen_pass, draw_commands, scene->background_colour, scene->getCamera()->getDescriptorSet(image_index));
+
+    recordRenderCommandsForPass(command_buffer, image_index, render_pass, second_pass_commands, { 0, 0, 0 }, scene->getCamera()->getDescriptorSet(image_index), true);
+
+    ImDrawData* draw_data = ImGui::GetDrawData();
+    ImGui_ImplVulkan_RenderDrawData(draw_data, command_buffer);
+
+    vkCmdEndRenderPass(command_buffer);
+
+    if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS)
+        DBG_FAULT("vkEndCommandBuffer failed");
+}
+
+void RenderServer::recordRenderCommandsForPass(VkCommandBuffer command_buffer, uint32_t image_index, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands, glm::vec3 clear_colour, VkDescriptorSet scene_descriptor_set, bool leave_open)
+{
     VkRenderPassBeginInfo render_pass_begin_info{ };
     render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    render_pass_begin_info.renderPass = offscreen_pass->getRenderPass();
-    render_pass_begin_info.framebuffer = offscreen_pass->getFramebuffer(0);
+    render_pass_begin_info.renderPass = pass->getRenderPass();
+    render_pass_begin_info.framebuffer = pass->getFramebuffer(image_index);
     render_pass_begin_info.renderArea.offset = { 0, 0 };
-    render_pass_begin_info.renderArea.extent = offscreen_pass->getExtent();
-    vector<VkClearValue> clear_values = offscreen_pass->getClearValues();
-    if (scene)
-        clear_values[0].color = { scene->background_colour.r, scene->background_colour.g, scene->background_colour.b };
+    render_pass_begin_info.renderArea.extent = pass->getExtent();
+    vector<VkClearValue> clear_values = pass->getClearValues();
+    clear_values[0].color = { clear_colour.r, clear_colour.g, clear_colour.b };
     render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
     render_pass_begin_info.pClearValues = clear_values.data();
 
@@ -686,7 +742,7 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
 
     VkRect2D scissor{ };
     scissor.offset = { 0, 0 };
-    scissor.extent = offscreen_pass->getExtent();
+    scissor.extent = pass->getExtent();
     VkViewport viewport{ };
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -697,131 +753,93 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
     vkCmdSetViewport(command_buffer, 0, 1, &viewport);
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
-    if (scene)
+    Ref<Shader> last_used_shader;
+    Ref<Material> last_used_material;
+    Ref<Mesh> last_used_mesh;
+    Ref<UniformBlock> last_used_uniforms;
+
+    VkDescriptorSet descriptor_sets[3] =
     {
-        auto comparator = [](const DrawCommand a, const DrawCommand b)
-            {
-                if (a.material->getShader() < a.material->getShader())
-                    return true;
-                if (a.material < b.material)
-                    return true;
-                if (a.uniforms < b.uniforms)
-                    return true;
-                if (a.mesh < b.mesh)
-                    return true;
-                return false;
-            };
-        multiset<DrawCommand, decltype(comparator)> draw_commands;
-        for (Ref<Object>& object : scene->getAllObjects())
+        scene_descriptor_set,
+        VK_NULL_HANDLE,
+        VK_NULL_HANDLE
+    };
+
+    for (DrawCommand command : commands)
+    {
+        if (!command.material || !command.mesh)
         {
-            auto obj_commands = object->getDrawCommands();
-            draw_commands.insert(obj_commands.begin(), obj_commands.end());
+            DBG_WARNING("skipping draw command with invalid mesh or material");
+            continue;
         }
 
-        Ref<Shader> last_used_shader;
-        Ref<Material> last_used_material;
-        Ref<Mesh> last_used_mesh;
-        Ref<UniformBlock> last_used_uniforms;
-
-        VkDescriptorSet descriptor_sets[3] =
+        bool rebind_material = false;
+        bool rebind_object = false;
+        bool rebind_pipeline = false;
+        bool rebind_layout = false;
+        bool rebind_mesh = false;
+        if (command.material->getShader() != last_used_shader)
         {
-            scene->getCamera()->getDescriptorSet(image_index),
-            VK_NULL_HANDLE,
-            VK_NULL_HANDLE
-        };
-
-        for (DrawCommand command : draw_commands)
+            last_used_shader = command.material->getShader();
+            rebind_layout = true;
+        }
+        if (command.material != last_used_material)
         {
-            if (!command.material || !command.mesh)
-            {
-                DBG_WARNING("skipping draw command with invalid mesh or material");
-                continue;
-            }
+            last_used_material = command.material;
+            rebind_material = true;
+            rebind_pipeline = true;
+        }
+        if (command.mesh != last_used_mesh)
+        {
+            last_used_mesh = command.mesh;
+            rebind_mesh = true;
+        }
+        if (command.uniforms != last_used_uniforms)
+        {
+            last_used_uniforms = command.uniforms;
+            rebind_object = true;
+        }
 
-            bool rebind_material = false;
-            bool rebind_object = false;
-            bool rebind_pipeline = false;
-            bool rebind_layout = false;
-            bool rebind_mesh = false;
-            if (command.material->getShader() != last_used_shader)
-            {
-                last_used_shader = command.material->getShader();
-                rebind_layout = true;
-            }
-            if (command.material != last_used_material)
-            {
-                last_used_material = command.material;
-                rebind_material = true;
-                rebind_pipeline = true;
-            }
-            if (command.mesh != last_used_mesh)
-            {
-                last_used_mesh = command.mesh;
-                rebind_mesh = true;
-            }
-            if (command.uniforms != last_used_uniforms)
-            {
-                last_used_uniforms = command.uniforms;
-                rebind_object = true;
-            }
-
-            if (rebind_material || rebind_layout)
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, last_used_material->getPipeline());
-            if (rebind_layout || rebind_material)
-                descriptor_sets[2] = last_used_material->getDescriptorSet(image_index);
-            if (rebind_layout || rebind_object)
-                descriptor_sets[1] = last_used_uniforms->getDescriptorSet(image_index);
-            if (rebind_layout || rebind_material || rebind_object)
+        if (rebind_material || rebind_layout)
+            vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, last_used_material->getPipeline());
+        if (rebind_layout || rebind_material)
+            descriptor_sets[2] = last_used_material->getDescriptorSet(image_index);
+        if ((rebind_layout || rebind_object) && last_used_uniforms)
+            descriptor_sets[1] = last_used_uniforms->getDescriptorSet(image_index);
+        if (rebind_layout || rebind_material || rebind_object)
+        {
+            if (last_used_uniforms)
                 vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, last_used_material->getPipelineLayout(), 0, 3, descriptor_sets, 0, nullptr);
-
-            if (rebind_mesh)
+            else
             {
-                VkBuffer vertex_buffers[] = { last_used_mesh->getVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
-                vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
-                vkCmdBindIndexBuffer(command_buffer, last_used_mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, last_used_material->getPipelineLayout(), 0, 1, descriptor_sets, 0, nullptr);
+                vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, last_used_material->getPipelineLayout(), 2, 1, descriptor_sets + 2, 0, nullptr);
             }
-            vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(last_used_mesh->getIndexCount()), 1, 0, 0, 0);
         }
+
+        if (rebind_mesh)
+        {
+            VkBuffer vertex_buffers[] = { last_used_mesh->getVertexBuffer() };
+            VkDeviceSize offsets[] = { 0 };
+            vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
+            vkCmdBindIndexBuffer(command_buffer, last_used_mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
+        }
+        vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(last_used_mesh->getIndexCount()), 1, 0, 0, 0);
     }
 
-    vkCmdEndRenderPass(command_buffer);
+    if (!leave_open)
+        vkCmdEndRenderPass(command_buffer);
+}
 
-    render_pass_begin_info = VkRenderPassBeginInfo{ };
-    render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    render_pass_begin_info.renderPass = render_pass->getRenderPass();
-    render_pass_begin_info.framebuffer = render_pass->getFramebuffer(image_index);
-    render_pass_begin_info.renderArea.offset = { 0, 0 };
-    render_pass_begin_info.renderArea.extent = render_pass->getExtent();
-    clear_values = render_pass->getClearValues();
-    render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
-    render_pass_begin_info.pClearValues = clear_values.data();
-
-    vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
-
-    scissor.extent = render_pass->getExtent();
-    viewport.width = static_cast<float>(scissor.extent.width);
-    viewport.height = static_cast<float>(scissor.extent.height);
-    vkCmdSetViewport(command_buffer, 0, 1, &viewport);
-    vkCmdSetScissor(command_buffer, 0, 1, &scissor);
-
-    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, post_process->getPipeline());
-    VkDescriptorSet scene_descriptor_set = scene->getCamera()->getDescriptorSet(image_index);
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, post_process->getPipelineLayout(), 0, 1, &scene_descriptor_set, 0, nullptr);
-    VkDescriptorSet material_descriptor_set = post_process->getDescriptorSet(image_index);
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, post_process->getPipelineLayout(), 2, 1, &material_descriptor_set, 0, nullptr);
-
-    VkBuffer vertex_buffers[] = { quad->getVertexBuffer() };
-    VkDeviceSize offsets[] = { 0 };
-    vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
-    vkCmdBindIndexBuffer(command_buffer, quad->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
-    vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(quad->getIndexCount()), 1, 0, 0, 0);
-
-    ImDrawData* draw_data = ImGui::GetDrawData();
-    ImGui_ImplVulkan_RenderDrawData(draw_data, command_buffer);
-
-    vkCmdEndRenderPass(command_buffer);
-
-    if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS)
-        DBG_FAULT("vkEndCommandBuffer failed");
+bool DrawCommand::operator()(const DrawCommand& a, const DrawCommand& b) const
+{
+    if (a.material->getShader() < a.material->getShader())
+        return true;
+    if (a.material < b.material)
+        return true;
+    if (a.uniforms < b.uniforms)
+        return true;
+    if (a.mesh < b.mesh)
+        return true;
+    return false;
 }

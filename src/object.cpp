@@ -48,7 +48,7 @@ void Object::pushToDescriptorSet(size_t index)
 
 vector<DrawCommand> Object::getDrawCommands() const
 {
-	return { };
+	return { { RenderServer::getGizmoMaterial(), RenderServer::getGizmoMesh(0), uniforms } };
 }
 
 Object::~Object()
@@ -90,7 +90,7 @@ void Camera::pushToDescriptorSet(size_t index, glm::ivec2 viewport_size, float t
 	uniforms->pushToDescriptorSet(index);
 }
 
-VkDescriptorSet Camera::getDescriptorSet(size_t index)
+VkDescriptorSet Camera::getDescriptorSet(size_t index) const
 {
 	return uniforms->getDescriptorSet(index);
 }
@@ -109,7 +109,9 @@ void StaticMesh::pushToDescriptorSet(size_t index)
 
 vector<DrawCommand> StaticMesh::getDrawCommands() const
 {
+	vector<DrawCommand> commands;
 	if (material && mesh && uniforms)
-		return { { material, mesh, uniforms } };
-	return { };
+		commands.push_back({ material, mesh, uniforms });
+	commands.push_back(Object::getDrawCommands()[0]);
+	return commands;
 }

@@ -24,13 +24,13 @@ public:
 
 	// TODO: multiple cameras, camera filtering for different objects (manage render passes? or let the render graph do that)
 	// TODO: draw list which the render server queries
-	Ref<Camera> getCamera();
+	Ref<Camera> getCamera() const;
 	template <class T>
 	inline Ref<T> insertObject(Ref<T> obj);
 	void removeObject(Ref<Object> obj);
 	template <class T>
-	inline Ref<T> findObject(std::string name);
-	std::vector<Ref<Object>> getAllObjects();
+	inline Ref<T> findObject(std::string name) const;
+	std::vector<Ref<Object>> getAllObjects() const;
 
 	Scene();
 	inline ~Scene() { };
@@ -62,7 +62,7 @@ inline Ref<T> Scene::insertObject(Ref<T> obj)
 }
 
 template<class T>
-inline Ref<T> Scene::findObject(std::string name)
+inline Ref<T> Scene::findObject(std::string name) const
 {
 	static_assert(std::is_convertible<T*, Object*>::value, "expected type must be a HopEngine::Object subclass");
 	for (auto& test_obj : objects)

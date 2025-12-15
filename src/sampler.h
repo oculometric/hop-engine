@@ -18,7 +18,7 @@ public:
 	Sampler(VkFilter filtering_mode, VkSamplerAddressMode address_mode);
 	~Sampler();
 
-	inline VkSampler getSampler() { return sampler; }
+	inline VkSampler getSampler() const { return sampler; }
 };
 
 }

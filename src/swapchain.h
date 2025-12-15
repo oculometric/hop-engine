@@ -33,11 +33,11 @@ public:
 	Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR surface);
 	~Swapchain();
 
-	inline VkFormat getFormat() { return format; }
-	inline VkExtent2D getExtent() { return extent; }
-	inline uint32_t getImageCount() { return static_cast<uint32_t>(image_views.size()); }
-	inline VkImageView getImage(size_t i) { return image_views[i]; }
-	inline VkSwapchainKHR getSwapchain() { return swapchain; }
+	inline VkFormat getFormat() const { return format; }
+	inline VkExtent2D getExtent() const { return extent; }
+	inline uint32_t getImageCount() const { return static_cast<uint32_t>(image_views.size()); }
+	inline VkImageView getImage(size_t i) const { return image_views[i]; }
+	inline VkSwapchainKHR getSwapchain() const { return swapchain; }
 	void resize(uint32_t width, uint32_t height);
 
 	static SwapchainSupportInfo getSupportInfo(VkPhysicalDevice device, VkSurfaceKHR surface);

@@ -35,7 +35,7 @@ public:
 	void transitionLayout(VkImageLayout new_layout);
 	void copyBufferToImage(Ref<Buffer> buffer);
 	VkImageView getView();
-	inline glm::ivec2 getSize() { return { width, height }; }
+	inline glm::ivec2 getSize() const { return { width, height }; }
 
 private:
 	void createImage();

@@ -54,7 +54,7 @@ public:
 	Camera();
 
 	void pushToDescriptorSet(size_t index, glm::ivec2 viewport_size, float time);
-	VkDescriptorSet getDescriptorSet(size_t index);
+	VkDescriptorSet getDescriptorSet(size_t index) const;
 };
 
 class StaticMesh : public Object

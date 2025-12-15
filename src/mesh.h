@@ -37,9 +37,9 @@ public:
 	Mesh(std::vector<Vertex> vertices, std::vector<uint16_t> indices, bool keep_accessible = false);
 	~Mesh();
 
-	VkBuffer getVertexBuffer();
-	VkBuffer getIndexBuffer();
-	inline size_t getIndexCount() { return index_count; }
+	VkBuffer getVertexBuffer() const;
+	VkBuffer getIndexBuffer() const;
+	inline size_t getIndexCount() const { return index_count; }
 	void updateData(std::vector<Vertex> vertices, std::vector<uint16_t> indices, size_t vertex_alloc = 0, size_t index_alloc = 0);
 
 	static VkVertexInputBindingDescription getBindingDescription();

@@ -29,9 +29,9 @@ public:
 	inline void* getBuffer() { return live_uniform_buffer.data(); }
 	void setTexture(uint32_t binding, Ref<Texture> image);
 	void setSampler(uint32_t binding, Ref<Sampler> sampler);
-	inline VkDeviceSize getSize() { return size; }
+	inline VkDeviceSize getSize() const { return size; }
 	void pushToDescriptorSet(size_t index);
-	inline VkDescriptorSet getDescriptorSet(size_t index) { return descriptor_sets[index]; }
+	inline VkDescriptorSet getDescriptorSet(size_t index) const { return descriptor_sets[index]; }
 
 private:
 	void applyDescriptorBindings();
