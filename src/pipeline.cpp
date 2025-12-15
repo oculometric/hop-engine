@@ -11,8 +11,7 @@
 using namespace HopEngine;
 using namespace std;
 
-Pipeline::Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode,
-    VkBool32 depth_write_enable, VkBool32 depth_test_enable, VkCompareOp depth_compare_op, Ref<RenderPass> render_pass)
+Pipeline::Pipeline(Ref<Shader> shader, PipelineBuilder config, Ref<RenderPass> render_pass)
 {
     array<VkDynamicState, 2> dynamic_states =
     {
@@ -48,9 +47,9 @@ Pipeline::Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMo
     rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizer.depthClampEnable = VK_FALSE;
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    rasterizer.polygonMode = polygon_mode;
+    rasterizer.polygonMode = config.polygon_mode;
     rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = culling_mode;
+    rasterizer.cullMode = config.culling_mode;
     rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -61,9 +60,9 @@ Pipeline::Pipeline(Ref<Shader> shader, VkCullModeFlags culling_mode, VkPolygonMo
 
     VkPipelineDepthStencilStateCreateInfo depth{ };
     depth.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depth.depthCompareOp = depth_compare_op;
-    depth.depthWriteEnable = depth_write_enable;
-    depth.depthTestEnable = depth_test_enable;
+    depth.depthCompareOp = config.depth_compare_op;
+    depth.depthWriteEnable = config.depth_write_enable;
+    depth.depthTestEnable = config.depth_test_enable;
     depth.depthBoundsTestEnable = VK_FALSE;
     depth.stencilTestEnable = VK_FALSE;
 

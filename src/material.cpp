@@ -15,12 +15,11 @@
 using namespace HopEngine;
 using namespace std;
 
-Material::Material(Ref<Shader> _shader, VkCullModeFlags culling_mode, VkPolygonMode polygon_mode,
-	VkBool32 depth_write_enable, VkBool32 depth_test_enable, VkCompareOp depth_compare_op, Ref<RenderPass> _render_pass)
+Material::Material(Ref<Shader> _shader, PipelineBuilder config, Ref<RenderPass> _render_pass)
 {
 	render_pass = _render_pass;
 	shader = _shader;
-	pipeline = new Pipeline(shader, culling_mode, polygon_mode, depth_write_enable, depth_test_enable, depth_compare_op, render_pass.isValid() ? render_pass : RenderServer::getMainRenderPass());
+	pipeline = new Pipeline(shader, config, render_pass.isValid() ? render_pass : RenderServer::getMainRenderPass());
 
 	auto layout = shader->getShaderLayout();
 	uniforms = new UniformBlock(layout);
@@ -38,7 +37,7 @@ Material::Material(Ref<Shader> _shader, VkCullModeFlags culling_mode, VkPolygonM
 			texture_name_to_binding[binding.name] = binding.binding;
 	}
 
-	DBG_INFO("created material from shader " + PTR(shader.get()) + " with config " + vk::to_string((vk::CullModeFlags)culling_mode) + ", " + vk::to_string((vk::PolygonMode)polygon_mode));
+	DBG_INFO("created material from shader " + PTR(shader.get()) + " with config " + vk::to_string((vk::CullModeFlags)config.culling_mode) + ", " + vk::to_string((vk::PolygonMode)config.polygon_mode));
 }
 
 Material::~Material()

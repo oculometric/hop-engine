@@ -297,11 +297,11 @@ Ref<Material> Material::deserialise(string name)
 
 	if (!main_shader)
 		return nullptr;
-	Ref<Material> material = new Material(main_shader, cull, polygon, write, test, operation);
+	Ref<Material> material = new Material(main_shader, PipelineBuilder().cullMode(cull).polygonMode(polygon).depthWrite(write).depthTest(test).depthOp(operation));
 	if (!material)
 		return nullptr;
 
-	for (const auto args : texture_bindings)
+	for (const auto& args : texture_bindings)
 	{
 		auto it = args.find("resource");
 		auto texture_it = textures.find(it->second.s_value);

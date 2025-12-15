@@ -38,7 +38,7 @@ void initScene(Ref<Scene> scene)
     asha = scene->insertObject<StaticMesh>(new StaticMesh(
         new Mesh("res://asha/asha.obj"),
         new Material(
-            shader, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL
+            shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE)
         )));
     asha->material->setTexture("albedo", new Texture("res://asha/asha.png"));
     asha->material->setSampler("albedo", sampler);
@@ -46,7 +46,7 @@ void initScene(Ref<Scene> scene)
 
     Ref<StaticMesh> bunny = scene->insertObject<StaticMesh>(new StaticMesh(
         new Mesh("res://bunny.obj"),
-        new Material(shader, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL)
+        new Material(shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE))
     ));
     bunny->material->setTexture("albedo", new Texture("res://bunny.png"));
     bunny->material->setSampler("albedo", sampler);
@@ -56,7 +56,7 @@ void initScene(Ref<Scene> scene)
 
     Ref<StaticMesh> tux = scene->insertObject<StaticMesh>(new StaticMesh(
         new Mesh("res://tux.obj"),
-        new Material(shader, VK_CULL_MODE_NONE, VK_POLYGON_MODE_FILL)
+        new Material(shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE))
     ));
     tux->material->setTexture("albedo", new Texture("res://tux.png"));
     tux->material->setSampler("albedo", sampler);
@@ -237,9 +237,8 @@ void initMaterialScene(Ref<Scene> scene)
     Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
     obj = scene->insertObject<StaticMesh>(new StaticMesh(
         new Mesh("res://cube.obj"),
-        new Material(
-            shader, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL
-        )));
+        new Material(shader)
+    ));
     obj->material->setTexture("albedo_tex", new Texture("res://icon.png"));
     obj->material->setTexture("normal_map", new Texture("res://BlackBricks_n.png"));
     MaterialParams material;
