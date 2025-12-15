@@ -48,7 +48,7 @@ void main()
         ivec2 segment = ivec2(floor(scaled_uv));
         if (debug_segments)
         {
-            colour = vec4(fract(scaled_uv), 0, 1);
+            out_colour = vec4(fract(scaled_uv), 0, 1);
         }
         else
         {

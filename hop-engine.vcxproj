@@ -215,6 +215,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="res\engine\common.glsl" />
+    <None Include="res\engine\node_shader.frag" />
+    <None Include="res\engine\node_shader.vert" />
     <None Include="res\engine\shader.frag" />
     <None Include="res\engine\shader.vert" />
     <None Include="res\pbr.frag" />

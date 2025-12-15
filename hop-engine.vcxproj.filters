@@ -244,6 +244,12 @@
     <None Include="res\engine\shader.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="res\engine\node_shader.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\engine\node_shader.vert">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="hop-engine.rc">

@@ -198,7 +198,7 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
         node_view_dirty = true;
     }
 
-    glm::vec2 mouse_delta = Input::getMouseDelta() * 0.25f;
+    glm::vec2 mouse_delta = Input::getMouseDelta() * 0.004f;
     float move_x = Input::getAxis(GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
     float move_y = Input::getAxis(GLFW_KEY_UP, GLFW_KEY_DOWN);
     if (Input::isMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
