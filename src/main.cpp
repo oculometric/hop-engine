@@ -62,6 +62,10 @@ void initScene(Ref<Scene> scene)
     tux->material->setSampler("albedo", sampler);
     tux->transform.translateLocal({ 2, 0, 0 });
 
+    auto sun_lamp = scene->insertObject<Light>(new Light(Light::DIRECTIONAL));
+    sun_lamp->transform.rotateLocal({ -17.0f, -34.0f, -189.0f });
+    sun_lamp->colour = { 1.0f, 1.0f, 1.0f, 0.0f };
+
     camera_spline.loop = true;
     camera_spline.points = { { 0, -1, 0.5f }, { 1, 0, 0.5f }, { 0, 1, 0.5f }, { -1, 0, 0.5f } };
 

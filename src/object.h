@@ -56,7 +56,7 @@ public:
 
 	Camera();
 
-	void pushToDescriptorSet(size_t index, glm::ivec2 viewport_size, float time, std::vector<LightParams> lights, glm::vec4 ambient);
+	void pushToCameraDescriptorSet(size_t index, glm::ivec2 viewport_size, float time, std::vector<LightParams> lights, glm::vec4 ambient);
 	VkDescriptorSet getDescriptorSet(size_t index) const;
 };
 
@@ -102,7 +102,7 @@ template<class T>
 inline void Object::setParent(Ref<T> new_parent)
 {
 	static_assert(std::is_convertible<T*, Object*>::value, "parent must be a HopEngine::Object subclass");
-	auto cast = new_parent.cast<Object>();
+	auto cast = new_parent.template cast<Object>();
 	_setParent(cast);
 }
 

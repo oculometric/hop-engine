@@ -635,7 +635,7 @@ void RenderServer::drawFrame(float delta_time)
     if (scene)
     {
         VkExtent2D framebuffer_size = swapchain->getExtent();
-        scene->getCamera()->pushToDescriptorSet(image_index, { framebuffer_size.width, framebuffer_size.height }, since_start.count(), scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
+        scene->getCamera()->pushToCameraDescriptorSet(image_index, { framebuffer_size.width, framebuffer_size.height }, since_start.count(), scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
 
         for (Ref<Object>& object : scene->getAllObjects())
         {
@@ -787,7 +787,6 @@ void RenderServer::recordRenderCommandsForPass(VkCommandBuffer command_buffer, u
 
         bool rebind_material = false;
         bool rebind_object = false;
-        bool rebind_pipeline = false;
         bool rebind_layout = false;
         bool rebind_mesh = false;
         if (command.material->getShader() != last_used_shader)
@@ -799,7 +798,6 @@ void RenderServer::recordRenderCommandsForPass(VkCommandBuffer command_buffer, u
         {
             last_used_material = command.material;
             rebind_material = true;
-            rebind_pipeline = true;
         }
         if (command.mesh != last_used_mesh)
         {
