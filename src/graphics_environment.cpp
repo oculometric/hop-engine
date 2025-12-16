@@ -187,7 +187,7 @@ Ref<Material> RenderServer::getSkyboxMaterial()
 glm::vec2 RenderServer::getFramebufferSize()
 {
     auto ext = environment->swapchain->getExtent();
-    return glm::vec2{ ext.width, ext.height };
+    return glm::vec2{ (float)ext.width, (float)ext.height };
 }
 
 void RenderServer::draw(float delta_time)

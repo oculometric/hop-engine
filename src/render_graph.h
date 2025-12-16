@@ -29,6 +29,8 @@ struct RenderStep
 	
 	Ref<RenderPass> render_pass;
 	Ref<UniformBlock> scene_uniforms;
+
+	~RenderStep();
 };
 
 struct RenderGraphBuilder

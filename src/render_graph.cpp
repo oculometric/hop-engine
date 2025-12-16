@@ -286,3 +286,6 @@ RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, Render
     execution_steps.push_back(step);
     return *this;
 }
+
+RenderStep::~RenderStep()
+{ }

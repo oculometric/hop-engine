@@ -212,12 +212,12 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
         node_view_dirty = true;
     }
 
-    glm::vec2 mouse_delta = Input::getMouseDelta() * 0.004f;
+    glm::vec2 mouse_delta = Input::getMouseDelta() * 0.025f;
     float move_x = Input::getAxis(GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
     float move_y = Input::getAxis(GLFW_KEY_UP, GLFW_KEY_DOWN);
     if (Input::isMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
     {
-        glm::vec2 mouse_world_delta = glm::vec2{ -mouse_delta.x * 512.0f, -mouse_delta.y * 512.0f } / RenderServer::getFramebufferSize();
+        glm::vec2 mouse_world_delta = glm::vec2{ -mouse_delta.x, -mouse_delta.y };// / RenderServer::getFramebufferSize();
         scene->getCamera(0)->transform.translateLocal({mouse_world_delta.x, mouse_world_delta.y, 0});
     }
     else if (Input::isMouseDown(GLFW_MOUSE_BUTTON_LEFT))
