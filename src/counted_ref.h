@@ -1,9 +1,21 @@
 #pragma once
 
 #include <cstring>
+#include <typeinfo>
 
 namespace HopEngine
 {
+
+#if !defined(NDEBUG)
+void registerCountedRef(const char* type_name, void* ptr, size_t* counter);
+void unregisterCountedRef(void* ptr);
+
+#define REGISTER registerCountedRef(typeid(T).name(), payload, ref_counter)
+#define UNREGISTER unregisterCountedRef(payload)
+#else
+#define REGISTER
+#define UNREGISTER
+#endif
 
 template <typename T>
 class WeakRef;
@@ -82,6 +94,7 @@ public:
 		{
 			ref_counter = new size_t;
 			*ref_counter = 1;
+			REGISTER;
 		}
 	}
 
@@ -97,6 +110,7 @@ public:
 		{
 			ref_counter = new size_t;
 			*ref_counter = 1;
+			REGISTER;
 		}
 	}
 	
@@ -128,6 +142,7 @@ private:
 			--(*ref_counter);
 			if (*ref_counter == 0)
 			{
+				UNREGISTER;
 				delete payload;
 				delete ref_counter;
 				ref_counter = nullptr;

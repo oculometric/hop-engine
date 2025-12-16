@@ -12,6 +12,34 @@ using namespace std;
 
 static Engine* engine = nullptr;
 
+#if !defined(NDEBUG)
+void Engine::registerCountedRef(const char* type_name, void* ptr, size_t* counter)
+{
+    if (engine->allocated_refs.contains(ptr))
+        DBG_ERROR("a reference counted object was allocated, but it's raw pointer is already allocated! you probably used a raw pointer twice. this will lead to double-freeing.");
+    else
+        engine->allocated_refs[ptr] = { type_name, counter };
+}
+
+void Engine::unregisterCountedRef(void* ptr)
+{
+    if (!engine->allocated_refs.contains(ptr))
+        DBG_ERROR("a reference counted object was deallocated, but it's raw pointer is not allocated! you probably used a raw pointer twice. we are about to double-free that pointer. i am praying for you.");
+    else
+        engine->allocated_refs.erase(ptr);
+}
+
+void HopEngine::registerCountedRef(const char* type_name, void* ptr, size_t* counter)
+{
+    Engine::registerCountedRef(type_name, ptr, counter);
+}
+
+void HopEngine::unregisterCountedRef(void* ptr)
+{
+    Engine::unregisterCountedRef(ptr);
+}
+#endif
+
 void Engine::init()
 {
 	if (engine == nullptr)
@@ -64,6 +92,13 @@ Ref<Scene> Engine::getScene()
     return engine->scene;
 }
 
+void Engine::summariseTrackedObjects()
+{
+    DBG_INFO("enumerating allocated objects (" + to_string(engine->allocated_refs.size()) + "):");
+    for (const auto& pair : engine->allocated_refs)
+        DBG_INFO("object " + PTR(pair.first) + ", with type '" + pair.second.first + "', has " + to_string(*pair.second.second) + " references");
+}
+
 void Engine::destroy()
 {
 	if (engine != nullptr)
@@ -72,6 +107,7 @@ void Engine::destroy()
 
 Engine::Engine()
 {
+    engine = this;
     Debug::init(Debug::DEBUG_FAULT);
     Window::initEnvironment();
     window = new Window(1024, 1024, "hop!");
@@ -79,16 +115,25 @@ Engine::Engine()
     Package::init();
     Package::loadPackage("resources.hop");
     RenderServer::init(window);
+    Engine::summariseTrackedObjects();
 }
 
 Engine::~Engine()
 {
     scene = nullptr;
 
+    Engine::summariseTrackedObjects();
     RenderServer::destroy();
     Package::destroy();
     Input::destroy();
     window = nullptr;
+    if (allocated_refs.size() > 0)
+    {
+        DBG_ERROR("uh oh! there are objects still allocated! prepare for vulkan errors and possibly crashes! see below:");
+        Engine::summariseTrackedObjects();
+    }
+    else
+        DBG_INFO("well done for cleaning up!");
     Window::terminateEnvironment();
     Debug::close();
 
