@@ -88,7 +88,11 @@ void RenderGraph::resizeBuffers(uint32_t width, uint32_t height)
 {
     for (RenderStep& step : execution_steps)
     {
-        step.render_pass->resize(width, height);
+        if (step.resolution_scale > 0.0f)
+            step.render_pass->resize((uint32_t)(width * step.resolution_scale), (uint32_t)(height * step.resolution_scale));
+        else
+            step.render_pass->resize(step.custom_extent.width ? step.custom_extent.width : (uint32_t)width, step.custom_extent.height ? step.custom_extent.height : height);
+
         if (step.is_camera)
             continue;
 
@@ -257,33 +261,54 @@ RenderGraphBuilder RenderGraphBuilder::addCamera(size_t slot)
     return addCamera(slot, RenderServer::getMainRenderPass()->getOutputConfig());
 }
 
-RenderGraphBuilder RenderGraphBuilder::addCamera(size_t slot, RenderOutput render_pass_config)
+RenderGraphBuilder RenderGraphBuilder::addCamera(size_t slot, RenderOutput render_pass_config, float size_factor, VkExtent2D custom_extent)
 {
     RenderStep step;
     step.is_camera = true;
     step.camera_slot = slot;
+    step.resolution_scale = size_factor;
+    step.custom_extent = custom_extent;
     glm::vec2 size = RenderServer::getFramebufferSize();
-    step.render_pass = new RenderPass((uint32_t)size.x, (uint32_t)size.y, render_pass_config);
+    if (size_factor > 0.0f)
+        step.render_pass = new RenderPass((uint32_t)(size.x * size_factor), (uint32_t)(size.y * size_factor), render_pass_config);
+    else
+        step.render_pass = new RenderPass(custom_extent.width ? custom_extent.width : (uint32_t)size.x, custom_extent.height ? custom_extent.height : (uint32_t)size.y, render_pass_config);
     execution_steps.push_back(step);
     return *this;
 }
 
-RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, std::map<uint32_t, RenderTextureBinding> texture_bindings)
+RenderGraphBuilder RenderGraphBuilder::addCamera(size_t slot, float size_factor, VkExtent2D custom_extent)
 {
-    return addPostProcess(shader, RenderOutput{ 0, true }, texture_bindings);
+
+    return addCamera(slot, RenderServer::getMainRenderPass()->getOutputConfig(), size_factor, custom_extent);
 }
 
-RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, RenderOutput render_pass_config, std::map<uint32_t, RenderTextureBinding> texture_bindings)
+RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<uint32_t, RenderTextureBinding> texture_bindings)
+{
+    return addPostProcess(shader, texture_bindings, RenderOutput{ 0, true });
+}
+
+RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<uint32_t, RenderTextureBinding> texture_bindings, RenderOutput render_pass_config, float size_factor, VkExtent2D custom_extent)
 {
     RenderStep step;
     step.is_camera = false;
+    step.resolution_scale = size_factor;
+    step.custom_extent = custom_extent;
     glm::vec2 size = RenderServer::getFramebufferSize();
-    step.render_pass = new RenderPass((uint32_t)size.x, (uint32_t)size.y, render_pass_config);
+    if (size_factor > 0.0f)
+        step.render_pass = new RenderPass((uint32_t)(size.x * size_factor), (uint32_t)(size.y * size_factor), render_pass_config);
+    else
+        step.render_pass = new RenderPass(custom_extent.width ? custom_extent.width : (uint32_t)size.x, custom_extent.height ? custom_extent.height : (uint32_t)size.y, render_pass_config);
     step.material = new Material(shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthTest(VK_FALSE).depthWrite(VK_FALSE), step.render_pass);
     step.texture_bindings = texture_bindings;
     step.scene_uniforms = new UniformBlock(ShaderLayout{ RenderServer::getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
     execution_steps.push_back(step);
     return *this;
+}
+
+RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<uint32_t, RenderTextureBinding> texture_bindings, float size_factor, VkExtent2D custom_extent)
+{
+    return addPostProcess(shader, texture_bindings, RenderOutput{ 0, true }, size_factor, custom_extent);
 }
 
 RenderStep::~RenderStep()

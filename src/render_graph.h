@@ -40,6 +40,8 @@ struct RenderStep
 	Ref<Material> material;
 	std::map<uint32_t, RenderTextureBinding> texture_bindings;
 	
+	float resolution_scale = 1.0f;
+	VkExtent2D custom_extent{ 0, 0 };
 	Ref<RenderPass> render_pass;
 	Ref<UniformBlock> scene_uniforms;
 
@@ -50,11 +52,12 @@ struct RenderGraphBuilder
 {
 	std::vector<RenderStep> execution_steps;
 
-	// TODO: custom render pass size/resolution control
 	RenderGraphBuilder addCamera(size_t slot);
-	RenderGraphBuilder addCamera(size_t slot, RenderOutput render_pass_config);
+	RenderGraphBuilder addCamera(size_t slot, RenderOutput render_pass_config, float size_factor = 1.0f, VkExtent2D custom_extent = { 128, 128 });
+	RenderGraphBuilder addCamera(size_t slot, float size_factor, VkExtent2D custom_extent = { 128, 128 });
 	RenderGraphBuilder addPostProcess(Ref<Shader> shader, std::map<uint32_t, RenderTextureBinding> texture_bindings);
-	RenderGraphBuilder addPostProcess(Ref<Shader> shader, RenderOutput render_pass_config, std::map<uint32_t, RenderTextureBinding> texture_bindings);
+	RenderGraphBuilder addPostProcess(Ref<Shader> shader, std::map<uint32_t, RenderTextureBinding> texture_bindings, RenderOutput render_pass_config, float size_factor = 1.0f, VkExtent2D custom_extent = { 128, 128 });
+	RenderGraphBuilder addPostProcess(Ref<Shader> shader, std::map<uint32_t, RenderTextureBinding> texture_bindings, float size_factor, VkExtent2D custom_extent = { 128, 128 });
 };
 
 class RenderGraph

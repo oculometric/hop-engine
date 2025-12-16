@@ -91,11 +91,11 @@ void initScene(Ref<Scene> scene)
     scene->render_graph = new RenderGraph(RenderGraphBuilder()
         .addCamera(0)
         .addCamera(1)
-        .addCamera(2)
+        .addCamera(2, 0.1f)
         .addPostProcess(new Shader("res://half_and_half", false), {
             { 0, RenderTextureBinding(0, 0) },
             { 1, RenderTextureBinding(1, 1).address(VK_SAMPLER_ADDRESS_MODE_REPEAT) },
-            { 2, RenderTextureBinding(2, 0).address(VK_SAMPLER_ADDRESS_MODE_REPEAT) }
+            { 2, RenderTextureBinding(2, 0).address(VK_SAMPLER_ADDRESS_MODE_REPEAT).filter(VK_FILTER_NEAREST) }
         }));
 }
 
