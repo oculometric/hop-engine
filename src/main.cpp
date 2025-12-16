@@ -77,6 +77,26 @@ void initScene(Ref<Scene> scene)
 
     gizmo = scene->insertObject<Gizmo>(new Gizmo());
     scene->skybox = new Texture("res://nasa_goddard_gaia_dr2_deep_star_map.png");
+
+    Ref<Camera> second_cam = new Camera();
+    scene->setCameraSlot(second_cam, 1);
+    second_cam->transform.lookAt({ 0, -2.0f, 0.7f }, { 0, 0, 0.7f }, { 0, 0, 1 });
+    second_cam->fov = 20.0f;
+
+    Ref<Camera> third_cam = new Camera();
+    scene->setCameraSlot(third_cam, 2);
+    third_cam->transform.lookAt({ 0, -0.2f, 0.8f }, { 0, 0, 0.7f }, { 0, 0, 1 });
+    third_cam->fov = 120.0f;
+
+    scene->render_graph = new RenderGraph(RenderGraphBuilder()
+        .addCamera(0)
+        .addCamera(1)
+        .addCamera(2)
+        .addPostProcess(new Shader("res://half_and_half", false), {
+            { 0, RenderTextureBinding(0, 0) },
+            { 1, RenderTextureBinding(1, 1).address(VK_SAMPLER_ADDRESS_MODE_REPEAT) },
+            { 2, RenderTextureBinding(2, 0).address(VK_SAMPLER_ADDRESS_MODE_REPEAT) }
+        }));
 }
 
 void updateScene(Ref<Scene> scene, float delta_time)

@@ -15,10 +15,10 @@ class Scene
 public:
 	glm::vec3 ambient_colour = { 0.01f, 0.01f, 0.01f };
 	Ref<Texture> skybox;
+	Ref<RenderGraph> render_graph;
 
 private:
 	std::vector<Ref<Object>> objects;
-	Ref<RenderGraph> render_graph;
 	std::map<size_t, Ref<Camera>> cameras;
 	Ref<Camera> backup_camera;
 	Ref<Object> root;

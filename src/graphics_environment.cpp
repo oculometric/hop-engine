@@ -671,6 +671,8 @@ void RenderServer::drawFrame(float delta_time)
         }
 
         WeakRef<Texture> new_passthrough_tex = scene->getRenderGraph()->getFinalImage();
+        if (!new_passthrough_tex)
+            new_passthrough_tex = default_image;
         if (new_passthrough_tex != passthrough_texture)
         {
             passthrough->setTexture(0, new_passthrough_tex);
