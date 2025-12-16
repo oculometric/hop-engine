@@ -13,7 +13,7 @@ private:
 	Ref<Scene> scene;
 	Ref<Window> window;
 	void(* update_func)(Ref<Scene>, float) = nullptr;
-	void(* imgui_func)() = nullptr;
+	void(* imgui_func)(Ref<Scene>, float) = nullptr;
 
 #if !defined(NDEBUG)
 	std::map<void*, std::pair<const char*, size_t*>> allocated_refs;
@@ -25,7 +25,7 @@ public:
 	static void init();
 	static void destroy();
 
-	static void setup(void(* init_func)(Ref<Scene>), void(* update_func)(Ref<Scene>, float), void(* imgui_func)());
+	static void setup(void(* init_func)(Ref<Scene>), void(* update_func)(Ref<Scene>, float), void(* imgui_func)(Ref<Scene>, float));
 	static void mainLoop();
 	static Ref<Scene> getScene();
 	static void summariseTrackedObjects();

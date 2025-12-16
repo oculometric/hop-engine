@@ -102,7 +102,7 @@ Ref<Texture> RenderGraph::getFinalImage() const
 {
     if (execution_steps.empty())
         return nullptr;
-    return execution_steps[execution_steps.size() - 1].render_pass->getImage(0);
+    return execution_steps[output_step % execution_steps.size()].render_pass->getImage(output_image);
 }
 
 void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands) const

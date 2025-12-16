@@ -59,6 +59,10 @@ struct RenderGraphBuilder
 
 class RenderGraph
 {
+public:
+	size_t output_step = -1;
+	size_t output_image = 0;
+
 private:
 	std::vector<RenderStep> execution_steps;
 	VkExtent2D expected_extent = { 0, 0 };
@@ -72,7 +76,7 @@ public:
 	void recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Scene> scene) const;
 	void resizeBuffers(uint32_t width, uint32_t height);
 	inline VkExtent2D getExpectedExtent() const { return expected_extent; }
-	Ref<Texture> getFinalImage() const; // TODO: control of which image to output 
+	Ref<Texture> getFinalImage() const;
 
 private:
 	void recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands) const;

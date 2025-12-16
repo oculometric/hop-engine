@@ -1,5 +1,7 @@
 #include "input.h"
 
+#include <imgui.h>
+
 using namespace HopEngine;
 using namespace std;
 
@@ -70,6 +72,8 @@ glm::vec2 Input::getMousePosition()
 
 bool Input::isMouseDown(int button)
 {
+	if (ImGui::GetIO().WantCaptureMouse)
+		return false;
 	return glfwGetMouseButton(application_instance->window->getWindow(), button) == GLFW_PRESS;
 }
 
@@ -102,6 +106,8 @@ void Input::keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 
 void Input::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
+	if (ImGui::GetIO().WantCaptureMouse)
+		return;
 	if (action == GLFW_PRESS)
 		application_instance->pressed_since_checked.insert(button);
 }

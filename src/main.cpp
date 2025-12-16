@@ -270,11 +270,32 @@ void initMaterialScene(Ref<Scene> scene)
         glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
-void imGuiDrawFunc()
+void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
 {
     ImGui::Begin("test");
     ImGui::Text("yippee");
     ImGui::End();
+
+    ImGui::Begin("render graph", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    int tmp = scene->getRenderGraph()->output_step;
+    ImGui::InputInt("step index", &tmp, 1, 1);
+    scene->getRenderGraph()->output_step = tmp;
+    tmp = scene->getRenderGraph()->output_image;
+    ImGui::SliderInt("attachment index", &tmp, 0, 4);
+    scene->getRenderGraph()->output_image = tmp;
+    ImGui::End();
+
+    // TODO: debug for the render graph (add/remove)
+    // TODO: debug for each render pass
+
+    ImGui::Begin("scene stats", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::LabelText("objects", "%d", scene->getAllObjects().size());
+    ImGui::LabelText("draws", "%d", scene->getDrawCommands().size());
+    ImGui::End();
+
+    // TODO: debug for each object
+    // TODO: debug for each light
+    // TODO: debug for each camera
 }
 
 struct SceneFuncSet
@@ -282,7 +303,7 @@ struct SceneFuncSet
     std::wstring name;
     void(*init_func)(Ref<Scene>);
     void(*update_func)(Ref<Scene>, float);
-    void(*imgui_func)();
+    void(*imgui_func)(Ref<Scene>, float);
 };
 
 static std::vector<SceneFuncSet> scenes =

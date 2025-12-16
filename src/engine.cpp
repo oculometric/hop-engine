@@ -46,7 +46,7 @@ void Engine::init()
 		engine = new Engine();
 }
 
-void Engine::setup(void(* init_func)(Ref<Scene>), void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)())
+void Engine::setup(void(* init_func)(Ref<Scene>), void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>, float))
 {
     RenderServer::waitIdle();
 
@@ -77,7 +77,7 @@ void Engine::mainLoop()
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            engine->imgui_func();
+            engine->imgui_func(engine->scene, delta.count());
 
             ImGui::Render();
         }
