@@ -9,6 +9,7 @@
 #include "scene.h"
 #include "mesh.h"
 #include "texture.h"
+#include "sampler.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -19,14 +20,16 @@ RenderGraph::RenderGraph(RenderGraphBuilder config)
     if (!config.execution_steps.empty())
         expected_extent = config.execution_steps[0].render_pass->getExtent();
 
-    // TODO: texture sampler control, sampler builder!
     for (RenderStep& step : execution_steps)
     {
         if (step.is_camera)
             continue;
 
         for (const auto& pair : step.texture_bindings)
-            step.material->setTexture(pair.first, execution_steps[pair.second.first].render_pass->getImage(pair.second.second));
+        {
+            step.material->setTexture(pair.first, execution_steps[pair.second.step_index].render_pass->getImage(pair.second.output_index));
+            step.material->setSampler(pair.first, new Sampler(SamplerBuilder().filter(pair.second.filter_mode).address(pair.second.address_mode)));
+        }
     }
     // TODO: checks for duplicate post process material use, and duplicate render pass use by those materials
 }
@@ -90,7 +93,7 @@ void RenderGraph::resizeBuffers(uint32_t width, uint32_t height)
             continue;
 
         for (const auto& pair : step.texture_bindings)
-            step.material->setTexture(pair.first, execution_steps[pair.second.first].render_pass->getImage(pair.second.second));
+            step.material->setTexture(pair.first, execution_steps[pair.second.step_index].render_pass->getImage(pair.second.output_index));
     }
     expected_extent = { width, height };
 }
@@ -265,12 +268,12 @@ RenderGraphBuilder RenderGraphBuilder::addCamera(size_t slot, RenderOutput rende
     return *this;
 }
 
-RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, std::map<uint32_t, std::pair<size_t, size_t>> texture_bindings)
+RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, std::map<uint32_t, RenderTextureBinding> texture_bindings)
 {
     return addPostProcess(shader, RenderOutput{ 0, true }, texture_bindings);
 }
 
-RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, RenderOutput render_pass_config, std::map<uint32_t, std::pair<size_t, size_t>> texture_bindings)
+RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, RenderOutput render_pass_config, std::map<uint32_t, RenderTextureBinding> texture_bindings)
 {
     RenderStep step;
     step.is_camera = false;

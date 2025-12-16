@@ -21,12 +21,24 @@
 namespace HopEngine
 {
 
+struct RenderTextureBinding
+{
+	size_t step_index = 0;
+	size_t output_index = 0;
+	VkFilter filter_mode = VK_FILTER_LINEAR;
+	VkSamplerAddressMode address_mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+	inline RenderTextureBinding(size_t step, size_t output) : step_index(step), output_index(output) { }
+	inline RenderTextureBinding filter(VkFilter value) { filter_mode = value; return *this; }
+	inline RenderTextureBinding address(VkSamplerAddressMode value) { address_mode = value; return *this; }
+};
+
 struct RenderStep
 {
 	bool is_camera = true;
 	size_t camera_slot = 0;
 	Ref<Material> material;
-	std::map<uint32_t, std::pair<size_t, size_t>> texture_bindings;
+	std::map<uint32_t, RenderTextureBinding> texture_bindings;
 	
 	Ref<RenderPass> render_pass;
 	Ref<UniformBlock> scene_uniforms;
@@ -41,8 +53,8 @@ struct RenderGraphBuilder
 	// TODO: custom render pass size/resolution control
 	RenderGraphBuilder addCamera(size_t slot);
 	RenderGraphBuilder addCamera(size_t slot, RenderOutput render_pass_config);
-	RenderGraphBuilder addPostProcess(Ref<Shader> shader, std::map<uint32_t, std::pair<size_t, size_t>> texture_bindings);
-	RenderGraphBuilder addPostProcess(Ref<Shader> shader, RenderOutput render_pass_config, std::map<uint32_t, std::pair<size_t, size_t>> texture_bindings);
+	RenderGraphBuilder addPostProcess(Ref<Shader> shader, std::map<uint32_t, RenderTextureBinding> texture_bindings);
+	RenderGraphBuilder addPostProcess(Ref<Shader> shader, RenderOutput render_pass_config, std::map<uint32_t, RenderTextureBinding> texture_bindings);
 };
 
 class RenderGraph
