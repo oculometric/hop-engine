@@ -7,6 +7,15 @@
 namespace HopEngine
 {
 
+struct SamplerBuilder
+{
+	VkFilter filtering_mode = VK_FILTER_LINEAR;
+	VkSamplerAddressMode address_mode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+
+	inline SamplerBuilder filter(VkFilter value) { filtering_mode = value; return *this; }
+	inline SamplerBuilder address(VkSamplerAddressMode value) { address_mode = value; return *this; }
+};
+
 class Sampler
 {
 private:
@@ -15,7 +24,7 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Sampler);
 
-	Sampler(VkFilter filtering_mode, VkSamplerAddressMode address_mode);
+	Sampler(SamplerBuilder config);
 	~Sampler();
 
 	inline VkSampler getSampler() const { return sampler; }

@@ -64,9 +64,9 @@ void UniformBlock::setTexture(uint32_t binding, Ref<Texture> image)
 
 void UniformBlock::setSampler(uint32_t binding, Ref<Sampler> sampler)
 {
-    textures_in_use[binding].second = sampler;
     if (textures_in_use[binding].second == sampler)
         return;
+    textures_in_use[binding].second = sampler;
     applyDescriptorBindings();
 }
 

@@ -51,7 +51,7 @@ private:
 public:
 	DELETE_CONSTRUCTORS(RenderGraph);
 
-	RenderGraph(RenderGraphBuilder config = RenderGraphBuilder());
+	RenderGraph(RenderGraphBuilder config);
 
 	void updateUniforms(uint32_t image_index, float time_since_start, Ref<Scene> scene);
 	void recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Scene> scene) const;

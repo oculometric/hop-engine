@@ -13,7 +13,7 @@ constexpr size_t v_i_buffer_rounding_size = 256;
 NodeView::NodeView() : StaticMesh(nullptr, nullptr)
 {
     material = new Material(new Shader("res://engine/node_shader", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthTest(VK_FALSE).depthWrite(VK_FALSE));
-    Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+    Ref<Sampler> sampler = new Sampler(SamplerBuilder().filter(VK_FILTER_NEAREST));
     material->setSampler("node_atlas", sampler);
     material->setSampler("text_atlas", sampler);
     material->setSampler("link_atlas", sampler);

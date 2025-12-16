@@ -36,7 +36,7 @@ Spline camera_spline;
 void initScene(Ref<Scene> scene)
 {
     Ref<Shader> shader = new Shader("res://psx", false);
-    Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+    Ref<Sampler> sampler = new Sampler(SamplerBuilder().filter(VK_FILTER_NEAREST));
     asha = scene->insertObject<StaticMesh>(new StaticMesh(
         new Mesh("res://asha/asha.obj"),
         new Material(
@@ -244,7 +244,7 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
 void initMaterialScene(Ref<Scene> scene)
 {
     Ref<Shader> shader = new Shader("res://pbr", false);
-    Ref<Sampler> sampler = new Sampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+    Ref<Sampler> sampler = new Sampler(SamplerBuilder().filter(VK_FILTER_NEAREST));
     obj = scene->insertObject<StaticMesh>(new StaticMesh(
         new Mesh("res://cube.obj"),
         new Material(shader)
