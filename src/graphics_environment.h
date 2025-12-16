@@ -82,6 +82,7 @@ private:
 	WeakRef<Texture> current_skybox;
 	Ref<Mesh> quad;
 	Ref<Material> passthrough;
+	WeakRef<Texture> passthrough_texture;
 
 public:
 	static void init(Ref<Window> main_window);

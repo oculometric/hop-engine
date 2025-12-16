@@ -670,8 +670,12 @@ void RenderServer::drawFrame(float delta_time)
             object->pushToDescriptorSet(image_index);
         }
 
-        // TODO: only do this when needed
-        passthrough->setTexture(0, scene->getRenderGraph()->getFinalImage());
+        WeakRef<Texture> new_passthrough_tex = scene->getRenderGraph()->getFinalImage();
+        if (new_passthrough_tex != passthrough_texture)
+        {
+            passthrough->setTexture(0, new_passthrough_tex);
+            passthrough_texture = new_passthrough_tex;
+        }
     }
     else
         DBG_WARNING("no scene attached to environment");
@@ -795,7 +799,7 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
 
 bool DrawCommand::operator()(const DrawCommand& a, const DrawCommand& b) const
 {
-    if (a.draw_priority < b.draw_priority)
+    if (a.draw_priority <= b.draw_priority)
         return false;
     if (a.material->getShader() > a.material->getShader())
         return false;
