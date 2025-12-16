@@ -31,6 +31,7 @@ public:
 	bool isResized();
 	std::pair<uint32_t, uint32_t> getSize();
 	void setTitle(std::string title);
+	void setVisible(bool visible);
 
 	~Window();
 };

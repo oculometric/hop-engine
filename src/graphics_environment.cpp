@@ -731,18 +731,27 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
                     draw_commands.insert(cmd);
             }
         }
+        if (scene->skybox)
+            draw_commands.insert({ skybox_material, skybox_cube });
     }
-    if (scene->skybox)
-        draw_commands.insert({ skybox_material, skybox_cube });
     second_pass_commands.insert({ post_process, quad });
 
     if (scene)
+    {
+        // TODO: make clear colour a property of the camera
         recordRenderCommandsForPass(command_buffer, image_index, offscreen_pass, draw_commands, scene->background_colour, scene->getCamera()->getDescriptorSet(image_index));
+        recordRenderCommandsForPass(command_buffer, image_index, render_pass, second_pass_commands, { 0, 0, 0 }, scene->getCamera()->getDescriptorSet(image_index), true);
+    }
+    else
+    {
+        Camera default_camera; // TODO: remove this as soon as render graph works
+        // TODO: default simple-clear if no scene (and thus render graph) is loaded
+        recordRenderCommandsForPass(command_buffer, image_index, render_pass, { }, { 0.02f, 0.02f, 0.02f }, default_camera.getDescriptorSet(image_index), true);
+    }
 
-    recordRenderCommandsForPass(command_buffer, image_index, render_pass, second_pass_commands, { 0, 0, 0 }, scene->getCamera()->getDescriptorSet(image_index), true);
 
     ImDrawData* draw_data = ImGui::GetDrawData();
-    ImGui_ImplVulkan_RenderDrawData(draw_data, command_buffer);
+    if (draw_data) ImGui_ImplVulkan_RenderDrawData(draw_data, command_buffer);
 
     vkCmdEndRenderPass(command_buffer);
 

@@ -7,7 +7,7 @@ Window::Window(uint32_t _width, uint32_t _height, string title)
 {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     width = _width;
     height = _height;
     window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
@@ -66,6 +66,14 @@ pair<uint32_t, uint32_t> Window::getSize()
 void Window::setTitle(std::string title)
 {
     glfwSetWindowTitle(window, title.c_str());
+}
+
+void Window::setVisible(bool visible)
+{
+    if (visible)
+        glfwShowWindow(window);
+    else
+        glfwHideWindow(window);
 }
 
 Window::~Window()

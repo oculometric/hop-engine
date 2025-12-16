@@ -200,6 +200,7 @@
     <ClInclude Include="src\node_view.h" />
     <ClInclude Include="src\package.h" />
     <ClInclude Include="src\pbr.h" />
+    <ClInclude Include="src\render_graph.h" />
     <ClInclude Include="src\sampler.h" />
     <ClInclude Include="src\scene.h" />
     <ClInclude Include="src\texture.h" />

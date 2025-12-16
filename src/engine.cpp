@@ -94,9 +94,11 @@ Ref<Scene> Engine::getScene()
 
 void Engine::summariseTrackedObjects()
 {
+#if !defined(NDEBUG)
     DBG_INFO("enumerating allocated objects (" + to_string(engine->allocated_refs.size()) + "):");
     for (const auto& pair : engine->allocated_refs)
         DBG_INFO("object " + PTR(pair.first) + ", with type '" + pair.second.first + "', has " + to_string(*pair.second.second) + " references");
+#endif
 }
 
 void Engine::destroy()
@@ -116,6 +118,8 @@ Engine::Engine()
     Package::loadPackage("resources.hop");
     RenderServer::init(window);
     Engine::summariseTrackedObjects();
+    RenderServer::draw(0.0f);
+    window->setVisible(true);
 }
 
 Engine::~Engine()
@@ -127,6 +131,7 @@ Engine::~Engine()
     Package::destroy();
     Input::destroy();
     window = nullptr;
+#if !defined(NDEBUG)
     if (allocated_refs.size() > 0)
     {
         DBG_ERROR("uh oh! there are objects still allocated! prepare for vulkan errors and possibly crashes! see below:");
@@ -134,6 +139,7 @@ Engine::~Engine()
     }
     else
         DBG_INFO("well done for cleaning up!");
+#endif
     Window::terminateEnvironment();
     Debug::close();
 
