@@ -2,6 +2,7 @@
 
 #include "texture.h"
 #include "render_graph.h"
+#include "uniform_block.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -50,6 +51,17 @@ vector<LightParams> Scene::getLightParams() const
 Ref<RenderGraph> Scene::getRenderGraph() const
 {
 	return render_graph;
+}
+
+vector<DrawCommand> Scene::getDrawCommands() const
+{
+	vector<DrawCommand> commands;
+	for (const Ref<Object>& object : objects)
+	{
+		auto obj_commands = object->getDrawCommands();
+		commands.insert(commands.begin(), obj_commands.begin(), obj_commands.end());
+	}
+	return commands;
 }
 
 Scene::Scene()

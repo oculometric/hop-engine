@@ -191,6 +191,7 @@
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\counted_ref.h" />
     <ClInclude Include="src\debug.h" />
+    <ClInclude Include="src\draw_command.h" />
     <ClInclude Include="src\engine.h" />
     <ClInclude Include="src\font.h" />
     <ClInclude Include="src\gizmo.h" />

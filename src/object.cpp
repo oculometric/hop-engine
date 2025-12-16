@@ -110,8 +110,7 @@ vector<DrawCommand> StaticMesh::getDrawCommands() const
 {
 	vector<DrawCommand> commands;
 	if (material && mesh && uniforms)
-		commands.push_back({ material, mesh, uniforms });
-	//commands.push_back(Object::getDrawCommands()[0]);
+		commands.push_back(DrawCommand(material, mesh, uniforms));
 	return commands;
 }
 

@@ -16,6 +16,7 @@
 
 #include "common.h"
 #include "render_pass.h"
+#include "draw_command.h"
 
 namespace HopEngine
 {

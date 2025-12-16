@@ -48,20 +48,16 @@ void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, R
 void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Scene> scene) const
 {
     vector<multiset<DrawCommand, DrawCommand>> step_commands(execution_steps.size());
-    for (const Ref<Object>& object : scene->getAllObjects())
+    auto scene_commands = scene->getDrawCommands();
+    for (const auto& cmd : scene_commands)
     {
-        auto obj_commands = object->getDrawCommands();
-        for (const auto& cmd : obj_commands)
+        for (size_t i = 0; i < execution_steps.size(); ++i)
         {
-            for (size_t i = 0; i < execution_steps.size(); ++i)
-            {
-                const RenderStep& step = execution_steps[i];
-                if (!step.is_camera)
-                    continue;
-                // TODO: make gizmos draw in the last camera slot, ability for some cameras to have custom render passes
-                if (cmd.material->getRenderPass()->isCompatible(step.render_pass) && (cmd.camera_mask & (1 << step.camera_slot)))
-                    step_commands[i].insert(cmd);
-            }
+            const RenderStep& step = execution_steps[i];
+            if (!step.is_camera)
+                continue;
+            if (cmd.material->getRenderPass()->isCompatible(step.render_pass) && (cmd.camera_mask & (1 << step.camera_slot)))
+                step_commands[i].insert(cmd);
         }
     }
 
@@ -71,7 +67,7 @@ void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t i
         {
             if (!execution_steps[i].is_camera)
                 continue;
-            step_commands[i].insert({ RenderServer::getSkyboxMaterial(), RenderServer::getSkyboxCube() });
+            step_commands[i].insert(DrawCommand(RenderServer::getSkyboxMaterial(), RenderServer::getSkyboxCube()).priority(1000));
         }
     }
 

@@ -8,6 +8,7 @@
 #include "common.h"
 #include "transform.h"
 #include "pbr.h"
+#include "draw_command.h"
 
 namespace HopEngine
 {

@@ -244,7 +244,7 @@ RenderServer::RenderServer(Ref<Window> main_window)
 
     default_material = new Material(new Shader("res://engine/shader", false));
     gizmo_material = new Material(new Shader("res://engine/gizmo", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE), final_render_pass);
-    skybox_material = new Material(new Shader("res://engine/skybox", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE));
+    skybox_material = new Material(new Shader("res://engine/skybox", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
     passthrough = new Material(new Shader("res://engine/passthrough", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), final_render_pass);
 
     // TODO: make this a render graph step
@@ -795,13 +795,15 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
 
 bool DrawCommand::operator()(const DrawCommand& a, const DrawCommand& b) const
 {
-    if (a.material->getShader() < a.material->getShader())
-        return true;
-    if (a.material < b.material)
-        return true;
-    if (a.uniforms < b.uniforms)
-        return true;
-    if (a.mesh < b.mesh)
-        return true;
-    return false;
+    if (a.draw_priority < b.draw_priority)
+        return false;
+    if (a.material->getShader() > a.material->getShader())
+        return false;
+    if (a.material > b.material)
+        return false;
+    if (a.uniforms > b.uniforms)
+        return false;
+    if (a.mesh > b.mesh)
+        return false;
+    return true;
 }

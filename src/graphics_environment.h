@@ -12,17 +12,6 @@
 namespace HopEngine
 {
 
-struct DrawCommand
-{
-	// TODO: priority
-	Ref<Material> material;
-	Ref<Mesh> mesh;
-	Ref<UniformBlock> uniforms;
-	uint32_t camera_mask = 0xFFFFFFFF;
-
-	bool operator()(const DrawCommand& a, const DrawCommand& b) const;
-};
-
 class RenderServer
 {
 public:

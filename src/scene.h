@@ -5,6 +5,7 @@
 
 #include "common.h"
 #include "object.h"
+#include "draw_command.h"
 
 namespace HopEngine
 {
@@ -35,6 +36,7 @@ public:
 	std::vector<Ref<Object>> getAllObjects() const;
 	std::vector<LightParams> getLightParams() const;
 	Ref<RenderGraph> getRenderGraph() const;
+	std::vector<DrawCommand> getDrawCommands() const;
 
 	Scene();
 	~Scene();
