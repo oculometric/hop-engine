@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <set>
+#include <map>
 
 #include "common.h"
 #include "object.h"
@@ -19,15 +19,16 @@ public:
 private:
 	std::vector<Ref<Object>> objects;
 	Ref<RenderGraph> render_graph;
-	Ref<Camera> camera;
+	std::map<size_t, Ref<Camera>> cameras;
+	Ref<Camera> backup_camera;
 	Ref<Object> root;
 	std::vector<Ref<Light>> lights;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Scene);
 
-	// TODO: draw list which the render server queries
 	Ref<Camera> getCamera(size_t slot) const;
+	void setCameraSlot(Ref<Camera> camera, size_t slot);
 	template <class T>
 	inline Ref<T> insertObject(Ref<T> obj);
 	void removeObject(Ref<Object> obj);

@@ -9,8 +9,16 @@ using namespace std;
 
 Ref<Camera> Scene::getCamera(size_t slot) const
 {
-	// TODO: support multiple cameras!!
-	return camera;
+	auto it = cameras.find(slot);
+	if (it != cameras.end())
+		return it->second;
+	else
+		return backup_camera;
+}
+
+void Scene::setCameraSlot(Ref<Camera> camera, size_t slot)
+{
+	cameras[slot] = camera;
 }
 
 void Scene::removeObject(Ref<Object> obj)
@@ -67,8 +75,11 @@ vector<DrawCommand> Scene::getDrawCommands() const
 Scene::Scene()
 {
 	render_graph = new RenderGraph(RenderGraphBuilder().addCamera(0));
-	camera = new Camera();
 	root = new Object();
+	backup_camera = new Camera();
+	backup_camera->setParent(root);
+	cameras[0] = new Camera();
+	cameras[0]->setParent(root);
 
 	DBG_INFO("created new scene");
 }
