@@ -13,6 +13,7 @@ using namespace std;
 
 Pipeline::Pipeline(Ref<Shader> shader, PipelineBuilder config, Ref<RenderPass> render_pass)
 {
+    pipeline_config = config;
     array<VkDynamicState, 2> dynamic_states =
     {
         VK_DYNAMIC_STATE_VIEWPORT,

@@ -27,6 +27,7 @@ public:
 	static bool wasKeyPressed(int key);
 	static float getAxis(int key_negative, int key_positive);
 	static glm::vec2 getMouseDelta();
+	static void resetMouseDelta();
 	static glm::vec2 getMousePosition();
 	static bool isMouseDown(int button);
 	static bool wasMousePressed(int button);

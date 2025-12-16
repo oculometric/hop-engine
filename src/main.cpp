@@ -21,12 +21,14 @@
 
 #include "token_file.h"
 #include "pbr.h"
+#include "gizmo.h"
 
 using namespace HopEngine;
 
 WeakRef<StaticMesh> asha;
 WeakRef<StaticMesh> obj;
 WeakRef<NodeView> node_view;
+WeakRef<Gizmo> gizmo;
 WeakRef<NodeView::Node> selected_node;
 
 Spline camera_spline;
@@ -72,6 +74,8 @@ void initScene(Ref<Scene> scene)
     scene->getCamera()->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f));
+
+    gizmo = scene->insertObject<Gizmo>(new Gizmo());
 }
 
 void updateScene(Ref<Scene> scene, float delta_time)
@@ -98,6 +102,11 @@ void updateScene(Ref<Scene> scene, float delta_time)
     /*scene->camera->transform.lookAt(camera_spline[total_time / 6.0f] * 1.5f,
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f));*/
+
+    auto cast = asha.cast<Object>();
+    gizmo->trackObject(cast, scene->getCamera());
+
+    Input::resetMouseDelta();
 }
 
 void initNodeScene(Ref<Scene> scene)
@@ -228,7 +237,7 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
 
     if (node_view_dirty)
         node_view->updateMesh();
-
+    Input::resetMouseDelta();
 }
 
 void initMaterialScene(Ref<Scene> scene)

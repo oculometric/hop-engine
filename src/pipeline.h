@@ -26,6 +26,7 @@ class Pipeline
 {
 private:
 	VkPipeline pipeline = VK_NULL_HANDLE;
+	PipelineBuilder pipeline_config;
 
 public:
 	DELETE_CONSTRUCTORS(Pipeline);
@@ -34,6 +35,7 @@ public:
 	~Pipeline();
 
 	inline VkPipeline getPipeline() const { return pipeline; }
+	inline PipelineBuilder getConfig() const { return pipeline_config; }
 };
 
 }

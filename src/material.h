@@ -35,6 +35,7 @@ public:
 	VkDescriptorSet getDescriptorSet(size_t index) const;
 	Ref<Shader> getShader() const;
 	Ref<RenderPass> getRenderPass() const;
+	Ref<Material> duplicate() const;
 	
 	void setTexture(uint32_t binding, Ref<Texture> texture);
 	void setSampler(uint32_t binding, Ref<Sampler> sampler);

@@ -79,6 +79,11 @@ Ref<RenderPass> Material::getRenderPass() const
 	return render_pass;
 }
 
+Ref<Material> Material::duplicate() const
+{
+    return new Material(shader, pipeline->getConfig(), render_pass);
+}
+
 void Material::setTexture(uint32_t binding, Ref<Texture> texture)
 {
 	DBG_VERBOSE("material " + PTR(this) + " assigned texture " + PTR(texture.get()) + " to binding " + to_string(binding));

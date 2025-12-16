@@ -54,7 +54,8 @@ void Object::pushToDescriptorSet(size_t index)
 
 vector<DrawCommand> Object::getDrawCommands() const
 {
-	return { { RenderServer::getGizmoMaterial(), RenderServer::getGizmoMesh(0), uniforms } };
+	return { };
+	//return { { RenderServer::getGizmoMaterial(), RenderServer::getGizmoMesh(0), uniforms } };
 }
 
 Object::~Object()
@@ -100,6 +101,15 @@ void Camera::pushToCameraDescriptorSet(size_t index, glm::ivec2 viewport_size, f
 	uniforms->pushToDescriptorSet(index);
 }
 
+glm::mat4 Camera::getWorldToScreenMatrix()
+{
+	glm::vec2 viewport_size = RenderServer::getFramebufferSize();
+	glm::mat4 view_to_clip = glm::perspective(glm::radians(fov), viewport_size.x / (float)(viewport_size.y), near_clip, far_clip);
+	view_to_clip[1][1] *= -1;
+	glm::mat4 world_to_view = glm::inverse(transform.getMatrix());
+    return view_to_clip * world_to_view;
+}
+
 VkDescriptorSet Camera::getDescriptorSet(size_t index) const
 {
 	return uniforms->getDescriptorSet(index);
@@ -122,7 +132,7 @@ vector<DrawCommand> StaticMesh::getDrawCommands() const
 	vector<DrawCommand> commands;
 	if (material && mesh && uniforms)
 		commands.push_back({ material, mesh, uniforms });
-	commands.push_back(Object::getDrawCommands()[0]);
+	//commands.push_back(Object::getDrawCommands()[0]);
 	return commands;
 }
 

@@ -253,6 +253,7 @@ RenderServer::RenderServer(Ref<Window> main_window)
     
     gizmo_material = new Material(new Shader("res://engine/gizmo", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE), render_pass);
     axes_gizmo = new Mesh("res://engine/axes_gizmo.obj");
+    rotations_gizmo = new Mesh("res://engine/rotate_gizmo.obj");
 
     initImGui();
 

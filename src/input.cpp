@@ -47,15 +47,18 @@ float Input::getAxis(int key_negative, int key_positive)
 	return value;
 }
 
+static double last_x = 0, last_y = 0;
 glm::vec2 Input::getMouseDelta()
 {
-	static double last_x = 0, last_y = 0;
 	double new_x, new_y;
 	glfwGetCursorPos(application_instance->window->getWindow(), &new_x, &new_y);
 	glm::vec2 difference = { new_x - last_x, new_y - last_y };
-	last_x = new_x;
-	last_y = new_y;
 	return difference;
+}
+
+void Input::resetMouseDelta()
+{
+	glfwGetCursorPos(application_instance->window->getWindow(), &last_x, &last_y);
 }
 
 glm::vec2 Input::getMousePosition()
