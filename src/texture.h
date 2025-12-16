@@ -36,6 +36,7 @@ public:
 	void copyBufferToImage(Ref<Buffer> buffer);
 	VkImageView getView();
 	inline glm::ivec2 getSize() const { return { width, height }; }
+	inline VkFormat getFormat() const { return format; }
 
 private:
 	void createImage();

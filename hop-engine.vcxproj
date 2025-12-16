@@ -222,6 +222,10 @@
     <None Include="res\engine\common.glsl" />
     <None Include="res\engine\node_shader.frag" />
     <None Include="res\engine\node_shader.vert" />
+    <None Include="res\engine\passthrough.frag" />
+    <None Include="res\engine\passthrough.vert" />
+    <None Include="res\engine\post_process.frag" />
+    <None Include="res\engine\post_process.vert" />
     <None Include="res\engine\shader.frag" />
     <None Include="res\engine\shader.vert" />
     <None Include="res\engine\skybox.frag" />

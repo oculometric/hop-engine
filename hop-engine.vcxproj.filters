@@ -271,6 +271,18 @@
     <None Include="res\engine\skybox.vert">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="res\engine\passthrough.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\engine\passthrough.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\engine\post_process.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\engine\post_process.vert">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="hop-engine.rc">

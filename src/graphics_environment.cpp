@@ -675,7 +675,12 @@ void RenderServer::drawFrame(float delta_time)
         {
             passthrough->setTexture(0, new_passthrough_tex);
             passthrough_texture = new_passthrough_tex;
+            if (new_passthrough_tex->getFormat() == Texture::depth_format)
+                passthrough->setIntUniform("display_depth", 1);
+            else
+                passthrough->setIntUniform("display_depth", 0);
         }
+        passthrough->pushToDescriptorSet(image_index);
     }
     else
         DBG_WARNING("no scene attached to environment");

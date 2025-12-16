@@ -24,5 +24,6 @@ void main()
     else
         out_colour = vec4(col.rgb, 1);
     out_normal = vec4(frag.normal.xyz, 0);
-    out_custom = vec4(col.xyz, 0);
+    out_custom = vec4(frag.position.xyz, 0);
+    out_params = vec4(frag.colour.xyz, 0);
 }
