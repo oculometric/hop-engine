@@ -87,7 +87,9 @@ private:
 	Ref<Mesh> axes_gizmo;
 	Ref<Mesh> rotations_gizmo;
 	Ref<Mesh> scale_gizmo;
-
+	Ref<Mesh> skybox_cube;
+	Ref<Material> skybox_material;
+	WeakRef<Texture> current_skybox;
 	Ref<Mesh> quad;
 	Ref<Material> post_process;
 

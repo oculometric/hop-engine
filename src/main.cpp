@@ -76,6 +76,7 @@ void initScene(Ref<Scene> scene)
         glm::vec3(0.0f, 0.0f, 1.0f));
 
     gizmo = scene->insertObject<Gizmo>(new Gizmo());
+    scene->skybox = new Texture("res://nasa_goddard_gaia_dr2_deep_star_map.png");
 }
 
 void updateScene(Ref<Scene> scene, float delta_time)

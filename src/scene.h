@@ -14,6 +14,7 @@ class Scene
 public:
 	glm::vec3 background_colour = { 0.004f, 0.509f, 0.506f };
 	glm::vec3 ambient_colour = { 0.01f, 0.01f, 0.01f };
+	Ref<Texture> skybox;
 
 private:
 	std::vector<Ref<Object>> objects;

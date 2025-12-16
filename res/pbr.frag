@@ -11,11 +11,6 @@ layout(set = 2, binding = 0) uniform MaterialInfo
 layout(set = 2, binding = 1) uniform sampler2D albedo_tex;
 layout(set = 2, binding = 2) uniform sampler2D normal_map;
 
-vec3 toLinear(vec3 srgb)
-{
-    return (pow(srgb, vec3(1.0f / 2.4f)) * 1.055f) -0.055f;
-}
-
 float saturate(float f) { return clamp(f, 0, 1); }
 
 vec3 sampleLight(Light light, vec3 alb, vec3 norm, vec3 pixel_to_eye)

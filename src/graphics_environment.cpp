@@ -222,6 +222,7 @@ RenderServer::RenderServer(Ref<Window> main_window)
         { { -1, 1, 0, 1 }, {}, {}, {}, { 0, 1 } },
         { { 1, 1, 0, 1 }, {}, {}, {}, { 1, 1 } }
         }, { 0, 3, 1, 0, 2, 3 });
+    skybox_cube = new Mesh("res://engine/skybox.obj");
     // TODO: system for associating material with render pass, and for controlling render pass execution
     // TODO: offscreen pass needs its own scene uniform buffers since viewport size is different!
     offscreen_pass = new RenderPass(framebuffer_size.first, framebuffer_size.second, { 3, true });
@@ -255,6 +256,8 @@ RenderServer::RenderServer(Ref<Window> main_window)
     axes_gizmo = new Mesh("res://engine/axes_gizmo.obj");
     rotations_gizmo = new Mesh("res://engine/rotate_gizmo.obj");
 
+    skybox_material = new Material(new Shader("res://engine/skybox", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE));
+
     initImGui();
 
     DBG_INFO("graphics environment initialised");
@@ -282,7 +285,9 @@ RenderServer::~RenderServer()
 
     DBG_VERBOSE("destroying command pool");
     vkDestroyCommandPool(device, command_pool, nullptr);
-
+    
+    skybox_material = nullptr;
+    skybox_cube = nullptr;
     default_material = nullptr;
     gizmo_material = nullptr;
     axes_gizmo = nullptr;
@@ -637,6 +642,11 @@ void RenderServer::drawFrame(float delta_time)
     {
         VkExtent2D framebuffer_size = swapchain->getExtent();
         scene->getCamera()->pushToCameraDescriptorSet(image_index, { framebuffer_size.width, framebuffer_size.height }, since_start.count(), scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
+        if (scene->skybox && current_skybox != scene->skybox)
+        {
+            skybox_material->setTexture("tex", scene->skybox);
+            current_skybox = scene->skybox;
+        }
 
         for (Ref<Object>& object : scene->getAllObjects())
         {
@@ -722,6 +732,8 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
             }
         }
     }
+    if (scene->skybox)
+        draw_commands.insert({ skybox_material, skybox_cube });
     second_pass_commands.insert({ post_process, quad });
 
     if (scene)

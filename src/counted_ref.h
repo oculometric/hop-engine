@@ -122,6 +122,7 @@ public:
 	inline bool isValid() const { return payload != nullptr; }
 	inline operator bool() const { return isValid(); }
 	inline bool operator==(const Ref<T>& other) const { return other.payload == payload; }
+	inline bool operator==(const WeakRef<T>& other) const { return other.payload == payload; }
 	inline T* operator->() { return payload; }
 	inline T* operator->() const { return payload; }
 	inline T* get() { return payload; }
@@ -222,7 +223,8 @@ public:
 
 	inline bool isValid() const { return payload != nullptr; }
 	inline operator bool() const { return isValid(); }
-	inline bool operator==(const WeakRef<T>& other) { return other.payload == payload; }
+	inline bool operator==(const WeakRef<T>& other) const { return other.payload == payload; }
+	inline bool operator==(const Ref<T>& other) const { return other.payload == payload; }
 	inline T* operator->() { return payload; }
 	inline T* get() { return payload; }
 	template<typename S>

@@ -1,5 +1,7 @@
 #include "scene.h"
 
+#include "texture.h"
+
 using namespace HopEngine;
 using namespace std;
 

@@ -221,6 +221,8 @@
     <None Include="res\engine\node_shader.vert" />
     <None Include="res\engine\shader.frag" />
     <None Include="res\engine\shader.vert" />
+    <None Include="res\engine\skybox.frag" />
+    <None Include="res\engine\skybox.vert" />
     <None Include="res\pbr.frag" />
     <None Include="res\pbr.vert" />
     <None Include="res\psx.frag" />

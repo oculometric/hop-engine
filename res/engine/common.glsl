@@ -67,3 +67,8 @@ layout(location = 2) out vec4 out_params;
 layout(location = 3) out vec4 out_custom;
 #endif
 #endif
+
+vec3 toLinear(vec3 srgb)
+{
+    return (pow(srgb, vec3(1.0f / 2.4f)) * 1.055f) -0.055f;
+}

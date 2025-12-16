@@ -256,6 +256,12 @@
     <None Include="res\engine\node_shader.vert">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="res\engine\skybox.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\engine\skybox.vert">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="hop-engine.rc">
