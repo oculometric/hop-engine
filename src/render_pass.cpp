@@ -67,6 +67,20 @@ Ref<Texture> RenderPass::getImage(size_t attachment) const
         return nullptr;
 }
 
+Ref<RenderPass> RenderPass::duplicate() const
+{
+    return new RenderPass(extent.width, extent.height, output_config);
+}
+
+bool RenderPass::isCompatible(const Ref<RenderPass>& other) const
+{
+    if (other->output_config.has_depth_attachment != output_config.has_depth_attachment)
+        return false;
+    if (other->output_config.additional_attachments != output_config.additional_attachments)
+        return false;
+    return true;
+}
+
 void RenderPass::createRenderPass(VkFormat main_colour_format, VkImageLayout final_main_colour_layout, bool make_readable)
 {
     vector<VkAttachmentDescription> attachments;

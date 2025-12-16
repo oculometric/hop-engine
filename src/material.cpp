@@ -17,9 +17,9 @@ using namespace std;
 
 Material::Material(Ref<Shader> _shader, PipelineBuilder config, Ref<RenderPass> _render_pass)
 {
-	render_pass = _render_pass;
+	render_pass = _render_pass.isValid() ? _render_pass : RenderServer::getMainRenderPass();
 	shader = _shader;
-	pipeline = new Pipeline(shader, config, render_pass.isValid() ? render_pass : RenderServer::getMainRenderPass());
+	pipeline = new Pipeline(shader, config, render_pass);
 
 	auto layout = shader->getShaderLayout();
 	uniforms = new UniformBlock(layout);

@@ -1,7 +1,6 @@
 #pragma once
 
-#include <glm/vec4.hpp>
-#include <glm/vec3.hpp>
+#include <glm/glm.hpp>
 
 struct LightParams
 {
@@ -20,5 +19,26 @@ struct MaterialParams
     glm::vec4 specular = { 1, 1, 1, 0 };
     glm::vec4 emissive = { 0, 0, 0, 0 };
     float specular_exponent = 32.0f;
-    glm::vec3 padding;
+    glm::vec3 padding = { 0, 0, 0 };
+};
+
+struct ObjectUniforms
+{
+    glm::mat4 model_to_world;
+    int id;
+};
+
+struct SceneUniforms
+{
+    glm::mat4 world_to_view;
+    glm::mat4 view_to_clip;
+    glm::mat4 clip_to_view;
+    glm::ivec2 viewport_size = { 0, 0 };
+    glm::vec2 padding = { 0, 0 };
+    glm::vec3 eye_position = { 0, 0, 0 };
+    float time = 0;
+    glm::vec2 near_far = { 0, 0 };
+    glm::vec2 padding2 = { 0, 0 };
+    LightParams lights[8];
+    glm::vec4 ambient_light = { 0, 0.05f, 0.05f, 0 };
 };

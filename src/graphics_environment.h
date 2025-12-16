@@ -18,6 +18,7 @@ struct DrawCommand
 	Ref<Material> material;
 	Ref<Mesh> mesh;
 	Ref<UniformBlock> uniforms;
+	uint32_t camera_mask = 0xFFFFFFFF;
 
 	bool operator()(const DrawCommand& a, const DrawCommand& b) const;
 };
@@ -73,7 +74,7 @@ private:
 
 	Ref<Swapchain> swapchain;
     Ref<RenderPass> offscreen_pass;
-	Ref<RenderPass> render_pass;
+	Ref<RenderPass> final_render_pass;
 
 	VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
 	VkDescriptorSetLayout scene_descriptor_set_layout = VK_NULL_HANDLE;
@@ -91,7 +92,7 @@ private:
 	Ref<Material> skybox_material;
 	WeakRef<Texture> current_skybox;
 	Ref<Mesh> quad;
-	Ref<Material> post_process;
+	Ref<Material> passthrough;
 
 public:
 	static void init(Ref<Window> main_window);
@@ -114,6 +115,8 @@ public:
 	static Ref<Mesh> getGizmoMesh(int type);
 	static Ref<Material> getDefaultMaterial();
 	static Ref<Mesh> getQuad();
+	static Ref<Mesh> getSkyboxCube();
+	static Ref<Material> getSkyboxMaterial();
 
 	static void draw(float delta_time);
 	static void resize();
@@ -133,7 +136,6 @@ private:
 	void resizeSwapchain();
 
 	void recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index);
-	void recordRenderCommandsForPass(VkCommandBuffer command_buffer, uint32_t image_index, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands, glm::vec3 clear_colour, VkDescriptorSet scene_descriptor_set, bool leave_open = false);
 };
 
 }

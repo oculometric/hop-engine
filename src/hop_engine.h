@@ -18,6 +18,7 @@
 #include "debug.h"
 #include "font.h"
 #include "swapchain.h"
+#include "render_graph.h"
 
 
 #include "engine.h"

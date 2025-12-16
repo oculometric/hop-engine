@@ -12,11 +12,14 @@
 namespace HopEngine
 {
 
+// TODO: per-object camera bitmask
+
 class Object
 {
 public:
 	std::string name;
 	Transform transform;
+	glm::vec3 clear_colour = { 0.004f, 0.509f, 0.506f };
 
 protected:
 	Ref<UniformBlock> uniforms;

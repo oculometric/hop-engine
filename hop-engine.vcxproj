@@ -172,6 +172,7 @@
     <ClCompile Include="src\object.cpp" />
     <ClCompile Include="src\package.cpp" />
     <ClCompile Include="src\pipeline.cpp" />
+    <ClCompile Include="src\render_graph.cpp" />
     <ClCompile Include="src\render_pass.cpp" />
     <ClCompile Include="src\sampler.cpp" />
     <ClCompile Include="src\scene.cpp" />

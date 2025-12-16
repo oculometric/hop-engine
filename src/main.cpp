@@ -71,7 +71,7 @@ void initScene(Ref<Scene> scene)
     camera_spline.loop = true;
     camera_spline.points = { { 0, -1, 0.5f }, { 1, 0, 0.5f }, { 0, 1, 0.5f }, { -1, 0, 0.5f } };
 
-    scene->getCamera()->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
+    scene->getCamera(0)->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f));
 
@@ -86,9 +86,9 @@ void updateScene(Ref<Scene> scene, float delta_time)
 
     glm::vec2 mouse_delta = Input::getMouseDelta() * 0.25f;
     if (Input::isMouseDown(GLFW_MOUSE_BUTTON_2))
-        scene->getCamera()->transform.rotateLocal({-mouse_delta.y, 0, -mouse_delta.x});
+        scene->getCamera(0)->transform.rotateLocal({-mouse_delta.y, 0, -mouse_delta.x});
 
-    glm::mat4 camera_matrix = scene->getCamera()->transform.getMatrix();
+    glm::mat4 camera_matrix = scene->getCamera(0)->transform.getMatrix();
     glm::vec3 local_move_vector = glm::vec3{
         Input::getAxis('A', 'D'),
         Input::getAxis('Q', 'E'),
@@ -96,7 +96,7 @@ void updateScene(Ref<Scene> scene, float delta_time)
     } * 0.02f;
     if (Input::isKeyDown(GLFW_KEY_LEFT_SHIFT))
         local_move_vector *= 3.0f;
-    scene->getCamera()->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
+    scene->getCamera(0)->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
 
     if (obj)
         obj->transform.rotateLocal({ 0, 0, 20 * delta_time });
@@ -105,7 +105,7 @@ void updateScene(Ref<Scene> scene, float delta_time)
         glm::vec3(0.0f, 0.0f, 1.0f));*/
 
     auto cast = asha.cast<Object>();
-    gizmo->trackObject(cast, scene->getCamera());
+    gizmo->trackObject(cast, scene->getCamera(0));
 
     Input::resetMouseDelta();
 }
@@ -191,8 +191,8 @@ void initNodeScene(Ref<Scene> scene)
     };
     node_view->setStyle(style);
 
-    scene->getCamera()->transform.lookAt({ 0, 0, 6 }, { 0, 0, 0 }, { 0, 1, 0 });
-    scene->background_colour = { 0, 0, 0 };
+    scene->getCamera(0)->transform.lookAt({ 0, 0, 6 }, { 0, 0, 0 }, { 0, 1, 0 });
+    scene->getCamera(0)->clear_colour = {0, 0, 0};
 }
 
 void updateNodeScene(Ref<Scene> scene, float delta_time)
@@ -203,7 +203,7 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
     {
         if (selected_node)
             selected_node->highlighted = false;
-        glm::vec2 camera_pos = scene->getCamera()->transform.getLocalPosition();
+        glm::vec2 camera_pos = scene->getCamera(0)->transform.getLocalPosition();
         glm::vec2 mouse_screen_pos = Input::getMousePosition() - (RenderServer::getFramebufferSize() * 0.5f);
         glm::vec2 mouse_world_pos = mouse_screen_pos + (camera_pos * RenderServer::getFramebufferSize() * 0.5f);
         selected_node = node_view->select(mouse_world_pos);
@@ -218,7 +218,7 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
     if (Input::isMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
     {
         glm::vec2 mouse_world_delta = glm::vec2{ -mouse_delta.x * 512.0f, -mouse_delta.y * 512.0f } / RenderServer::getFramebufferSize();
-        scene->getCamera()->transform.translateLocal({mouse_world_delta.x, mouse_world_delta.y, 0});
+        scene->getCamera(0)->transform.translateLocal({mouse_world_delta.x, mouse_world_delta.y, 0});
     }
     else if (Input::isMouseDown(GLFW_MOUSE_BUTTON_LEFT))
     {
@@ -265,7 +265,7 @@ void initMaterialScene(Ref<Scene> scene)
     other_lamp->spot_angle = 15.0f;
     other_lamp->transform.rotateLocal({ 45.0f, 0.0f, 0.0f });
 
-    scene->getCamera()->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
+    scene->getCamera(0)->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f));
 }

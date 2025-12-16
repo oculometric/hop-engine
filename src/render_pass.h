@@ -39,6 +39,8 @@ public:
 	void resize(uint32_t width = 0, uint32_t height = 0);
 	inline VkExtent2D getExtent() const { return extent; }
 	Ref<Texture> getImage(size_t attachment) const;
+	Ref<RenderPass> duplicate() const;
+	bool isCompatible(const Ref<RenderPass>& other) const;
 
 private:
 	void createRenderPass(VkFormat main_colour_format, VkImageLayout final_main_colour_layout, bool make_readable);

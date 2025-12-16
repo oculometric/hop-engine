@@ -22,5 +22,6 @@ class Scene;
 class Font;
 class NodeView;
 struct DrawCommand;
+class RenderGraph;
 
 }

@@ -1,12 +1,14 @@
 #include "scene.h"
 
 #include "texture.h"
+#include "render_graph.h"
 
 using namespace HopEngine;
 using namespace std;
 
-Ref<Camera> Scene::getCamera() const
+Ref<Camera> Scene::getCamera(size_t slot) const
 {
+	// TODO: support multiple cameras!!
 	return camera;
 }
 
@@ -45,8 +47,21 @@ vector<LightParams> Scene::getLightParams() const
 	return lights_params;
 }
 
+Ref<RenderGraph> Scene::getRenderGraph() const
+{
+	return render_graph;
+}
+
 Scene::Scene()
 {
+	render_graph = new RenderGraph(RenderGraphBuilder().addCamera(0));
 	camera = new Camera();
 	root = new Object();
+
+	DBG_INFO("created new scene");
+}
+
+Scene::~Scene()
+{
+	DBG_INFO("destroying scene " + PTR(this));
 }

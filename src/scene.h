@@ -12,12 +12,12 @@ namespace HopEngine
 class Scene
 {
 public:
-	glm::vec3 background_colour = { 0.004f, 0.509f, 0.506f };
 	glm::vec3 ambient_colour = { 0.01f, 0.01f, 0.01f };
 	Ref<Texture> skybox;
 
 private:
 	std::vector<Ref<Object>> objects;
+	Ref<RenderGraph> render_graph;
 	Ref<Camera> camera;
 	Ref<Object> root;
 	std::vector<Ref<Light>> lights;
@@ -25,9 +25,8 @@ private:
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Scene);
 
-	// TODO: multiple cameras, camera filtering for different objects (manage render passes? or let the render graph do that)
 	// TODO: draw list which the render server queries
-	Ref<Camera> getCamera() const;
+	Ref<Camera> getCamera(size_t slot) const;
 	template <class T>
 	inline Ref<T> insertObject(Ref<T> obj);
 	void removeObject(Ref<Object> obj);
@@ -35,9 +34,10 @@ public:
 	inline Ref<T> findObject(std::string name) const;
 	std::vector<Ref<Object>> getAllObjects() const;
 	std::vector<LightParams> getLightParams() const;
+	Ref<RenderGraph> getRenderGraph() const;
 
 	Scene();
-	inline ~Scene() { };
+	~Scene();
 };
 
 template<class T>

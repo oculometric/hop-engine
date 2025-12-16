@@ -12,12 +12,6 @@
 using namespace HopEngine;
 using namespace std;
 
-struct ObjectUniforms
-{
-	glm::mat4 model_to_world;
-	int id;
-};
-
 Object::Object()
 {
 	transform = Transform();
@@ -62,21 +56,6 @@ Object::~Object()
 {
 	DBG_VERBOSE("destroying object " + PTR(this));
 }
-
-struct SceneUniforms
-{
-	glm::mat4 world_to_view;
-	glm::mat4 view_to_clip;
-	glm::mat4 clip_to_view;
-	glm::ivec2 viewport_size = { 0, 0 };
-	glm::vec2 padding = { 0, 0 };
-	glm::vec3 eye_position = { 0, 0, 0 };
-	float time = 0;
-	glm::vec2 near_far = { 0, 0 };
-	glm::vec2 padding2 = { 0, 0 };
-	LightParams lights[8];
-	glm::vec4 ambient_light = { 0, 0.05f, 0.05f, 0 };
-};
 
 Camera::Camera() : Object()
 {
