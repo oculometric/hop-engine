@@ -5,11 +5,11 @@
 
 vec4 snap(vec4 value)
 {
-    vec4 snapping_value = vec4(vec2(scene.viewport_size) * 0.25f, 1, 1);
-    vec4 snapped = round(value * snapping_value) / snapping_value;
-    snapped.w = value.w;
-    snapped.z = value.z;
-    return snapped;
+    vec2 snapping_value = vec2(scene.viewport_size) * 0.25f;
+    vec2 rounding = value.xy / value.w;
+    vec2 snapped = round(rounding * snapping_value) / snapping_value;
+    snapped *= value.w;
+    return vec4(snapped, value.z, value.w);
 }
 
 void main()

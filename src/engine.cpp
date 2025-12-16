@@ -111,11 +111,12 @@ Engine::Engine()
 {
     engine = this;
     Debug::init(Debug::DEBUG_FAULT);
-    Window::initEnvironment();
-    window = new Window(1024, 1024, "hop!");
-    Input::init(window);
     Package::init();
     Package::loadPackage("resources.hop");
+    Window::initEnvironment();
+    window = new Window(1024, 1024, "hop!");
+    window->setIcon("res://icon.png");
+    Input::init(window);
     RenderServer::init(window);
     Engine::summariseTrackedObjects();
     RenderServer::draw(0.0f);

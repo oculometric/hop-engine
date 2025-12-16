@@ -1,5 +1,9 @@
 #include "window.h"
 
+#include <stb_image.h>
+
+#include "package.h"
+
 using namespace HopEngine;
 using namespace std;
 
@@ -63,7 +67,7 @@ pair<uint32_t, uint32_t> Window::getSize()
     return { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
 }
 
-void Window::setTitle(std::string title)
+void Window::setTitle(string title)
 {
     glfwSetWindowTitle(window, title.c_str());
 }
@@ -74,6 +78,18 @@ void Window::setVisible(bool visible)
         glfwShowWindow(window);
     else
         glfwHideWindow(window);
+}
+
+void Window::setIcon(string path)
+{
+    GLFWimage image;
+
+    auto image_data = Package::tryLoadFile(path);
+    int img_channels;
+    image.pixels = stbi_load_from_memory(image_data.data(), static_cast<int>(image_data.size()), &image.width, &image.height, &img_channels, STBI_rgb_alpha);
+
+    glfwSetWindowIcon(window, 1, &image);
+    stbi_image_free(image.pixels);
 }
 
 Window::~Window()

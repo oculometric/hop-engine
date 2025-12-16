@@ -203,16 +203,7 @@
     <ClInclude Include="src\package.h">
       <Filter>Header Files\Singletons</Filter>
     </ClInclude>
-    <ClInclude Include="src\object.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\node_view.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\transform.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\token_file.h">
@@ -221,11 +212,20 @@
     <ClInclude Include="src\pbr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\object.h">
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
     <ClInclude Include="src\gizmo.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scene.h">
+      <Filter>Header Files\Resource Types</Filter>
     </ClInclude>
     <ClInclude Include="src\render_graph.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Resource Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\node_view.h">
+      <Filter>Header Files\Resource Types</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
