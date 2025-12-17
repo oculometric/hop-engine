@@ -11,20 +11,53 @@
 using namespace HopEngine;
 using namespace std;
 
+static WeakRef<Object> selected_object;
+static WeakRef<Material> selected_material;
+
+void drawImGuiDebug()
+{
+	if (selected_object)
+	{
+		ImGui::Begin("selected object", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+		selected_object->drawImGuiDebug();
+		ImGui::End();
+	}
+
+	if (selected_material)
+	{
+		ImGui::Begin("selected material", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+		//selected_object->drawImGuiDebug();
+		ImGui::End();
+	}
+
+	if (Engine::getScene())
+	{
+		ImGui::Begin("scene", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+		Engine::getScene()->drawImGuiDebug();
+		ImGui::End();
+	}
+}
+
 Ref<Texture> texturePicker(Ref<Texture> current, const char* str)
 {
 	auto options = Engine::getAllRefs<Texture>();
+	options.push_back(WeakRef<Texture>(nullptr));
 	int selected = 0;
-	while (selected < options.size() && options[selected] != current)
+	while (selected < (options.size() - 1) && options[selected] != current)
 		++selected;
 	string options_str;
 	for (auto opt : options)
 	{
-		string origin = opt->getOrigin();
-		if (origin.empty())
-			options_str += PTR(opt.get());
+		if (opt == nullptr)
+			options_str += PTR(0);
 		else
-			options_str += origin;
+		{
+			string origin = opt->getOrigin();
+			if (origin.empty())
+				options_str += PTR(opt.get());
+			else
+				options_str += origin;
+		}
 		options_str.resize(options_str.size() + 1);
 	}
 	ImGui::Combo(str, &selected, options_str.c_str());
@@ -34,17 +67,23 @@ Ref<Texture> texturePicker(Ref<Texture> current, const char* str)
 Ref<Mesh> meshPicker(Ref<Mesh> current, const char* str)
 {
 	auto options = Engine::getAllRefs<Mesh>();
+	options.push_back(WeakRef<Mesh>(nullptr));
 	int selected = 0;
-	while (selected < options.size() && options[selected] != current)
+	while (selected < (options.size() - 1) && options[selected] != current)
 		++selected;
 	string options_str;
 	for (auto opt : options)
 	{
-		string origin = opt->getOrigin();
-		if (origin.empty())
-			options_str += PTR(opt.get());
+		if (opt == nullptr)
+			options_str += PTR(0);
 		else
-			options_str += origin;
+		{
+			string origin = opt->getOrigin();
+			if (origin.empty())
+				options_str += PTR(opt.get());
+			else
+				options_str += origin;
+		}
 		options_str.resize(options_str.size() + 1);
 	}
 	ImGui::Combo(str, &selected, options_str.c_str());
@@ -54,17 +93,23 @@ Ref<Mesh> meshPicker(Ref<Mesh> current, const char* str)
 Ref<Material> materialPicker(Ref<Material> current, const char* str)
 {
 	auto options = Engine::getAllRefs<Material>();
+	options.push_back(WeakRef<Material>(nullptr));
 	int selected = 0;
-	while (selected < options.size() && options[selected] != current)
+	while (selected < (options.size() - 1) && options[selected] != current)
 		++selected;
 	string options_str;
 	for (auto opt : options)
 	{
-		string origin;
-		if (origin.empty())
-			options_str += PTR(opt.get());
+		if (opt == nullptr)
+			options_str += PTR(0);
 		else
-			options_str += origin;
+		{
+			string origin;
+			if (origin.empty())
+				options_str += PTR(opt.get());
+			else
+				options_str += origin;
+		}
 		options_str.resize(options_str.size() + 1);
 	}
 	ImGui::Combo(str, &selected, options_str.c_str());
@@ -110,26 +155,35 @@ void StaticMesh::drawImGuiDebug()
 	if (ImGui::CollapsingHeader("mesh params", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		mesh = meshPicker(mesh, "mesh data");
-		ImGui::LabelText("vertices", "%i", mesh->getVertexCount());
-		ImGui::LabelText("triangles", "%i", mesh->getIndexCount() / 3);
-		ImGui::LabelText("vertex size", "%i", sizeof(Vertex));
-		ImGui::LabelText("vertex attributes", "%i", mesh->getAttributeDescriptions().size());
-
+		if (mesh)
+		{
+			ImGui::LabelText("vertices", "%i", mesh->getVertexCount());
+			ImGui::LabelText("triangles", "%i", mesh->getIndexCount() / 3);
+			ImGui::LabelText("vertex size", "%i", sizeof(Vertex));
+			ImGui::LabelText("vertex attributes", "%i", mesh->getAttributeDescriptions().size());
+		}
 		material = materialPicker(material, "material");
-		ImGui::Button("edit material");
+		if (material)
+		{
+			ImGui::Button("edit material");
+		}
 		// TODO: jump to editing this material!
 		// TODO: jump to viewing object when clicked in heirarchy (track)
 	}
+	// TODO: close/deselect button
 }
 
-void drawImGuiSceneTreeItem(multimap<Object*, Object*>& parent_map, Object* parent)
+void drawImGuiSceneTreeItem(multimap<Object*, WeakRef<Object>>& parent_map, WeakRef<Object> parent)
 {
-	auto range = parent_map.equal_range(parent);
+	auto range = parent_map.equal_range(parent.get());
 	while (range.first != range.second)
 	{
-		Object* child = range.first->second;
-		if (ImGui::TreeNode((child->name + " - " + PTR(child)).c_str()))
+		WeakRef<Object> child = range.first->second;
+		
+		if (ImGui::TreeNode((child->name + " - " + PTR(child.get())).c_str()))
 		{
+			if (ImGui::Button("select"))
+				selected_object = child;
 			drawImGuiSceneTreeItem(parent_map, child);
 			ImGui::TreePop();
 		}
@@ -139,20 +193,16 @@ void drawImGuiSceneTreeItem(multimap<Object*, Object*>& parent_map, Object* pare
 
 void Scene::drawImGuiDebug()
 {
-	ImGui::Begin("scene", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-
 	ImGui::ColorEdit3("ambient light", (float*)&(ambient_colour));
 	int current_skybox_index = 0;
 	const char* skybox_items = "tex 1\0tex 2\0tex 3";
 	skybox = texturePicker(skybox, "skybox");
 	ImGui::LabelText("total objects", "%d", objects.size());
 	ImGui::LabelText("draws", "%d", getDrawCommands().size());
-	multimap<Object*, Object*> parent_map;
+	multimap<Object*, WeakRef<Object>> parent_map;
 	for (auto object : objects)
-		parent_map.insert({ object->getParent().get(), object.get() });
-	parent_map.insert({ nullptr, root.get() });
+		parent_map.insert({ object->getParent().get(), object});
+	parent_map.insert({ (nullptr), root });
 
-	drawImGuiSceneTreeItem(parent_map, nullptr);
-
-	ImGui::End();
+	drawImGuiSceneTreeItem(parent_map, WeakRef<Object>(nullptr));
 }

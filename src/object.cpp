@@ -118,7 +118,8 @@ StaticMesh::StaticMesh(Ref<Mesh> _mesh, Ref<Material> _material) : Object()
 void StaticMesh::pushToDescriptorSet(size_t index)
 {
 	Object::pushToDescriptorSet(index);
-	material->pushToDescriptorSet(index);
+	if (material)
+		material->pushToDescriptorSet(index);
 }
 
 vector<DrawCommand> StaticMesh::getDrawCommands() const

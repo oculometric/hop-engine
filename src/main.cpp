@@ -27,12 +27,13 @@
 
 using namespace HopEngine;
 
+void drawImGuiDebug();
+
 WeakRef<StaticMesh> asha;
 WeakRef<StaticMesh> obj;
 WeakRef<NodeView> node_view;
 WeakRef<Gizmo> gizmo;
 WeakRef<NodeView::Node> selected_node;
-WeakRef<Object> selected_object;
 
 Spline camera_spline;
 
@@ -124,8 +125,6 @@ void initScene(Ref<Scene> scene)
     scene->render_graph->getMaterialForStep(5)->setFloatUniform("gamma", 2.2f);
     scene->render_graph->getMaterialForStep(5)->setFloatUniform("exposure", 16.0f);
     scene->render_graph->getMaterialForStep(5)->setFloatUniform("offset", 0.0f);
-
-    selected_object = asha.cast<Object>();
 }
 
 void updateScene(Ref<Scene> scene, float delta_time)
@@ -339,7 +338,6 @@ void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
     scene->getRenderGraph()->output_image = tmp;
     ImGui::End();
 
-    scene->drawImGuiDebug();
 
     ImGui::Begin("colour correction", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     if (gizmo)
@@ -362,15 +360,8 @@ void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
     }
     ImGui::End();
 
-    if (selected_object)
-    {
-        ImGui::Begin("selected object", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-        selected_object->drawImGuiDebug();
-        ImGui::End();
-    }
-    // TODO: debug for each object
+    drawImGuiDebug();
     // TODO: debug for each light
-    // TODO: debug for each camera
 }
 
 struct SceneFuncSet
