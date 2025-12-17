@@ -21,7 +21,7 @@ layout(set = 2, binding = 2) uniform AOParams
 
 const float radius = 0.5f;
 
-float calculateOcclusion()
+void main()
 {
     vec2 screen_uv = frag.uv;
     
@@ -68,12 +68,5 @@ float calculateOcclusion()
     }
     
     occlusion = pow(smoothstep(0.0f, 1.0f, 1.0f - (occlusion / NUM_SAMPLES)), 3.0f);
-    
-    return occlusion;
-}
-
-
-void main()
-{
-    out_colour = vec4(vec3(calculateOcclusion(), 0, 1), 1);
+    out_colour = vec4(vec3(occlusion), 1);
 }

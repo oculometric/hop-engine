@@ -50,6 +50,7 @@ void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, R
             VkExtent2D extent = execution_steps[0].render_pass->getExtent();
             step.material->pushToDescriptorSet(image_index);
             SceneUniforms uniforms = scene->getCamera(execution_steps[0].camera_slot)->getSceneUniforms({ extent.width, extent.height }, time_since_start, scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
+            uniforms.viewport_size = { step.render_pass->getExtent().width, step.render_pass->getExtent().height };
             memcpy(step.scene_uniforms->getBuffer(), &uniforms, sizeof(SceneUniforms));
             step.scene_uniforms->pushToDescriptorSet(image_index);
         }
