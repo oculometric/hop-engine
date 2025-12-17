@@ -110,7 +110,7 @@ void initScene(Ref<Scene> scene)
     {
         glm::vec4 s = glm::vec4((dist(rand) * 2.0f) - 1.0f, (dist(rand) * 2.0f) - 1.0f, -dist(rand), 0.0f);
         float fi = (float)i / (float)64;
-        glm::vec4 v = glm::normalize(s) * (0.05f + ((1.0f - 0.05f) * fi * fi));
+        glm::vec4 v = glm::normalize(s * (0.05f + ((1.0f - 0.05f) * fi * fi))); // inside or outside brackets?
         samples[i] = v;
     }
     scene->render_graph->getMaterialForStep(3)->setUniform("samples", samples, sizeof(glm::vec4) * 64); // TODO: AO material flickering?

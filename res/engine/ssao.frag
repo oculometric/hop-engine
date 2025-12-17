@@ -75,5 +75,5 @@ float calculateOcclusion()
 
 void main()
 {
-    out_colour = vec4(vec3(calculateOcclusion()), 1);
+    out_colour = vec4(vec3(calculateOcclusion(), 0, 1), 1);
 }
