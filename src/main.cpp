@@ -28,7 +28,7 @@
 using namespace HopEngine;
 
 // TODO: make this more sensible
-void drawImGuiDebug();
+void drawImGuiDebug(float delta_time);
 void debugCamera(float delta_time);
 void debugClearSelection();
 
@@ -309,10 +309,6 @@ void initMaterialScene(Ref<Scene> scene)
 void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
 {
     // TODO: move all the imgui stuff into its own file
-    ImGui::Begin("test");
-    ImGui::Text("yippee");
-    ImGui::End();
-    // TODO: timing/rendering statistics (dt, fps, cpu/gpu time, objects, draw calls, triangles, lights)
 
 
     // TODO: debug for the render graph (add/remove)
@@ -325,7 +321,6 @@ void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
     ImGui::SliderInt("attachment index", &tmp, 0, 4);
     scene->getRenderGraph()->output_image = tmp;
     ImGui::End();
-
 
     ImGui::Begin("colour correction", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     if (gizmo)
@@ -348,7 +343,7 @@ void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
     }
     ImGui::End();
 
-    drawImGuiDebug();
+    drawImGuiDebug(delta_time);
 }
 
 struct SceneFuncSet
@@ -413,10 +408,9 @@ int main()
 #endif
         Engine::init();
 
-
         const auto& scene = scenes[selected_scene];
-        Engine::setup(scene.init_func, scene.update_func, scene.imgui_func);
 
+        Engine::setup(scene.init_func, scene.update_func, scene.imgui_func);
         debugClearSelection();
 
         Engine::mainLoop();

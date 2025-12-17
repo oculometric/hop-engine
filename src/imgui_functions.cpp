@@ -15,8 +15,10 @@ using namespace std;
 static WeakRef<Object> selected_object;
 static WeakRef<Material> selected_material;
 static Camera* selected_camera;
+static float delta_time_graph[512] = { 0.0f };
+int delta_time_graph_offset = 0;
 
-void drawImGuiDebug()
+void drawImGuiDebug(float delta_time)
 {
 	if (selected_object)
 	{
@@ -42,6 +44,13 @@ void drawImGuiDebug()
 		Engine::getScene()->drawImGuiDebug();
 		ImGui::End();
 	}
+
+	// TODO: timing/rendering statistics (dt, fps, cpu/gpu time, objects, draw calls, triangles, lights)
+	ImGui::Begin("performance", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+	delta_time_graph[delta_time_graph_offset] = delta_time;
+	ImGui::PlotLines("delta time", delta_time_graph, 512, delta_time_graph_offset, nullptr, 0.0001f, 0.2f, ImVec2{0, 160}, 4);
+	delta_time_graph_offset = (delta_time_graph_offset + 1) % 512;
+	ImGui::End();
 }
 
 void debugCamera(float delta_time)

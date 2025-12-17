@@ -85,6 +85,7 @@ public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Debug);
 
 	static void init(DebugLevel crash_level);
+	static void setLogLevel(DebugLevel severity);
 	static void write(std::string description, DebugLevel severity);
 	static void flush();
 	static void close();

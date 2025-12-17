@@ -23,6 +23,11 @@ void Debug::init(DebugLevel crash_level)
 	DBG_INFO("initialised debug");
 }
 
+void Debug::setLogLevel(DebugLevel severity)
+{
+	application_debug->log_level = severity;
+}
+
 string makeANSIColour(int fgcol, int bgcol)
 {
 	return "\033[" + to_string(fgcol + 30) + ';' + to_string(bgcol + 40) + 'm';
