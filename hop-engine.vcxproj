@@ -219,6 +219,8 @@
     <ClInclude Include="src\window.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="res\engine\colour_correct.frag" />
+    <None Include="res\engine\colour_correct.vert" />
     <None Include="res\engine\common.glsl" />
     <None Include="res\engine\node_shader.frag" />
     <None Include="res\engine\node_shader.vert" />

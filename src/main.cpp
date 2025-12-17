@@ -93,27 +93,32 @@ void initScene(Ref<Scene> scene)
         .addCamera(0)
         .addCamera(1)
         .addCamera(2, 0.1f)
-        .addPostProcess(new Shader("res://engine/ssao", false), {
+        /*.addPostProcess(new Shader("res://engine/ssao", false), {
             { 0, RenderTextureBinding(0, 1) },
             { 1, RenderTextureBinding(0, 4) }
-            })
+            })*/
         .addPostProcess(new Shader("res://half_and_half", false), {
             { 0, RenderTextureBinding(0, 0) },
             { 1, RenderTextureBinding(1, 1).address(VK_SAMPLER_ADDRESS_MODE_REPEAT) },
-            { 2, RenderTextureBinding(2, 0).address(VK_SAMPLER_ADDRESS_MODE_REPEAT).filter(VK_FILTER_NEAREST) }
-        }));
+            { 2, RenderTextureBinding(2, 0).address(VK_SAMPLER_ADDRESS_MODE_REPEAT).filter(VK_FILTER_NEAREST) } })
+        .addPostProcess(new Shader("res://engine/colour_correct", false), {
+            { 0, RenderTextureBinding(3, 0).filter(VK_FILTER_NEAREST) } })
+    );
 
-    glm::vec4 samples[64];
-    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-    std::default_random_engine rand;
-    for (int i = 0; i < 64; ++i)
-    {
-        glm::vec4 s = glm::vec4((dist(rand) * 2.0f) - 1.0f, (dist(rand) * 2.0f) - 1.0f, -dist(rand), 0.0f);
-        float fi = (float)i / (float)64;
-        glm::vec4 v = glm::normalize(s * (0.05f + ((1.0f - 0.05f) * fi * fi))); // inside or outside brackets?
-        samples[i] = v;
-    }
-    scene->render_graph->getMaterialForStep(3)->setUniform("samples", samples, sizeof(glm::vec4) * 64); // TODO: AO material flickering?
+    //glm::vec4 samples[64];
+    //std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    //std::default_random_engine rand;
+    //for (int i = 0; i < 64; ++i)
+    //{
+    //    glm::vec4 s = glm::vec4((dist(rand) * 2.0f) - 1.0f, (dist(rand) * 2.0f) - 1.0f, -dist(rand), 0.0f);
+    //    float fi = (float)i / (float)64;
+    //    glm::vec4 v = glm::normalize(s * (0.05f + ((1.0f - 0.05f) * fi * fi))); // inside or outside brackets?
+    //    samples[i] = v;
+    //}
+    //scene->render_graph->getMaterialForStep(3)->setUniform("samples", samples, sizeof(glm::vec4) * 64); // TODO: AO material flickering?
+    scene->render_graph->getMaterialForStep(4)->setFloatUniform("gamma", 2.2f);
+    scene->render_graph->getMaterialForStep(4)->setFloatUniform("exposure", 16.0f);
+    scene->render_graph->getMaterialForStep(4)->setFloatUniform("offset", 0.0f);
 }
 
 void updateScene(Ref<Scene> scene, float delta_time)
@@ -328,6 +333,24 @@ void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
     ImGui::Begin("scene stats", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::LabelText("objects", "%d", scene->getAllObjects().size());
     ImGui::LabelText("draws", "%d", scene->getDrawCommands().size());
+    ImGui::End();
+
+    ImGui::Begin("colour correction", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    WeakRef<Material> mat = scene->render_graph->getMaterialForStep(4);
+    if (mat)
+    {
+        static float gamma = 1.2f;
+        static float exposure = 1.5f;
+        static float offset = 0.0f;
+        ImGui::SliderFloat("gamma", &gamma, 0.001f, 4.0f);
+        ImGui::SliderFloat("exposure", &exposure, 0.001f, 16.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
+        ImGui::SliderFloat("offset", &offset, -2.0f, 2.0f);
+        mat->setFloatUniform("gamma", gamma);
+        mat->setFloatUniform("exposure", exposure);
+        mat->setFloatUniform("offset", offset);
+    }
+    else
+        ImGui::Text("couldn't find the colour correction step!");
     ImGui::End();
 
     // TODO: debug for each object

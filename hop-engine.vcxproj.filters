@@ -289,6 +289,12 @@
     <None Include="res\half_and_half.vert">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="res\engine\colour_correct.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\engine\colour_correct.vert">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="hop-engine.rc">
