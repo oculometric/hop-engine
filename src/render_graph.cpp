@@ -312,7 +312,7 @@ RenderGraphBuilder RenderGraphBuilder::addCamera(size_t slot, float size_factor,
 
 RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<uint32_t, RenderTextureBinding> texture_bindings)
 {
-    return addPostProcess(shader, texture_bindings, RenderOutput{ 0, true });
+    return addPostProcess(shader, texture_bindings, RenderOutput{ 0, false });
 }
 
 RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<uint32_t, RenderTextureBinding> texture_bindings, RenderOutput render_pass_config, float size_factor, VkExtent2D custom_extent)
@@ -335,7 +335,7 @@ RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<ui
 
 RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<uint32_t, RenderTextureBinding> texture_bindings, float size_factor, VkExtent2D custom_extent)
 {
-    return addPostProcess(shader, texture_bindings, RenderOutput{ 0, true }, size_factor, custom_extent);
+    return addPostProcess(shader, texture_bindings, RenderOutput{ 0, false }, size_factor, custom_extent);
 }
 
 RenderStep::~RenderStep()

@@ -336,23 +336,25 @@ void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
     ImGui::End();
 
     ImGui::Begin("colour correction", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-    WeakRef<Material> mat = scene->render_graph->getMaterialForStep(4);
-    if (mat)
+    if (gizmo)
     {
-        static float gamma = 1.2f;
-        static float exposure = 1.5f;
-        static float offset = 0.0f;
-        ImGui::SliderFloat("gamma", &gamma, 0.001f, 4.0f);
-        ImGui::SliderFloat("exposure", &exposure, 0.001f, 16.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
-        ImGui::SliderFloat("offset", &offset, -2.0f, 2.0f);
-        mat->setFloatUniform("gamma", gamma);
-        mat->setFloatUniform("exposure", exposure);
-        mat->setFloatUniform("offset", offset);
+        WeakRef<Material> mat = scene->render_graph->getMaterialForStep(4);
+        if (mat)
+        {
+            static float gamma = 1.2f;
+            static float exposure = 1.5f;
+            static float offset = 0.0f;
+            ImGui::SliderFloat("gamma", &gamma, 0.001f, 4.0f);
+            ImGui::SliderFloat("exposure", &exposure, 0.001f, 16.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
+            ImGui::SliderFloat("offset", &offset, -2.0f, 2.0f);
+            mat->setFloatUniform("gamma", gamma);
+            mat->setFloatUniform("exposure", exposure);
+            mat->setFloatUniform("offset", offset);
+        }
+        else
+            ImGui::Text("couldn't find the colour correction step!");
     }
-    else
-        ImGui::Text("couldn't find the colour correction step!");
     ImGui::End();
-
     // TODO: debug for each object
     // TODO: debug for each light
     // TODO: debug for each camera
