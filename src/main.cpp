@@ -27,7 +27,10 @@
 
 using namespace HopEngine;
 
+// TODO: make this more sensible
 void drawImGuiDebug();
+void debugCamera(float delta_time);
+void debugClearSelection();
 
 WeakRef<StaticMesh> asha;
 WeakRef<StaticMesh> obj;
@@ -132,25 +135,10 @@ void updateScene(Ref<Scene> scene, float delta_time)
     static float total_time = 0;
     total_time += delta_time;
 
-    glm::vec2 mouse_delta = Input::getMouseDelta() * 0.25f;
-    if (Input::isMouseDown(GLFW_MOUSE_BUTTON_2))
-        scene->getCamera(0)->transform.rotateLocal({-mouse_delta.y, 0, -mouse_delta.x});
-
-    glm::mat4 camera_matrix = scene->getCamera(0)->transform.getMatrix();
-    glm::vec3 local_move_vector = glm::vec3{
-        Input::getAxis('A', 'D'),
-        Input::getAxis('Q', 'E'),
-        Input::getAxis('W', 'S')
-    } * 0.02f;
-    if (Input::isKeyDown(GLFW_KEY_LEFT_SHIFT))
-        local_move_vector *= 3.0f;
-    scene->getCamera(0)->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
+    debugCamera(delta_time);
 
     if (obj)
         obj->transform.rotateLocal({ 0, 0, 20 * delta_time });
-    /*scene->camera->transform.lookAt(camera_spline[total_time / 6.0f] * 1.5f,
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 0.0f, 1.0f));*/
 
     //auto cast = asha.cast<Object>();
     //gizmo->trackObject(cast, scene->getCamera(0));
@@ -361,7 +349,6 @@ void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
     ImGui::End();
 
     drawImGuiDebug();
-    // TODO: debug for each light
 }
 
 struct SceneFuncSet
@@ -426,8 +413,11 @@ int main()
 #endif
         Engine::init();
 
+
         const auto& scene = scenes[selected_scene];
         Engine::setup(scene.init_func, scene.update_func, scene.imgui_func);
+
+        debugClearSelection();
 
         Engine::mainLoop();
 

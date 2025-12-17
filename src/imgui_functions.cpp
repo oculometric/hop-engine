@@ -7,12 +7,14 @@
 #include "mesh.h"
 #include "texture.h"
 #include "material.h"
+#include "input.h"
 
 using namespace HopEngine;
 using namespace std;
 
 static WeakRef<Object> selected_object;
 static WeakRef<Material> selected_material;
+static Camera* selected_camera;
 
 void drawImGuiDebug()
 {
@@ -40,6 +42,36 @@ void drawImGuiDebug()
 		Engine::getScene()->drawImGuiDebug();
 		ImGui::End();
 	}
+}
+
+void debugCamera(float delta_time)
+{
+	if (!selected_camera)
+		return;
+
+	glm::vec2 mouse_delta = Input::getMouseDelta() * 0.25f;
+	if (Input::isMouseDown(GLFW_MOUSE_BUTTON_2))
+		selected_camera->transform.rotateLocal({ -mouse_delta.y, 0, -mouse_delta.x });
+
+	glm::mat4 camera_matrix = selected_camera->transform.getMatrix();
+	glm::vec3 local_move_vector = glm::vec3{
+		Input::getAxis('A', 'D'),
+		Input::getAxis('Q', 'E'),
+		Input::getAxis('W', 'S')
+	} * delta_time * 1.5f;
+	if (Input::isKeyDown(GLFW_KEY_LEFT_SHIFT))
+		local_move_vector *= 3.0f;
+	selected_camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
+}
+
+void debugClearSelection()
+{
+	selected_object = nullptr;
+	selected_material = nullptr;
+	if (Engine::getScene())
+		selected_camera = Engine::getScene()->getCamera(0).get();
+	else
+		selected_camera = nullptr;
 }
 
 Ref<Texture> texturePicker(Ref<Texture> current, const char* str)
@@ -150,6 +182,8 @@ void Camera::drawImGuiDebug()
 		ImGui::DragFloat("far clip", &far_clip, 1.0f, near_clip, 1000.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
 		ImGui::DragFloat("fov", &fov, 1.0f, 1.0f, 179.0f);
 		ImGui::ColorEdit3("clear colour", (float*)&clear_colour);
+		if (ImGui::Button("take control"))
+			selected_camera = this;
 	}
 }
 
