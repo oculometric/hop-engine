@@ -20,13 +20,17 @@ void drawImGuiDebug()
 	{
 		ImGui::Begin("selected object", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 		selected_object->drawImGuiDebug();
+		if (ImGui::Button("close"))
+			selected_object = nullptr;
 		ImGui::End();
 	}
 
 	if (selected_material)
 	{
 		ImGui::Begin("selected material", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-		//selected_object->drawImGuiDebug();
+		//selected_material->drawImGuiDebug();
+		if (ImGui::Button("close"))
+			selected_material = nullptr;
 		ImGui::End();
 	}
 
@@ -152,7 +156,7 @@ void Camera::drawImGuiDebug()
 void StaticMesh::drawImGuiDebug()
 {
 	Object::drawImGuiDebug();
-	if (ImGui::CollapsingHeader("mesh params", ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader("static mesh params", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		mesh = meshPicker(mesh, "mesh data");
 		if (mesh)
@@ -165,12 +169,48 @@ void StaticMesh::drawImGuiDebug()
 		material = materialPicker(material, "material");
 		if (material)
 		{
-			ImGui::Button("edit material");
+			if (ImGui::Button("edit material"))
+				selected_material = material;
 		}
-		// TODO: jump to editing this material!
-		// TODO: jump to viewing object when clicked in heirarchy (track)
+		if (ImGui::CollapsingHeader("camera mask"))
+		{
+			ImGui::InputScalar("bitflags", ImGuiDataType_U32, &camera_mask, nullptr, nullptr, nullptr, ImGuiInputTextFlags_CharsDecimal);
+			ImGui::BeginTable("bitflag_table", 8);
+			size_t i = 0;
+			for (int y = 0; y < 4; ++y)
+			{
+				ImGui::TableNextRow();
+				for (int x = 0; x < 8; ++x)
+				{
+					ImGui::TableSetColumnIndex(x);
+					bool v = camera_mask & (1 << i);
+					ImGui::Checkbox(("##xx" + to_string(i)).c_str(), &v);
+					camera_mask &= ~(1 << i);
+					if (v)
+						camera_mask |= (1 << i);
+					++i;
+				}
+			}
+			ImGui::EndTable();
+		}
 	}
-	// TODO: close/deselect button
+}
+
+void Light::drawImGuiDebug()
+{
+	Object::drawImGuiDebug();
+	if (ImGui::CollapsingHeader("light params", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		const char* types = "POINT\0SPOT\0DIRECTIONAL";
+		ImGui::Combo("type", (int*)&type, types);
+		ImGui::ColorEdit3("colour", (float*)&colour);
+		if (type == SPOT)
+		{
+			spot_angle *= glm::pi<float>() / 180.0f;
+			ImGui::SliderAngle("spot angle", &spot_angle, 1.0f, 89.0f);
+			spot_angle /= glm::pi<float>() / 180.0f;
+		}
+	}
 }
 
 void drawImGuiSceneTreeItem(multimap<Object*, WeakRef<Object>>& parent_map, WeakRef<Object> parent)

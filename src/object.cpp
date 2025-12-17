@@ -126,7 +126,7 @@ vector<DrawCommand> StaticMesh::getDrawCommands() const
 {
 	vector<DrawCommand> commands;
 	if (material && mesh && uniforms)
-		commands.push_back(DrawCommand(material, mesh, uniforms));
+		commands.push_back(DrawCommand(material, mesh, uniforms).mask(camera_mask));
 	return commands;
 }
 

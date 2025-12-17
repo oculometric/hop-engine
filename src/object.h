@@ -74,6 +74,7 @@ class StaticMesh : public Object
 public:
 	Ref<Mesh> mesh;
 	Ref<Material> material;
+	uint32_t camera_mask = 0x000000FF;
 
 public:
 	DELETE_CONSTRUCTORS(StaticMesh);
@@ -106,6 +107,7 @@ public:
 	Light(LightType type);
 
 	LightParams getParamsStructure() const;
+	virtual void drawImGuiDebug() override;
 };
 
 template<class T>
