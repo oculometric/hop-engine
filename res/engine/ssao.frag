@@ -7,17 +7,14 @@
 
 layout(location = 0) out vec4 out_colour;
 
-layout(set = 2, binding = 0) uniform sampler2D screen_texture;
-layout(set = 2, binding = 1) uniform sampler2D normal_texture;
-layout(set = 2, binding = 2) uniform sampler2D params_texture;
-layout(set = 2, binding = 3) uniform sampler2D custom_texture;
-layout(set = 2, binding = 4) uniform sampler2D depth_texture;
+layout(set = 2, binding = 0) uniform sampler2D normal_texture;
+layout(set = 2, binding = 1) uniform sampler2D depth_texture;
 
 #include "dither.glsl"
 
 #define NUM_SAMPLES 64
 
-layout(set = 2, binding = 5) uniform AOParams
+layout(set = 2, binding = 2) uniform AOParams
 {
     vec4 samples[NUM_SAMPLES];
 };
@@ -78,7 +75,5 @@ float calculateOcclusion()
 
 void main()
 {
-    out_colour = vec4(texture(screen_texture, frag.uv).rgb, 1);
-    //vec3 col = texture(screen_texture, frag.uv).rgb;
-    //colour = vec4(col * calculateOcclusion(), 1);
+    out_colour = vec4(vec3(calculateOcclusion()), 1);
 }

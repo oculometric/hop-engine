@@ -61,6 +61,7 @@ public:
 	Camera();
 
 	void pushToCameraDescriptorSet(size_t index, glm::ivec2 viewport_size, float time, std::vector<LightParams> lights, glm::vec4 ambient);
+	SceneUniforms getSceneUniforms(glm::ivec2 viewport_size, float time, std::vector<LightParams> lights, glm::vec4 ambient);
 	glm::mat4 getWorldToScreenMatrix();
 	VkDescriptorSet getDescriptorSet(size_t index) const;
 };

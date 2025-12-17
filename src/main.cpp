@@ -8,6 +8,7 @@
 #include <vulkan/vulkan.h>
 #include <iostream>
 #include <chrono>
+#include <random>
 #include <thread>
 #include <string>
 #if defined(_WIN32)
@@ -92,11 +93,27 @@ void initScene(Ref<Scene> scene)
         .addCamera(0)
         .addCamera(1)
         .addCamera(2, 0.1f)
+        .addPostProcess(new Shader("res://engine/ssao", false), {
+            { 0, RenderTextureBinding(0, 1) },
+            { 1, RenderTextureBinding(0, 4) }
+            })
         .addPostProcess(new Shader("res://half_and_half", false), {
             { 0, RenderTextureBinding(0, 0) },
             { 1, RenderTextureBinding(1, 1).address(VK_SAMPLER_ADDRESS_MODE_REPEAT) },
             { 2, RenderTextureBinding(2, 0).address(VK_SAMPLER_ADDRESS_MODE_REPEAT).filter(VK_FILTER_NEAREST) }
         }));
+
+    glm::vec4 samples[64];
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    std::default_random_engine rand;
+    for (int i = 0; i < 64; ++i)
+    {
+        glm::vec4 s = glm::vec4((dist(rand) * 2.0f) - 1.0f, (dist(rand) * 2.0f) - 1.0f, -dist(rand), 0.0f);
+        float fi = (float)i / (float)64;
+        glm::vec4 v = glm::normalize(s) * (0.05f + ((1.0f - 0.05f) * fi * fi));
+        samples[i] = v;
+    }
+    scene->render_graph->getMaterialForStep(3)->setUniform("samples", samples, sizeof(glm::vec4) * 64); // TODO: AO material flickering?
 }
 
 void updateScene(Ref<Scene> scene, float delta_time)

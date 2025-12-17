@@ -1,5 +1,7 @@
 #include "render_graph.h"
 
+#include <string>
+
 #include "graphics_environment.h"
 #include "render_pass.h"
 #include "material.h"
@@ -41,10 +43,16 @@ void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, R
         if (step.is_camera)
         {
             VkExtent2D extent = step.render_pass->getExtent();
-            scene->getCamera(step.camera_slot)->pushToCameraDescriptorSet(image_index, { extent.width, extent.height}, time_since_start, scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
+            scene->getCamera(step.camera_slot)->pushToCameraDescriptorSet(image_index, { extent.width, extent.height }, time_since_start, scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
         }
         else
+        {
+            VkExtent2D extent = execution_steps[0].render_pass->getExtent();
             step.material->pushToDescriptorSet(image_index);
+            SceneUniforms uniforms = scene->getCamera(execution_steps[0].camera_slot)->getSceneUniforms({ extent.width, extent.height }, time_since_start, scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
+            memcpy(step.scene_uniforms->getBuffer(), &uniforms, sizeof(SceneUniforms));
+            step.scene_uniforms->pushToDescriptorSet(image_index);
+        }
     }
 }
 
@@ -106,7 +114,26 @@ Ref<Texture> RenderGraph::getFinalImage() const
 {
     if (execution_steps.empty())
         return nullptr;
+    if (output_step == (size_t)-1)
+        return execution_steps[execution_steps.size() - 1].render_pass->getImage(output_image);
     return execution_steps[output_step % execution_steps.size()].render_pass->getImage(output_image);
+}
+
+Ref<Material> RenderGraph::getMaterialForStep(size_t step)
+{
+    if (step >= execution_steps.size())
+    {
+        DBG_ERROR("attempt to read material from step " + to_string(step) + " of render graph " + PTR(this) + ", but there is no such step");
+        return nullptr;
+    }
+
+    if (execution_steps[step].is_camera)
+    {
+        DBG_ERROR("attempt to read material from step " + to_string(step) + " of render graph " + PTR(this) + ", but it is not a post-process (material) step");
+        return nullptr;
+    }
+
+    return execution_steps[step].material;
 }
 
 void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands) const

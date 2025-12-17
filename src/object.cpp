@@ -64,6 +64,14 @@ Camera::Camera() : Object()
 
 void Camera::pushToCameraDescriptorSet(size_t index, glm::ivec2 viewport_size, float time, vector<LightParams> lights, glm::vec4 ambient)
 {
+	SceneUniforms scene_uniforms = getSceneUniforms(viewport_size, time, lights, ambient);
+
+	memcpy(uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
+	uniforms->pushToDescriptorSet(index);
+}
+
+SceneUniforms Camera::getSceneUniforms(glm::ivec2 viewport_size, float time, std::vector<LightParams> lights, glm::vec4 ambient)
+{
 	SceneUniforms scene_uniforms;
 	scene_uniforms.time = time;
 	scene_uniforms.eye_position = transform.getLocalPosition();
@@ -76,8 +84,7 @@ void Camera::pushToCameraDescriptorSet(size_t index, glm::ivec2 viewport_size, f
 	memcpy(scene_uniforms.lights, lights.data(), lights.size() * sizeof(LightParams));
 	scene_uniforms.ambient_light = ambient;
 
-	memcpy(uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
-	uniforms->pushToDescriptorSet(index);
+	return scene_uniforms;
 }
 
 glm::mat4 Camera::getWorldToScreenMatrix()

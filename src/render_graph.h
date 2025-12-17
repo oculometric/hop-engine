@@ -80,6 +80,7 @@ public:
 	void resizeBuffers(uint32_t width, uint32_t height);
 	inline VkExtent2D getExpectedExtent() const { return expected_extent; }
 	Ref<Texture> getFinalImage() const;
+	Ref<Material> getMaterialForStep(size_t step);
 
 private:
 	void recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands) const;

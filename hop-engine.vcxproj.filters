@@ -277,10 +277,10 @@
     <None Include="res\engine\passthrough.frag">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="res\engine\post_process.frag">
+    <None Include="res\engine\ssao.frag">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="res\engine\post_process.vert">
+    <None Include="res\engine\ssao.vert">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="res\half_and_half.frag">

@@ -246,31 +246,6 @@ RenderServer::RenderServer(Ref<Window> main_window)
     gizmo_material = new Material(new Shader("res://engine/gizmo", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE), final_render_pass);
     skybox_material = new Material(new Shader("res://engine/skybox", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
     passthrough = new Material(new Shader("res://engine/passthrough", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), final_render_pass);
-
-    // TODO: make this a render graph step
-    /*post_process = new Material(new Shader("res://engine/post_process", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), final_render_pass);
-    Ref<Sampler> clamped_sampler = new Sampler(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
-    post_process->setSampler("screen_texture", clamped_sampler);
-    post_process->setSampler("normal_texture", clamped_sampler);
-    post_process->setSampler("params_texture", clamped_sampler);
-    post_process->setSampler("custom_texture", clamped_sampler);
-    post_process->setSampler("depth_texture", clamped_sampler);
-    post_process->setTexture("screen_texture", offscreen_pass->getImage(0));
-    post_process->setTexture("normal_texture", offscreen_pass->getImage(1));
-    post_process->setTexture("params_texture", offscreen_pass->getImage(2));
-    post_process->setTexture("custom_texture", offscreen_pass->getImage(3));
-    post_process->setTexture("depth_texture", offscreen_pass->getImage(4));
-    glm::vec4 samples[64];
-    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-    std::default_random_engine rand;
-    for (int i = 0; i < 64; ++i)
-    {
-        glm::vec4 s = glm::vec4((dist(rand) * 2.0f) - 1.0f, (dist(rand) * 2.0f) - 1.0f, -dist(rand), 0.0f);
-        float fi = (float)i / (float)64;
-        glm::vec4 v = glm::normalize(s) * (0.05f + ((1.0f - 0.05f) * fi * fi));
-        samples[i] = v;
-    }
-    post_process->setUniform("samples", samples, sizeof(glm::vec4) * 64);*/
     
     initImGui();
 

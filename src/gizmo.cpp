@@ -14,6 +14,9 @@ Gizmo::Gizmo() : StaticMesh(RenderServer::getGizmoMesh(0), RenderServer::getGizm
 
 void Gizmo::trackObject(WeakRef<Object> object, WeakRef<Camera> camera)
 {
+    if (!object)
+        return;
+
     if (Input::wasKeyPressed('Z'))
         mesh = RenderServer::getGizmoMesh(0);
     else if (Input::wasKeyPressed('X'))
