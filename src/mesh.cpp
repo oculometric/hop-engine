@@ -14,6 +14,7 @@ using namespace std;
 
 Mesh::Mesh(string path)
 {
+    origin = path;
     vector<Vertex> verts;
     vector<uint16_t> inds;
 
@@ -90,6 +91,7 @@ void Mesh::updateData(vector<Vertex> vertices, vector<uint16_t> indices, size_t 
     memcpy(vertex_buffer->mapMemory(), vertices.data(), vertices.size() * sizeof(Vertex));
     vertex_buffer->unmapMemory();
     vertex_space = vertex_alloc;
+    vertex_count = vertices.size();
 
     index_alloc = max(index_alloc, indices.size());
     if (index_alloc != index_space)
@@ -392,5 +394,6 @@ void Mesh::createFromArrays(vector<Vertex> verts, vector<uint16_t> inds)
 
     vertex_space = verts.size();
     index_space = inds.size();
+    vertex_count = verts.size();
     index_count = index_space;
 }

@@ -11,6 +11,7 @@
 #include <random>
 #include <thread>
 #include <string>
+#include <map>
 #if defined(_WIN32)
 #undef APIENTRY
 #include <Windows.h>
@@ -31,6 +32,7 @@ WeakRef<StaticMesh> obj;
 WeakRef<NodeView> node_view;
 WeakRef<Gizmo> gizmo;
 WeakRef<NodeView::Node> selected_node;
+WeakRef<Object> selected_object;
 
 Spline camera_spline;
 
@@ -39,17 +41,17 @@ void initScene(Ref<Scene> scene)
     Ref<Shader> shader = new Shader("res://psx", false);
     Ref<Sampler> sampler = new Sampler(SamplerBuilder().filter(VK_FILTER_NEAREST));
     asha = scene->insertObject<StaticMesh>(new StaticMesh(
-        new Mesh("res://asha/asha.obj"),
-        new Material(
+        Engine::keepLoaded(new Mesh("res://asha/asha.obj")),
+        Engine::keepLoaded(new Material(
             shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE)
-        )));
+        ))));
     asha->material->setTexture("albedo", new Texture("res://asha/asha.png"));
     asha->material->setSampler("albedo", sampler);
     asha->transform.setLocalPosition({ 0, 0, -0.9f });
 
     Ref<StaticMesh> bunny = scene->insertObject<StaticMesh>(new StaticMesh(
-        new Mesh("res://bunny.obj"),
-        new Material(shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE))
+        Engine::keepLoaded(new Mesh("res://bunny.obj")),
+        Engine::keepLoaded(new Material(shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE)))
     ));
     bunny->material->setTexture("albedo", new Texture("res://bunny.png"));
     bunny->material->setSampler("albedo", sampler);
@@ -58,8 +60,8 @@ void initScene(Ref<Scene> scene)
     bunny->transform.scaleLocal({ 2, 2, 2 });
 
     Ref<StaticMesh> tux = scene->insertObject<StaticMesh>(new StaticMesh(
-        new Mesh("res://tux.obj"),
-        new Material(shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE))
+        Engine::keepLoaded(new Mesh("res://tux.obj")),
+        Engine::keepLoaded(new Material(shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE)))
     ));
     tux->material->setTexture("albedo", new Texture("res://tux.png"));
     tux->material->setSampler("albedo", sampler);
@@ -72,19 +74,22 @@ void initScene(Ref<Scene> scene)
     camera_spline.loop = true;
     camera_spline.points = { { 0, -1, 0.5f }, { 1, 0, 0.5f }, { 0, 1, 0.5f }, { -1, 0, 0.5f } };
 
+    scene->insertObject(scene->getCamera(0));
     scene->getCamera(0)->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f));
 
     gizmo = scene->insertObject<Gizmo>(new Gizmo());
-    scene->skybox = new Texture("res://nasa_goddard_gaia_dr2_deep_star_map.png");
+    scene->skybox = Engine::keepLoaded(new Texture("res://nasa_goddard_gaia_dr2_deep_star_map.png"));
 
     Ref<Camera> second_cam = new Camera();
+    scene->insertObject(second_cam);
     scene->setCameraSlot(second_cam, 1);
     second_cam->transform.lookAt({ 0, -2.0f, 0.7f }, { 0, 0, 0.7f }, { 0, 0, 1 });
     second_cam->fov = 20.0f;
 
     Ref<Camera> third_cam = new Camera();
+    scene->insertObject(third_cam);
     scene->setCameraSlot(third_cam, 2);
     third_cam->transform.lookAt({ 0, -0.2f, 0.8f }, { 0, 0, 0.7f }, { 0, 0, 1 });
     third_cam->fov = 120.0f;
@@ -119,6 +124,8 @@ void initScene(Ref<Scene> scene)
     scene->render_graph->getMaterialForStep(5)->setFloatUniform("gamma", 2.2f);
     scene->render_graph->getMaterialForStep(5)->setFloatUniform("exposure", 16.0f);
     scene->render_graph->getMaterialForStep(5)->setFloatUniform("offset", 0.0f);
+
+    selected_object = asha.cast<Object>();
 }
 
 void updateScene(Ref<Scene> scene, float delta_time)
@@ -146,8 +153,8 @@ void updateScene(Ref<Scene> scene, float delta_time)
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f));*/
 
-    auto cast = asha.cast<Object>();
-    gizmo->trackObject(cast, scene->getCamera(0));
+    //auto cast = asha.cast<Object>();
+    //gizmo->trackObject(cast, scene->getCamera(0));
 
     Input::resetMouseDelta();
 }
@@ -314,10 +321,15 @@ void initMaterialScene(Ref<Scene> scene)
 
 void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
 {
+    // TODO: move all the imgui stuff into its own file
     ImGui::Begin("test");
     ImGui::Text("yippee");
     ImGui::End();
+    // TODO: timing/rendering statistics (dt, fps, cpu/gpu time, objects, draw calls, triangles, lights)
 
+
+    // TODO: debug for the render graph (add/remove)
+    // TODO: debug for each render pass
     ImGui::Begin("render graph", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     int tmp = scene->getRenderGraph()->output_step;
     ImGui::InputInt("step index", &tmp, 1, 1);
@@ -327,13 +339,7 @@ void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
     scene->getRenderGraph()->output_image = tmp;
     ImGui::End();
 
-    // TODO: debug for the render graph (add/remove)
-    // TODO: debug for each render pass
-
-    ImGui::Begin("scene stats", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::LabelText("objects", "%d", scene->getAllObjects().size());
-    ImGui::LabelText("draws", "%d", scene->getDrawCommands().size());
-    ImGui::End();
+    scene->drawImGuiDebug();
 
     ImGui::Begin("colour correction", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     if (gizmo)
@@ -355,6 +361,13 @@ void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
             ImGui::Text("couldn't find the colour correction step!");
     }
     ImGui::End();
+
+    if (selected_object)
+    {
+        ImGui::Begin("selected object", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+        selected_object->drawImGuiDebug();
+        ImGui::End();
+    }
     // TODO: debug for each object
     // TODO: debug for each light
     // TODO: debug for each camera

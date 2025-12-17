@@ -16,7 +16,8 @@ Object::Object()
 {
 	transform = Transform();
 	uniforms = new UniformBlock(ShaderLayout{ RenderServer::getObjectDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(ObjectUniforms) }} });
-	
+	name = "object";
+
 	DBG_VERBOSE("created object");
 }
 
@@ -60,7 +61,10 @@ Object::~Object()
 Camera::Camera() : Object()
 {
 	uniforms = new UniformBlock(ShaderLayout{ RenderServer::getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
+	name = "camera";
 }
+
+void Camera::pushToDescriptorSet(size_t index) { }
 
 void Camera::pushToCameraDescriptorSet(size_t index, glm::ivec2 viewport_size, float time, vector<LightParams> lights, glm::vec4 ambient)
 {
@@ -74,7 +78,7 @@ SceneUniforms Camera::getSceneUniforms(glm::ivec2 viewport_size, float time, std
 {
 	SceneUniforms scene_uniforms;
 	scene_uniforms.time = time;
-	scene_uniforms.eye_position = transform.getLocalPosition();
+	scene_uniforms.eye_position = transform.getPosition();
 	scene_uniforms.viewport_size = viewport_size;
 	scene_uniforms.world_to_view = glm::inverse(transform.getMatrix());
 	scene_uniforms.view_to_clip = glm::perspective(glm::radians(fov), viewport_size.x / (float)(viewport_size.y), near_clip, far_clip);
@@ -93,6 +97,9 @@ glm::mat4 Camera::getWorldToScreenMatrix()
 	glm::mat4 view_to_clip = glm::perspective(glm::radians(fov), viewport_size.x / (float)(viewport_size.y), near_clip, far_clip);
 	view_to_clip[1][1] *= -1;
 	glm::mat4 world_to_view = glm::inverse(transform.getMatrix());
+	world_to_view[0] = glm::normalize(world_to_view[0]);
+	world_to_view[1] = glm::normalize(world_to_view[1]);
+	world_to_view[2] = glm::normalize(world_to_view[2]);
     return view_to_clip * world_to_view;
 }
 
@@ -105,6 +112,7 @@ StaticMesh::StaticMesh(Ref<Mesh> _mesh, Ref<Material> _material) : Object()
 {
 	mesh = _mesh;
 	material = _material;
+	name = "static mesh";
 }
 
 void StaticMesh::pushToDescriptorSet(size_t index)
@@ -124,6 +132,7 @@ vector<DrawCommand> StaticMesh::getDrawCommands() const
 Light::Light(LightType _type)
 {
 	type = _type;
+	name = "light";
 }
 
 LightParams Light::getParamsStructure() const

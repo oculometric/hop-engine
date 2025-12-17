@@ -26,6 +26,8 @@ void Input::destroy()
 
 bool Input::isKeyDown(int key)
 {
+	if (ImGui::GetIO().WantTextInput)
+		return false;
 	return glfwGetKey(application_instance->window->getWindow(), key) == GLFW_PRESS;
 }
 
@@ -100,6 +102,8 @@ Input::~Input()
 
 void Input::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+	if (ImGui::GetIO().WantTextInput)
+		return;
 	if (action == GLFW_PRESS || action == GLFW_REPEAT)
 		application_instance->pressed_since_checked.insert(key);
 }

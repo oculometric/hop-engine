@@ -1,5 +1,7 @@
 #include "scene.h"
 
+#include <imgui.h>
+
 #include "texture.h"
 #include "render_graph.h"
 #include "uniform_block.h"
@@ -76,6 +78,7 @@ Scene::Scene()
 {
 	render_graph = new RenderGraph(RenderGraphBuilder().addCamera(0));
 	root = new Object();
+	root->name = "scene root";
 	backup_camera = new Camera();
 	backup_camera->setParent(root);
 	cameras[0] = new Camera();

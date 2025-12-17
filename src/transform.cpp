@@ -22,22 +22,16 @@ void Transform::updateMatrix()
 
 void Transform::lookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up)
 {
-	local_matrix = glm::inverse(glm::lookAt(eye, target, up));
-	glm::vec3 skew;
-	glm::vec4 perspective;
-	glm::quat quat;
-	glm::decompose(local_matrix, local_scale, quat, local_position, skew, perspective);
-	local_euler = glm::degrees(glm::eulerAngles(quat));
-
-	updateWorldMatrix();
+	world_matrix = glm::inverse(glm::lookAt(eye, target, up));
+	correctLocalMatrix();
 }
 
 void Transform::correctLocalMatrix()
 {
-	glm::mat4 parent = glm::mat4(1);
+	glm::mat4 parent = glm::identity<glm::mat4>();
 	if (parent_transform)
 		parent = parent_transform->getMatrix();
-	local_matrix = glm::inverse(world_matrix) * parent;
+	local_matrix = glm::inverse(parent) * world_matrix;
 
 	glm::vec3 skew;
 	glm::vec4 perspective;
@@ -48,7 +42,7 @@ void Transform::correctLocalMatrix()
 
 void Transform::updateWorldMatrix()
 {
-	world_matrix = glm::mat4(1);
+	world_matrix = glm::identity<glm::mat4>();
 	if (parent_transform)
 		world_matrix = parent_transform->getMatrix();
 	world_matrix = world_matrix * local_matrix;

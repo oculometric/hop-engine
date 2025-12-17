@@ -12,33 +12,42 @@ using namespace std;
 
 static Engine* engine = nullptr;
 
-#if !defined(NDEBUG)
-void Engine::registerCountedRef(const char* type_name, void* ptr, size_t* counter)
+void Engine::registerCountedRef(const char* type_name, WeakRef<void> reference)
 {
-    if (engine->allocated_refs.contains(ptr))
+    /*if (engine->allocated_refs.contains(ptr))
         DBG_ERROR("a reference counted object was allocated, but it's raw pointer is already allocated! you probably used a raw pointer twice. this will lead to double-freeing.");
     else
-        engine->allocated_refs[ptr] = { type_name, counter };
+        engine->allocated_refs[ptr] = { type_name, counter };*/
+    engine->allocated_refs.insert({ type_name, reference });
 }
 
 void Engine::unregisterCountedRef(void* ptr)
 {
-    if (!engine->allocated_refs.contains(ptr))
-        DBG_ERROR("a reference counted object was deallocated, but it's raw pointer is not allocated! you probably used a raw pointer twice. we are about to double-free that pointer. i am praying for you.");
-    else
-        engine->allocated_refs.erase(ptr);
+    for (auto pair = engine->allocated_refs.begin(); pair != engine->allocated_refs.end(); ++pair)
+    {
+        if (pair->second.get() == ptr)
+        {
+            engine->allocated_refs.erase(pair);
+            return;
+        }
+    }
+    DBG_ERROR("a reference counted object was deallocated, but it's raw pointer is not allocated! you probably used a raw pointer twice. we are about to double-free that pointer. i am praying for you.");
 }
 
-void HopEngine::registerCountedRef(const char* type_name, void* ptr, size_t* counter)
+void Engine::_keepLoaded(Ref<void> ref)
 {
-    Engine::registerCountedRef(type_name, ptr, counter);
+    engine->keep_loaded_refs.push_back(ref);
+}
+
+void HopEngine::registerCountedRef(const char* type_name, WeakRef<void> reference)
+{
+    Engine::registerCountedRef(type_name, reference);
 }
 
 void HopEngine::unregisterCountedRef(void* ptr)
 {
     Engine::unregisterCountedRef(ptr);
 }
-#endif
 
 void Engine::init()
 {
@@ -94,11 +103,9 @@ Ref<Scene> Engine::getScene()
 
 void Engine::summariseTrackedObjects()
 {
-#if !defined(NDEBUG)
     DBG_INFO("enumerating allocated objects (" + to_string(engine->allocated_refs.size()) + "):");
-    for (const auto& pair : engine->allocated_refs)
-        DBG_INFO("object " + PTR(pair.first) + ", with type '" + pair.second.first + "', has " + to_string(*pair.second.second) + " references");
-#endif
+    for (auto& pair : engine->allocated_refs)
+        DBG_INFO("object " + PTR(pair.second.get()) + ", with type '" + pair.first);
 }
 
 void Engine::destroy()
@@ -126,13 +133,13 @@ Engine::Engine()
 Engine::~Engine()
 {
     scene = nullptr;
+    keep_loaded_refs.clear();
 
     Engine::summariseTrackedObjects();
     RenderServer::destroy();
     Package::destroy();
     Input::destroy();
     window = nullptr;
-#if !defined(NDEBUG)
     if (allocated_refs.size() > 0)
     {
         DBG_ERROR("uh oh! there are objects still allocated! prepare for vulkan errors and possibly crashes! see below:");
@@ -140,9 +147,20 @@ Engine::~Engine()
     }
     else
         DBG_INFO("well done for cleaning up!");
-#endif
     Window::terminateEnvironment();
     Debug::close();
 
     engine = nullptr;
+}
+
+vector<WeakRef<void>> Engine::getRefsWithType(const char* type_name)
+{
+    vector<WeakRef<void>> refs;
+    auto range = engine->allocated_refs.equal_range(type_name);
+    while (range.first != range.second)
+    {
+        refs.push_back(range.first->second);
+        ++range.first;
+    }
+    return refs;
 }

@@ -43,6 +43,7 @@ Texture::Texture(size_t _width, size_t _height, VkFormat _format, void* data, Vk
 
 Texture::Texture(string file, VkImageUsageFlags _usage)
 {
+    origin = file;
     auto file_data = Package::tryLoadFile(file);
     int img_width, img_height, img_channels;
     stbi_uc* pixels = stbi_load_from_memory(file_data.data(), static_cast<int>(file_data.size()), &img_width, &img_height, &img_channels, STBI_rgb_alpha);

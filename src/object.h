@@ -20,7 +20,6 @@ class Object
 public:
 	std::string name;
 	Transform transform;
-	glm::vec3 clear_colour = { 0.004f, 0.509f, 0.506f };
 
 protected:
 	Ref<UniformBlock> uniforms;
@@ -41,6 +40,7 @@ public:
 
 	virtual void pushToDescriptorSet(size_t index);
 	virtual std::vector<DrawCommand> getDrawCommands() const;
+	virtual void drawImGuiDebug();
 
 	virtual ~Object();
 
@@ -54,16 +54,19 @@ public:
 	float fov = 90.0f;
 	float near_clip = 0.01f;
 	float far_clip = 100.0f;
+	glm::vec3 clear_colour = { 0.004f, 0.509f, 0.506f };
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Camera);
 
 	Camera();
 
+	void pushToDescriptorSet(size_t index) override;
 	void pushToCameraDescriptorSet(size_t index, glm::ivec2 viewport_size, float time, std::vector<LightParams> lights, glm::vec4 ambient);
 	SceneUniforms getSceneUniforms(glm::ivec2 viewport_size, float time, std::vector<LightParams> lights, glm::vec4 ambient);
 	glm::mat4 getWorldToScreenMatrix();
 	VkDescriptorSet getDescriptorSet(size_t index) const;
+	virtual void drawImGuiDebug() override;
 };
 
 class StaticMesh : public Object
@@ -79,6 +82,7 @@ public:
 
 	void pushToDescriptorSet(size_t index) override;
 	std::vector<DrawCommand> getDrawCommands() const override;
+	virtual void drawImGuiDebug() override;
 };
 
 class Light : public Object

@@ -156,6 +156,7 @@
     <ClCompile Include="src\font.cpp" />
     <ClCompile Include="src\gizmo.cpp" />
     <ClCompile Include="src\graphics_environment.cpp" />
+    <ClCompile Include="src\imgui_functions.cpp" />
     <ClCompile Include="src\input.cpp" />
     <ClCompile Include="src\lib\imgui.cpp" />
     <ClCompile Include="src\lib\imgui_demo.cpp" />

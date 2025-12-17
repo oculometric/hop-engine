@@ -38,6 +38,7 @@ public:
 	std::vector<LightParams> getLightParams() const;
 	Ref<RenderGraph> getRenderGraph() const;
 	std::vector<DrawCommand> getDrawCommands() const;
+	void drawImGuiDebug();
 
 	Scene();
 	~Scene();

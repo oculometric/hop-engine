@@ -6,19 +6,14 @@
 namespace HopEngine
 {
 
-#if !defined(NDEBUG)
-void registerCountedRef(const char* type_name, void* ptr, size_t* counter);
-void unregisterCountedRef(void* ptr);
-
-#define REGISTER registerCountedRef(typeid(T).name(), payload, ref_counter)
+#define REGISTER registerCountedRef(typeid(T).name(), WeakRef<void>(this->cast<void>()))
 #define UNREGISTER unregisterCountedRef(payload)
-#else
-#define REGISTER
-#define UNREGISTER
-#endif
 
 template <typename T>
 class WeakRef;
+
+void registerCountedRef(const char* type_name, WeakRef<void> reference);
+void unregisterCountedRef(void* ptr);
 
 template<typename T>
 class Ref
@@ -125,7 +120,7 @@ public:
 	inline bool operator==(const WeakRef<T>& other) const { return other.payload == payload; }
 	inline T* operator->() { return payload; }
 	inline T* operator->() const { return payload; }
-	inline T* get() { return payload; }
+	inline T* get() const { return payload; }
 	template<typename S>
 	inline Ref<S> cast()
 	{

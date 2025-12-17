@@ -27,8 +27,10 @@ private:
 	Ref<Buffer> index_buffer;
 	size_t vertex_space = 0;
 	size_t index_space = 0;
+	size_t vertex_count = 0;
 	size_t index_count = 0;
 	bool accessible = false;
+	std::string origin;
 
 public:
 	DELETE_CONSTRUCTORS(Mesh);
@@ -39,8 +41,10 @@ public:
 
 	VkBuffer getVertexBuffer() const;
 	VkBuffer getIndexBuffer() const;
+	inline size_t getVertexCount() const { return vertex_count; }
 	inline size_t getIndexCount() const { return index_count; }
 	void updateData(std::vector<Vertex> vertices, std::vector<uint16_t> indices, size_t vertex_alloc = 0, size_t index_alloc = 0);
+	inline std::string getOrigin() const { return origin; }
 
 	static VkVertexInputBindingDescription getBindingDescription();
 	static std::array<VkVertexInputAttributeDescription, 5> getAttributeDescriptions();
