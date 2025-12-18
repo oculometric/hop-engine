@@ -359,15 +359,15 @@ void UniformBlock::drawImGuiDebug(map<string, uint32_t> texture_name_to_binding)
 void Engine::_drawImGuiDebug()
 {
 	ImGui::Begin("performance", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-	ImGui::LabelText("delta time", "%fs", last_frame_stats.delta_time);
+	ImGui::LabelText("delta time", "%fms", last_frame_stats.delta_time * 1000.0f);
 	ImGui::LabelText("smoothed FPS", "%f", smoothed_fps);
 	if (ImGui::CollapsingHeader("time details", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		ImGui::LabelText("render imgui", "%fs", last_frame_stats.imgui_time);
-		ImGui::LabelText("build buffers", "%fs", last_frame_stats.build_time);
-		ImGui::LabelText("record commands", "%fs", last_frame_stats.record_time);
-		ImGui::LabelText("render time", "%fs", last_frame_stats.render_time);
-		ImGui::LabelText("update scene", "%fs", last_frame_stats.update_time);
+		ImGui::LabelText("render imgui", "%fms", last_frame_stats.imgui_time * 1000.0f);
+		ImGui::LabelText("build buffers", "%fms", last_frame_stats.build_time * 1000.0f);
+		ImGui::LabelText("record commands", "%fms", last_frame_stats.record_time * 1000.0f);
+		ImGui::LabelText("render time", "%fms", last_frame_stats.render_time * 1000.0f); // TODO: find out how long it takes to render the image command buffer on the gpu
+		ImGui::LabelText("update scene", "%fms", last_frame_stats.update_time * 1000.0f);
 	}
 	if (ImGui::CollapsingHeader("scene stats", ImGuiTreeNodeFlags_DefaultOpen))
 	{
