@@ -13,6 +13,7 @@
 #include "input.h"
 #include "uniform_block.h"
 #include "sampler.h"
+#include "render_graph.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -45,6 +46,7 @@ void drawImGuiDebug(float delta_time)
 	{
 		ImGui::Begin("scene", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 		Engine::getScene()->drawImGuiDebug();
+		Engine::getScene()->render_graph->drawImGuiDebug();
 		ImGui::End();
 	}
 
@@ -284,7 +286,9 @@ void Scene::drawImGuiDebug()
 		parent_map.insert({ object->getParent().get(), object});
 	parent_map.insert({ (nullptr), root });
 
-	drawImGuiSceneTreeItem(parent_map, WeakRef<Object>(nullptr));
+	if (ImGui::CollapsingHeader("object heirarchy", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
+		drawImGuiSceneTreeItem(parent_map, WeakRef<Object>(nullptr));
+	// TODO: ability to add/remove objects
 }
 
 void Material::drawImGuiDebug()
@@ -383,4 +387,96 @@ void Engine::_drawImGuiDebug()
 	ImGui::PlotLines("##xx", delta_time_history, 512, history_offset, "delta time", 0.0001f, 0.2f, ImVec2{0, 160}, 4);
 	//ImGui::PlotLines("##xxx", fps_history, 512, history_offset, "FPS", 10.0f, 200.0f, ImVec2{ 0, 160 }, 4);
 	ImGui::End();
+}
+
+void RenderGraph::drawImGuiDebug()
+{
+	if (ImGui::CollapsingHeader("render graph", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		int tmp = output_step;
+		ImGui::InputInt("show step", &tmp, 1, 1);
+		output_step = tmp;
+		tmp = output_image;
+		ImGui::SliderInt("show attachment", &tmp, 0, 4);
+		output_image = tmp;
+
+		static int pass_details_index = 0;
+		ImGui::BeginTable("passes", 7, ImGuiTableFlags_Borders);
+		ImGui::TableSetupColumn("type");
+		ImGui::TableSetupColumn("slot");
+		ImGui::TableSetupColumn("material");
+		ImGui::TableSetupColumn("inputs");
+		ImGui::TableSetupColumn("outputs");
+		ImGui::TableSetupColumn("extent");
+		ImGui::TableSetupColumn("info");
+		ImGui::TableHeadersRow();
+		int current_pass = 0;
+		for (const auto& pass : execution_steps)
+		{
+			ImGui::PushID(current_pass);
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text(pass.is_camera ? "camera" : "post-process");
+			ImGui::TableSetColumnIndex(1);
+			if (pass.is_camera)
+				ImGui::Text("%i", pass.camera_slot);
+			ImGui::TableSetColumnIndex(2);
+			if (!pass.is_camera)
+				ImGui::Text("%s", PTR(pass.material.get()));
+			ImGui::TableSetColumnIndex(3);
+			if (!pass.is_camera)
+				ImGui::Text("%i", pass.texture_bindings.size());
+			ImGui::TableSetColumnIndex(4);
+			ImGui::Text("%i", pass.render_pass->getClearValues().size());
+			ImGui::TableSetColumnIndex(5);
+			ImGui::Text("%i x %i", pass.render_pass->getExtent().width, pass.render_pass->getExtent().height);
+			ImGui::TableSetColumnIndex(6);
+			if (ImGui::SmallButton(">"))
+				pass_details_index = current_pass;
+			++current_pass;
+			ImGui::PopID();
+		}
+		ImGui::EndTable();
+		if (pass_details_index < execution_steps.size())
+		{
+			if (ImGui::CollapsingHeader(("pass " + to_string(pass_details_index) + " details").c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				const auto& pass = execution_steps[pass_details_index];
+				if (!pass.is_camera)
+				{
+					ImGui::Text("input texture bindings:");
+					ImGui::BeginTable("bindings", 5, ImGuiTableFlags_Borders);
+					ImGui::TableSetupColumn("binding");
+					ImGui::TableSetupColumn("pass");
+					ImGui::TableSetupColumn("attachment");
+					ImGui::TableSetupColumn("filtering");
+					ImGui::TableSetupColumn("addressing");
+					ImGui::TableHeadersRow();
+					for (const auto& pair : pass.texture_bindings)
+					{
+						ImGui::TableNextRow();
+						ImGui::TableSetColumnIndex(0);
+						ImGui::Text("%i", pair.first);
+						ImGui::TableSetColumnIndex(1);
+						ImGui::Text("%i", pair.second.step_index);
+						ImGui::TableSetColumnIndex(2);
+						ImGui::Text("%i", pair.second.output_index);
+						ImGui::TableSetColumnIndex(3);
+						ImGui::Text("%s", vk::to_string((vk::Filter)(pair.second.filter_mode)));
+						ImGui::TableSetColumnIndex(4);
+						ImGui::Text("%s", vk::to_string((vk::SamplerAddressMode)(pair.second.address_mode)));
+					}
+					ImGui::EndTable();
+				}
+				if (pass.resolution_scale > 0)
+					ImGui::LabelText("resolution scale", "%.2f", pass.resolution_scale);
+				else
+					ImGui::LabelText("custom resolution", "%i x %i", pass.custom_extent.width, pass.custom_extent.height);
+				ImGui::Text("output attachments:");
+				ImGui::LabelText("colour attachment", "always present");
+				ImGui::LabelText("extra attachments", "%i", pass.render_pass->getOutputConfig().additional_attachments);
+				ImGui::LabelText("depth attachment", pass.render_pass->getOutputConfig().has_depth_attachment ? "present" : "disabled");
+			}
+		}
+	}
 }

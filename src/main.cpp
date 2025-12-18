@@ -310,20 +310,6 @@ void initMaterialScene(Ref<Scene> scene)
 
 void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
 {
-    // TODO: move all the imgui stuff into its own file
-
-
-    // TODO: debug for the render graph (add/remove)
-    // TODO: debug for each render pass
-    ImGui::Begin("render graph", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-    int tmp = scene->getRenderGraph()->output_step;
-    ImGui::InputInt("step index", &tmp, 1, 1);
-    scene->getRenderGraph()->output_step = tmp;
-    tmp = scene->getRenderGraph()->output_image;
-    ImGui::SliderInt("attachment index", &tmp, 0, 4);
-    scene->getRenderGraph()->output_image = tmp;
-    ImGui::End();
-
     ImGui::Begin("colour correction", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     if (gizmo)
     {

@@ -83,6 +83,8 @@ public:
 	Ref<Texture> getFinalImage() const;
 	Ref<Material> getMaterialForStep(size_t step);
 
+	void drawImGuiDebug();
+
 private:
 	void recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands, FrameStats& stats) const;
 	void recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Material> material, VkDescriptorSet scene_descriptor_set, FrameStats& stats) const;
