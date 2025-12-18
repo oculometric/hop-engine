@@ -1,5 +1,8 @@
 #include <imgui.h>
 #include <map>
+#include <string>
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_to_string.hpp>
 
 #include "engine.h"
 #include "object.h"
@@ -22,7 +25,7 @@ void drawImGuiDebug(float delta_time)
 {
 	if (selected_object)
 	{
-		ImGui::Begin("selected object", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Begin("object", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 		selected_object->drawImGuiDebug();
 		if (ImGui::Button("close"))
 			selected_object = nullptr;
@@ -31,8 +34,8 @@ void drawImGuiDebug(float delta_time)
 
 	if (selected_material)
 	{
-		ImGui::Begin("selected material", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-		//selected_material->drawImGuiDebug();
+		ImGui::Begin("material", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+		selected_material->drawImGuiDebug();
 		if (ImGui::Button("close"))
 			selected_material = nullptr;
 		ImGui::End();
@@ -45,7 +48,7 @@ void drawImGuiDebug(float delta_time)
 		ImGui::End();
 	}
 
-	// TODO: timing/rendering statistics (dt, fps, cpu/gpu time, objects, draw calls, triangles, lights)
+	// TODO: timing/rendering statistics (dt, fps, cpu/gpu time, objects, draw calls, triangles, lights) managed by engine
 	ImGui::Begin("performance", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 	delta_time_graph[delta_time_graph_offset] = delta_time;
 	ImGui::PlotLines("delta time", delta_time_graph, 512, delta_time_graph_offset, nullptr, 0.0001f, 0.2f, ImVec2{0, 160}, 4);
@@ -73,10 +76,10 @@ void debugCamera(float delta_time)
 	selected_camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
 }
 
-void debugClearSelection()
+void debugClearSelection(WeakRef<Object> object, WeakRef<Material> material)
 {
-	selected_object = nullptr;
-	selected_material = nullptr;
+	selected_object = object;
+	selected_material = material;
 	if (Engine::getScene())
 		selected_camera = Engine::getScene()->getCamera(0).get();
 	else
@@ -288,4 +291,26 @@ void Scene::drawImGuiDebug()
 	parent_map.insert({ (nullptr), root });
 
 	drawImGuiSceneTreeItem(parent_map, WeakRef<Object>(nullptr));
+}
+
+void Material::drawImGuiDebug()
+{
+	ImGui::LabelText("shader", "%s (%s)", shader->getOrigin(), PTR(shader.get()));
+	if (ImGui::CollapsingHeader("pipeline config", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		auto config = pipeline->getConfig();
+		ImGui::LabelText("culling", "%s", vk::to_string((vk::CullModeFlags)config.culling_mode));
+		ImGui::LabelText("polygon", "%s", vk::to_string((vk::PolygonMode)config.polygon_mode));
+		ImGui::LabelText("depth write", "%s", config.depth_write_enable ? "true" : "false");
+		ImGui::LabelText("depth test", "%s", config.depth_test_enable ? "true" : "false");
+		ImGui::LabelText("depth operation", "%s", vk::to_string((vk::CompareOp)config.depth_compare_op));
+	}
+	if (ImGui::CollapsingHeader("texture bindings", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+
+	}
+	if (ImGui::CollapsingHeader("uniform variables", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+
+	}
 }

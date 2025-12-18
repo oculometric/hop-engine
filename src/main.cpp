@@ -30,7 +30,7 @@ using namespace HopEngine;
 // TODO: make this more sensible
 void drawImGuiDebug(float delta_time);
 void debugCamera(float delta_time);
-void debugClearSelection();
+void debugClearSelection(WeakRef<Object> object = WeakRef<Object>(nullptr), WeakRef<Material> material = WeakRef<Material>(nullptr));
 
 WeakRef<StaticMesh> asha;
 WeakRef<StaticMesh> obj;
@@ -128,6 +128,8 @@ void initScene(Ref<Scene> scene)
     scene->render_graph->getMaterialForStep(5)->setFloatUniform("gamma", 2.2f);
     scene->render_graph->getMaterialForStep(5)->setFloatUniform("exposure", 16.0f);
     scene->render_graph->getMaterialForStep(5)->setFloatUniform("offset", 0.0f);
+
+    debugClearSelection(asha.cast<Object>(), asha->material);
 }
 
 void updateScene(Ref<Scene> scene, float delta_time)
@@ -373,6 +375,8 @@ INT_PTR dialogFunc(HWND handle, UINT message, WPARAM unnamedParam3, LPARAM unnam
         {
             SendMessage(list, LB_ADDSTRING, 0, (LPARAM)scene.name.c_str());
         }
+        SendMessage(handle, WM_SETICON, ICON_SMALL, (LPARAM)MAKEINTRESOURCE(IDI_ICON1));
+        SendMessage(handle, WM_SETICON, ICON_BIG, (LPARAM)MAKEINTRESOURCE(IDI_ICON1));
         return true;
     case WM_COMMAND:
         if (unnamedParam3 == 2)
@@ -407,14 +411,15 @@ int main()
         DialogBox(NULL, MAKEINTRESOURCE(IDD_DIALOG1), NULL, dialogFunc);
 #endif
         Engine::init();
+        debugClearSelection();
 
         const auto& scene = scenes[selected_scene];
 
         Engine::setup(scene.init_func, scene.update_func, scene.imgui_func);
-        debugClearSelection();
 
         Engine::mainLoop();
 
+        debugClearSelection();
         Engine::destroy();
 
         return 0;

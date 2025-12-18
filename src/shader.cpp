@@ -23,6 +23,7 @@ const char* Shader::compiler_path = "glslc";
 
 Shader::Shader(string base_path, bool is_precompiled)
 {
+	origin = base_path;
 	string proper_path = base_path;
 	if (!is_precompiled)
 	{

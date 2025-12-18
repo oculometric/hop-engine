@@ -48,6 +48,7 @@ private:
 	VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
 	VkDescriptorSetLayout descriptor_set_layout = VK_NULL_HANDLE;
 	std::vector<DescriptorBinding> bindings;
+	std::string origin;
 
 public:
 	DELETE_CONSTRUCTORS(Shader);
@@ -58,6 +59,7 @@ public:
 	inline VkPipelineLayout getPipelineLayout() const { return pipeline_layout; }
 	std::vector<VkPipelineShaderStageCreateInfo> getShaderStageCreateInfos() const;
 	ShaderLayout getShaderLayout() const;
+	inline std::string getOrigin() const { return origin; }
 
 private:
 	static std::vector<DescriptorBinding> mergeBindings(std::vector<DescriptorBinding> list_a, std::vector<DescriptorBinding> list_b);

@@ -64,6 +64,8 @@ public:
 
 	static Ref<Material> deserialise(std::string name);
 
+	void drawImGuiDebug();
+
 private:
 };
 
