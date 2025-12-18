@@ -13,8 +13,6 @@
 namespace HopEngine
 {
 
-// TODO: per-object camera bitmask
-
 class Object
 {
 public:
