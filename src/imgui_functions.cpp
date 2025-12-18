@@ -393,6 +393,47 @@ void Material::drawImGuiDebug()
 	ImGui::Button("reload shader");
 }
 
+bool Sampler::drawImGuiDebug()
+{
+	ImGui::LabelText("filter", "%s", vk::to_string((vk::Filter)builder.filtering_mode).c_str());
+	VkFilter new_mode = builder.filtering_mode;
+	if (ImGui::Button("switch filtering"))
+		new_mode = (VkFilter)((new_mode + 1) % 2);
+	ImGui::LabelText("address", "%s", vk::to_string((vk::SamplerAddressMode)builder.address_mode).c_str());
+	VkSamplerAddressMode new_address = builder.address_mode;
+	if (ImGui::Button("switch addressing"))
+		new_address = (VkSamplerAddressMode)((new_address + 1) % 5);
+	if (new_mode != builder.filtering_mode || new_address != builder.address_mode)
+	{
+		vkDestroySampler(RenderServer::getDevice(), sampler, nullptr);
+		builder.filtering_mode = new_mode;
+		builder.address_mode = new_address;
+		VkSamplerCreateInfo create_info{ };
+		create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		create_info.magFilter = builder.filtering_mode;
+		create_info.minFilter = builder.filtering_mode;
+		create_info.addressModeU = builder.address_mode;
+		create_info.addressModeV = builder.address_mode;
+		create_info.addressModeW = builder.address_mode;
+		VkPhysicalDeviceProperties properties{ };
+		vkGetPhysicalDeviceProperties(RenderServer::getPhysicalDevice(), &properties);
+		create_info.anisotropyEnable = VK_TRUE;
+		create_info.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+		create_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		create_info.unnormalizedCoordinates = VK_FALSE;
+		create_info.compareEnable = VK_FALSE;
+		create_info.compareOp = VK_COMPARE_OP_ALWAYS;
+		create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		create_info.mipLodBias = 0.0f;
+		create_info.minLod = 0.0f;
+		create_info.maxLod = 0.0f;
+		if (vkCreateSampler(RenderServer::getDevice(), &create_info, nullptr, &sampler) != VK_SUCCESS)
+			DBG_FAULT("vkCreateSampler failed");
+		return true;
+	}
+	return false;
+}
+
 void UniformBlock::drawImGuiDebug(map<string, uint32_t> texture_name_to_binding)
 {
 	map<uint32_t, string> binding_to_texture_name;
@@ -409,9 +450,11 @@ void UniformBlock::drawImGuiDebug(map<string, uint32_t> texture_name_to_binding)
 			auto result = texturePicker(pair.second.first, "texture");
 			if (result != pair.second.first)
 				setTexture(pair.first, result);
-			// TODO: change sampler as well!
-			ImGui::LabelText("filter", "%s", vk::to_string((vk::Filter)pair.second.second->getBuilder().filtering_mode));
-			ImGui::LabelText("address", "%s", vk::to_string((vk::SamplerAddressMode)pair.second.second->getBuilder().address_mode));
+			if (pair.second.second->drawImGuiDebug())
+			{
+				setSampler(pair.first, nullptr);
+				setSampler(pair.first, pair.second.second);
+			}
 			ImGui::PopID();
 		}
 	}
@@ -560,9 +603,9 @@ void RenderGraph::drawImGuiDebug()
 					ImGui::LabelText("custom resolution", "%i x %i", pass.custom_extent.width, pass.custom_extent.height);
 				ImGui::Separator();
 				ImGui::Text("output attachments:");
-				ImGui::LabelText("colour attachment", "always present");
-				ImGui::LabelText("extra attachments", "%i", pass.render_pass->getOutputConfig().additional_attachments);
-				ImGui::LabelText("depth attachment", pass.render_pass->getOutputConfig().has_depth_attachment ? "present" : "disabled");
+				ImGui::LabelText("colour", "always present");
+				ImGui::LabelText("extras", "%i", pass.render_pass->getOutputConfig().additional_attachments);
+				ImGui::LabelText("depth", pass.render_pass->getOutputConfig().has_depth_attachment ? "present" : "disabled");
 			}
 		}
 	}

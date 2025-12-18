@@ -78,7 +78,6 @@ void initScene(Ref<Scene> scene)
     camera_spline.loop = true;
     camera_spline.points = { { 0, -1, 0.5f }, { 1, 0, 0.5f }, { 0, 1, 0.5f }, { -1, 0, 0.5f } };
 
-    scene->insertObject(scene->getCamera(0));
     scene->getCamera(0)->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f));

@@ -30,6 +30,7 @@ public:
 
 	inline VkSampler getSampler() const { return sampler; }
 	inline SamplerBuilder getBuilder() const { return builder; }
+	bool drawImGuiDebug();
 };
 
 }
