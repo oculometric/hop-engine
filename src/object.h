@@ -104,7 +104,7 @@ public:
 
 	Light(LightType type);
 
-	LightParams getParamsStructure() const;
+	LightParams getParamsStructure();
 	virtual void drawImGuiDebug() override;
 };
 
@@ -112,7 +112,7 @@ template<class T>
 inline void Object::setParent(Ref<T> new_parent)
 {
 	static_assert(std::is_convertible<T*, Object*>::value, "parent must be a HopEngine::Object subclass");
-	auto cast = new_parent.template cast<Object>();
+	auto cast = new_parent ? new_parent.template cast<Object>() : Ref<Object>();
 	_setParent(cast);
 }
 

@@ -46,7 +46,7 @@ public:
 	inline void scale(float factor);
 
 	inline glm::mat4 getLocalMatrix() const { return local_matrix; }
-	inline glm::mat4 getMatrix() const { return world_matrix; }
+	inline glm::mat4 getMatrix() { updateWorldMatrix(); return world_matrix; }
 	inline void setMatrix(glm::mat4 matrix) { world_matrix = matrix; correctLocalMatrix(); }
 
 	// TODO: world space transforms

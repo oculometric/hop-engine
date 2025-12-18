@@ -136,7 +136,7 @@ Light::Light(LightType _type)
 	name = "light";
 }
 
-LightParams Light::getParamsStructure() const
+LightParams Light::getParamsStructure()
 {
 	LightParams params{ };
 	params.colour = colour;

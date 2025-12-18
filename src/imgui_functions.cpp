@@ -14,6 +14,7 @@
 #include "uniform_block.h"
 #include "sampler.h"
 #include "render_graph.h"
+#include "graphics_environment.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -274,6 +275,17 @@ void drawImGuiSceneTreeItem(multimap<Object*, WeakRef<Object>>& parent_map, Weak
 	}
 }
 
+void collectDescendents(multimap<Object*, WeakRef<Object>>& parent_map, Object* parent, vector<Object*>& descendents)
+{
+	auto range = parent_map.equal_range(parent);
+	while (range.first != range.second)
+	{
+		descendents.push_back(range.first->second.get());
+		collectDescendents(parent_map, range.first->second.get(), descendents);
+		range.first++;
+	}
+}
+
 void Scene::drawImGuiDebug()
 {
 	ImGui::ColorEdit3("ambient light", (float*)&(ambient_colour));
@@ -288,7 +300,80 @@ void Scene::drawImGuiDebug()
 
 	if (ImGui::CollapsingHeader("object heirarchy", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
 		drawImGuiSceneTreeItem(parent_map, WeakRef<Object>(nullptr));
-	// TODO: ability to add/remove objects
+	ImGui::Text("selected: %s", selected_object ? (selected_object->name + " - " + PTR(selected_object.get())).c_str() : "none");
+	bool disabled = !selected_object;
+	if (disabled)
+		ImGui::BeginDisabled();
+	if (selected_object != root && ImGui::Button("remove from tree"))
+	{
+		vector<Object*> objects_to_remove;
+		objects_to_remove.push_back(selected_object.get());
+		collectDescendents(parent_map, selected_object.get(), objects_to_remove);
+		for (Object* obj : objects_to_remove)
+		{ // TODO: improve scene tree so that objects know about their children, can be removed
+			auto it = objects.begin();
+			while (it != objects.end())
+			{
+				if (it->get() == obj)
+				{
+					objects.erase(it);
+					break;
+				}
+				++it;
+			}
+		}
+		selected_object->setParent(WeakRef<Object>());
+		selected_object = nullptr;
+	}
+	if (selected_object != root && ImGui::Button("reparent"))
+	{
+		ImGui::OpenPopup("new parent");
+	}
+	if (selected_object != root && ImGui::BeginPopup("new parent", ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		if (ImGui::SmallButton((root->name + " - " + PTR(root.get())).c_str()))
+		{
+			selected_object->setParent(root);
+			ImGui::CloseCurrentPopup();
+		}
+		for (size_t i = 0; i < objects.size(); ++i)
+		{
+			const auto& object = objects[i];
+			if (object == selected_object)
+				continue;
+			if (ImGui::SmallButton((object->name + " - " + PTR(object.get())).c_str()))
+			{
+				selected_object->setParent(object);
+				ImGui::CloseCurrentPopup();
+			}
+		}
+		ImGui::EndPopup();
+	}
+	if (ImGui::Button("add child"))
+	{
+		ImGui::OpenPopup("child type");
+	}
+	if (ImGui::BeginPopup("child type", ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		if (ImGui::Button("object"))
+		{
+			insertObject<Object>(new Object())->setParent(selected_object);
+			ImGui::CloseCurrentPopup();
+		}
+		if (ImGui::Button("static mesh"))
+		{
+			insertObject<StaticMesh>(new StaticMesh(RenderServer::getQuad(), RenderServer::getDefaultMaterial()))->setParent(selected_object);
+			ImGui::CloseCurrentPopup();
+		}
+		if (ImGui::Button("light"))
+		{
+			insertObject<Light>(new Light(Light::DIRECTIONAL))->setParent(selected_object);
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+	if (disabled)
+		ImGui::EndDisabled();
 }
 
 void Material::drawImGuiDebug()
@@ -467,11 +552,13 @@ void RenderGraph::drawImGuiDebug()
 						ImGui::Text("%s", vk::to_string((vk::SamplerAddressMode)(pair.second.address_mode)));
 					}
 					ImGui::EndTable();
+					ImGui::Separator();
 				}
 				if (pass.resolution_scale > 0)
 					ImGui::LabelText("resolution scale", "%.2f", pass.resolution_scale);
 				else
 					ImGui::LabelText("custom resolution", "%i x %i", pass.custom_extent.width, pass.custom_extent.height);
+				ImGui::Separator();
 				ImGui::Text("output attachments:");
 				ImGui::LabelText("colour attachment", "always present");
 				ImGui::LabelText("extra attachments", "%i", pass.render_pass->getOutputConfig().additional_attachments);

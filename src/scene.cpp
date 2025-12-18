@@ -83,6 +83,7 @@ Scene::Scene()
 	backup_camera->setParent(root);
 	cameras[0] = new Camera();
 	cameras[0]->setParent(root);
+	insertObject(cameras[0]);
 
 	DBG_INFO("created new scene");
 }
