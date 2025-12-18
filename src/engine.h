@@ -37,8 +37,8 @@ private:
 	std::vector<Ref<void>> keep_loaded_refs;
 
 	FrameStats last_frame_stats;
-	float smoothed_delta_time;
-	float smoothed_fps;
+	float smoothed_delta_time = 0.0f;
+	float smoothed_fps = 0.0f;
 	float delta_time_history[512];
 	float fps_history[512];
 	int history_offset = 0;

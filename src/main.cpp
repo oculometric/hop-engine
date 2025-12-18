@@ -77,7 +77,7 @@ void initScene(Ref<Scene> scene)
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f));
 
-    gizmo = scene->insertObject<Gizmo>(new Gizmo());
+    //gizmo = scene->insertObject<Gizmo>(new Gizmo());
     scene->skybox = Engine::keepLoaded(new Texture("res://nasa_goddard_gaia_dr2_deep_star_map.png"));
 
     Ref<Camera> second_cam = new Camera();
@@ -302,10 +302,12 @@ void initMaterialScene(Ref<Scene> scene)
         glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
+static int selected_scene = 0;
+
 void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
 {
     ImGui::Begin("colour correction", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-    if (gizmo)
+    if (selected_scene == 0)
     {
         WeakRef<Material> mat = scene->render_graph->getMaterialForStep(5);
         if (mat)
@@ -342,7 +344,6 @@ static std::vector<SceneFuncSet> scenes =
     { L"nodes", initNodeScene, updateNodeScene, imGuiDrawFunc },
     { L"material", initMaterialScene, updateScene, imGuiDrawFunc },
 };
-static int selected_scene = 0;
 
 #if defined(_WIN32)
 INT_PTR dialogFunc(HWND handle, UINT message, WPARAM unnamedParam3, LPARAM unnamedParam4)
