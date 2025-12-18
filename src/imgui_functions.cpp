@@ -23,67 +23,6 @@ static WeakRef<Object> selected_object;
 static WeakRef<Material> selected_material;
 static Camera* selected_camera;
 
-void drawImGuiDebug(float delta_time)
-{
-	if (selected_object)
-	{
-		ImGui::Begin("object", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-		selected_object->drawImGuiDebug();
-		if (ImGui::Button("close"))
-			selected_object = nullptr;
-		ImGui::End();
-	}
-
-	if (selected_material)
-	{
-		ImGui::Begin("material", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-		selected_material->drawImGuiDebug();
-		if (ImGui::Button("close"))
-			selected_material = nullptr;
-		ImGui::End();
-	}
-
-	if (Engine::getScene())
-	{
-		ImGui::Begin("scene", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-		Engine::getScene()->drawImGuiDebug();
-		Engine::getScene()->render_graph->drawImGuiDebug();
-		ImGui::End();
-	}
-
-	Engine::drawImGuiDebug();
-}
-
-void debugCamera(float delta_time)
-{
-	if (!selected_camera)
-		return;
-
-	glm::vec2 mouse_delta = Input::getMouseDelta() * 0.25f;
-	if (Input::isMouseDown(GLFW_MOUSE_BUTTON_2))
-		selected_camera->transform.rotateLocal({ -mouse_delta.y, 0, -mouse_delta.x });
-
-	glm::mat4 camera_matrix = selected_camera->transform.getMatrix();
-	glm::vec3 local_move_vector = glm::vec3{
-		Input::getAxis('A', 'D'),
-		Input::getAxis('Q', 'E'),
-		Input::getAxis('W', 'S')
-	} * delta_time * 1.5f;
-	if (Input::isKeyDown(GLFW_KEY_LEFT_SHIFT))
-		local_move_vector *= 3.0f;
-	selected_camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
-}
-
-void debugClearSelection(WeakRef<Object> object, WeakRef<Material> material)
-{
-	selected_object = object;
-	selected_material = material;
-	if (Engine::getScene())
-		selected_camera = Engine::getScene()->getCamera(0).get();
-	else
-		selected_camera = nullptr;
-}
-
 Ref<Texture> texturePicker(Ref<Texture> current, const char* str)
 {
 	auto options = Engine::getAllRefs<Texture>();
@@ -488,8 +427,34 @@ void UniformBlock::drawImGuiDebug(map<string, uint32_t> texture_name_to_binding)
 	}
 }
 
-void Engine::_drawImGuiDebug()
+void Engine::_drawImGuiDebug(float delta_time)
 {
+	if (selected_object)
+	{
+		ImGui::Begin("object", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+		selected_object->drawImGuiDebug();
+		if (ImGui::Button("close"))
+			selected_object = nullptr;
+		ImGui::End();
+	}
+
+	if (selected_material)
+	{
+		ImGui::Begin("material", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+		selected_material->drawImGuiDebug();
+		if (ImGui::Button("close"))
+			selected_material = nullptr;
+		ImGui::End();
+	}
+
+	if (Engine::getScene())
+	{
+		ImGui::Begin("scene", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+		Engine::getScene()->drawImGuiDebug();
+		Engine::getScene()->render_graph->drawImGuiDebug();
+		ImGui::End();
+	}
+
 	ImGui::Begin("performance", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 	ImGui::LabelText("delta time", "%fms", last_frame_stats.delta_time * 1000.0f);
 	ImGui::LabelText("smoothed FPS", "%f", smoothed_fps);
@@ -517,16 +482,42 @@ void Engine::_drawImGuiDebug()
 	ImGui::End();
 }
 
+void Engine::debugCamera(float delta_time)
+{
+	if (!selected_camera)
+		return;
+
+	glm::vec2 mouse_delta = Input::getMouseDelta() * 0.25f;
+	if (Input::isMouseDown(GLFW_MOUSE_BUTTON_2))
+		selected_camera->transform.rotateLocal({ -mouse_delta.y, 0, -mouse_delta.x });
+
+	glm::mat4 camera_matrix = selected_camera->transform.getMatrix();
+	glm::vec3 local_move_vector = glm::vec3{
+		Input::getAxis('A', 'D'),
+		Input::getAxis('Q', 'E'),
+		Input::getAxis('W', 'S')
+	} * delta_time * 1.5f;
+	if (Input::isKeyDown(GLFW_KEY_LEFT_SHIFT))
+		local_move_vector *= 3.0f;
+	selected_camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
+}
+
+void Engine::debugClearSelection(WeakRef<Object> object, WeakRef<Material> material)
+{
+	selected_object = object;
+	selected_material = material;
+	if (Engine::getScene())
+		selected_camera = Engine::getScene()->getCamera(0).get();
+	else
+		selected_camera = nullptr;
+}
+
 void RenderGraph::drawImGuiDebug()
 {
 	if (ImGui::CollapsingHeader("render graph", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		int tmp = output_step;
-		ImGui::InputInt("show step", &tmp, 1, 1);
-		output_step = tmp;
-		tmp = output_image;
-		ImGui::SliderInt("show attachment", &tmp, 0, 4);
-		output_image = tmp;
+		ImGui::InputInt("show step", &output_step, 1, 1);
+		ImGui::SliderInt("show attachment", &output_image, 0, 4);
 
 		static int pass_details_index = 0;
 		ImGui::BeginTable("passes", 7, ImGuiTableFlags_Borders);

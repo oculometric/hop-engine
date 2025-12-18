@@ -64,8 +64,8 @@ struct RenderGraphBuilder
 class RenderGraph
 {
 public:
-	size_t output_step = -1;
-	size_t output_image = 0;
+	int output_step = -1;
+	int output_image = 0;
 
 private:
 	std::vector<RenderStep> execution_steps;

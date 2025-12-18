@@ -27,11 +27,6 @@
 
 using namespace HopEngine;
 
-// TODO: make this more sensible
-void drawImGuiDebug(float delta_time);
-void debugCamera(float delta_time);
-void debugClearSelection(WeakRef<Object> object = WeakRef<Object>(nullptr), WeakRef<Material> material = WeakRef<Material>(nullptr));
-
 WeakRef<StaticMesh> asha;
 WeakRef<StaticMesh> obj;
 WeakRef<NodeView> node_view;
@@ -128,7 +123,7 @@ void initScene(Ref<Scene> scene)
     scene->render_graph->getMaterialForStep(5)->setFloatUniform("exposure", 16.0f);
     scene->render_graph->getMaterialForStep(5)->setFloatUniform("offset", 0.0f);
 
-    debugClearSelection(asha.cast<Object>(), asha->material);
+    Engine::debugClearSelection(asha.cast<Object>(), asha->material);
 }
 
 void updateScene(Ref<Scene> scene, float delta_time)
@@ -136,7 +131,7 @@ void updateScene(Ref<Scene> scene, float delta_time)
     static float total_time = 0;
     total_time += delta_time;
 
-    debugCamera(delta_time);
+    Engine::debugCamera(delta_time);
 
     if (obj)
         obj->transform.rotateLocal({ 0, 0, 20 * delta_time });
@@ -330,7 +325,7 @@ void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
     }
     ImGui::End();
 
-    drawImGuiDebug(delta_time);
+    Engine::drawImGuiDebug(delta_time);
 }
 
 struct SceneFuncSet
@@ -396,7 +391,7 @@ int main()
         DialogBox(NULL, MAKEINTRESOURCE(IDD_DIALOG1), NULL, dialogFunc);
 #endif
         Engine::init();
-        debugClearSelection();
+        Engine::debugClearSelection();
 
         const auto& scene = scenes[selected_scene];
 
@@ -404,7 +399,7 @@ int main()
 
         Engine::mainLoop();
 
-        debugClearSelection();
+        Engine::debugClearSelection();
         Engine::destroy();
 
         return 0;

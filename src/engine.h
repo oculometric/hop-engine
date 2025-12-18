@@ -66,7 +66,9 @@ public:
 	static FrameStats getFrameStats();
 	static float getSmoothedDeltaTime();
 	static float getSmoothedFPS();
-	static void drawImGuiDebug();
+	static void drawImGuiDebug(float delta_time);
+	static void debugCamera(float delta_time);
+	static void debugClearSelection(WeakRef<Object> object = WeakRef<Object>(), WeakRef<Material> material = WeakRef<Material>());
 
 private:
 	Engine();
@@ -75,7 +77,7 @@ private:
 	static void _keepLoaded(Ref<void> ref);
 	static std::vector<WeakRef<void>> getRefsWithType(const char* type_name);
 	void updateStats(FrameStats stats);
-	void _drawImGuiDebug();
+	void _drawImGuiDebug(float delta_time);
 };
 
 template<class T>

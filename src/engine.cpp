@@ -141,9 +141,9 @@ float Engine::getSmoothedFPS()
     return engine->smoothed_fps;
 }
 
-void Engine::drawImGuiDebug()
+void Engine::drawImGuiDebug(float delta_time)
 {
-    engine->_drawImGuiDebug();
+    engine->_drawImGuiDebug(delta_time);
 }
 
 Engine::Engine()
