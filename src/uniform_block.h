@@ -32,6 +32,7 @@ public:
 	inline VkDeviceSize getSize() const { return size; }
 	void pushToDescriptorSet(size_t index);
 	inline VkDescriptorSet getDescriptorSet(size_t index) const { return descriptor_sets[index]; }
+	void drawImGuiDebug(std::map<std::string, uint32_t> texture_name_to_binding);
 
 private:
 	void applyDescriptorBindings();

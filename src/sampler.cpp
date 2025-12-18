@@ -10,6 +10,7 @@ using namespace std;
 
 Sampler::Sampler(SamplerBuilder config)
 {
+	builder = config;
 	VkSamplerCreateInfo create_info{ };
 	create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 	create_info.magFilter = config.filtering_mode;

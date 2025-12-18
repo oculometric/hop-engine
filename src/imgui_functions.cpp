@@ -11,6 +11,8 @@
 #include "texture.h"
 #include "material.h"
 #include "input.h"
+#include "uniform_block.h"
+#include "sampler.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -295,7 +297,7 @@ void Scene::drawImGuiDebug()
 
 void Material::drawImGuiDebug()
 {
-	ImGui::LabelText("shader", "%s (%s)", shader->getOrigin(), PTR(shader.get()));
+	ImGui::LabelText("shader", "%s (%s)", shader->getOrigin().c_str(), PTR(shader.get()));
 	if (ImGui::CollapsingHeader("pipeline config", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		auto config = pipeline->getConfig();
@@ -305,12 +307,59 @@ void Material::drawImGuiDebug()
 		ImGui::LabelText("depth test", "%s", config.depth_test_enable ? "true" : "false");
 		ImGui::LabelText("depth operation", "%s", vk::to_string((vk::CompareOp)config.depth_compare_op));
 	}
+	uniforms->drawImGuiDebug(texture_name_to_binding);
+	// TODO: reload shader button
+	ImGui::Button("reload shader");
+}
+
+void UniformBlock::drawImGuiDebug(map<string, uint32_t> texture_name_to_binding)
+{
+	map<uint32_t, string> binding_to_texture_name;
+	for (const auto& pair : texture_name_to_binding)
+		binding_to_texture_name[pair.second] = pair.first;
+
 	if (ImGui::CollapsingHeader("texture bindings", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-
+		for (const auto& pair : textures_in_use)
+		{
+			ImGui::PushID(pair.first);
+			ImGui::LabelText("binding", "%i", pair.first);
+			ImGui::LabelText("name", "%s", binding_to_texture_name[pair.first]);
+			auto result = texturePicker(pair.second.first, "texture");
+			if (result != pair.second.first)
+				setTexture(pair.first, result);
+			// TODO: change sampler as well!
+			ImGui::LabelText("filter", "%s", vk::to_string((vk::Filter)pair.second.second->getBuilder().filtering_mode));
+			ImGui::LabelText("address", "%s", vk::to_string((vk::SamplerAddressMode)pair.second.second->getBuilder().address_mode));
+			ImGui::PopID();
+		}
 	}
 	if (ImGui::CollapsingHeader("uniform variables", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-
+		for (const auto& block : layout.bindings)
+		{
+			if (block.type != UNIFORM)
+				continue;
+			ImGui::LabelText("binding", "%i", block.binding);
+			ImGui::LabelText("block name", "%s", block.name);
+			ImGui::LabelText("block size", "%i", block.buffer_size);
+			ImGui::BeginTable("uniforms", 3, ImGuiTableFlags_Borders);
+			ImGui::TableSetupColumn("name");
+			ImGui::TableSetupColumn("size");
+			ImGui::TableSetupColumn("offset");
+			ImGui::TableHeadersRow();
+			for (const auto& var : block.variables)
+			{
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("%s", var.name);
+				ImGui::TableSetColumnIndex(1);
+				ImGui::Text("%i", var.size);
+				ImGui::TableSetColumnIndex(2);
+				ImGui::Text("%i", var.offset);
+			}
+			ImGui::EndTable();
+		}
+		// TODO: variables be modifiable
 	}
 }

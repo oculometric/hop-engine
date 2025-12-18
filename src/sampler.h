@@ -20,6 +20,7 @@ class Sampler
 {
 private:
 	VkSampler sampler = VK_NULL_HANDLE;
+	SamplerBuilder builder;
 
 public:
 	DELETE_CONSTRUCTORS(Sampler);
@@ -28,6 +29,7 @@ public:
 	~Sampler();
 
 	inline VkSampler getSampler() const { return sampler; }
+	inline SamplerBuilder getBuilder() const { return builder; }
 };
 
 }

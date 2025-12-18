@@ -59,6 +59,8 @@ void UniformBlock::setTexture(uint32_t binding, Ref<Texture> image)
     if (textures_in_use[binding].first == image)
         return;
     textures_in_use[binding].first = image;
+    if (!image)
+        textures_in_use[binding].first = RenderServer::getDefaultTextureSampler().first;
     applyDescriptorBindings();
 }
 
@@ -67,6 +69,8 @@ void UniformBlock::setSampler(uint32_t binding, Ref<Sampler> sampler)
     if (textures_in_use[binding].second == sampler)
         return;
     textures_in_use[binding].second = sampler;
+    if (!sampler)
+        textures_in_use[binding].second = RenderServer::getDefaultTextureSampler().second;
     applyDescriptorBindings();
 }
 
