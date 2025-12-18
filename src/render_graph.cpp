@@ -57,7 +57,7 @@ void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, R
     }
 }
 
-void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Scene> scene) const
+void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Scene> scene, FrameStats& stats) const
 {
     vector<multiset<DrawCommand, DrawCommand>> step_commands(execution_steps.size());
     auto scene_commands = scene->getDrawCommands();
@@ -87,9 +87,9 @@ void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t i
     {
         const RenderStep& step = execution_steps[i];
         if (step.is_camera)
-            recordCameraStep(command_buffer, image_index, scene->getCamera(step.camera_slot), step.render_pass, step_commands[i]);
+            recordCameraStep(command_buffer, image_index, scene->getCamera(step.camera_slot), step.render_pass, step_commands[i], stats);
         else
-            recordPostProcessStep(command_buffer, image_index, step.material, step.scene_uniforms->getDescriptorSet(image_index));
+            recordPostProcessStep(command_buffer, image_index, step.material, step.scene_uniforms->getDescriptorSet(image_index), stats);
     }
 }
 
@@ -137,8 +137,10 @@ Ref<Material> RenderGraph::getMaterialForStep(size_t step)
     return execution_steps[step].material;
 }
 
-void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands) const
+void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands, FrameStats& stats) const
 {
+    stats.cameras++;
+
     VkRenderPassBeginInfo render_pass_begin_info{ };
     render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     render_pass_begin_info.renderPass = pass->getRenderPass();
@@ -151,6 +153,7 @@ void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t imag
     render_pass_begin_info.pClearValues = clear_values.data();
 
     vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+    stats.passes++;
 
     VkRect2D scissor{ };
     scissor.offset = { 0, 0 };
@@ -211,7 +214,10 @@ void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t imag
         }
 
         if (rebind_material || rebind_layout)
+        {
             vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, last_used_material->getPipeline());
+            stats.pipeline_rebinds++;
+        }
         if (rebind_layout || rebind_material)
             descriptor_sets[2] = last_used_material->getDescriptorSet(image_index);
         if ((rebind_layout || rebind_object) && last_used_uniforms)
@@ -235,12 +241,15 @@ void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t imag
             vkCmdBindIndexBuffer(command_buffer, last_used_mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
         }
         vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(last_used_mesh->getIndexCount()), 1, 0, 0, 0);
+        stats.draw_calls++;
+        stats.triangles += last_used_mesh->getIndexCount() / 3;
+        stats.vertices += last_used_mesh->getVertexCount();
     }
 
     vkCmdEndRenderPass(command_buffer);
 }
 
-void RenderGraph::recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Material> material, VkDescriptorSet scene_descriptor_set) const
+void RenderGraph::recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Material> material, VkDescriptorSet scene_descriptor_set, FrameStats& stats) const
 {
     VkRenderPassBeginInfo render_pass_begin_info{ };
     render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -253,6 +262,7 @@ void RenderGraph::recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t
     render_pass_begin_info.pClearValues = clear_values.data();
 
     vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+    stats.passes++;
 
     VkRect2D scissor{ };
     scissor.offset = { 0, 0 };
@@ -268,6 +278,7 @@ void RenderGraph::recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
     vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->getPipeline());
+    stats.pipeline_rebinds++;
 
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->getPipelineLayout(), 0, 1, &scene_descriptor_set, 0, nullptr);
     VkDescriptorSet material_descriptor_set = material->getDescriptorSet(image_index);
@@ -280,6 +291,9 @@ void RenderGraph::recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t
     vkCmdBindIndexBuffer(command_buffer, quad->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
 
     vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(quad->getIndexCount()), 1, 0, 0, 0);
+    stats.draw_calls++;
+    stats.triangles += 2;
+    stats.vertices += 4;
 
     vkCmdEndRenderPass(command_buffer);
 }

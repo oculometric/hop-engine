@@ -17,6 +17,7 @@
 #include "common.h"
 #include "render_pass.h"
 #include "draw_command.h"
+#include "engine.h"
 
 namespace HopEngine
 {
@@ -76,15 +77,15 @@ public:
 	RenderGraph(RenderGraphBuilder config);
 
 	void updateUniforms(uint32_t image_index, float time_since_start, Ref<Scene> scene);
-	void recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Scene> scene) const;
+	void recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Scene> scene, FrameStats& stats) const;
 	void resizeBuffers(uint32_t width, uint32_t height);
 	inline VkExtent2D getExpectedExtent() const { return expected_extent; }
 	Ref<Texture> getFinalImage() const;
 	Ref<Material> getMaterialForStep(size_t step);
 
 private:
-	void recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands) const;
-	void recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Material> material, VkDescriptorSet scene_descriptor_set) const;
+	void recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands, FrameStats& stats) const;
+	void recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Material> material, VkDescriptorSet scene_descriptor_set, FrameStats& stats) const;
 };
 
 }

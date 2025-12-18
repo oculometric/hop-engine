@@ -4,6 +4,7 @@
 #include <imgui/imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
+#include <format>
 
 #include "hop_engine.h"
 
@@ -80,6 +81,7 @@ void Engine::mainLoop()
             continue;
         if (engine->window->isResized())
             RenderServer::resize();
+        auto imgui_start = chrono::steady_clock::now();
         if (engine->imgui_func)
         {
             ImGui_ImplVulkan_NewFrame();
@@ -90,9 +92,19 @@ void Engine::mainLoop()
 
             ImGui::Render();
         }
-        RenderServer::draw(delta.count());
+        chrono::duration<float> imgui_duration = chrono::steady_clock::now() - imgui_start;
+        FrameStats stats = RenderServer::draw();
+        auto update_start = chrono::steady_clock::now();
         if (engine->update_func)
             engine->update_func(engine->scene, delta.count());
+        chrono::duration<float> update_duration = chrono::steady_clock::now() - update_start;
+        stats.imgui_time = imgui_duration.count();
+        stats.update_time = update_duration.count();
+        static auto last_frame_end = chrono::steady_clock::now();
+        chrono::duration<float> frame_delta = chrono::steady_clock::now() - last_frame_end;
+        last_frame_end = chrono::steady_clock::now();
+        stats.delta_time = frame_delta.count();
+        engine->updateStats(stats);
     }
 }
 
@@ -114,6 +126,26 @@ void Engine::destroy()
 		delete engine;
 }
 
+FrameStats Engine::getFrameStats()
+{
+    return engine->last_frame_stats;
+}
+
+float Engine::getSmoothedDeltaTime()
+{
+    return engine->smoothed_delta_time;
+}
+
+float Engine::getSmoothedFPS()
+{
+    return engine->smoothed_fps;
+}
+
+void Engine::drawImGuiDebug()
+{
+    engine->_drawImGuiDebug();
+}
+
 Engine::Engine()
 {
     engine = this;
@@ -126,7 +158,7 @@ Engine::Engine()
     Input::init(window);
     RenderServer::init(window);
     Engine::summariseTrackedObjects();
-    RenderServer::draw(0.0f);
+    RenderServer::draw();
     window->setVisible(true);
 }
 
@@ -163,4 +195,19 @@ vector<WeakRef<void>> Engine::getRefsWithType(const char* type_name)
         ++range.first;
     }
     return refs;
+}
+
+void Engine::updateStats(FrameStats stats)
+{
+    last_frame_stats = stats;
+
+    smoothed_delta_time = (smoothed_delta_time * 0.5f) + (stats.delta_time * 0.5f);
+    float fps = 1.0f / stats.delta_time;
+    smoothed_fps = (smoothed_fps * 0.5f) + (fps * 0.5f);
+
+    delta_time_history[history_offset] = stats.delta_time;
+    fps_history[history_offset] = 1.0f / stats.delta_time;
+    history_offset = (history_offset + 1) % 512;
+
+    engine->window->setTitle(format("hop-engine   -   {:>4.2f}ms   -   {:>6.2f} fps", smoothed_delta_time * 1000.0f, smoothed_fps));
 }

@@ -8,6 +8,7 @@
 #include <set>
 
 #include "common.h"
+#include "engine.h"
 
 namespace HopEngine
 {
@@ -108,7 +109,7 @@ public:
 	static Ref<Mesh> getSkyboxCube();
 	static Ref<Material> getSkyboxMaterial();
 
-	static void draw(float delta_time);
+	static FrameStats draw();
 	static void resize();
 
 private:
@@ -122,10 +123,10 @@ private:
 	void createSyncObjects();
 	void initImGui();
 
-	void drawFrame(float delta_time);
+	FrameStats drawFrame();
 	void resizeSwapchain();
 
-	void recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index);
+	void recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index, FrameStats& stats);
 };
 
 }

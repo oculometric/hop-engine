@@ -20,8 +20,6 @@ using namespace std;
 static WeakRef<Object> selected_object;
 static WeakRef<Material> selected_material;
 static Camera* selected_camera;
-static float delta_time_graph[512] = { 0.0f };
-int delta_time_graph_offset = 0;
 
 void drawImGuiDebug(float delta_time)
 {
@@ -50,12 +48,7 @@ void drawImGuiDebug(float delta_time)
 		ImGui::End();
 	}
 
-	// TODO: timing/rendering statistics (dt, fps, cpu/gpu time, objects, draw calls, triangles, lights) managed by engine
-	ImGui::Begin("performance", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-	delta_time_graph[delta_time_graph_offset] = delta_time;
-	ImGui::PlotLines("delta time", delta_time_graph, 512, delta_time_graph_offset, nullptr, 0.0001f, 0.2f, ImVec2{0, 160}, 4);
-	delta_time_graph_offset = (delta_time_graph_offset + 1) % 512;
-	ImGui::End();
+	Engine::drawImGuiDebug();
 }
 
 void debugCamera(float delta_time)
@@ -286,7 +279,6 @@ void Scene::drawImGuiDebug()
 	const char* skybox_items = "tex 1\0tex 2\0tex 3";
 	skybox = texturePicker(skybox, "skybox");
 	ImGui::LabelText("total objects", "%d", objects.size());
-	ImGui::LabelText("draws", "%d", getDrawCommands().size());
 	multimap<Object*, WeakRef<Object>> parent_map;
 	for (auto object : objects)
 		parent_map.insert({ object->getParent().get(), object});
@@ -362,4 +354,33 @@ void UniformBlock::drawImGuiDebug(map<string, uint32_t> texture_name_to_binding)
 		}
 		// TODO: variables be modifiable
 	}
+}
+
+void Engine::_drawImGuiDebug()
+{
+	ImGui::Begin("performance", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::LabelText("delta time", "%fs", last_frame_stats.delta_time);
+	ImGui::LabelText("smoothed FPS", "%f", smoothed_fps);
+	if (ImGui::CollapsingHeader("time details", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::LabelText("render imgui", "%fs", last_frame_stats.imgui_time);
+		ImGui::LabelText("build buffers", "%fs", last_frame_stats.build_time);
+		ImGui::LabelText("record commands", "%fs", last_frame_stats.record_time);
+		ImGui::LabelText("render time", "%fs", last_frame_stats.render_time);
+		ImGui::LabelText("update scene", "%fs", last_frame_stats.update_time);
+	}
+	if (ImGui::CollapsingHeader("scene stats", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::LabelText("draw calls", "%i", last_frame_stats.draw_calls);
+		ImGui::LabelText("pipeline rebinds", "%i", last_frame_stats.pipeline_rebinds);
+		ImGui::LabelText("triangles", "%i", last_frame_stats.triangles);
+		ImGui::LabelText("vertices", "%i", last_frame_stats.vertices);
+		ImGui::LabelText("render passes", "%i", last_frame_stats.passes);
+		ImGui::LabelText("camera rendering", "%i", last_frame_stats.cameras);
+		ImGui::LabelText("lights rendering", "%i", last_frame_stats.lights);
+	}
+	ImGui::Spacing();
+	ImGui::PlotLines("##xx", delta_time_history, 512, history_offset, "delta time", 0.0001f, 0.2f, ImVec2{0, 160}, 4);
+	//ImGui::PlotLines("##xxx", fps_history, 512, history_offset, "FPS", 10.0f, 200.0f, ImVec2{ 0, 160 }, 4);
+	ImGui::End();
 }

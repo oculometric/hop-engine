@@ -190,9 +190,9 @@ glm::vec2 RenderServer::getFramebufferSize()
     return glm::vec2{ (float)ext.width, (float)ext.height };
 }
 
-void RenderServer::draw(float delta_time)
+FrameStats RenderServer::draw()
 {
-    environment->drawFrame(delta_time);
+    return environment->drawFrame();
 }
 
 void RenderServer::resize()
@@ -608,16 +608,16 @@ void RenderServer::initImGui()
     ImGui_ImplVulkan_Init(&init_info);
 }
 
-void RenderServer::drawFrame(float delta_time)
+FrameStats RenderServer::drawFrame()
 {
     static size_t frame_index = 0;
     ++frame_index;
     DBG_BABBLE("drawing frame " + to_string(frame_index));
+
     static auto start_time = chrono::steady_clock::now();
+    FrameStats stats;
     auto now_time = chrono::steady_clock::now();
     chrono::duration<float> since_start = now_time - start_time;
-
-    window->setTitle(format("hop-engine   -   {:>4.2f}ms   -   {:>6.2f} fps", delta_time * 1000.0f, 1.0f / delta_time));
 
     vkWaitForFences(device, 1, &in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT], VK_TRUE, UINT64_MAX);
     vkResetFences(device, 1, &in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT]);
@@ -626,9 +626,11 @@ void RenderServer::drawFrame(float delta_time)
     vkAcquireNextImageKHR(device, swapchain->getSwapchain(), UINT64_MAX, image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT], VK_NULL_HANDLE, &image_index);
     DBG_BABBLE("acquired image " + to_string(image_index));
 
+    auto build_start = chrono::steady_clock::now();
     Ref<Scene> scene = Engine::getScene();
     if (scene && scene->getRenderGraph())
     {
+        stats.lights = scene->getLightParams().size();
         VkExtent2D extent = swapchain->getExtent();
         VkExtent2D graph_extent = scene->getRenderGraph()->getExpectedExtent();
         if (graph_extent.width != extent.width || graph_extent.height != extent.height)
@@ -661,9 +663,14 @@ void RenderServer::drawFrame(float delta_time)
     }
     else
         DBG_WARNING("no scene attached to environment");
+    chrono::duration<float> build_duration = chrono::steady_clock::now() - build_start;
+    stats.build_time = build_duration.count();
 
+    auto record_start = chrono::steady_clock::now();
     vkResetCommandBuffer(command_buffers[image_index], 0);
-    recordRenderCommands(command_buffers[image_index], image_index);
+    recordRenderCommands(command_buffers[image_index], image_index, stats);
+    chrono::duration<float> record_duration = chrono::steady_clock::now() - record_start;
+    stats.record_time = record_duration.count();
 
     VkSubmitInfo submit_info{ };
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -691,6 +698,8 @@ void RenderServer::drawFrame(float delta_time)
     present_info.pImageIndices = &image_index;
     DBG_BABBLE("submitting present");
     vkQueuePresentKHR(present_queue, &present_info);
+
+    return stats;
 }
 
 void RenderServer::resizeSwapchain()
@@ -711,7 +720,7 @@ void RenderServer::resizeSwapchain()
     final_render_pass->resize();
 }
 
-void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index)
+void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index, FrameStats& stats)
 {
     DBG_BABBLE("recording command buffer");
     VkCommandBufferBeginInfo cmd_buffer_begin_info{ };
@@ -724,7 +733,7 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
 
     if (scene && scene->getRenderGraph())
     {
-        scene->getRenderGraph()->recordCommandBuffer(command_buffer, image_index, scene);
+        scene->getRenderGraph()->recordCommandBuffer(command_buffer, image_index, scene, stats);
         
         // TODO: extend RenderGraph to handle this final stage and skip the passthrough if possible, and to draw gizmos into this
     }
@@ -740,6 +749,7 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
     render_pass_begin_info.pClearValues = clear_values.data();
 
     vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+    stats.passes++;
 
     VkRect2D scissor{ };
     scissor.offset = { 0, 0 };
@@ -757,6 +767,7 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
     if (scene && scene->getRenderGraph())
     {
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, passthrough->getPipeline());
+        stats.pipeline_rebinds++;
 
         VkDescriptorSet material_descriptor_set = passthrough->getDescriptorSet(image_index);
         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, passthrough->getPipelineLayout(), 2, 1, &material_descriptor_set, 0, nullptr);
@@ -768,6 +779,9 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
         vkCmdBindIndexBuffer(command_buffer, quad->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
 
         vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(quad->getIndexCount()), 1, 0, 0, 0);
+        stats.draw_calls++;
+        stats.triangles += 2;
+        stats.vertices += 4;
     }
 
     ImDrawData* draw_data = ImGui::GetDrawData();

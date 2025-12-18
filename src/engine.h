@@ -8,6 +8,23 @@
 namespace HopEngine
 {
 
+struct FrameStats
+{
+	float imgui_time = 0.0f;
+	float build_time = 0.0f;
+	float record_time = 0.0f;
+	float render_time = 0.0f;
+	float update_time = 0.0f;
+	float delta_time = 0.0f;
+	size_t draw_calls = 0;
+	size_t pipeline_rebinds = 0;
+	size_t triangles = 0;
+	size_t vertices = 0;
+	size_t passes = 0;
+	size_t cameras = 0;
+	size_t lights = 0;
+};
+
 class Engine
 {
 private:
@@ -18,6 +35,13 @@ private:
 
 	std::multimap<const char*, WeakRef<void>> allocated_refs;
 	std::vector<Ref<void>> keep_loaded_refs;
+
+	FrameStats last_frame_stats;
+	float smoothed_delta_time;
+	float smoothed_fps;
+	float delta_time_history[512];
+	float fps_history[512];
+	int history_offset = 0;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Engine);
@@ -39,12 +63,19 @@ public:
 	template <class T>
 	static inline Ref<T> keepLoaded(T* ref) { return keepLoaded(Ref<T>(ref)); }
 
+	static FrameStats getFrameStats();
+	static float getSmoothedDeltaTime();
+	static float getSmoothedFPS();
+	static void drawImGuiDebug();
+
 private:
 	Engine();
 	~Engine();
 
 	static void _keepLoaded(Ref<void> ref);
 	static std::vector<WeakRef<void>> getRefsWithType(const char* type_name);
+	void updateStats(FrameStats stats);
+	void _drawImGuiDebug();
 };
 
 template<class T>
