@@ -317,15 +317,15 @@ void Scene::drawImGuiDebug()
 
 void Material::drawImGuiDebug()
 {
-	ImGui::LabelText("shader", "%s (%s)", shader->getOrigin().c_str(), PTR(shader.get()));
+	ImGui::LabelText("shader", "%s (%s)", shader->getOrigin().c_str(), PTR(shader.get()).c_str());
 	if (ImGui::CollapsingHeader("pipeline config", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		auto config = pipeline->getConfig();
-		ImGui::LabelText("culling", "%s", vk::to_string((vk::CullModeFlags)config.culling_mode));
-		ImGui::LabelText("polygon", "%s", vk::to_string((vk::PolygonMode)config.polygon_mode));
+		ImGui::LabelText("culling", "%s", vk::to_string((vk::CullModeFlags)config.culling_mode).c_str());
+		ImGui::LabelText("polygon", "%s", vk::to_string((vk::PolygonMode)config.polygon_mode).c_str());
 		ImGui::LabelText("depth write", "%s", config.depth_write_enable ? "true" : "false");
 		ImGui::LabelText("depth test", "%s", config.depth_test_enable ? "true" : "false");
-		ImGui::LabelText("depth operation", "%s", vk::to_string((vk::CompareOp)config.depth_compare_op));
+		ImGui::LabelText("depth operation", "%s", vk::to_string((vk::CompareOp)config.depth_compare_op).c_str());
 	}
 	uniforms->drawImGuiDebug(texture_name_to_binding);
 	// TODO: reload shader button
@@ -373,7 +373,7 @@ bool Sampler::drawImGuiDebug()
 	return false;
 }
 
-void UniformBlock::drawImGuiDebug(map<string, uint32_t> texture_name_to_binding)
+void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_binding)
 {
 	map<uint32_t, string> binding_to_texture_name;
 	for (const auto& pair : texture_name_to_binding)
@@ -385,7 +385,7 @@ void UniformBlock::drawImGuiDebug(map<string, uint32_t> texture_name_to_binding)
 		{
 			ImGui::PushID(pair.first);
 			ImGui::LabelText("binding", "%i", pair.first);
-			ImGui::LabelText("name", "%s", binding_to_texture_name[pair.first]);
+			ImGui::LabelText("name", "%s", binding_to_texture_name[pair.first].c_str());
 			auto result = texturePicker(pair.second.first, "texture");
 			if (result != pair.second.first)
 				setTexture(pair.first, result);
@@ -404,7 +404,7 @@ void UniformBlock::drawImGuiDebug(map<string, uint32_t> texture_name_to_binding)
 			if (block.type != UNIFORM)
 				continue;
 			ImGui::LabelText("binding", "%i", block.binding);
-			ImGui::LabelText("block name", "%s", block.name);
+			ImGui::LabelText("block name", "%s", block.name.c_str());
 			ImGui::LabelText("block size", "%i", block.buffer_size);
 			ImGui::BeginTable("uniforms", 3, ImGuiTableFlags_Borders);
 			ImGui::TableSetupColumn("name");
@@ -415,7 +415,7 @@ void UniformBlock::drawImGuiDebug(map<string, uint32_t> texture_name_to_binding)
 			{
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
-				ImGui::Text("%s", var.name);
+				ImGui::Text("%s", var.name.c_str());
 				ImGui::TableSetColumnIndex(1);
 				ImGui::Text("%i", var.size);
 				ImGui::TableSetColumnIndex(2);
@@ -463,7 +463,7 @@ void Engine::_drawImGuiDebug(float delta_time)
 		ImGui::LabelText("render imgui", "%fms", last_frame_stats.imgui_time * 1000.0f);
 		ImGui::LabelText("build buffers", "%fms", last_frame_stats.build_time * 1000.0f);
 		ImGui::LabelText("record commands", "%fms", last_frame_stats.record_time * 1000.0f);
-		ImGui::LabelText("render time", "%fms", last_frame_stats.render_time * 1000.0f); // TODO: find out how long it takes to render the image command buffer on the gpu
+		ImGui::LabelText("render time", "%fms", last_frame_stats.render_time * 1000.0f);
 		ImGui::LabelText("update scene", "%fms", last_frame_stats.update_time * 1000.0f);
 	}
 	if (ImGui::CollapsingHeader("scene stats", ImGuiTreeNodeFlags_DefaultOpen))
@@ -541,7 +541,7 @@ void RenderGraph::drawImGuiDebug()
 				ImGui::Text("%i", pass.camera_slot);
 			ImGui::TableSetColumnIndex(2);
 			if (!pass.is_camera)
-				ImGui::Text("%s", PTR(pass.material.get()));
+				ImGui::Text("%s", PTR(pass.material.get()).c_str());
 			ImGui::TableSetColumnIndex(3);
 			if (!pass.is_camera)
 				ImGui::Text("%i", pass.texture_bindings.size());

@@ -33,7 +33,6 @@ RenderGraph::RenderGraph(RenderGraphBuilder config)
             step.material->setSampler(pair.first, new Sampler(SamplerBuilder().filter(pair.second.filter_mode).address(pair.second.address_mode)));
         }
     }
-    // TODO: checks for duplicate post process material use, and duplicate render pass use by those materials
 }
 
 void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, Ref<Scene> scene)

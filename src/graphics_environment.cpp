@@ -159,9 +159,8 @@ Ref<Mesh> RenderServer::getGizmoMesh(int type)
     case 0: return environment->axes_gizmo;
     case 1: return environment->rotations_gizmo;
     case 2: return environment->scale_gizmo;
+    default: return nullptr;
     }
-
-    return nullptr;
 }
 
 Ref<Material> RenderServer::getDefaultMaterial()
@@ -291,6 +290,7 @@ RenderServer::~RenderServer()
     vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
     vkDestroyDescriptorSetLayout(device, scene_descriptor_set_layout, nullptr);
     vkDestroyDescriptorSetLayout(device, object_descriptor_set_layout, nullptr);
+    vkDestroyQueryPool(device, query_pool, nullptr);
 
     offscreen_pass = nullptr;
     final_render_pass = nullptr;
@@ -533,6 +533,13 @@ void RenderServer::createDescriptorPoolAndSets()
 
     if (vkCreateDescriptorSetLayout(device, &layout_create_info, nullptr, &object_descriptor_set_layout) != VK_SUCCESS)
         DBG_FAULT("vkCreateDescriptorSetLayout failed");
+    
+    VkQueryPoolCreateInfo query_pool_create_info{ };
+    query_pool_create_info.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+    query_pool_create_info.queryCount = MAX_FRAMES_IN_FLIGHT * 2;
+    query_pool_create_info.queryType = VK_QUERY_TYPE_TIMESTAMP;
+    if (vkCreateQueryPool(device, &query_pool_create_info, nullptr, &query_pool) != VK_SUCCESS)
+        DBG_FAULT("vkCreateQueryPool failed");
 }
 
 void RenderServer::createCommandPool()
@@ -698,7 +705,12 @@ FrameStats RenderServer::drawFrame()
     present_info.pImageIndices = &image_index;
     DBG_BABBLE("submitting present");
     vkQueuePresentKHR(present_queue, &present_info);
+    
+    uint32_t results_buf[6 * 2] = { 0 };
+    vkGetQueryPoolResults(device, query_pool, image_index * 2, 2, 6 * 2 * sizeof(uint32_t), results_buf, 4, VK_QUERY_RESULT_WAIT_BIT);
 
+    float render_time = (float)(results_buf[1] - results_buf[0]) / (1000.0f * 1000.0f * 100.0f);
+    stats.render_time = render_time;
     return stats;
 }
 
@@ -710,13 +722,6 @@ void RenderServer::resizeSwapchain()
 
     swapchain->resize(new_size.first, new_size.second);
     
-    //offscreen_pass->resize(new_size.first, new_size.second);
-    
-    //post_process->setTexture("screen_texture", offscreen_pass->getImage(0));
-    //post_process->setTexture("normal_texture", offscreen_pass->getImage(1));
-    //post_process->setTexture("params_texture", offscreen_pass->getImage(2));
-    //post_process->setTexture("custom_texture", offscreen_pass->getImage(3));
-    //post_process->setTexture("depth_texture", offscreen_pass->getImage(4));
     final_render_pass->resize();
 }
 
@@ -728,6 +733,8 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
 
     if (vkBeginCommandBuffer(command_buffer, &cmd_buffer_begin_info) != VK_SUCCESS)
         DBG_FAULT("vkBeginCommandBuffer failed");
+    vkCmdResetQueryPool(command_buffer, query_pool, 0, MAX_FRAMES_IN_FLIGHT * 2);
+    vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, query_pool, (image_index * 2) + 0);
 
     Ref<Scene> scene = Engine::getScene();
 
@@ -789,6 +796,7 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
 
     vkCmdEndRenderPass(command_buffer);
 
+    vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, query_pool, (image_index * 2) + 1);
     if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS)
         DBG_FAULT("vkEndCommandBuffer failed");
 }
@@ -797,7 +805,7 @@ bool DrawCommand::operator()(const DrawCommand& a, const DrawCommand& b) const
 {
     if (a.draw_priority <= b.draw_priority)
         return false;
-    if (a.material->getShader() > a.material->getShader())
+    if (a.material->getShader() > b.material->getShader())
         return false;
     if (a.material > b.material)
         return false;

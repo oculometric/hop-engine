@@ -65,7 +65,8 @@ private:
 	Ref<Swapchain> swapchain;
     Ref<RenderPass> offscreen_pass;
 	Ref<RenderPass> final_render_pass;
-
+	/* hawk tuah */
+	VkQueryPool query_pool = VK_NULL_HANDLE;
 	VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
 	VkDescriptorSetLayout scene_descriptor_set_layout = VK_NULL_HANDLE;
 	VkDescriptorSetLayout object_descriptor_set_layout = VK_NULL_HANDLE;

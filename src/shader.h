@@ -49,6 +49,7 @@ private:
 	VkDescriptorSetLayout descriptor_set_layout = VK_NULL_HANDLE;
 	std::vector<DescriptorBinding> bindings;
 	std::string origin;
+	bool precompiled;
 
 public:
 	DELETE_CONSTRUCTORS(Shader);
@@ -60,6 +61,7 @@ public:
 	std::vector<VkPipelineShaderStageCreateInfo> getShaderStageCreateInfos() const;
 	ShaderLayout getShaderLayout() const;
 	inline std::string getOrigin() const { return origin; }
+	bool reloadShader();
 
 private:
 	static std::vector<DescriptorBinding> mergeBindings(std::vector<DescriptorBinding> list_a, std::vector<DescriptorBinding> list_b);

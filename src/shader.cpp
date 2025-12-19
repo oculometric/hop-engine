@@ -23,6 +23,7 @@ const char* Shader::compiler_path = "glslc";
 
 Shader::Shader(string base_path, bool is_precompiled)
 {
+	precompiled = is_precompiled;
 	origin = base_path;
 	string proper_path = base_path;
 	if (!is_precompiled)
@@ -116,6 +117,73 @@ vector<VkPipelineShaderStageCreateInfo> Shader::getShaderStageCreateInfos() cons
 ShaderLayout Shader::getShaderLayout() const
 {
 	return { descriptor_set_layout, bindings };
+}
+
+bool Shader::reloadShader()
+{
+	RenderServer::waitIdle();
+
+	string proper_path = origin;
+	if (!precompiled)
+	{
+		proper_path = Package::getTempPath() + "temp_shader_compiled";
+		if (!compileShaders(origin, proper_path))
+		{
+			DBG_ERROR(origin + " shader compilation failed");
+			return false;
+		}
+	}
+
+	auto vert_blob = Package::tryLoadFile(proper_path + "_vert.spv");
+	auto frag_blob = Package::tryLoadFile(proper_path + "_frag.spv");
+
+	vkDestroyShaderModule(RenderServer::getDevice(), vert_module, nullptr);
+	vert_module = createShaderModule(vert_blob);
+	vkDestroyShaderModule(RenderServer::getDevice(), frag_module, nullptr);
+	frag_module = createShaderModule(frag_blob);
+
+	auto vert_bindings = getReflectedBindings(vert_blob);
+	auto frag_bindings = getReflectedBindings(frag_blob);
+
+	bindings = mergeBindings(vert_bindings, frag_bindings);
+
+	vector<VkDescriptorSetLayoutBinding> layout_bindings;
+	for (const DescriptorBinding& binding : bindings)
+	{
+		VkDescriptorSetLayoutBinding layout_binding{ };
+		layout_binding.binding = binding.binding;
+		layout_binding.descriptorType = (binding.type == UNIFORM) ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		layout_binding.descriptorCount = 1;
+		layout_binding.pImmutableSamplers = nullptr;
+		layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		layout_bindings.push_back(layout_binding);
+	}
+
+	VkDescriptorSetLayoutCreateInfo set_layout_create_info{ };
+	set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	set_layout_create_info.bindingCount = static_cast<uint32_t>(layout_bindings.size());
+	set_layout_create_info.pBindings = layout_bindings.data();
+
+	if (vkCreateDescriptorSetLayout(RenderServer::getDevice(), &set_layout_create_info, nullptr, &descriptor_set_layout) != VK_SUCCESS)
+		DBG_FAULT("vkCreateDescriptorSetLayout failed");
+
+	VkPipelineLayoutCreateInfo layout_create_info{ };
+	layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	layout_create_info.setLayoutCount = 3;
+	VkDescriptorSetLayout layouts[3] =
+	{
+		RenderServer::getSceneDescriptorSetLayout(),
+		RenderServer::getObjectDescriptorSetLayout(),
+		descriptor_set_layout
+
+	};
+	layout_create_info.pSetLayouts = layouts;
+
+	if (vkCreatePipelineLayout(RenderServer::getDevice(), &layout_create_info, nullptr, &pipeline_layout) != VK_SUCCESS)
+		DBG_FAULT("vkCreatePipelineLayout failed");
+
+	DBG_INFO("recompiled shader from " + origin);
+	return true;
 }
 
 vector<DescriptorBinding> Shader::mergeBindings(vector<DescriptorBinding> list_a, vector<DescriptorBinding> list_b)
