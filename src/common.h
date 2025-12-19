@@ -17,4 +17,10 @@
 #include "counted_ref.h"
 #include "debug.h"
 
+class Destructible
+{
+public:
+    inline virtual ~Destructible() { }
+};
+
 int exec(std::string command, std::string& output);

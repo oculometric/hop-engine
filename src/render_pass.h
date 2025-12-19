@@ -14,7 +14,7 @@ struct RenderOutput
 	bool has_depth_attachment = true;
 };
 
-class RenderPass
+class RenderPass : public Destructible
 {
 private:
 	VkRenderPass render_pass = VK_NULL_HANDLE;
@@ -30,7 +30,7 @@ public:
 
 	RenderPass(Ref<Swapchain> swapchain, RenderOutput config);
 	RenderPass(uint32_t width, uint32_t height, RenderOutput config);
-	~RenderPass();
+	~RenderPass() override;
 
 	inline RenderOutput getOutputConfig() const { return output_config; }
 	inline VkRenderPass getRenderPass() const { return render_pass; }

@@ -39,6 +39,13 @@ RenderGraph::RenderGraph(RenderGraphBuilder config)
     }
 }
 
+RenderGraph::~RenderGraph()
+{
+    DBG_INFO("destroying render graph " + PTR(this));
+    execution_steps.clear();
+    passthrough = nullptr;
+}
+
 void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, Ref<Scene> scene)
 {
     for (const RenderStep& step : execution_steps)
@@ -149,7 +156,8 @@ void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t i
     stats.pipeline_rebinds++;
 
     descriptor_sets[2] = passthrough->getDescriptorSet(image_index);
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, passthrough->getPipelineLayout(), 0, 3, descriptor_sets, 0, nullptr);
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, passthrough->getPipelineLayout(), 0, 1, descriptor_sets, 0, nullptr);
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, passthrough->getPipelineLayout(), 2, 1, descriptor_sets + 2, 0, nullptr);
     
     WeakRef<Mesh> quad = RenderServer::getQuad();
     VkBuffer vertex_buffers[] = { quad->getVertexBuffer() };
@@ -445,4 +453,6 @@ RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<ui
 }
 
 RenderStep::~RenderStep()
-{ }
+{
+    DBG_INFO("destroying render step " + PTR(this));
+}

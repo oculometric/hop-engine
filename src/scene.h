@@ -10,7 +10,7 @@
 namespace HopEngine
 {
 
-class Scene
+class Scene : public Destructible
 {
 public:
 	glm::vec3 ambient_colour = { 0.01f, 0.01f, 0.01f };
@@ -41,7 +41,7 @@ public:
 	void drawImGuiDebug();
 
 	Scene();
-	~Scene();
+	~Scene() override;
 };
 
 template<class T>

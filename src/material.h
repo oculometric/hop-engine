@@ -13,7 +13,7 @@
 namespace HopEngine
 {
 
-class Material
+class Material : public Destructible
 {
 private:
 	Ref<Shader> shader;
@@ -27,7 +27,7 @@ public:
 	DELETE_CONSTRUCTORS(Material);
 
 	Material(Ref<Shader> shader, PipelineBuilder config = PipelineBuilder(), Ref<RenderPass> render_pass = nullptr);
-	~Material();
+	~Material() override;
 
 	VkPipeline getPipeline() const;
 	VkPipelineLayout getPipelineLayout() const;

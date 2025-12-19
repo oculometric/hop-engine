@@ -35,7 +35,7 @@ void Engine::unregisterCountedRef(void* ptr)
     DBG_ERROR("a reference counted object was deallocated, but it's raw pointer is not allocated! you probably used a raw pointer twice. we are about to double-free that pointer. i am praying for you.");
 }
 
-void Engine::_keepLoaded(Ref<void> ref)
+void Engine::_keepLoaded(Ref<Destructible> ref)
 {
     engine->keep_loaded_refs.push_back(ref);
 }
@@ -117,7 +117,7 @@ void Engine::summariseTrackedObjects()
 {
     DBG_INFO("enumerating allocated objects (" + to_string(engine->allocated_refs.size()) + "):");
     for (auto& pair : engine->allocated_refs)
-        DBG_INFO("object " + PTR(pair.second.get()) + ", with type '" + pair.first);
+        DBG_INFO("object " + PTR(pair.second.get()) + ", with type '" + pair.first + '\'');
 }
 
 void Engine::destroy()
@@ -167,7 +167,6 @@ Engine::~Engine()
     scene = nullptr;
     keep_loaded_refs.clear();
 
-    Engine::summariseTrackedObjects();
     RenderServer::destroy();
     Package::destroy();
     Input::destroy();
@@ -178,7 +177,7 @@ Engine::~Engine()
         Engine::summariseTrackedObjects();
     }
     else
-        DBG_INFO("well done for cleaning up!");
+        DBG_INFO("good girl for cleaning up!");
     Window::terminateEnvironment();
     Debug::close();
 

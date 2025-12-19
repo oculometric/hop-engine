@@ -9,7 +9,7 @@
 namespace HopEngine
 {
 
-class Texture
+class Texture : public Destructible
 {
 public:
 	static constexpr VkFormat depth_format = VK_FORMAT_D32_SFLOAT_S8_UINT;
@@ -31,7 +31,7 @@ public:
 
 	Texture(size_t width, size_t height, VkFormat format, void* data = nullptr, VkImageUsageFlags usage = VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM);
 	Texture(std::string file, VkImageUsageFlags usage = VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM);
-	~Texture();
+	~Texture() override;
 
 	void transitionLayout(VkImageLayout new_layout);
 	void copyBufferToImage(Ref<Buffer> buffer);

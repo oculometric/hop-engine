@@ -13,7 +13,7 @@
 namespace HopEngine
 {
 
-class Object
+class Object : public Destructible
 {
 public:
 	std::string name;
@@ -40,7 +40,7 @@ public:
 	virtual std::vector<DrawCommand> getDrawCommands() const;
 	virtual void drawImGuiDebug();
 
-	virtual ~Object();
+	virtual ~Object() override;
 
 private:
 	void _setParent(Ref<Object> new_parent);

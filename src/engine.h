@@ -34,7 +34,7 @@ private:
 	void(* imgui_func)(Ref<Scene>, float) = nullptr;
 
 	std::multimap<const char*, WeakRef<void>> allocated_refs;
-	std::vector<Ref<void>> keep_loaded_refs;
+	std::vector<Ref<Destructible>> keep_loaded_refs;
 
 	FrameStats last_frame_stats;
 	float smoothed_delta_time = 0.0f;
@@ -75,7 +75,7 @@ private:
 	Engine();
 	~Engine();
 
-	static void _keepLoaded(Ref<void> ref);
+	static void _keepLoaded(Ref<Destructible> ref);
 	static std::vector<WeakRef<void>> getRefsWithType(const char* type_name);
 	void updateStats(FrameStats stats);
 	void _drawImGuiDebug(float delta_time);
@@ -94,7 +94,8 @@ inline std::vector<WeakRef<T>> Engine::getAllRefs()
 template<class T>
 inline Ref<T> Engine::keepLoaded(Ref<T> ref)
 {
-	_keepLoaded(ref.cast<void>());
+	static_assert(std::is_convertible<T*, Destructible*>::value, "reference must be a HopEngine::Destructible subclass");
+	_keepLoaded(ref.template cast<Destructible>());
 	return ref;
 }
 

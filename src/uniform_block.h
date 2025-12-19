@@ -10,7 +10,7 @@
 namespace HopEngine
 {
 
-class UniformBlock
+class UniformBlock : public Destructible
 {
 private:
 	std::vector<VkDescriptorSet> descriptor_sets;
@@ -24,7 +24,7 @@ public:
 	DELETE_CONSTRUCTORS(UniformBlock);
 
 	UniformBlock(ShaderLayout layout_info);
-	~UniformBlock();
+	~UniformBlock() override;
 
 	inline void* getBuffer() { return live_uniform_buffer.data(); }
 	void setTexture(uint32_t binding, Ref<Texture> image);

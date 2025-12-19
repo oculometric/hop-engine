@@ -8,7 +8,7 @@
 namespace HopEngine
 {
 
-class Font
+class Font : public Destructible
 {
 private:
 	Ref<Texture> atlas = nullptr;
@@ -20,7 +20,7 @@ public:
 	DELETE_CONSTRUCTORS(Font);
 
 	Font(std::string atlas, glm::ivec2 character_bitmap_size);
-	~Font();
+	~Font() override;
 
 	inline glm::vec2 getCharacterSize() const { return character_size; }
 	Ref<Texture> getAtlas() const;

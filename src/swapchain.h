@@ -15,7 +15,7 @@ struct SwapchainSupportInfo
 	std::vector<VkPresentModeKHR> present_modes;
 };
 
-class Swapchain
+class Swapchain : public Destructible
 {
 private:
 	VkSwapchainKHR swapchain = VK_NULL_HANDLE;
@@ -31,7 +31,7 @@ public:
 	DELETE_CONSTRUCTORS(Swapchain);
 
 	Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR surface);
-	~Swapchain();
+	~Swapchain() override;
 
 	inline VkFormat getFormat() const { return format; }
 	inline VkExtent2D getExtent() const { return extent; }

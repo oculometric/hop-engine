@@ -37,7 +37,7 @@ struct ShaderLayout
 	std::vector<DescriptorBinding> bindings;
 };
 
-class Shader
+class Shader : public Destructible
 {
 public:
 	static const char* compiler_path;
@@ -55,7 +55,7 @@ public:
 	DELETE_CONSTRUCTORS(Shader);
 		
 	Shader(std::string base_path, bool is_precompiled);
-	~Shader();
+	~Shader() override;
 
 	inline VkPipelineLayout getPipelineLayout() const { return pipeline_layout; }
 	std::vector<VkPipelineShaderStageCreateInfo> getShaderStageCreateInfos() const;

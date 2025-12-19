@@ -7,7 +7,7 @@
 namespace HopEngine
 {
 
-class CommandBuffer
+class CommandBuffer : public Destructible
 {
 private:
 	VkCommandBuffer buffer = VK_NULL_HANDLE;
@@ -17,7 +17,7 @@ public:
 	DELETE_NOT_ALL_CONSTRUCTORS(CommandBuffer);
 
 	CommandBuffer();
-	~CommandBuffer();
+	~CommandBuffer() override;
 
 	inline VkCommandBuffer getBuffer() const { return buffer; }
 	void submit();

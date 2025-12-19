@@ -22,7 +22,7 @@ struct PipelineBuilder
 	inline PipelineBuilder depthOp(VkCompareOp value) { depth_compare_op = value; return *this; }
 };
 
-class Pipeline
+class Pipeline : public Destructible
 {
 private:
 	VkPipeline pipeline = VK_NULL_HANDLE;
@@ -32,7 +32,7 @@ public:
 	DELETE_CONSTRUCTORS(Pipeline);
 
 	Pipeline(Ref<Shader> shader, PipelineBuilder config, Ref<RenderPass> render_pass);
-	~Pipeline();
+	~Pipeline() override;
 
 	inline VkPipeline getPipeline() const { return pipeline; }
 	inline PipelineBuilder getConfig() const { return pipeline_config; }

@@ -119,9 +119,6 @@ void initScene(Ref<Scene> scene)
         samples[i] = v;
     }
     scene->render_graph->getMaterialForStep(3)->setUniform("samples", samples, sizeof(glm::vec4) * 64);
-    scene->render_graph->getMaterialForStep(5)->setFloatUniform("gamma", 2.2f);
-    scene->render_graph->getMaterialForStep(5)->setFloatUniform("exposure", 16.0f);
-    scene->render_graph->getMaterialForStep(5)->setFloatUniform("offset", 0.0f);
 
     Engine::debugClearSelection(asha.cast<Object>(), asha->material);
 }
@@ -311,15 +308,24 @@ void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
         WeakRef<Material> mat = scene->render_graph->getMaterialForStep(5);
         if (mat)
         {
-            static float gamma = 1.2f;
-            static float exposure = 1.5f;
-            static float offset = 0.0f;
-            ImGui::SliderFloat("gamma", &gamma, 0.001f, 4.0f);
-            ImGui::SliderFloat("exposure", &exposure, 0.001f, 16.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
-            ImGui::SliderFloat("offset", &offset, -2.0f, 2.0f);
-            mat->setFloatUniform("gamma", gamma);
-            mat->setFloatUniform("exposure", exposure);
-            mat->setFloatUniform("offset", offset);
+            static float gamma = 0;
+            static float new_gamma = 1.2f;
+            static float exposure = 0;
+            static float new_exposure = 1.5f;
+            static float offset = 0;
+            static float new_offset = 0.0f;
+            ImGui::SliderFloat("gamma", &new_gamma, 0.001f, 4.0f);
+            ImGui::SliderFloat("exposure", &new_exposure, 0.001f, 16.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
+            ImGui::SliderFloat("offset", &new_offset, -2.0f, 2.0f);
+            if (gamma != new_gamma)
+                mat->setFloatUniform("gamma", new_gamma);
+            if (exposure != new_exposure)
+                mat->setFloatUniform("exposure", new_exposure);
+            if (offset != new_offset)
+                mat->setFloatUniform("offset", new_offset);
+            gamma = new_gamma;
+            exposure = new_exposure;
+            offset = new_offset;
         }
         else
             ImGui::Text("couldn't find the colour correction step!");

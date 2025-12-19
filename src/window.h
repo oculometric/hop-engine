@@ -9,7 +9,7 @@
 namespace HopEngine
 {
 
-class Window
+class Window : public Destructible
 {
 private:
 	GLFWwindow* window;
@@ -34,7 +34,7 @@ public:
 	void setVisible(bool visible);
 	void setIcon(std::string path);
 
-	~Window();
+	~Window() override;
 };
 
 }

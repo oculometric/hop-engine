@@ -20,7 +20,7 @@ struct Vertex
 	glm::vec2 uv;
 };
 
-class Mesh
+class Mesh : public Destructible
 {
 private:
 	Ref<Buffer> vertex_buffer;
@@ -37,7 +37,7 @@ public:
 
 	Mesh(std::string path);
 	Mesh(std::vector<Vertex> vertices, std::vector<uint16_t> indices, bool keep_accessible = false);
-	~Mesh();
+	~Mesh() override;
 
 	VkBuffer getVertexBuffer() const;
 	VkBuffer getIndexBuffer() const;

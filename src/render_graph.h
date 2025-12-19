@@ -61,7 +61,7 @@ struct RenderGraphBuilder
 	RenderGraphBuilder addPostProcess(Ref<Shader> shader, std::map<uint32_t, RenderTextureBinding> texture_bindings, float size_factor, VkExtent2D custom_extent = { 128, 128 });
 };
 
-class RenderGraph
+class RenderGraph : public Destructible
 {
 public:
 	int output_step = -1;
@@ -77,6 +77,7 @@ public:
 	DELETE_CONSTRUCTORS(RenderGraph);
 
 	RenderGraph(RenderGraphBuilder config);
+	~RenderGraph() override;
 
 	void updateUniforms(uint32_t image_index, float time_since_start, Ref<Scene> scene);
 	void recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Scene> scene, FrameStats& stats, Ref<RenderPass>

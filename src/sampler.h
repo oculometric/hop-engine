@@ -16,7 +16,7 @@ struct SamplerBuilder
 	inline SamplerBuilder address(VkSamplerAddressMode value) { address_mode = value; return *this; }
 };
 
-class Sampler
+class Sampler : public Destructible
 {
 private:
 	VkSampler sampler = VK_NULL_HANDLE;
@@ -26,7 +26,7 @@ public:
 	DELETE_CONSTRUCTORS(Sampler);
 
 	Sampler(SamplerBuilder config);
-	~Sampler();
+	~Sampler() override;
 
 	inline VkSampler getSampler() const { return sampler; }
 	inline SamplerBuilder getBuilder() const { return builder; }
