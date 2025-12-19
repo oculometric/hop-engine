@@ -78,6 +78,11 @@ Ref<RenderPass> RenderServer::getMainRenderPass()
     return environment->offscreen_pass;
 }
 
+Ref<RenderPass> RenderServer::getFinalRenderPass()
+{
+    return environment->final_render_pass;
+}
+
 RenderServer::QueueFamilies RenderServer::getQueueFamilies(VkPhysicalDevice device)
 {
     QueueFamilies families;
@@ -244,7 +249,6 @@ RenderServer::RenderServer(Ref<Window> main_window)
     default_material = new Material(new Shader("res://engine/shader", false));
     gizmo_material = new Material(new Shader("res://engine/gizmo", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE), final_render_pass);
     skybox_material = new Material(new Shader("res://engine/skybox", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
-    passthrough = new Material(new Shader("res://engine/passthrough", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), final_render_pass);
     
     initImGui();
 
@@ -274,7 +278,6 @@ RenderServer::~RenderServer()
     DBG_VERBOSE("destroying command pool");
     vkDestroyCommandPool(device, command_pool, nullptr);
     
-    passthrough = nullptr;
     skybox_material = nullptr;
     skybox_cube = nullptr;
     default_material = nullptr;
@@ -653,20 +656,6 @@ FrameStats RenderServer::drawFrame()
         {
             object->pushToDescriptorSet(image_index);
         }
-
-        WeakRef<Texture> new_passthrough_tex = scene->getRenderGraph()->getFinalImage();
-        if (!new_passthrough_tex)
-            new_passthrough_tex = default_image;
-        if (new_passthrough_tex != passthrough_texture)
-        {
-            passthrough->setTexture(0, new_passthrough_tex);
-            passthrough_texture = new_passthrough_tex;
-            if (new_passthrough_tex->getFormat() == Texture::depth_format)
-                passthrough->setIntUniform("display_depth", 1);
-            else
-                passthrough->setIntUniform("display_depth", 0);
-        }
-        passthrough->pushToDescriptorSet(image_index);
     }
     else
         DBG_WARNING("no scene attached to environment");
@@ -739,62 +728,7 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
     Ref<Scene> scene = Engine::getScene();
 
     if (scene && scene->getRenderGraph())
-    {
-        scene->getRenderGraph()->recordCommandBuffer(command_buffer, image_index, scene, stats);
-        
-        // TODO: extend RenderGraph to handle this final stage and skip the passthrough if possible, and to draw gizmos into this
-    }
-    VkRenderPassBeginInfo render_pass_begin_info{ };
-    render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    render_pass_begin_info.renderPass = final_render_pass->getRenderPass();
-    render_pass_begin_info.framebuffer = final_render_pass->getFramebuffer(image_index);
-    render_pass_begin_info.renderArea.offset = { 0, 0 };
-    render_pass_begin_info.renderArea.extent = final_render_pass->getExtent();
-    vector<VkClearValue> clear_values = final_render_pass->getClearValues();
-    clear_values[0].color = { 0.02f, 0.02f, 0.02f };
-    render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
-    render_pass_begin_info.pClearValues = clear_values.data();
-
-    vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
-    stats.passes++;
-
-    VkRect2D scissor{ };
-    scissor.offset = { 0, 0 };
-    scissor.extent = final_render_pass->getExtent();
-    VkViewport viewport{ };
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = static_cast<float>(scissor.extent.width);
-    viewport.height = static_cast<float>(scissor.extent.height);
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-    vkCmdSetViewport(command_buffer, 0, 1, &viewport);
-    vkCmdSetScissor(command_buffer, 0, 1, &scissor);
-
-    if (scene && scene->getRenderGraph())
-    {
-        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, passthrough->getPipeline());
-        stats.pipeline_rebinds++;
-
-        VkDescriptorSet material_descriptor_set = passthrough->getDescriptorSet(image_index);
-        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, passthrough->getPipelineLayout(), 2, 1, &material_descriptor_set, 0, nullptr);
-
-        WeakRef<Mesh> quad = RenderServer::getQuad();
-        VkBuffer vertex_buffers[] = { quad->getVertexBuffer() };
-        VkDeviceSize offsets[] = { 0 };
-        vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
-        vkCmdBindIndexBuffer(command_buffer, quad->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
-
-        vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(quad->getIndexCount()), 1, 0, 0, 0);
-        stats.draw_calls++;
-        stats.triangles += 2;
-        stats.vertices += 4;
-    }
-
-    ImDrawData* draw_data = ImGui::GetDrawData();
-    if (draw_data) ImGui_ImplVulkan_RenderDrawData(draw_data, command_buffer);
-
-    vkCmdEndRenderPass(command_buffer);
+        scene->getRenderGraph()->recordCommandBuffer(command_buffer, image_index, scene, stats, final_render_pass);
 
     vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, query_pool, (image_index * 2) + 1);
     if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS)

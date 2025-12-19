@@ -70,6 +70,8 @@ public:
 private:
 	std::vector<RenderStep> execution_steps;
 	VkExtent2D expected_extent = { 0, 0 };
+	Ref<Material> passthrough;
+	WeakRef<Texture> passthrough_texture;
 
 public:
 	DELETE_CONSTRUCTORS(RenderGraph);
@@ -77,7 +79,8 @@ public:
 	RenderGraph(RenderGraphBuilder config);
 
 	void updateUniforms(uint32_t image_index, float time_since_start, Ref<Scene> scene);
-	void recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Scene> scene, FrameStats& stats) const;
+	void recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Scene> scene, FrameStats& stats, Ref<RenderPass>
+	                         final_render_pass) const;
 	void resizeBuffers(uint32_t width, uint32_t height);
 	inline VkExtent2D getExpectedExtent() const { return expected_extent; }
 	Ref<Texture> getFinalImage() const;

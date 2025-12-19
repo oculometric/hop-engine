@@ -69,7 +69,8 @@ public:
 	static void drawImGuiDebug(float delta_time);
 	static void debugCamera(float delta_time);
 	static void debugClearSelection(WeakRef<Object> object = WeakRef<Object>(), WeakRef<Material> material = WeakRef<Material>());
-
+	static WeakRef<Object> getDebugSelection();
+	
 private:
 	Engine();
 	~Engine();

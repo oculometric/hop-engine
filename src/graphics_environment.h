@@ -83,8 +83,6 @@ private:
 	Ref<Material> skybox_material;
 	WeakRef<Texture> current_skybox;
 	Ref<Mesh> quad;
-	Ref<Material> passthrough;
-	WeakRef<Texture> passthrough_texture;
 
 public:
 	static void init(Ref<Window> main_window);
@@ -94,6 +92,7 @@ public:
 	static VkDevice getDevice();
 	static VkPhysicalDevice getPhysicalDevice();
 	static Ref<RenderPass> getMainRenderPass();
+	static Ref<RenderPass> getFinalRenderPass();
 	static glm::vec2 getFramebufferSize();
 	static size_t getFramesInFlight();
 	static QueueFamilies getQueueFamilies(VkPhysicalDevice device);

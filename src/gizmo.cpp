@@ -10,6 +10,8 @@ using namespace std;
 
 Gizmo::Gizmo() : StaticMesh(RenderServer::getGizmoMesh(0), RenderServer::getGizmoMaterial()->duplicate())
 {
+    camera_mask = 0xF0000000;
+    name = "gizmo";
 }
 
 void Gizmo::trackObject(WeakRef<Object> object, WeakRef<Camera> camera)
@@ -30,7 +32,7 @@ void Gizmo::trackObject(WeakRef<Object> object, WeakRef<Camera> camera)
         glm::vec4 mouse_delta = glm::vec4(Input::getMouseDelta() / (RenderServer::getFramebufferSize() / 4.0f), 0, 0);
         glm::mat4 screen_to_local = glm::inverse(camera->getWorldToScreenMatrix() * transform.getMatrix());
         glm::vec4 translation = screen_to_local * mouse_delta;
-        object->transform.translate(glm::vec3{ translation.x, translation.y, translation.z } * current_colour );
+        object->transform.translateLocal(glm::vec3{ translation.x, translation.y, translation.z } * current_colour );
     }
     else
     {

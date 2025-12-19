@@ -512,6 +512,11 @@ void Engine::debugClearSelection(WeakRef<Object> object, WeakRef<Material> mater
 		selected_camera = nullptr;
 }
 
+WeakRef<Object> Engine::getDebugSelection()
+{
+	return selected_object;
+}
+
 void RenderGraph::drawImGuiDebug()
 {
 	if (ImGui::CollapsingHeader("render graph", nullptr, ImGuiTreeNodeFlags_DefaultOpen))

@@ -1,6 +1,9 @@
 #include "render_graph.h"
 
+#include <execution>
 #include <string>
+#include <imgui.h>
+#include <imgui_impl_vulkan.h>
 
 #include "graphics_environment.h"
 #include "render_pass.h"
@@ -18,6 +21,7 @@ using namespace std;
 
 RenderGraph::RenderGraph(RenderGraphBuilder config)
 {
+    passthrough = new Material(new Shader("res://engine/passthrough", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), RenderServer::getFinalRenderPass());
     execution_steps = config.execution_steps;
     if (!config.execution_steps.empty())
         expected_extent = config.execution_steps[0].render_pass->getExtent();
@@ -54,11 +58,25 @@ void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, R
             step.scene_uniforms->pushToDescriptorSet(image_index);
         }
     }
+    
+    WeakRef<Texture> new_passthrough_tex = getFinalImage();
+    if (!new_passthrough_tex)
+        new_passthrough_tex = RenderServer::getDefaultTextureSampler().first;
+    if (new_passthrough_tex != passthrough_texture)
+    {
+        passthrough->setTexture(0, new_passthrough_tex);
+        passthrough_texture = new_passthrough_tex;
+        if (new_passthrough_tex->getFormat() == Texture::depth_format)
+            passthrough->setIntUniform("display_depth", 1);
+        else
+            passthrough->setIntUniform("display_depth", 0);
+    }
+    passthrough->pushToDescriptorSet(image_index);
 }
 
-void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Scene> scene, FrameStats& stats) const
+void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Scene> scene, FrameStats& stats, Ref<RenderPass> final_render_pass) const
 {
-    vector<multiset<DrawCommand, DrawCommand>> step_commands(execution_steps.size());
+    vector<multiset<DrawCommand, DrawCommand>> step_commands(execution_steps.size() + 1);
     auto scene_commands = scene->getDrawCommands();
     for (const auto& cmd : scene_commands)
     {
@@ -70,6 +88,8 @@ void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t i
             if (cmd.material->getRenderPass()->isCompatible(step.render_pass) && (cmd.camera_mask & (1 << step.camera_slot)))
                 step_commands[i].insert(cmd);
         }
+        if (cmd.material->getRenderPass()->isCompatible(final_render_pass) && cmd.camera_mask & 0xF0000000)
+            step_commands[execution_steps.size()].insert(cmd);
     }
 
     if (scene->skybox)
@@ -90,6 +110,79 @@ void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t i
         else
             recordPostProcessStep(command_buffer, image_index, step.material, step.scene_uniforms->getDescriptorSet(image_index), stats);
     }
+    
+    VkRenderPassBeginInfo render_pass_begin_info{ };
+    render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    render_pass_begin_info.renderPass = final_render_pass->getRenderPass();
+    render_pass_begin_info.framebuffer = final_render_pass->getFramebuffer(image_index);
+    render_pass_begin_info.renderArea.offset = { 0, 0 };
+    render_pass_begin_info.renderArea.extent = final_render_pass->getExtent();
+    vector<VkClearValue> clear_values = final_render_pass->getClearValues();
+    clear_values[0].color = { 0.02f, 0.02f, 0.02f };
+    render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
+    render_pass_begin_info.pClearValues = clear_values.data();
+
+    vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+    stats.passes++;
+
+    VkRect2D scissor{ };
+    scissor.offset = { 0, 0 };
+    scissor.extent = final_render_pass->getExtent();
+    VkViewport viewport{ };
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(scissor.extent.width);
+    viewport.height = static_cast<float>(scissor.extent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(command_buffer, 0, 1, &viewport);
+    vkCmdSetScissor(command_buffer, 0, 1, &scissor);
+
+    VkDescriptorSet descriptor_sets[3] =
+    {
+        scene->getCamera(execution_steps[0].camera_slot)->getDescriptorSet(image_index),
+        VK_NULL_HANDLE,
+        VK_NULL_HANDLE
+    };
+    
+    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, passthrough->getPipeline());
+    stats.pipeline_rebinds++;
+
+    descriptor_sets[2] = passthrough->getDescriptorSet(image_index);
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, passthrough->getPipelineLayout(), 0, 3, descriptor_sets, 0, nullptr);
+    
+    WeakRef<Mesh> quad = RenderServer::getQuad();
+    VkBuffer vertex_buffers[] = { quad->getVertexBuffer() };
+    VkDeviceSize offsets[] = { 0 };
+    vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
+    vkCmdBindIndexBuffer(command_buffer, quad->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
+
+    vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(quad->getIndexCount()), 1, 0, 0, 0);
+    stats.draw_calls++;
+    stats.triangles += 2;
+    stats.vertices += 4;
+    
+    auto final_step = step_commands[execution_steps.size()];
+    for (DrawCommand command : final_step)
+    {
+        descriptor_sets[1] = command.uniforms->getDescriptorSet(image_index);
+        descriptor_sets[2] = command.material->getDescriptorSet(image_index);
+        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, command.material->getPipeline());
+        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, command.material->getPipelineLayout(), 0, 3, descriptor_sets, 0, nullptr);
+        VkBuffer vertex_buffers[] = { command.mesh->getVertexBuffer() };
+        VkDeviceSize offsets[] = { 0 };
+        vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
+        vkCmdBindIndexBuffer(command_buffer, command.mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
+        vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(command.mesh->getIndexCount()), 1, 0, 0, 0);
+        stats.draw_calls++;
+        stats.triangles += command.mesh->getIndexCount() / 3;
+        stats.vertices += command.mesh->getVertexCount();
+    }
+
+    ImDrawData* draw_data = ImGui::GetDrawData();
+    if (draw_data) ImGui_ImplVulkan_RenderDrawData(draw_data, command_buffer);
+
+    vkCmdEndRenderPass(command_buffer);
 }
 
 void RenderGraph::resizeBuffers(uint32_t width, uint32_t height)
@@ -320,7 +413,6 @@ RenderGraphBuilder RenderGraphBuilder::addCamera(size_t slot, RenderOutput rende
 
 RenderGraphBuilder RenderGraphBuilder::addCamera(size_t slot, float size_factor, VkExtent2D custom_extent)
 {
-
     return addCamera(slot, RenderServer::getMainRenderPass()->getOutputConfig(), size_factor, custom_extent);
 }
 

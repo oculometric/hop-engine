@@ -77,7 +77,7 @@ void initScene(Ref<Scene> scene)
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f));
 
-    //gizmo = scene->insertObject<Gizmo>(new Gizmo());
+    gizmo = scene->insertObject<Gizmo>(new Gizmo());
     scene->skybox = Engine::keepLoaded(new Texture("res://nasa_goddard_gaia_dr2_deep_star_map.png"));
 
     Ref<Camera> second_cam = new Camera();
@@ -136,8 +136,7 @@ void updateScene(Ref<Scene> scene, float delta_time)
     if (obj)
         obj->transform.rotateLocal({ 0, 0, 20 * delta_time });
 
-    //auto cast = asha.cast<Object>();
-    //gizmo->trackObject(cast, scene->getCamera(0));
+    gizmo->trackObject(Engine::getDebugSelection(), scene->getCamera(0));
 
     Input::resetMouseDelta();
 }
