@@ -16,6 +16,8 @@
 #include "render_graph.h"
 #include "graphics_environment.h"
 
+// TODO: be able to load resources at runtime
+
 using namespace HopEngine;
 using namespace std;
 

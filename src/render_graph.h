@@ -18,6 +18,7 @@
 #include "render_pass.h"
 #include "draw_command.h"
 #include "engine.h"
+#include "uniform_block.h"
 
 namespace HopEngine
 {
@@ -28,7 +29,8 @@ struct RenderTextureBinding
 	size_t output_index = 0;
 	VkFilter filter_mode = VK_FILTER_LINEAR;
 	VkSamplerAddressMode address_mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-
+	
+	inline RenderTextureBinding() = default;
 	inline RenderTextureBinding(size_t step, size_t output) : step_index(step), output_index(output) { }
 	inline RenderTextureBinding filter(VkFilter value) { filter_mode = value; return *this; }
 	inline RenderTextureBinding address(VkSamplerAddressMode value) { address_mode = value; return *this; }
@@ -88,6 +90,8 @@ public:
 	Ref<Material> getMaterialForStep(size_t step);
 
 	void drawImGuiDebug();
+	
+	static Ref<RenderGraph> deserialise(std::string name);
 
 private:
 	void recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands, FrameStats& stats) const;
@@ -97,4 +101,3 @@ private:
 }
 
 // TODO: build a graphical node editor for this....
-// TODO: build a serialisable structure for this

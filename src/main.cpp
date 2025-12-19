@@ -92,21 +92,7 @@ void initScene(Ref<Scene> scene)
     third_cam->transform.lookAt({ 0, -0.2f, 0.8f }, { 0, 0, 0.7f }, { 0, 0, 1 });
     third_cam->fov = 120.0f;
 
-    scene->render_graph = new RenderGraph(RenderGraphBuilder()
-        .addCamera(0)
-        .addCamera(1)
-        .addCamera(2, 0.1f)
-        .addPostProcess(new Shader("res://engine/ssao", false), {
-            { 0, RenderTextureBinding(0, 1) },
-            { 1, RenderTextureBinding(0, 4) }
-            }, 0.25f)
-        .addPostProcess(new Shader("res://half_and_half", false), {
-            { 0, RenderTextureBinding(0, 0) },
-            { 1, RenderTextureBinding(1, 1).address(VK_SAMPLER_ADDRESS_MODE_REPEAT) },
-            { 2, RenderTextureBinding(2, 0).address(VK_SAMPLER_ADDRESS_MODE_REPEAT).filter(VK_FILTER_NEAREST) } })
-        .addPostProcess(new Shader("res://engine/colour_correct", false), {
-            { 0, RenderTextureBinding(4, 0).filter(VK_FILTER_NEAREST) } })
-    );
+    scene->render_graph = RenderGraph::deserialise("res://test.hrgr");
 
     glm::vec4 samples[64];
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);

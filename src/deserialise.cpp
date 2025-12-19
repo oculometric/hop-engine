@@ -4,6 +4,7 @@
 #include "token_file.h"
 #include "package.h"
 #include "sampler.h"
+#include "render_graph.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -65,6 +66,93 @@ bool getAnonArgument(size_t index, float result, const vector<pair<string, Token
 	return false;
 }
 
+static VkCompareOp getCompareOp(string str)
+{
+	static map<string, VkCompareOp> op_map =
+	{
+		{ "ALWAYS", VK_COMPARE_OP_ALWAYS },
+		{ "EQUAL", VK_COMPARE_OP_EQUAL },
+		{ "GREATER", VK_COMPARE_OP_GREATER },
+		{ "GREATER_EQUAL", VK_COMPARE_OP_GREATER_OR_EQUAL },
+		{ "LESS", VK_COMPARE_OP_LESS },
+		{ "LESS_EQUAL", VK_COMPARE_OP_LESS_OR_EQUAL },
+		{ "NEVER", VK_COMPARE_OP_NEVER },
+		{ "NOT_EQUAL", VK_COMPARE_OP_NOT_EQUAL }
+	};
+	auto it = op_map.find(str);
+	if (it == op_map.end())
+		return VK_COMPARE_OP_MAX_ENUM;
+	return it->second;
+}
+
+static VkBool32 getBool(string str)
+{
+	static map<string, VkBool32> bool_map =
+	{
+		{ "TRUE", VK_TRUE },
+		{ "FALSE", VK_FALSE }
+	};
+	auto it = bool_map.find(str);
+	if (it == bool_map.end())
+		return -1;
+	return it->second;
+}
+
+static VkCullModeFlags getCullMode(string str)
+{
+	static map<string, VkCullModeFlags> cull_map =
+	{
+		{ "NONE", VK_CULL_MODE_NONE },
+		{ "FRONT", VK_CULL_MODE_FRONT_BIT },
+		{ "BACK", VK_CULL_MODE_BACK_BIT }
+	};
+	auto it = cull_map.find(str);
+	if (it == cull_map.end())
+		return VK_CULL_MODE_FLAG_BITS_MAX_ENUM;
+	return it->second;
+}
+
+static VkPolygonMode getPolygonMode(string str)
+{
+	static map<string, VkPolygonMode> polygon_map =
+	{
+		{ "FILL", VK_POLYGON_MODE_FILL },
+		{ "LINE", VK_POLYGON_MODE_LINE },
+		{ "POINT", VK_POLYGON_MODE_POINT }
+	};
+	auto it = polygon_map.find(str);
+	if (it == polygon_map.end())
+		return VK_POLYGON_MODE_MAX_ENUM;
+	return it->second;
+}
+
+static VkFilter getFilter(string str)
+{
+	static map<string, VkFilter> filter_map =
+	{
+		{ "LINEAR", VK_FILTER_LINEAR },
+		{ "NEAREST", VK_FILTER_NEAREST },
+	};
+	auto it = filter_map.find(str);
+	if (it == filter_map.end())
+		return VK_FILTER_MAX_ENUM;
+	return it->second;
+}
+
+static VkSamplerAddressMode getAddressMode(string str)
+{
+	static map<string, VkSamplerAddressMode> address_map =
+	{
+		{ "REPEAT", VK_SAMPLER_ADDRESS_MODE_REPEAT },
+		{ "MIRROR", VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT },
+		{ "CLAMP", VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }
+	};
+	auto it = address_map.find(str);
+	if (it == address_map.end())
+		return VK_SAMPLER_ADDRESS_MODE_MAX_ENUM;
+	return it->second;
+}
+
 Ref<Material> Material::deserialise(string name)
 {
 	auto raw_data = Package::tryLoadFile(name);
@@ -89,51 +177,6 @@ Ref<Material> Material::deserialise(string name)
 	VkCullModeFlags cull = VK_CULL_MODE_BACK_BIT;
 	VkPolygonMode polygon = VK_POLYGON_MODE_FILL;
 	Ref<Shader> main_shader;
-
-	static map<string, VkCompareOp> op_map =
-	{
-		{ "ALWAYS", VK_COMPARE_OP_ALWAYS },
-		{ "EQUAL", VK_COMPARE_OP_EQUAL },
-		{ "GREATER", VK_COMPARE_OP_GREATER },
-		{ "GREATER_EQUAL", VK_COMPARE_OP_GREATER_OR_EQUAL },
-		{ "LESS", VK_COMPARE_OP_LESS },
-		{ "LESS_EQUAL", VK_COMPARE_OP_LESS_OR_EQUAL },
-		{ "NEVER", VK_COMPARE_OP_NEVER },
-		{ "NOT_EQUAL", VK_COMPARE_OP_NOT_EQUAL }
-	};
-
-	static map<string, VkBool32> bool_map =
-	{
-		{ "TRUE", VK_TRUE },
-		{ "FALSE", VK_FALSE }
-	};
-
-	static map<string, VkCullModeFlags> cull_map =
-	{
-		{ "NONE", VK_CULL_MODE_NONE },
-		{ "FRONT", VK_CULL_MODE_FRONT_BIT },
-		{ "BACK", VK_CULL_MODE_BACK_BIT }
-	};
-
-	static map<string, VkPolygonMode> polygon_map =
-	{
-		{ "FILL", VK_POLYGON_MODE_FILL },
-		{ "LINE", VK_POLYGON_MODE_LINE },
-		{ "POINT", VK_POLYGON_MODE_POINT }
-	};
-
-	static map<string, VkFilter> filter_map =
-	{
-		{ "LINEAR", VK_FILTER_LINEAR },
-		{ "NEAREST", VK_FILTER_NEAREST },
-	};
-
-	static map<string, VkSamplerAddressMode> address_map =
-	{
-		{ "REPEAT", VK_SAMPLER_ADDRESS_MODE_REPEAT },
-		{ "MIRROR", VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT },
-		{ "CLAMP", VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }
-	};
 
 	vector<TokenReader::Statement> uniforms;
 	vector<map<string, TokenReader::Token>> texture_bindings;
@@ -172,9 +215,8 @@ Ref<Material> Material::deserialise(string name)
 			auto it = args.find("operation");
 			if (it != args.end())
 			{
-				if (op_map.contains(it->second.s_value))
-					operation = op_map[it->second.s_value];
-				else
+				operation = getCompareOp(it->second.s_value);
+				if (operation == VK_COMPARE_OP_MAX_ENUM)
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid depth operation value");
 					return nullptr;
@@ -183,9 +225,8 @@ Ref<Material> Material::deserialise(string name)
 			it = args.find("test");
 			if (it != args.end())
 			{
-				if (bool_map.contains(it->second.s_value))
-					test = bool_map[it->second.s_value];
-				else
+				test = getBool(it->second.s_value);
+				if (test == (VkBool32)-1)
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid depth test value");
 					return nullptr;
@@ -194,9 +235,8 @@ Ref<Material> Material::deserialise(string name)
 			it = args.find("write");
 			if (it != args.end())
 			{
-				if (bool_map.contains(it->second.s_value))
-					write = bool_map[it->second.s_value];
-				else
+				write = getBool(it->second.s_value);
+				if (write == (VkBool32)-1)
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid depth write value");
 					return nullptr;
@@ -214,9 +254,8 @@ Ref<Material> Material::deserialise(string name)
 			auto it = args.find("mode");
 			if (it != args.end())
 			{
-				if (cull_map.contains(it->second.s_value))
-					cull = cull_map[it->second.s_value];
-				else
+				cull = getCullMode(it->second.s_value);
+				if (cull == VK_CULL_MODE_FLAG_BITS_MAX_ENUM)
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid culling mode value");
 					return nullptr;
@@ -234,9 +273,8 @@ Ref<Material> Material::deserialise(string name)
 			auto it = args.find("mode");
 			if (it != args.end())
 			{
-				if (polygon_map.contains(it->second.s_value))
-					polygon = polygon_map[it->second.s_value];
-				else
+				polygon = getPolygonMode(it->second.s_value);
+				if (polygon == VK_POLYGON_MODE_MAX_ENUM)
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid polygon mode value");
 					return nullptr;
@@ -316,27 +354,23 @@ Ref<Material> Material::deserialise(string name)
 		it = args.find("filter");
 		if (it != args.end())
 		{
-			auto filter_it = filter_map.find(it->second.s_value);
-			if (filter_it == filter_map.end())
+			filter = getFilter(it->second.s_value);
+			if (filter == VK_FILTER_MAX_ENUM)
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor filter value");
 				return nullptr;
 			}
-			else
-				filter = filter_it->second;
 		}
 		VkSamplerAddressMode address = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 		it = args.find("address");
 		if (it != args.end())
 		{
-			auto address_it = address_map.find(it->second.s_value);
-			if (address_it == address_map.end())
+			address = getAddressMode(it->second.s_value);
+			if (address == VK_SAMPLER_ADDRESS_MODE_MAX_ENUM)
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor address value");
 				return nullptr;
 			}
-			else
-				address = address_it->second;
 		}
 		material->setTexture(binding, texture_it->second);
 		if (address != VK_SAMPLER_ADDRESS_MODE_REPEAT || filter != VK_FILTER_LINEAR)
@@ -385,4 +419,217 @@ Ref<Material> Material::deserialise(string name)
 	}
 
 	return material;
+}
+
+Ref<RenderGraph> RenderGraph::deserialise(string name)
+{
+	auto raw_data = Package::tryLoadFile(name);
+	if (raw_data.empty())
+		return nullptr;
+
+	std::string token_str((char*)raw_data.data(), raw_data.size());
+	auto tokens = TokenReader::tokenise(token_str);
+	if (tokens.empty())
+		return nullptr;
+
+	auto syntax_tree = TokenReader::extractSyntaxTree(tokens, token_str);
+	if (syntax_tree.empty())
+		return nullptr;
+
+	map<string, Ref<Shader>> shaders;
+	map<string, RenderOutput> render_passes;
+	map<string, int> step_identifiers;
+	RenderGraphBuilder builder;
+	
+	for (const TokenReader::Statement& statement : syntax_tree)
+	{
+		if (statement.keyword == "Resource")
+		{
+			vector<TokenReader::Token> args;
+			if (!TokenReader::readStatement(statement, false, true,
+				{
+					TokenReader::TEXT,
+					TokenReader::STRING
+				}, args, "error deserialising render graph '" + name + "'"))
+				return nullptr;
+			if (args[0].s_value == "shader")
+				shaders[statement.identifier] = new Shader(args[1].s_value, false);
+			else
+			{
+				DBG_ERROR("error deserialising render graph '" + name + "': invalid resource type");
+				return nullptr;
+			}
+		}
+		else if (statement.keyword == "RenderPass")
+		{
+			vector<TokenReader::Token> args;
+			if (!TokenReader::readStatement(statement, false, true,
+				{
+					TokenReader::TEXT,
+					TokenReader::INT
+				}, args, "error deserialising render graph '" + name + "'"))
+				return nullptr;
+			VkBool32 has_depth = getBool(args[0].s_value);
+			if (has_depth == (VkBool32)-1)
+			{
+				DBG_ERROR("error deserialising render graph '" + name + "': invalid 'depth enabled' value for render pass descriptor");
+				return nullptr;
+			}
+			size_t extra_buffers = glm::clamp(args[1].i_value, 0, 6);
+			render_passes[statement.identifier] = RenderOutput{ extra_buffers, (bool)has_depth };
+		}
+		else if (statement.keyword == "Camera")
+		{
+			map<string, TokenReader::Token> args;
+			if (!TokenReader::readStatement(statement, false, true,
+				{
+					{ "slot", { TokenReader::INT, true } },
+					{ "scale", { TokenReader::FLOAT, false } },
+					{ "custom_size", { TokenReader::VECTOR, false } },
+					{ "render_pass", { TokenReader::IDENTIFIER, false } },
+				}, args, "error deserialising render graph '" + name + "'"))
+				return nullptr;
+			int slot = args["slot"].i_value;
+			if (slot < 0)
+			{
+				DBG_ERROR("error deserialising render graph '" + name + "': camera slot must be greater than 0");
+				return nullptr;
+			}
+			float scale = 1.0f;
+			auto it = args.find("scale");
+			if (it != args.end())
+				scale = it->second.f_value;
+			glm::vec2 custom_size{ 1, 1 };
+			it = args.find("custom_size");
+			if (it != args.end())
+			{
+				scale = 0.0f;
+				custom_size = glm::max(it->second.c_value, 1.0f);
+			}
+			it = args.find("render_pass");
+			if (it != args.end())
+			{
+				auto render_pass_it = render_passes.find(it->second.s_value);
+				if (render_pass_it == render_passes.end())
+				{
+					DBG_ERROR("error deserialising render graph '" + name + "': unknown render pass identifier '" + it->second.s_value + "'");
+					return nullptr;
+				}
+				builder.addCamera(slot, render_pass_it->second, scale, { (uint32_t)custom_size.x, (uint32_t)custom_size.y });
+			}
+			else
+				builder.addCamera(slot, scale, { (uint32_t)custom_size.x, (uint32_t)custom_size.y });
+			step_identifiers[statement.identifier] = (int)builder.execution_steps.size() - 1;
+		}
+		else if (statement.keyword == "PostProcess")
+		{
+			map<string, TokenReader::Token> args;
+			if (!TokenReader::readStatement(statement, true, true,
+				{
+					{ "shader", { TokenReader::IDENTIFIER, true } },
+					{ "scale", { TokenReader::FLOAT, false } },
+					{ "custom_size", { TokenReader::VECTOR, false } },
+					{ "render_pass", { TokenReader::IDENTIFIER, false } },
+				}, args, "error deserialising render graph '" + name + "'"))
+				return nullptr;
+			auto shader_it = shaders.find(args["shader"].s_value);
+			if (shader_it == shaders.end())
+			{
+				DBG_ERROR("error deserialising render graph '" + name + "': unknown shader identifier '" + args["shader"].s_value + "'");
+				return nullptr;
+			}
+			float scale = 1.0f;
+			auto it = args.find("scale");
+			if (it != args.end())
+				scale = it->second.f_value;
+			glm::vec2 custom_size{ 1, 1 };
+			it = args.find("custom_size");
+			if (it != args.end())
+			{
+				scale = 0.0f;
+				custom_size = glm::max(it->second.c_value, 1.0f);
+			}
+			map<uint32_t, RenderTextureBinding> bindings;
+			for (const TokenReader::Statement& sub_statement : statement.children)
+			{
+				if (sub_statement.keyword != "Input")
+				{
+					DBG_ERROR("error deserialising render graph '" + name + "': only Input statements are allowed inside a PostProcess statement");
+					return nullptr;
+				}
+				map<string, TokenReader::Token> args2;
+				if (!TokenReader::readStatement(sub_statement, false, false,
+					{
+						{ "binding", { TokenReader::INT, true } },
+						{ "step", { TokenReader::IDENTIFIER, true } },
+						{ "attachment", { TokenReader::INT, true } },
+						{ "filter", { TokenReader::TEXT, false } },
+						{ "address", { TokenReader::TEXT, false } },
+					}, args2, "error deserialising render graph '" + name + "'"))
+					return nullptr;
+				int binding = args2["binding"].i_value;
+				if (binding < 0)
+				{
+					DBG_ERROR("error deserialising render graph '" + name + "': post-process input binding must be positive");
+					return nullptr;
+				}
+				auto step_it = step_identifiers.find(args2["step"].s_value);
+				if (step_it == step_identifiers.end())
+				{
+					DBG_ERROR("error deserialising render graph '" + name + "': nonexistent step identifier '" + args2["step"].s_value + "'");
+					return nullptr;
+				}
+				int attachment = args2["attachment"].i_value;
+				if (binding < 0)
+				{
+					DBG_ERROR("error deserialising render graph '" + name + "': post-process input attachment must be positive");
+					return nullptr;
+				}
+				RenderTextureBinding texture_binding(step_it->second, attachment);
+				auto filter_it = args2.find("filter");
+				if (filter_it != args2.end())
+				{
+					VkFilter filter = getFilter(filter_it->second.s_value);
+					if (filter == VK_FILTER_MAX_ENUM)
+					{
+						DBG_ERROR("error deserialising render graph '" + name + "': invalid post-process input filter value");
+						return nullptr;
+					}
+					texture_binding.filter(filter);
+				}
+				filter_it = args2.find("address");
+				if (filter_it != args2.end())
+				{
+					VkSamplerAddressMode address = getAddressMode(filter_it->second.s_value);
+					if (address == VK_SAMPLER_ADDRESS_MODE_MAX_ENUM)
+					{
+						DBG_ERROR("error deserialising render graph '" + name + "': invalid post-process input address mode value");
+						return nullptr;
+					}
+					texture_binding.address(address);
+				}
+				bindings[(uint32_t)binding] = texture_binding;
+			}
+			it = args.find("render_pass");
+			if (it != args.end())
+			{
+				auto render_pass_it = render_passes.find(it->second.s_value);
+				if (render_pass_it == render_passes.end())
+				{
+					DBG_ERROR("error deserialising render graph '" + name + "': unknown render pass identifier '" + it->second.s_value + "'");
+					return nullptr;
+				}
+				builder.addPostProcess(shader_it->second, bindings, render_pass_it->second, scale, { (uint32_t)custom_size.x, (uint32_t)custom_size.y });
+			}
+			else
+				builder.addPostProcess(shader_it->second, bindings, scale, { (uint32_t)custom_size.x, (uint32_t)custom_size.y });
+			step_identifiers[statement.identifier] = static_cast<int>(builder.execution_steps.size()) - 1;
+		}
+		else
+		{
+			DBG_ERROR("error deserialising render graph '" + name + "': invalid keyword '" + statement.keyword + "'");;
+			return nullptr;
+		}
+	}
+	return new RenderGraph(builder);
 }
