@@ -8,18 +8,27 @@ namespace HopEngine
 {
 
 struct PipelineBuilder
-{ // TODO: stencil support
+{
 	VkCullModeFlags culling_mode = VK_CULL_MODE_BACK_BIT;
 	VkPolygonMode polygon_mode = VK_POLYGON_MODE_FILL;
 	VkBool32 depth_write_enable = VK_TRUE;
 	VkBool32 depth_test_enable = VK_TRUE;
 	VkCompareOp depth_compare_op = VK_COMPARE_OP_LESS;
+	VkBool32 stencil_enable = VK_FALSE;
+	VkCompareOp stencil_compare_op = VK_COMPARE_OP_ALWAYS;
+	uint32_t stencil_compare_value = 0xFFFFFFFF;
+	uint32_t stencil_compare_mask = 0xFFFFFFFF;
+	uint32_t stencil_write = 0;
 
 	inline PipelineBuilder cullMode(VkCullModeFlags value) { culling_mode = value; return *this; }
 	inline PipelineBuilder polygonMode(VkPolygonMode value) { polygon_mode = value; return *this; }
 	inline PipelineBuilder depthWrite(VkBool32 value) { depth_write_enable = value; return *this; }
 	inline PipelineBuilder depthTest(VkBool32 value) { depth_test_enable = value; return *this; }
 	inline PipelineBuilder depthOp(VkCompareOp value) { depth_compare_op = value; return *this; }
+	inline PipelineBuilder stencil() { stencil_enable = true; return *this; }
+	inline PipelineBuilder stencilCompare(VkCompareOp value, uint32_t compare_value, uint32_t compare_mask = 0xFFFFFFFF)
+	{ stencil_enable = true; stencil_compare_op = value; stencil_compare_value = compare_value; stencil_compare_mask = compare_mask;  return *this; }
+	inline PipelineBuilder stencilWrite(uint32_t value) { stencil_enable = true; stencil_write = value; return *this; }
 };
 
 class Pipeline : public Destructible

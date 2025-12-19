@@ -86,7 +86,7 @@ public:
 	                         final_render_pass) const;
 	void resizeBuffers(uint32_t width, uint32_t height);
 	inline VkExtent2D getExpectedExtent() const { return expected_extent; }
-	Ref<Texture> getFinalImage() const;
+	std::pair<Ref<Texture>, bool> getFinalImage() const;
 	Ref<Material> getMaterialForStep(size_t step);
 
 	void drawImGuiDebug();

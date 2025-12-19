@@ -65,7 +65,22 @@ Pipeline::Pipeline(Ref<Shader> shader, PipelineBuilder config, Ref<RenderPass> r
     depth.depthWriteEnable = config.depth_write_enable;
     depth.depthTestEnable = config.depth_test_enable;
     depth.depthBoundsTestEnable = VK_FALSE;
-    depth.stencilTestEnable = VK_FALSE;
+    depth.stencilTestEnable = config.stencil_enable;
+    if (config.stencil_enable)
+    {
+        VkStencilOpState front_and_back{ };
+        front_and_back.failOp = VK_STENCIL_OP_KEEP;
+        front_and_back.passOp = VK_STENCIL_OP_REPLACE;
+        front_and_back.depthFailOp = VK_STENCIL_OP_KEEP;
+        front_and_back.compareOp = config.stencil_compare_op;
+        front_and_back.reference = config.stencil_compare_value;
+        front_and_back.compareMask = config.stencil_compare_mask;
+        front_and_back.writeMask = config.stencil_write;
+        if (!(config.culling_mode & VK_CULL_MODE_FRONT_BIT))
+            depth.front = front_and_back;
+        if (!(config.culling_mode & VK_CULL_MODE_BACK_BIT))
+            depth.back = front_and_back;
+    }
 
     vector<VkPipelineColorBlendAttachmentState> colour_attachment_blends;
     VkPipelineColorBlendAttachmentState colour_blend_attachment{ };

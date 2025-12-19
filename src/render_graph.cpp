@@ -66,15 +66,18 @@ void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, R
         }
     }
     
-    WeakRef<Texture> new_passthrough_tex = getFinalImage();
+    auto final_image_info = getFinalImage();
+    WeakRef<Texture> new_passthrough_tex = final_image_info.first;
     if (!new_passthrough_tex)
         new_passthrough_tex = RenderServer::getDefaultTextureSampler().first;
-    if (new_passthrough_tex != passthrough_texture)
+    static bool in_stencil_mode = false;
+    if (new_passthrough_tex != passthrough_texture || final_image_info.second != in_stencil_mode)
     {
         passthrough->setTexture(0, new_passthrough_tex);
         passthrough_texture = new_passthrough_tex;
+        in_stencil_mode = final_image_info.second;
         if (new_passthrough_tex->getFormat() == Texture::depth_format)
-            passthrough->setIntUniform("display_depth", 1);
+            passthrough->setIntUniform("display_depth", in_stencil_mode ? 2 : 1);
         else
             passthrough->setIntUniform("display_depth", 0);
     }
@@ -211,13 +214,18 @@ void RenderGraph::resizeBuffers(uint32_t width, uint32_t height)
     expected_extent = { width, height };
 }
 
-Ref<Texture> RenderGraph::getFinalImage() const
+pair<Ref<Texture>, bool> RenderGraph::getFinalImage() const
 {
     if (execution_steps.empty())
-        return nullptr;
-    if (output_step == (size_t)-1)
-        return execution_steps[execution_steps.size() - 1].render_pass->getImage(output_image);
-    return execution_steps[output_step % execution_steps.size()].render_pass->getImage(output_image);
+        return { nullptr, false };
+    auto& step = (output_step == (size_t)-1) ? execution_steps[execution_steps.size() - 1] : execution_steps[output_step % execution_steps.size()];
+    size_t attachment = output_image;
+    auto config = step.render_pass->getOutputConfig();
+    size_t max_attachments = config.additional_attachments + (config.has_depth_attachment ? 2 : 1);
+    bool is_stencil = false;
+    if (output_image == max_attachments + 1)
+        is_stencil = true;
+    return { step.render_pass->getImage(is_stencil ? output_image - 1 : output_image), is_stencil };
 }
 
 Ref<Material> RenderGraph::getMaterialForStep(size_t step)

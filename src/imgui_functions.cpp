@@ -524,7 +524,7 @@ void RenderGraph::drawImGuiDebug()
 	if (ImGui::CollapsingHeader("render graph", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::InputInt("show step", &output_step, 1, 1);
-		ImGui::SliderInt("show attachment", &output_image, 0, 4);
+		ImGui::SliderInt("show attachment", &output_image, 0, 5);
 
 		static int pass_details_index = 0;
 		ImGui::BeginTable("passes", 7, ImGuiTableFlags_Borders);

@@ -42,7 +42,7 @@ void initScene(Ref<Scene> scene)
     asha = scene->insertObject<StaticMesh>(new StaticMesh(
         Engine::keepLoaded(new Mesh("res://asha/asha.obj")),
         Engine::keepLoaded(new Material(
-            shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE)
+            shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE).stencilWrite(1)
         ))));
     asha->material->setTexture("albedo", new Texture("res://asha/asha.png"));
     asha->material->setSampler("albedo", sampler);
@@ -50,8 +50,8 @@ void initScene(Ref<Scene> scene)
 
     Ref<StaticMesh> bunny = scene->insertObject<StaticMesh>(new StaticMesh(
         Engine::keepLoaded(new Mesh("res://bunny.obj")),
-        Engine::keepLoaded(new Material(shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE)))
-    ));
+        Engine::keepLoaded(new Material(shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE).stencilWrite(2)
+        ))));
     bunny->material->setTexture("albedo", new Texture("res://bunny.png"));
     bunny->material->setSampler("albedo", sampler);
     bunny->setParent(asha);
