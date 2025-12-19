@@ -1,9 +1,6 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
-#include <glm/mat4x4.hpp>
 #include <imgui.h>
 #include <vulkan/vulkan.h>
 #include <iostream>
@@ -11,7 +8,6 @@
 #include <random>
 #include <thread>
 #include <string>
-#include <map>
 #if defined(_WIN32)
 #undef APIENTRY
 #include <Windows.h>
