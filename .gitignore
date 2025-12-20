@@ -4,3 +4,4 @@ bin
 *.spv
 *.log
 resources.hop
+imgui.ini
