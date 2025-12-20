@@ -1,0 +1,16 @@
+Resource(shader, "res://pbr") : shader;
+Resource(texture, "res://museum/PalmFrond_t.png") : albedo;
+Resource(texture, "res://museum/PalmFrond_n.png") : normal;
+
+Shader(resource = @shader);
+Culling(mode = NONE);
+Texture(binding = "albedo_tex", resource = @albedo, filter = NEAREST);
+Texture(binding = "normal_map", resource = @normal, filter = NEAREST);
+Uniform()
+{
+    vec4("diffuse", [ 1, 1, 1, 1 ]);
+    vec4("specular", [ 1, 1, 1, 1 ]);
+    vec4("emissive", [ 0, 0, 0, 0 ]);
+    float("specular_exponent", 12);
+    float("specular_factor", 0.5);
+};

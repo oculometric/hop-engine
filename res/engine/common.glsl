@@ -9,14 +9,6 @@ struct Light
     float padding;
 };
 
-struct Material
-{
-    vec4 diffuse;
-    vec4 specular;
-    vec4 emissive;
-    float specular_exponent;
-};
-
 layout(set = 0, binding = 0) uniform SceneUniforms
 {
     mat4 world_to_view;

@@ -233,43 +233,52 @@ vector<TokenReader::Token> TokenReader::tokenise(const string& content, bool tri
     return tokens;
 }
 
-size_t TokenReader::findClosingBrace(const vector<Token>& tokens, size_t open_index, const string& original_content)
+vector<TokenReader::Token>::const_iterator TokenReader::findClosingBrace(const vector<Token>& tokens, const vector<Token>::const_iterator open_index, const string& original_content)
 {
     vector<Token> brackets;
-    size_t index = open_index;
+    vector<Token>::const_iterator index = open_index;
 
-    while (index < tokens.size())
+    while (index != tokens.end())
     {
-        switch (tokens[index].type)
+        switch (index->type)
         {
         case OPEN_ROUND:
         case OPEN_CURLY:
-            brackets.push_back(tokens[index]);
+            brackets.push_back(*index);
             break;
         case CLOSE_ROUND:
             if (!brackets.empty() && brackets[brackets.size() - 1].type == TokenType::OPEN_ROUND)
                 brackets.pop_back();
             else
-                return reportError("invalid closing bracket", tokens[index].start_offset, original_content);
+            {
+                reportError("invalid closing bracket", index->start_offset, original_content);
+                return tokens.end();
+            }
             break;
         case CLOSE_CURLY:
             if (!brackets.empty() && brackets[brackets.size() - 1].type == TokenType::OPEN_CURLY)
                 brackets.pop_back();
             else
-                return reportError("invalid closing curly brace", tokens[index].start_offset, original_content);
+            {
+                reportError("invalid closing curly brace", index->start_offset, original_content);
+                return tokens.end();
+            }
             break;
         default:
             break;
         }
 
-        if (brackets.size() == 0)
+        if (brackets.empty())
             break;
 
         ++index;
     }
 
-    if (index >= tokens.size())
-        return reportError("missing closing " + string(tokens[open_index].type == TokenType::OPEN_ROUND ? "bracket" : "curly brace"), tokens[open_index].start_offset, original_content);
+    if (index == tokens.end())
+    {
+        reportError("missing closing " + string(open_index->type == TokenType::OPEN_ROUND ? "bracket" : "curly brace"), open_index->start_offset, original_content);
+        return tokens.end();
+    }
 
     return index;
 }
@@ -321,7 +330,9 @@ vector<TokenReader::Statement> TokenReader::extractSyntaxTree(const vector<Token
                 if (current_it->type == OPEN_ROUND)
                 {
                     arg_start_it = current_it;
-                    arg_end_it = tokens.begin() + findClosingBrace(tokens, current_it - tokens.begin(), original_content);
+                    arg_end_it = findClosingBrace(tokens, current_it, original_content);
+                    if (arg_end_it == tokens.end())
+                        return { };
                     current_it = arg_end_it;
                     stage = 2;
                 }
@@ -372,7 +383,9 @@ vector<TokenReader::Statement> TokenReader::extractSyntaxTree(const vector<Token
                 if (current_it->type == OPEN_CURLY)
                 {
                     children_start_it = current_it;
-                    children_end_it = tokens.begin() + findClosingBrace(tokens, current_it - tokens.begin(), original_content);
+                    children_end_it = findClosingBrace(tokens, current_it, original_content);
+                    if (children_end_it == tokens.end())
+                        return { };
                     current_it = children_end_it;
                     stage = 5;
                 }

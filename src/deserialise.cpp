@@ -35,7 +35,7 @@ bool getAnonArgument(size_t index, string& result, TokenReader::TokenType type, 
 	return true;
 }
 
-bool getAnonArgument(size_t index, glm::vec4 result, const vector<pair<string, TokenReader::Token>>& args)
+bool getAnonArgument(size_t index, glm::vec4& result, const vector<pair<string, TokenReader::Token>>& args)
 {
 	if (index >= args.size())
 		return false;
@@ -47,7 +47,7 @@ bool getAnonArgument(size_t index, glm::vec4 result, const vector<pair<string, T
 	return true;
 }
 
-bool getAnonArgument(size_t index, float result, const vector<pair<string, TokenReader::Token>>& args)
+bool getAnonArgument(size_t index, float& result, const vector<pair<string, TokenReader::Token>>& args)
 {
 	if (index >= args.size())
 		return false;

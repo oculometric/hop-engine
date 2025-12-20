@@ -5,8 +5,14 @@
 
 layout(set = 2, binding = 0) uniform MaterialInfo
 {
-    Material material;
-};
+    vec4 diffuse;
+    vec4 specular;
+    vec4 emissive;
+    float specular_exponent;
+    float specular_factor;
+    float use_triplanar;
+    float triplanar_scale;
+} material;
 
 layout(set = 2, binding = 1) uniform sampler2D albedo_tex;
 layout(set = 2, binding = 2) uniform sampler2D normal_map;
@@ -48,7 +54,7 @@ vec3 sampleLight(Light light, vec3 alb, vec3 norm, vec3 pixel_to_eye)
         return vec3(0);
 
     float n_dot_l = 0;
-    if (dot(pixel_to_light, frag.normal.xyz) > 0.0f)
+    if (dot(pixel_to_light, frag.normal.xyz) > 0.0f) // TODO: backside lighting
         n_dot_l = saturate(dot(pixel_to_light, norm));
     float specular = 0.0f;
     if (n_dot_l > 0.0f)
@@ -60,7 +66,7 @@ vec3 sampleLight(Light light, vec3 alb, vec3 norm, vec3 pixel_to_eye)
 
     vec3 result = material.emissive.rgb
                 + (alb * material.diffuse.rgb * light.colour.rgb * frag.colour.rgb * n_dot_l * attenuation)
-                + (material.specular.rgb * light.colour.rgb * specular * attenuation);
+                + (material.specular.rgb * light.colour.rgb * specular * attenuation * material.specular_factor);
 
     return result;
 }
@@ -69,8 +75,17 @@ void main()
 {
     vec3 pixel_to_eye = normalize(scene.eye_position - frag.position.xyz);
 
-    vec4 albedo = texture(albedo_tex, frag.uv);
-    vec3 normal_val = normalize((toLinear(texture(normal_map, frag.uv).rgb) * 2.0f - 1.0f));
+    vec2 uv = frag.uv;
+    if (material.use_triplanar > 0)
+    {
+        uv = abs(frag.normal.z) > 0.701f ? frag.position.xy : (abs(frag.normal.x) > 0.701f ? frag.position.yz : frag.position.xz);
+        uv *= material.triplanar_scale;
+    }
+    
+    vec4 albedo = texture(albedo_tex, uv);
+    if (albedo.a < 0.5f)
+        discard;
+    vec3 normal_val = normalize((toLinear(texture(normal_map, uv).rgb) * 2.0f - 1.0f));
     normal_val.y *= -1;
     vec3 bitangent = normalize(cross(frag.tangent.xyz, frag.normal.xyz));
     mat3 tbn = mat3(frag.tangent.xyz, bitangent, frag.normal.xyz);

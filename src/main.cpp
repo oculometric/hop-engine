@@ -87,7 +87,7 @@ static void initScene(Ref<Scene> scene)
 
     glm::vec4 samples[64];
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-    std::default_random_engine rand(time);
+    std::default_random_engine rand;
     for (int i = 0; i < 64; ++i)
     {
         glm::vec4 s = glm::vec4((dist(rand) * 2.0f) - 1.0f, (dist(rand) * 2.0f) - 1.0f, -dist(rand), 0.0f);
@@ -249,40 +249,57 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
 
 void initMaterialScene(Ref<Scene> scene)
 {
-    Ref<Shader> shader = new Shader("res://pbr", false);
-    Ref<Sampler> sampler = new Sampler(SamplerBuilder().filter(VK_FILTER_NEAREST));
-    obj = scene->insertObject<StaticMesh>(new StaticMesh(
-        new Mesh("res://cube.obj"),
-        new Material(shader)
-    ));
-    obj->material->setTexture("albedo_tex", new Texture("res://icon.png"));
-    obj->material->setTexture("normal_map", new Texture("res://BlackBricks_n.png"));
-    MaterialParams material;
-    obj->material->setUniform("material", &material, sizeof(MaterialParams));
+    scene->insertObject<StaticMesh>(new StaticMesh(
+        new Mesh("res://museum/Room01Concrete.obj"),
+        Material::deserialise("res://museum/ConcretePanels.hmat")));
+    scene->insertObject<StaticMesh>(new StaticMesh(
+        new Mesh("res://museum/Room01Bricks.obj"),
+        Material::deserialise("res://museum/BlackBricks.hmat")));
+    scene->insertObject<StaticMesh>(new StaticMesh(
+        new Mesh("res://museum/Room01Plaster.obj"),
+        Material::deserialise("res://museum/WhitePlaster.hmat")));
+    
+    auto palm = scene->insertObject<StaticMesh>(new StaticMesh(
+        new Mesh("res://museum/PalmTree1.obj"),
+        Material::deserialise("res://museum/PalmFrond.hmat")));
+    palm->transform.setPosition({ 0, 0, 0 });
+    
+    auto pillar = scene->insertObject<StaticMesh>(new StaticMesh(
+        new Mesh("res://museum/Pedestal3.obj"),
+        Material::deserialise("res://museum/Marble.hmat")));
+    pillar->transform.setPosition({ 0, 4, 0 });
+    auto pillar2 = scene->insertObject<StaticMesh>(new StaticMesh(
+        new Mesh("res://museum/Pedestal3.obj"),
+        Material::deserialise("res://museum/Marble.hmat")));
+    pillar2->transform.setPosition({ 0, 6, 0 });
+    auto pillar3 = scene->insertObject<StaticMesh>(new StaticMesh(
+        new Mesh("res://museum/Pedestal3.obj"),
+        Material::deserialise("res://museum/Marble.hmat")));
+    pillar3->transform.setPosition({ 0, 8, 0 });
 
     auto sun_lamp = scene->insertObject<Light>(new Light(Light::DIRECTIONAL));
     sun_lamp->transform.setLocalPosition({ 1, 0, 2 });
     sun_lamp->transform.rotateLocal({ 20.0f, 30.0f, 0.0f });
-    sun_lamp->colour = { 0.4f, 0.4f, 0.4f, 0.0f };
+    sun_lamp->colour = { 1.0f, 1.0f, 1.0f, 0.0f };
 
-    auto other_lamp = scene->insertObject<Light>(new Light(Light::SPOT));
-    other_lamp->transform.setLocalPosition({ 0, -2, 2 });
-    other_lamp->colour = { 200.0f, 0.0f, 0.0f, 0.0f };
-    other_lamp->spot_angle = 15.0f;
-    other_lamp->transform.rotateLocal({ 45.0f, 0.0f, 0.0f });
-
-    scene->getCamera(0)->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
-        glm::vec3(0.0f, 0.0f, 0.0f),
+    auto other_lamp = scene->insertObject<Light>(new Light(Light::POINT));
+    other_lamp->colour = { 0.5f, 0.5f, 0.5f, 0.0f };
+    other_lamp->setParent(scene->getCamera(0));
+    
+    scene->getCamera(0)->transform.lookAt(glm::vec3(0.0f, -7.5f, 1.73f),
+        glm::vec3(0.0f, 1.0f, 1.73f),
         glm::vec3(0.0f, 0.0f, 1.0f));
+    
+    scene->skybox = new Texture("res://nasa_goddard_gaia_dr2_deep_star_map.png");
 }
 
 static int selected_scene = 0;
 
 void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
 {
-    ImGui::Begin("colour correction", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     if (selected_scene == 0)
     {
+    ImGui::Begin("colour correction", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
         WeakRef<Material> mat = scene->render_graph->getMaterialForStep(5);
         if (mat)
         {
@@ -307,8 +324,8 @@ void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
         }
         else
             ImGui::Text("couldn't find the colour correction step!");
-    }
     ImGui::End();
+    }
 
     Engine::drawImGuiDebug(delta_time);
 }
@@ -325,7 +342,7 @@ static std::vector<SceneFuncSet> scenes =
 {
     { L"bunnygirl", initScene, updateScene, imGuiDrawFunc },
     { L"nodes", initNodeScene, updateNodeScene, imGuiDrawFunc },
-    { L"material", initMaterialScene, updateScene, imGuiDrawFunc },
+    { L"museum", initMaterialScene, updateScene, imGuiDrawFunc },
 };
 
 #if defined(_WIN32)
@@ -380,6 +397,7 @@ int main()
         const auto& scene = scenes[selected_scene];
 
         Engine::setup(scene.init_func, scene.update_func, scene.imgui_func);
+        Engine::debugClearSelection();
 
         Engine::mainLoop();
 

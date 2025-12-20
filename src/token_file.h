@@ -157,7 +157,7 @@ public:
     DELETE_CONSTRUCTORS(TokenReader);
 
     static std::vector<Token> tokenise(const std::string& content, bool trim_comments = true, bool trim_whitespace = true);
-    static size_t findClosingBrace(const std::vector<Token>& tokens, size_t open_index, const std::string& original_content);
+    static std::vector<Token>::const_iterator findClosingBrace(const std::vector<Token>& tokens, const std::vector<Token>::const_iterator open_index, const std::string& original_content);
     static std::vector<Statement> extractSyntaxTree(const std::vector<Token>& tokens, const std::string& original_content);
 
     static bool readStatement(const Statement& statement, bool children_allowed, bool requires_identifier, const std::vector<TokenType> expected_args, std::vector<Token>& extracted_args, std::string error_base);

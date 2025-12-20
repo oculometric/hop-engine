@@ -235,6 +235,11 @@
     <None Include="res\engine\skybox.vert" />
     <None Include="res\half_and_half.frag" />
     <None Include="res\half_and_half.vert" />
+    <None Include="res\museum\BlackBricks.hmat" />
+    <None Include="res\museum\ConcretePanels.hmat" />
+    <None Include="res\museum\Marble.hmat" />
+    <None Include="res\museum\PalmFrond.hmat" />
+    <None Include="res\museum\WhitePlaster.hmat" />
     <None Include="res\pbr.frag" />
     <None Include="res\pbr.vert" />
     <None Include="res\psx.frag" />
