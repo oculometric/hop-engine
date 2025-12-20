@@ -1,7 +1,6 @@
 # TODO
 
 - blur post process effect
-- fog post process
 - full colour grading + LUT post process
 - scene deserialisation
 - controller support
@@ -15,3 +14,4 @@
 - separate engine from game resources
 - material deserialisation needs support for stencil pipeline controls
 - fix broken comments in deserialiser (does not detect end correctly)
+- custom shader format to keep stuff in one file

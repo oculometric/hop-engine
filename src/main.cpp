@@ -290,6 +290,18 @@ void initMaterialScene(Ref<Scene> scene)
         glm::vec3(0.0f, 1.0f, 1.73f),
         glm::vec3(0.0f, 0.0f, 1.0f));
     
+    scene->render_graph = new RenderGraph(RenderGraphBuilder()
+        .addCamera(0)
+        .addPostProcess(Engine::loadShader("res://engine/fog"), { 
+                { 0, RenderTextureBinding(0, 0) },
+                { 1, RenderTextureBinding(0, 4) },
+            }));
+    auto fog_mat = scene->render_graph->getMaterialForStep(1);
+    fog_mat->setFloatUniform("fog_start", 4.0f);
+    fog_mat->setFloatUniform("fog_end", 32.0f);
+    fog_mat->setFloatUniform("fog_exponent", 2.0f);
+    fog_mat->setVec4Uniform("fog_colour", { 1, 0, 1, 0 });
+    
     scene->skybox = Engine::loadTexture("res://nasa_goddard_gaia_dr2_deep_star_map.png");
 }
 
