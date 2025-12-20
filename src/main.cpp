@@ -115,7 +115,8 @@ void updateScene(Ref<Scene> scene, float delta_time)
     if (obj)
         obj->transform.rotateLocal({ 0, 0, 20 * delta_time });
 
-    gizmo->trackObject(Engine::getDebugSelection(), scene->getCamera(0));
+    if (gizmo)
+        gizmo->trackObject(Engine::getDebugSelection(), scene->getCamera(0));
 
     Input::resetMouseDelta();
 }
