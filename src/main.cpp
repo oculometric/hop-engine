@@ -28,6 +28,7 @@ static WeakRef<StaticMesh> obj;
 static WeakRef<NodeView> node_view;
 static WeakRef<Gizmo> gizmo;
 static WeakRef<NodeView::Node> selected_node;
+static WeakRef<Material> cc_material;
 
 static void initScene(Ref<Scene> scene)
 {
@@ -96,6 +97,7 @@ static void initScene(Ref<Scene> scene)
         samples[i] = v;
     }
     scene->render_graph->getMaterialForStep(3)->setUniform("samples", samples, sizeof(glm::vec4) * 64);
+    cc_material = scene->render_graph->getMaterialForStep(4);
 
     Engine::debugClearSelection(asha.cast<Object>(), asha->material);
 }
@@ -295,12 +297,22 @@ void initMaterialScene(Ref<Scene> scene)
         .addPostProcess(Engine::loadShader("res://engine/fog"), { 
                 { 0, RenderTextureBinding(0, 0) },
                 { 1, RenderTextureBinding(0, 4) },
+            })
+        .addPostProcess(Engine::loadShader("res://engine/colour_correct"), { 
+            { 0, RenderTextureBinding(1, 0) },
             }));
     auto fog_mat = scene->render_graph->getMaterialForStep(1);
     fog_mat->setFloatUniform("fog_start", 4.0f);
     fog_mat->setFloatUniform("fog_end", 32.0f);
     fog_mat->setFloatUniform("fog_exponent", 2.0f);
     fog_mat->setVec4Uniform("fog_colour", { 1, 0, 1, 0 });
+    
+    cc_material = scene->render_graph->getMaterialForStep(2);
+    cc_material->setFloatUniform("gamma", 1.0f);
+    cc_material->setFloatUniform("exposure", 1.0f);
+    cc_material->setFloatUniform("offset", 0.0f);
+    cc_material->setTexture("lut", Engine::loadTexture("res://museum/lut.png"));
+    cc_material->setFloatUniform("use_lut", 1);
     
     scene->skybox = Engine::loadTexture("res://nasa_goddard_gaia_dr2_deep_star_map.png");
 }
@@ -309,34 +321,28 @@ static int selected_scene = 0;
 
 void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
 {
-    if (selected_scene == 0)
+    if (cc_material)
     {
-    ImGui::Begin("colour correction", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-        WeakRef<Material> mat = scene->render_graph->getMaterialForStep(5);
-        if (mat)
-        {
-            static float gamma = 0;
-            static float new_gamma = 1.2f;
-            static float exposure = 0;
-            static float new_exposure = 1.5f;
-            static float offset = 0;
-            static float new_offset = 0.0f;
-            ImGui::SliderFloat("gamma", &new_gamma, 0.001f, 4.0f);
-            ImGui::SliderFloat("exposure", &new_exposure, 0.001f, 16.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
-            ImGui::SliderFloat("offset", &new_offset, -2.0f, 2.0f);
-            if (gamma != new_gamma)
-                mat->setFloatUniform("gamma", new_gamma);
-            if (exposure != new_exposure)
-                mat->setFloatUniform("exposure", new_exposure);
-            if (offset != new_offset)
-                mat->setFloatUniform("offset", new_offset);
-            gamma = new_gamma;
-            exposure = new_exposure;
-            offset = new_offset;
-        }
-        else
-            ImGui::Text("couldn't find the colour correction step!");
-    ImGui::End();
+        ImGui::Begin("colour correction", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+        static float gamma = 0;
+        static float new_gamma = 1.0f;
+        static float exposure = 0;
+        static float new_exposure = 1.0f;
+        static float offset = 0;
+        static float new_offset = 0.0f;
+        ImGui::SliderFloat("gamma", &new_gamma, 0.001f, 4.0f);
+        ImGui::SliderFloat("exposure", &new_exposure, 0.001f, 16.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
+        ImGui::SliderFloat("offset", &new_offset, -2.0f, 2.0f);
+        if (gamma != new_gamma)
+            cc_material->setFloatUniform("gamma", new_gamma);
+        if (exposure != new_exposure)
+            cc_material->setFloatUniform("exposure", new_exposure);
+        if (offset != new_offset)
+            cc_material->setFloatUniform("offset", new_offset);
+        gamma = new_gamma;
+        exposure = new_exposure;
+        offset = new_offset;
+        ImGui::End();
     }
 
     Engine::drawImGuiDebug(delta_time);
