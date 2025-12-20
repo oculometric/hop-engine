@@ -1,0 +1,2 @@
+magick mogrify -path bigger -format bmp -filter point -resize 60x48 *.png
+potrace -s -n -a 0 --flat bigger/*.bmp  
