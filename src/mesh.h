@@ -44,7 +44,7 @@ public:
 	inline size_t getVertexCount() const { return vertex_count; }
 	inline size_t getIndexCount() const { return index_count; }
 	void updateData(std::vector<Vertex> vertices, std::vector<uint16_t> indices, size_t vertex_alloc = 0, size_t index_alloc = 0);
-	inline std::string getOrigin() const { return origin; }
+	inline std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 
 	static VkVertexInputBindingDescription getBindingDescription();
 	static std::array<VkVertexInputAttributeDescription, 5> getAttributeDescriptions();

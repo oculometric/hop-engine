@@ -39,7 +39,7 @@ public:
 	VkImageView getView(bool stencil = false);
 	inline glm::ivec2 getSize() const { return { width, height }; }
 	inline VkFormat getFormat() const { return format; }
-	inline std::string getOrigin() const { return origin; }
+	inline std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 
 private:
 	void createImage();

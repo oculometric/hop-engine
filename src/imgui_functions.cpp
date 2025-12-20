@@ -35,16 +35,7 @@ Ref<Texture> texturePicker(Ref<Texture> current, const char* str)
 	string options_str;
 	for (auto opt : options)
 	{
-		if (opt == nullptr)
-			options_str += PTR(0);
-		else
-		{
-			string origin = opt->getOrigin();
-			if (origin.empty())
-				options_str += PTR(opt.get());
-			else
-				options_str += origin;
-		}
+		options_str += opt->getOrigin();
 		options_str.resize(options_str.size() + 1);
 	}
 	ImGui::Combo(str, &selected, options_str.c_str());
@@ -61,16 +52,7 @@ Ref<Mesh> meshPicker(Ref<Mesh> current, const char* str)
 	string options_str;
 	for (auto opt : options)
 	{
-		if (opt == nullptr)
-			options_str += PTR(0);
-		else
-		{
-			string origin = opt->getOrigin();
-			if (origin.empty())
-				options_str += PTR(opt.get());
-			else
-				options_str += origin;
-		}
+		options_str += opt->getOrigin();
 		options_str.resize(options_str.size() + 1);
 	}
 	ImGui::Combo(str, &selected, options_str.c_str());
@@ -87,16 +69,7 @@ Ref<Material> materialPicker(Ref<Material> current, const char* str)
 	string options_str;
 	for (auto opt : options)
 	{
-		if (opt == nullptr)
-			options_str += PTR(0);
-		else
-		{
-			string origin;
-			if (origin.empty())
-				options_str += PTR(opt.get());
-			else
-				options_str += origin;
-		}
+		options_str += opt->getOrigin();
 		options_str.resize(options_str.size() + 1);
 	}
 	ImGui::Combo(str, &selected, options_str.c_str());
@@ -548,7 +521,7 @@ void RenderGraph::drawImGuiDebug()
 				ImGui::Text("%i", pass.camera_slot);
 			ImGui::TableSetColumnIndex(2);
 			if (!pass.is_camera)
-				ImGui::Text("%s", PTR(pass.material.get()).c_str());
+				ImGui::Text("%s", pass.material->getOrigin().c_str());
 			ImGui::TableSetColumnIndex(3);
 			if (!pass.is_camera)
 				ImGui::Text("%i", pass.texture_bindings.size());

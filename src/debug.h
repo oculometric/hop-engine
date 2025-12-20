@@ -89,7 +89,7 @@ public:
 	static void write(std::string description, DebugLevel severity);
 	static void flush();
 	static void close();
-	static std::string pointerToString(void* ptr);
+	static std::string pointerToString(const void* ptr);
 
 private:
 	Debug();

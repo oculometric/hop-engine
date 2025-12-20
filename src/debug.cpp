@@ -122,7 +122,7 @@ void Debug::close()
 #endif
 }
 
-string Debug::pointerToString(void* ptr)
+string Debug::pointerToString(const void* ptr)
 {
 	return format("0x{:x}", (size_t)ptr);
 }

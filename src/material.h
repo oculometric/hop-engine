@@ -22,6 +22,7 @@ private:
 	Ref<RenderPass> render_pass;
 	std::map<std::string, uint32_t> texture_name_to_binding;
 	std::map<std::string, UniformVariable> variable_name_to_binding;
+	std::string origin;
 
 public:
 	DELETE_CONSTRUCTORS(Material);
@@ -36,6 +37,7 @@ public:
 	Ref<Shader> getShader() const;
 	Ref<RenderPass> getRenderPass() const;
 	Ref<Material> duplicate() const;
+	inline std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 	
 	void setTexture(uint32_t binding, Ref<Texture> texture, bool use_stencil = false);
 	void setSampler(uint32_t binding, Ref<Sampler> sampler);

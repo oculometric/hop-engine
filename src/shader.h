@@ -60,7 +60,7 @@ public:
 	inline VkPipelineLayout getPipelineLayout() const { return pipeline_layout; }
 	std::vector<VkPipelineShaderStageCreateInfo> getShaderStageCreateInfos() const;
 	ShaderLayout getShaderLayout() const;
-	inline std::string getOrigin() const { return origin; }
+	inline std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 	bool reloadShader();
 
 private:

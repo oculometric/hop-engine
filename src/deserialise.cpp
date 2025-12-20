@@ -1,3 +1,5 @@
+#include <filesystem>
+
 #include "material.h"
 #include "texture.h"
 #include "shader.h"
@@ -419,6 +421,7 @@ Ref<Material> Material::deserialise(string name)
 		}
 	}
 
+	material->origin = name;
 	return material;
 }
 
