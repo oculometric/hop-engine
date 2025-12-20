@@ -13,7 +13,7 @@ namespace HopEngine
 class NodeView : public StaticMesh
 {
 public:
-	enum NodeElementType
+	enum NodeElementType : uint8_t
 	{
 		ELEMENT_INPUT,
 		ELEMENT_OUTPUT,
@@ -28,6 +28,9 @@ public:
 		NodeElementType type;
 		int pin_type = 0;
 		bool pin_solid = true;
+		
+		inline NodeElement(const std::string& _text, const NodeElementType _type, const int _pin_type = 0, const bool _pin_solid = true)
+			: text(_text), type(_type), pin_type(_pin_type), pin_solid(_pin_solid) { }
 	};
 
 	struct Node

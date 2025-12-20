@@ -23,15 +23,13 @@
 
 using namespace HopEngine;
 
-WeakRef<StaticMesh> asha;
-WeakRef<StaticMesh> obj;
-WeakRef<NodeView> node_view;
-WeakRef<Gizmo> gizmo;
-WeakRef<NodeView::Node> selected_node;
+static WeakRef<StaticMesh> asha;
+static WeakRef<StaticMesh> obj;
+static WeakRef<NodeView> node_view;
+static WeakRef<Gizmo> gizmo;
+static WeakRef<NodeView::Node> selected_node;
 
-Spline camera_spline;
-
-void initScene(Ref<Scene> scene)
+static void initScene(Ref<Scene> scene)
 {
     Ref<Shader> shader = new Shader("res://psx", false);
     Ref<Sampler> sampler = new Sampler(SamplerBuilder().filter(VK_FILTER_NEAREST));
@@ -66,9 +64,6 @@ void initScene(Ref<Scene> scene)
     sun_lamp->transform.rotateLocal({ -17.0f, -34.0f, -189.0f });
     sun_lamp->colour = { 1.0f, 1.0f, 1.0f, 0.0f };
 
-    camera_spline.loop = true;
-    camera_spline.points = { { 0, -1, 0.5f }, { 1, 0, 0.5f }, { 0, 1, 0.5f }, { -1, 0, 0.5f } };
-
     scene->getCamera(0)->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f));
@@ -92,11 +87,11 @@ void initScene(Ref<Scene> scene)
 
     glm::vec4 samples[64];
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-    std::default_random_engine rand;
+    std::default_random_engine rand(time);
     for (int i = 0; i < 64; ++i)
     {
         glm::vec4 s = glm::vec4((dist(rand) * 2.0f) - 1.0f, (dist(rand) * 2.0f) - 1.0f, -dist(rand), 0.0f);
-        float fi = (float)i / (float)64;
+        const float fi = static_cast<float>(i) / 64.0f;
         glm::vec4 v = glm::normalize(s * (0.05f + ((1.0f - 0.05f) * fi * fi)));
         samples[i] = v;
     }
@@ -105,7 +100,7 @@ void initScene(Ref<Scene> scene)
     Engine::debugClearSelection(asha.cast<Object>(), asha->material);
 }
 
-void updateScene(Ref<Scene> scene, float delta_time)
+static void updateScene(Ref<Scene> scene, float delta_time)
 {
     static float total_time = 0;
     total_time += delta_time;
@@ -121,20 +116,20 @@ void updateScene(Ref<Scene> scene, float delta_time)
     Input::resetMouseDelta();
 }
 
-void initNodeScene(Ref<Scene> scene)
+static void initNodeScene(Ref<Scene> scene)
 {
     node_view = scene->insertObject<NodeView>(new NodeView());
     node_view->nodes.push_back(new NodeView::Node
         { "Hello, World!",
         {
-            { "Outputs on right", NodeView::ELEMENT_OUTPUT },
-            { "text 6px inwards", NodeView::ELEMENT_OUTPUT },
-            { "text 4px down", NodeView::ELEMENT_OUTPUT },
-            { "Inputs on the left", NodeView::ELEMENT_INPUT },
-            { "", NodeView::ELEMENT_SPACE },
-            { "mixed-width font!", NodeView::ELEMENT_BLOCK },
-            { "above is a banner", NodeView::ELEMENT_TEXT },
-            { "extra bottom spacing", NodeView::ELEMENT_TEXT },
+            NodeView::NodeElement("Outputs on right", NodeView::ELEMENT_OUTPUT),
+            NodeView::NodeElement( "text 6px inwards", NodeView::ELEMENT_OUTPUT),
+            NodeView::NodeElement( "text 4px down", NodeView::ELEMENT_OUTPUT),
+            NodeView::NodeElement( "Inputs on the left", NodeView::ELEMENT_INPUT),
+            NodeView::NodeElement( "", NodeView::ELEMENT_SPACE),
+            NodeView::NodeElement( "mixed-width font!", NodeView::ELEMENT_BLOCK),
+            NodeView::NodeElement( "above is a banner", NodeView::ELEMENT_TEXT),
+            NodeView::NodeElement( "extra bottom spacing", NodeView::ELEMENT_TEXT),
         }, { 5, -10 }, 1 });
     node_view->nodes.push_back(new NodeView::Node
         { "multiply",
