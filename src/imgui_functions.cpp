@@ -561,9 +561,9 @@ void RenderGraph::drawImGuiDebug()
 						ImGui::TableSetColumnIndex(2);
 						ImGui::Text("%i", pair.second.output_index);
 						ImGui::TableSetColumnIndex(3);
-						ImGui::Text("%s", vk::to_string((vk::Filter)(pair.second.filter_mode)));
+						ImGui::Text("%s", vk::to_string((vk::Filter)(pair.second.filter_mode)).c_str());
 						ImGui::TableSetColumnIndex(4);
-						ImGui::Text("%s", vk::to_string((vk::SamplerAddressMode)(pair.second.address_mode)));
+						ImGui::Text("%s", vk::to_string((vk::SamplerAddressMode)(pair.second.address_mode)).c_str());
 					}
 					ImGui::EndTable();
 					ImGui::Separator();
