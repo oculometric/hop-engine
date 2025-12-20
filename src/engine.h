@@ -34,6 +34,10 @@ private:
 	void(* imgui_func)(Ref<Scene>, float) = nullptr;
 
 	std::multimap<const char*, WeakRef<void>> allocated_refs;
+	std::map<std::string, Ref<Shader>> loaded_shaders;
+	std::map<std::string, Ref<Material>> loaded_materials;
+	std::map<std::string, Ref<Texture>> loaded_textures;
+	std::map<std::string, Ref<Mesh>> loaded_meshes;
 	std::vector<Ref<Destructible>> keep_loaded_refs;
 
 	FrameStats last_frame_stats;
@@ -70,6 +74,11 @@ public:
 	static void debugCamera(float delta_time);
 	static void debugClearSelection(WeakRef<Object> object = WeakRef<Object>(), WeakRef<Material> material = WeakRef<Material>());
 	static WeakRef<Object> getDebugSelection();
+	
+	static Ref<Shader> loadShader(const std::string& path);
+	static Ref<Material> loadMaterial(const std::string& path);
+	static Ref<Texture> loadTexture(const std::string& path);
+	static Ref<Mesh> loadMesh(const std::string& path);
 	
 private:
 	Engine();

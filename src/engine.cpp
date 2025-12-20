@@ -142,6 +142,58 @@ float Engine::getSmoothedFPS()
     return engine->smoothed_fps;
 }
 
+Ref<Shader> Engine::loadShader(const string& path)
+{
+    const auto it = engine->loaded_shaders.find(path);
+    if (it == engine->loaded_shaders.end())
+    {
+        Ref<Shader> thing = new Shader(path, false);
+        engine->loaded_shaders[path] = thing;
+        return thing;
+    }
+    DBG_VERBOSE("reused shader '" + path + "' instead of duplicating");
+    return it->second;
+}
+
+Ref<Material> Engine::loadMaterial(const string& path)
+{
+    const auto it = engine->loaded_materials.find(path);
+    if (it == engine->loaded_materials.end())
+    {
+        Ref<Material> thing = Material::deserialise(path);
+        engine->loaded_materials[path] = thing;
+        return thing;
+    }
+    DBG_VERBOSE("reused material '" + path + "' instead of duplicating");
+    return it->second;
+}
+
+Ref<Texture> Engine::loadTexture(const string& path)
+{
+    const auto it = engine->loaded_textures.find(path);
+    if (it == engine->loaded_textures.end())
+    {
+        Ref<Texture> thing = new Texture(path);
+        engine->loaded_textures[path] = thing;
+        return thing;
+    }
+    DBG_VERBOSE("reused texture '" + path + "' instead of duplicating");
+    return it->second;
+}
+
+Ref<Mesh> Engine::loadMesh(const string& path)
+{
+    const auto it = engine->loaded_meshes.find(path);
+    if (it == engine->loaded_meshes.end())
+    {
+        Ref<Mesh> thing = new Mesh(path);
+        engine->loaded_meshes[path] = thing;
+        return thing;
+    }
+    DBG_VERBOSE("reused mesh '" + path + "' instead of duplicating");
+    return it->second;
+}
+
 void Engine::drawImGuiDebug(float delta_time)
 {
     engine->_drawImGuiDebug(delta_time);
@@ -167,6 +219,10 @@ Engine::~Engine()
 {
     scene = nullptr;
     keep_loaded_refs.clear();
+    loaded_shaders.clear();
+    loaded_materials.clear();
+    loaded_textures.clear();
+    loaded_meshes.clear();
 
     RenderServer::destroy();
     Package::destroy();

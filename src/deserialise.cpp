@@ -5,6 +5,7 @@
 #include "package.h"
 #include "sampler.h"
 #include "render_graph.h"
+#include "engine.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -193,9 +194,9 @@ Ref<Material> Material::deserialise(string name)
 				}, args, "error deserialising material '" + name + "'"))
 				return nullptr;
 			if (args[0].s_value == "shader")
-				shaders[statement.identifier] = new Shader(args[1].s_value, false);
+				shaders[statement.identifier] = Engine::loadShader(args[1].s_value);
 			else if (args[0].s_value == "texture")
-				textures[statement.identifier] = new Texture(args[1].s_value);
+				textures[statement.identifier] = Engine::loadTexture(args[1].s_value);
 			else
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid resource type");
@@ -453,7 +454,7 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 				}, args, "error deserialising render graph '" + name + "'"))
 				return nullptr;
 			if (args[0].s_value == "shader")
-				shaders[statement.identifier] = new Shader(args[1].s_value, false);
+				shaders[statement.identifier] = Engine::loadShader(args[1].s_value);
 			else
 			{
 				DBG_ERROR("error deserialising render graph '" + name + "': invalid resource type");

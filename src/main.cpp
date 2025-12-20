@@ -31,32 +31,32 @@ static WeakRef<NodeView::Node> selected_node;
 
 static void initScene(Ref<Scene> scene)
 {
-    Ref<Shader> shader = new Shader("res://psx", false);
+    Ref<Shader> shader = Engine::loadShader("res://psx");
     Ref<Sampler> sampler = new Sampler(SamplerBuilder().filter(VK_FILTER_NEAREST));
     asha = scene->insertObject<StaticMesh>(new StaticMesh(
-        Engine::keepLoaded(new Mesh("res://asha/asha.obj")),
+        Engine::loadMesh("res://asha/asha.obj"),
         Engine::keepLoaded(new Material(
             shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE).stencilWrite(1)
         ))));
-    asha->material->setTexture("albedo", new Texture("res://asha/asha.png"));
+    asha->material->setTexture("albedo", Engine::loadTexture("res://asha/asha.png"));
     asha->material->setSampler("albedo", sampler);
     asha->transform.setLocalPosition({ 0, 0, -0.9f });
 
     Ref<StaticMesh> bunny = scene->insertObject<StaticMesh>(new StaticMesh(
-        Engine::keepLoaded(new Mesh("res://bunny.obj")),
+        Engine::loadMesh("res://bunny.obj"),
         Engine::keepLoaded(new Material(shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE).stencilWrite(2)
         ))));
-    bunny->material->setTexture("albedo", new Texture("res://bunny.png"));
+    bunny->material->setTexture("albedo", Engine::loadTexture("res://bunny.png"));
     bunny->material->setSampler("albedo", sampler);
     bunny->setParent(asha);
     bunny->transform.setLocalPosition({ 0, -0.5f, 0.9f });
     bunny->transform.scaleLocal({ 2, 2, 2 });
 
     Ref<StaticMesh> tux = scene->insertObject<StaticMesh>(new StaticMesh(
-        Engine::keepLoaded(new Mesh("res://tux.obj")),
+        Engine::loadMesh("res://tux.obj"),
         Engine::keepLoaded(new Material(shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE)))
     ));
-    tux->material->setTexture("albedo", new Texture("res://tux.png"));
+    tux->material->setTexture("albedo", Engine::loadTexture("res://tux.png"));
     tux->material->setSampler("albedo", sampler);
     tux->transform.translateLocal({ 2, 0, 0 });
 
@@ -69,7 +69,7 @@ static void initScene(Ref<Scene> scene)
         glm::vec3(0.0f, 0.0f, 1.0f));
 
     gizmo = scene->insertObject<Gizmo>(new Gizmo());
-    scene->skybox = Engine::keepLoaded(new Texture("res://nasa_goddard_gaia_dr2_deep_star_map.png"));
+    scene->skybox = Engine::loadTexture("res://nasa_goddard_gaia_dr2_deep_star_map.png");
 
     Ref<Camera> second_cam = new Camera();
     scene->insertObject(second_cam);
@@ -250,31 +250,31 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
 void initMaterialScene(Ref<Scene> scene)
 {
     scene->insertObject<StaticMesh>(new StaticMesh(
-        new Mesh("res://museum/Room01Concrete.obj"),
-        Material::deserialise("res://museum/ConcretePanels.hmat")));
+        Engine::loadMesh("res://museum/Room01Concrete.obj"),
+        Engine::loadMaterial("res://museum/ConcretePanels.hmat")));
     scene->insertObject<StaticMesh>(new StaticMesh(
-        new Mesh("res://museum/Room01Bricks.obj"),
-        Material::deserialise("res://museum/BlackBricks.hmat")));
+        Engine::loadMesh("res://museum/Room01Bricks.obj"),
+        Engine::loadMaterial("res://museum/BlackBricks.hmat")));
     scene->insertObject<StaticMesh>(new StaticMesh(
-        new Mesh("res://museum/Room01Plaster.obj"),
-        Material::deserialise("res://museum/WhitePlaster.hmat")));
+        Engine::loadMesh("res://museum/Room01Plaster.obj"),
+        Engine::loadMaterial("res://museum/WhitePlaster.hmat")));
     
     auto palm = scene->insertObject<StaticMesh>(new StaticMesh(
-        new Mesh("res://museum/PalmTree1.obj"),
-        Material::deserialise("res://museum/PalmFrond.hmat")));
+        Engine::loadMesh("res://museum/PalmTree1.obj"),
+        Engine::loadMaterial("res://museum/PalmFrond.hmat")));
     palm->transform.setPosition({ 0, 0, 0 });
     
     auto pillar = scene->insertObject<StaticMesh>(new StaticMesh(
-        new Mesh("res://museum/Pedestal3.obj"),
-        Material::deserialise("res://museum/Marble.hmat")));
+        Engine::loadMesh("res://museum/Pedestal3.obj"),
+        Engine::loadMaterial("res://museum/Marble.hmat")));
     pillar->transform.setPosition({ 0, 4, 0 });
     auto pillar2 = scene->insertObject<StaticMesh>(new StaticMesh(
-        new Mesh("res://museum/Pedestal3.obj"),
-        Material::deserialise("res://museum/Marble.hmat")));
+        Engine::loadMesh("res://museum/Pedestal3.obj"),
+        Engine::loadMaterial("res://museum/Marble.hmat")));
     pillar2->transform.setPosition({ 0, 6, 0 });
     auto pillar3 = scene->insertObject<StaticMesh>(new StaticMesh(
-        new Mesh("res://museum/Pedestal3.obj"),
-        Material::deserialise("res://museum/Marble.hmat")));
+        Engine::loadMesh("res://museum/Pedestal3.obj"),
+        Engine::loadMaterial("res://museum/Marble.hmat")));
     pillar3->transform.setPosition({ 0, 8, 0 });
 
     auto sun_lamp = scene->insertObject<Light>(new Light(Light::DIRECTIONAL));
@@ -290,7 +290,7 @@ void initMaterialScene(Ref<Scene> scene)
         glm::vec3(0.0f, 1.0f, 1.73f),
         glm::vec3(0.0f, 0.0f, 1.0f));
     
-    scene->skybox = new Texture("res://nasa_goddard_gaia_dr2_deep_star_map.png");
+    scene->skybox = Engine::loadTexture("res://nasa_goddard_gaia_dr2_deep_star_map.png");
 }
 
 static int selected_scene = 0;
