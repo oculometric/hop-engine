@@ -80,6 +80,8 @@ Texture::~Texture()
     DBG_INFO("destroying image " + PTR(this));
     if (view != VK_NULL_HANDLE)
         vkDestroyImageView(RenderServer::getDevice(), view, nullptr);
+    if (stencil_view != VK_NULL_HANDLE)
+        vkDestroyImageView(RenderServer::getDevice(), stencil_view, nullptr);
     vkDestroyImage(RenderServer::getDevice(), image, nullptr);
     vkFreeMemory(RenderServer::getDevice(), memory, nullptr);
 }
@@ -159,10 +161,12 @@ void Texture::copyBufferToImage(Ref<Buffer> buffer)
     cmd_buf->submit();
 }
 
-VkImageView Texture::getView()
+VkImageView Texture::getView(bool stencil)
 {
-    if (view != VK_NULL_HANDLE)
+    if (!stencil && view != VK_NULL_HANDLE)
         return view;
+    if (stencil && stencil_view != VK_NULL_HANDLE)
+        return stencil_view;
 
     DBG_VERBOSE("creating image view for image " + PTR(this));
 
@@ -177,7 +181,7 @@ VkImageView Texture::getView()
         || format == VK_FORMAT_D32_SFLOAT
         || format == VK_FORMAT_D24_UNORM_S8_UINT)
     {
-        view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+        view_create_info.subresourceRange.aspectMask = stencil ? VK_IMAGE_ASPECT_STENCIL_BIT : VK_IMAGE_ASPECT_DEPTH_BIT;
     }
     else
     {
@@ -188,10 +192,10 @@ VkImageView Texture::getView()
     view_create_info.subresourceRange.baseArrayLayer = 0;
     view_create_info.subresourceRange.layerCount = 1;
 
-    if (vkCreateImageView(RenderServer::getDevice(), &view_create_info, nullptr, &view) != VK_SUCCESS)
+    if (vkCreateImageView(RenderServer::getDevice(), &view_create_info, nullptr, stencil ? &stencil_view : &view) != VK_SUCCESS)
         DBG_ERROR("vkCreateImageView failed");
 
-    return view;
+    return stencil ? stencil_view : view;
 }
 
 void Texture::createImage()

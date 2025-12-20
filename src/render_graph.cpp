@@ -76,6 +76,8 @@ void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, R
         passthrough->setTexture(0, new_passthrough_tex);
         passthrough_texture = new_passthrough_tex;
         in_stencil_mode = final_image_info.second;
+        if (in_stencil_mode) passthrough->setTexture(1, new_passthrough_tex, true);
+        else passthrough->setTexture(1, nullptr);
         if (new_passthrough_tex->getFormat() == Texture::depth_format)
             passthrough->setIntUniform("display_depth", in_stencil_mode ? 2 : 1);
         else
@@ -223,7 +225,7 @@ pair<Ref<Texture>, bool> RenderGraph::getFinalImage() const
     auto config = step.render_pass->getOutputConfig();
     size_t max_attachments = config.additional_attachments + (config.has_depth_attachment ? 2 : 1);
     bool is_stencil = false;
-    if (output_image == max_attachments + 1)
+    if (output_image == max_attachments)
         is_stencil = true;
     return { step.render_pass->getImage(is_stencil ? output_image - 1 : output_image), is_stencil };
 }

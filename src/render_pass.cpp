@@ -141,7 +141,7 @@ void RenderPass::createRenderPass(VkFormat main_colour_format, VkImageLayout fin
     if (output_config.has_depth_attachment)
     {
         depth_attachment_ref.attachment = static_cast<uint32_t>(output_config.additional_attachments + 1);
-        depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+        depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     }
 
     VkSubpassDescription subpass{ };

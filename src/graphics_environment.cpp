@@ -33,16 +33,16 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
     switch (message_severity)
     {
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-        DBG_VERBOSE("[ VALIDATION ]: " + string(callback_data->pMessage));
+        Debug::write("[ VALIDATION ]: " + string(callback_data->pMessage), Debug::DEBUG_VERBOSE);
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-        DBG_INFO("[ VALIDATION ]: " + string(callback_data->pMessage));
+        Debug::write("[ VALIDATION ]: " + string(callback_data->pMessage), Debug::DEBUG_INFO);
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-        DBG_WARNING("[ VALIDATION ]: " + string(callback_data->pMessage));
+        Debug::write("[ VALIDATION ]: " + string(callback_data->pMessage), Debug::DEBUG_WARNING);
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-        DBG_ERROR("[ VALIDATION ]: " + string(callback_data->pMessage));
+        Debug::write("[ VALIDATION ]: " + string(callback_data->pMessage), Debug::DEBUG_ERROR);
         break;
     default: break;
     }

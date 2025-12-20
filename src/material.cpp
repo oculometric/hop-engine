@@ -84,10 +84,10 @@ Ref<Material> Material::duplicate() const
     return new Material(shader, pipeline->getConfig(), render_pass);
 }
 
-void Material::setTexture(uint32_t binding, Ref<Texture> texture)
+void Material::setTexture(uint32_t binding, Ref<Texture> texture, bool use_stencil)
 {
 	DBG_VERBOSE("material " + PTR(this) + " assigned texture " + PTR(texture.get()) + " to binding " + to_string(binding));
-	uniforms->setTexture(binding, texture);
+	uniforms->setTexture(binding, texture, use_stencil);
 }
 
 void Material::setSampler(uint32_t binding, Ref<Sampler> sampler)
@@ -96,13 +96,13 @@ void Material::setSampler(uint32_t binding, Ref<Sampler> sampler)
 	uniforms->setSampler(binding, sampler);
 }
 
-void Material::setTexture(string name, Ref<Texture> texture)
+void Material::setTexture(string name, Ref<Texture> texture, bool use_stencil)
 {
 	auto it = texture_name_to_binding.find(name);
 	if (it != texture_name_to_binding.end())
 	{
 		DBG_VERBOSE("material " + PTR(this) + " assigned texture " + PTR(texture.get()) + " to binding '" + name + '\'');
-		uniforms->setTexture(it->second, texture);
+		uniforms->setTexture(it->second, texture, use_stencil);
 	}
 	else
 		DBG_WARNING("material " + PTR(this) + " has no such binding '" + name + '\'');

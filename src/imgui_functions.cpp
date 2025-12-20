@@ -388,13 +388,13 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 			ImGui::PushID(pair.first);
 			ImGui::LabelText("binding", "%i", pair.first);
 			ImGui::LabelText("name", "%s", binding_to_texture_name[pair.first].c_str());
-			auto result = texturePicker(pair.second.first, "texture");
-			if (result != pair.second.first)
+			auto result = texturePicker(pair.second.texture, "texture");
+			if (result != pair.second.texture)
 				setTexture(pair.first, result);
-			if (pair.second.second->drawImGuiDebug())
+			if (pair.second.sampler->drawImGuiDebug())
 			{
 				setSampler(pair.first, nullptr);
-				setSampler(pair.first, pair.second.second);
+				setSampler(pair.first, pair.second.sampler);
 			}
 			ImGui::PopID();
 		}

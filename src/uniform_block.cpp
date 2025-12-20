@@ -19,7 +19,10 @@ UniformBlock::UniformBlock(ShaderLayout layout_info)
         if (binding.type == UNIFORM)
             size += binding.buffer_size;
         else if (binding.type == TEXTURE)
-            textures_in_use[binding.binding] = RenderServer::getDefaultTextureSampler();
+        {
+            auto default_pair = RenderServer::getDefaultTextureSampler();
+            textures_in_use[binding.binding] = { default_pair.first, default_pair.second, false };
+        }
     }
 
     uniform_buffers.resize(RenderServer::getFramesInFlight());
@@ -54,23 +57,27 @@ UniformBlock::~UniformBlock()
     live_uniform_buffer.clear();
 }
 
-void UniformBlock::setTexture(uint32_t binding, Ref<Texture> image)
+void UniformBlock::setTexture(uint32_t binding, Ref<Texture> image, bool use_stencil)
 {
-    if (textures_in_use[binding].first == image)
+    if (textures_in_use[binding].texture == image && textures_in_use[binding].use_stencil == use_stencil)
         return;
-    textures_in_use[binding].first = image;
+    textures_in_use[binding].texture = image;
+    textures_in_use[binding].use_stencil = use_stencil;
     if (!image)
-        textures_in_use[binding].first = RenderServer::getDefaultTextureSampler().first;
+    {
+        textures_in_use[binding].texture = RenderServer::getDefaultTextureSampler().first;
+        textures_in_use[binding].use_stencil = false;
+    }
     applyDescriptorBindings();
 }
 
 void UniformBlock::setSampler(uint32_t binding, Ref<Sampler> sampler)
 {
-    if (textures_in_use[binding].second == sampler)
+    if (textures_in_use[binding].sampler == sampler)
         return;
-    textures_in_use[binding].second = sampler;
+    textures_in_use[binding].sampler = sampler;
     if (!sampler)
-        textures_in_use[binding].second = RenderServer::getDefaultTextureSampler().second;
+        textures_in_use[binding].sampler = RenderServer::getDefaultTextureSampler().second;
     applyDescriptorBindings();
 }
 
@@ -108,8 +115,8 @@ void UniformBlock::applyDescriptorBindings()
             else if (binding.type == TEXTURE)
             {
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = textures_in_use[binding.binding].first->getView();
-                image_info.sampler = textures_in_use[binding.binding].second->getSampler();
+                image_info.imageView = textures_in_use[binding.binding].texture->getView(textures_in_use[binding.binding].use_stencil);
+                image_info.sampler = textures_in_use[binding.binding].sampler->getSampler();
                 descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 descriptor_write.pImageInfo = &image_info;
             }

@@ -37,9 +37,9 @@ public:
 	Ref<RenderPass> getRenderPass() const;
 	Ref<Material> duplicate() const;
 	
-	void setTexture(uint32_t binding, Ref<Texture> texture);
+	void setTexture(uint32_t binding, Ref<Texture> texture, bool use_stencil = false);
 	void setSampler(uint32_t binding, Ref<Sampler> sampler);
-	void setTexture(std::string name, Ref<Texture> texture);
+	void setTexture(std::string name, Ref<Texture> texture, bool use_stencil = false);
 	void setSampler(std::string name, Ref<Sampler> sampler);
 
 	inline void setFloatUniform(std::string name, float value) { setUniform(name, &value, sizeof(value)); }

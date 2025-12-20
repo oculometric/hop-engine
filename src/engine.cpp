@@ -88,6 +88,7 @@ void Engine::mainLoop()
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
+            RenderServer::waitIdle();
             engine->imgui_func(engine->scene, delta.count());
 
             ImGui::Render();

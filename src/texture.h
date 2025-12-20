@@ -24,6 +24,7 @@ private:
 	VkImage image = VK_NULL_HANDLE;
 	VkDeviceMemory memory = VK_NULL_HANDLE;
 	VkImageView view = VK_NULL_HANDLE;
+	VkImageView stencil_view = VK_NULL_HANDLE;
 	std::string origin;
 
 public:
@@ -35,7 +36,7 @@ public:
 
 	void transitionLayout(VkImageLayout new_layout);
 	void copyBufferToImage(Ref<Buffer> buffer);
-	VkImageView getView();
+	VkImageView getView(bool stencil = false);
 	inline glm::ivec2 getSize() const { return { width, height }; }
 	inline VkFormat getFormat() const { return format; }
 	inline std::string getOrigin() const { return origin; }

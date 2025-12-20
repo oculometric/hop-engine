@@ -8,8 +8,9 @@
 layout(location = 0) out vec4 out_colour;
 
 layout(set = 2, binding = 0) uniform sampler2D screen_texture;
+layout(set = 2, binding = 1) uniform sampler2D stencil_texture;
 
-layout(set = 2, binding = 1) uniform MaterialUniforms
+layout(set = 2, binding = 2) uniform MaterialUniforms
 {
     int display_depth;
 };
@@ -24,7 +25,7 @@ void main()
     }
     else if (display_depth == 2)
     {
-        float d = uint(texture(screen_texture, frag.uv).r) / 256.0f;
+        float d = texture(stencil_texture, frag.uv).r * 16.0f;
         out_colour = vec4(vec3(d), 1);
     }
     else

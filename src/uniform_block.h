@@ -9,13 +9,20 @@
 
 namespace HopEngine
 {
-
+	
+struct TextureBinding
+{
+	Ref<Texture> texture;
+	Ref<Sampler> sampler;
+	bool use_stencil = false;
+};
+	
 class UniformBlock : public Destructible
 {
 private:
 	std::vector<VkDescriptorSet> descriptor_sets;
 	std::vector<Ref<Buffer>> uniform_buffers;
-	std::map<uint32_t, std::pair<Ref<Texture>, Ref<Sampler>>> textures_in_use;
+	std::map<uint32_t, TextureBinding> textures_in_use;
 	std::vector<uint8_t> live_uniform_buffer;
 	VkDeviceSize size;
 	ShaderLayout layout;
@@ -27,7 +34,7 @@ public:
 	~UniformBlock() override;
 
 	inline void* getBuffer() { return live_uniform_buffer.data(); }
-	void setTexture(uint32_t binding, Ref<Texture> image);
+	void setTexture(uint32_t binding, Ref<Texture> image, bool use_stencil = false);
 	void setSampler(uint32_t binding, Ref<Sampler> sampler);
 	inline VkDeviceSize getSize() const { return size; }
 	void pushToDescriptorSet(size_t index);
