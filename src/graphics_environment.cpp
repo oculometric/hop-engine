@@ -729,6 +729,23 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
 
     if (scene && scene->getRenderGraph())
         scene->getRenderGraph()->recordCommandBuffer(command_buffer, image_index, scene, stats, final_render_pass);
+    else
+    {
+        VkRenderPassBeginInfo render_pass_begin_info{ };
+        render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        render_pass_begin_info.renderPass = final_render_pass->getRenderPass();
+        render_pass_begin_info.framebuffer = final_render_pass->getFramebuffer(image_index);
+        render_pass_begin_info.renderArea.offset = { 0, 0 };
+        render_pass_begin_info.renderArea.extent = final_render_pass->getExtent();
+        vector<VkClearValue> clear_values = final_render_pass->getClearValues();
+        clear_values[0].color = { 0.02f, 0.02f, 0.02f };
+        render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
+        render_pass_begin_info.pClearValues = clear_values.data();
+
+        vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+        stats.passes++;
+        vkCmdEndRenderPass(command_buffer);
+    }
 
     vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, query_pool, (image_index * 2) + 1);
     if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS)

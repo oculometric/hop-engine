@@ -381,11 +381,6 @@ INT_PTR dialogFunc(HWND handle, UINT message, WPARAM unnamedParam3, LPARAM unnam
 
 int main()
 {
-#if defined(_WIN32)
-    system(".\\package-builder\\bin\\x64\\Release\\package-builder.exe res -c resources.hop");
-#endif
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
     while (true)
     {
 #if defined(_WIN32)
