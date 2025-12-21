@@ -32,7 +32,7 @@ vec3 sampleLut(vec3 colour)
 
 void main()
 {
-    if (use_lut > 0)
+    if (use_lut > 0.5f)
         out_colour = vec4(sampleLut(texture(tex, frag.uv).rgb), 1);
     else
         out_colour = vec4(gammaAdjust(texture(tex, frag.uv).rgb), 1);

@@ -97,7 +97,7 @@ static void initScene(Ref<Scene> scene)
         samples[i] = v;
     }
     scene->render_graph->getMaterialForStep(3)->setUniform("samples", samples, sizeof(glm::vec4) * 64);
-    cc_material = scene->render_graph->getMaterialForStep(4);
+    cc_material = scene->render_graph->getMaterialForStep(5);
 
     Engine::debugClearSelection(asha.cast<Object>(), asha->material);
 }
