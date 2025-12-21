@@ -1,0 +1,415 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.0.3 Chrome/140.0.7339.249 Electron/38.7.0 Safari/537.36" version="29.0.3">
+  <diagram name="Page-1" id="EdecST5CnT5VkrG_xHQS">
+    <mxGraphModel dx="1658" dy="618" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-1" value="Texture" style="swimlane;" vertex="1" parent="1">
+          <mxGeometry x="-560" y="560" width="240" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-2" value="VkFormat" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-1">
+          <mxGeometry y="30" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-3" value="VkImageLayout" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-1">
+          <mxGeometry y="50" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-4" value="VkImageUsageFlags" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-1">
+          <mxGeometry y="70" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="NwW8g2TU3WmbBtwsWACN-1" source="NwW8g2TU3WmbBtwsWACN-5" target="NwW8g2TU3WmbBtwsWACN-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-5" value="VkImage" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-1">
+          <mxGeometry x="150" y="120" width="90" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="NwW8g2TU3WmbBtwsWACN-1" source="NwW8g2TU3WmbBtwsWACN-6" target="NwW8g2TU3WmbBtwsWACN-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-6" value="VkDeviceMemory" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-1">
+          <mxGeometry y="120" width="130" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-8" value="VkImageView" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-1">
+          <mxGeometry x="150" y="160" width="90" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-10" value="VkExtent2D" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-1">
+          <mxGeometry y="90" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-11" value="Buffer" style="swimlane;" vertex="1" parent="1">
+          <mxGeometry x="-120" y="830" width="220" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-12" value="VkDeviceSize" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-11">
+          <mxGeometry y="30" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-13" value="VkBufferUsageFlags" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-11">
+          <mxGeometry y="50" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-14" value="VkMemoryPropertyFlags" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-11">
+          <mxGeometry y="70" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-16" value="VkBuffer" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-11">
+          <mxGeometry x="150" y="100" width="70" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="NwW8g2TU3WmbBtwsWACN-11" source="NwW8g2TU3WmbBtwsWACN-17" target="NwW8g2TU3WmbBtwsWACN-16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-17" value="VkDeviceMemory" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-11">
+          <mxGeometry y="100" width="130" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-20" value="Sampler" style="swimlane;" vertex="1" parent="1">
+          <mxGeometry x="-70" y="1120" width="170" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-21" value="VkFilter" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-20">
+          <mxGeometry y="30" width="170" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-22" value="VkSamplerAddressMode" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-20">
+          <mxGeometry y="50" width="170" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-23" value="VkSampler" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-20">
+          <mxGeometry x="80" y="80" width="90" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-24" value="Pipeline" style="swimlane;" vertex="1" parent="1">
+          <mxGeometry x="390" y="360" width="240" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-25" value="VkCullModeFlags" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-24">
+          <mxGeometry y="30" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-26" value="VkPolygonMode" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-24">
+          <mxGeometry y="50" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-27" value="VkBool32 (depth write)" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-24">
+          <mxGeometry y="70" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-28" value="VkBool32 (depth test)" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-24">
+          <mxGeometry y="90" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-29" value="VkCompareOp (depth)" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-24">
+          <mxGeometry y="110" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-30" value="VkBool32 (stencil)" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-24">
+          <mxGeometry y="130" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-31" value="VkCompareOp (stencil)" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-24">
+          <mxGeometry y="150" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-32" value="uint32_t (stencil compare value)" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-24">
+          <mxGeometry y="170" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-33" value="uint32_t (stencil compare mask)" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-24">
+          <mxGeometry y="190" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-34" value="uint32_t (stencil write mask)" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-24">
+          <mxGeometry y="210" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-35" value="VkPipeline" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-24">
+          <mxGeometry x="150" y="240" width="90" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-38" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=1;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="NwW8g2TU3WmbBtwsWACN-122" target="NwW8g2TU3WmbBtwsWACN-35">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="475.0000000000002" y="890" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="400" y="890" />
+              <mxPoint x="400" y="620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="NwW8g2TU3WmbBtwsWACN-123">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="475.0000000000002" y="920" as="sourcePoint" />
+            <mxPoint x="540" y="620" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="420" y="910" />
+              <mxPoint x="420" y="620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-44" value="RenderPass" style="swimlane;" vertex="1" parent="1">
+          <mxGeometry x="-20" y="290" width="350" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-45" value="VkExtent2D" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-44">
+          <mxGeometry y="30" width="350" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-46" value="std::vector&amp;lt;VkAttachmentDescription&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-44">
+          <mxGeometry y="50" width="350" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-58" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="NwW8g2TU3WmbBtwsWACN-44" source="NwW8g2TU3WmbBtwsWACN-55" target="NwW8g2TU3WmbBtwsWACN-57">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-55" value="VkRenderPass" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-44">
+          <mxGeometry x="180" y="100" width="170" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-57" value="std::vector&amp;lt;VkFramebuffer&amp;gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-44">
+          <mxGeometry x="180" y="140" width="170" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-59" value="std::vector&amp;lt;VkClearValue&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-44">
+          <mxGeometry y="70" width="350" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-71" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="NwW8g2TU3WmbBtwsWACN-44" source="NwW8g2TU3WmbBtwsWACN-67" target="NwW8g2TU3WmbBtwsWACN-57">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="170" y="150" />
+              <mxPoint x="170" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-67" value="std::vector&amp;lt;VkImageView&amp;gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-44">
+          <mxGeometry y="140" width="160" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-64" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="NwW8g2TU3WmbBtwsWACN-46">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="540" y="600" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="370" y="350" />
+              <mxPoint x="370" y="600" />
+              <mxPoint x="540" y="600" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-65" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="NwW8g2TU3WmbBtwsWACN-55">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="540" y="600" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="350" y="400" />
+              <mxPoint x="350" y="600" />
+              <mxPoint x="540" y="600" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-70" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="NwW8g2TU3WmbBtwsWACN-8" target="NwW8g2TU3WmbBtwsWACN-67">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-72" value="Swapchain" style="swimlane;" vertex="1" parent="1">
+          <mxGeometry x="-370" y="220" width="310" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-73" value="VkFormat" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-72">
+          <mxGeometry y="30" width="310" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-74" value="VkExtent2D" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-72">
+          <mxGeometry y="50" width="310" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-76" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="NwW8g2TU3WmbBtwsWACN-72" source="NwW8g2TU3WmbBtwsWACN-77" target="NwW8g2TU3WmbBtwsWACN-80">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-77" value="std::vector&amp;lt;VkImage&amp;gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-72">
+          <mxGeometry y="160" width="130" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-80" value="std::vector&amp;lt;VkImageView&amp;gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-72">
+          <mxGeometry x="150" y="160" width="160" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-82" value="VkPresentModeKHR" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-72">
+          <mxGeometry y="70" width="310" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-83" value="VkSurfaceFormatKHR" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-72">
+          <mxGeometry y="90" width="310" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-86" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="NwW8g2TU3WmbBtwsWACN-72" source="NwW8g2TU3WmbBtwsWACN-84" target="NwW8g2TU3WmbBtwsWACN-77">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="65" y="150" />
+              <mxPoint x="65" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-84" value="VkSwapchainKHR" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-72">
+          <mxGeometry x="150" y="120" width="160" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-143" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="NwW8g2TU3WmbBtwsWACN-79" target="NwW8g2TU3WmbBtwsWACN-77">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-79" value="VkSurfaceKHR" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-560" y="380" width="130" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-87" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="NwW8g2TU3WmbBtwsWACN-84" target="NwW8g2TU3WmbBtwsWACN-57">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-20" y="440" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="-40" y="350" />
+              <mxPoint x="-40" y="400" />
+              <mxPoint x="150" y="400" />
+              <mxPoint x="150" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-88" value="Shader" style="swimlane;" vertex="1" parent="1">
+          <mxGeometry x="30" y="580" width="300" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-89" value="VkFormat" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-88">
+          <mxGeometry y="30" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-90" value="VkImageLayout" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-88">
+          <mxGeometry y="50" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-91" value="VkImageUsageFlags" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-88">
+          <mxGeometry y="70" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-104" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="NwW8g2TU3WmbBtwsWACN-88" source="NwW8g2TU3WmbBtwsWACN-95" target="NwW8g2TU3WmbBtwsWACN-100">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="140" y="150" />
+              <mxPoint x="140" y="180" />
+              <mxPoint x="187" y="180" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-97" value="VkExtent2D" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-88">
+          <mxGeometry y="90" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-105" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="NwW8g2TU3WmbBtwsWACN-88" source="NwW8g2TU3WmbBtwsWACN-98" target="NwW8g2TU3WmbBtwsWACN-100">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="140" y="170" />
+              <mxPoint x="140" y="180" />
+              <mxPoint x="187" y="180" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-106" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.25;entryY=1;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="NwW8g2TU3WmbBtwsWACN-88" source="NwW8g2TU3WmbBtwsWACN-98" target="NwW8g2TU3WmbBtwsWACN-99">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="140" y="170" />
+              <mxPoint x="140" y="180" />
+              <mxPoint x="187" y="180" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-103" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="NwW8g2TU3WmbBtwsWACN-88" source="NwW8g2TU3WmbBtwsWACN-99" target="NwW8g2TU3WmbBtwsWACN-100">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-100" value="VkPipelineLayout" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-88">
+          <mxGeometry x="150" y="200" width="150" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-98" value="VkShaderModule" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-88">
+          <mxGeometry y="160" width="130" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-95" value="VkShaderModule" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-88">
+          <mxGeometry y="140" width="130" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-99" value="VkDescriptorSetLayout" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-88">
+          <mxGeometry x="150" y="140" width="150" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-112" value="VkPipelineShaderStageCreateInfo" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-88">
+          <mxGeometry y="110" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-113" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="NwW8g2TU3WmbBtwsWACN-112" target="NwW8g2TU3WmbBtwsWACN-35">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="350" y="700" />
+              <mxPoint x="350" y="610" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-114" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="NwW8g2TU3WmbBtwsWACN-100" target="NwW8g2TU3WmbBtwsWACN-35">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="540" y="620" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="370" y="790" />
+              <mxPoint x="370" y="610" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-115" value="Mesh" style="swimlane;" vertex="1" parent="1">
+          <mxGeometry x="140" y="830" width="190" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-116" value="size_t (indices)" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-115">
+          <mxGeometry y="30" width="190" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-117" value="VkBuffer (vertex)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-115">
+          <mxGeometry x="80" y="100" width="110" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-118" value="VkBuffer (index)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-115">
+          <mxGeometry x="80" y="120" width="110" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-122" value="VkVertexInputBindingDescription" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-115">
+          <mxGeometry y="50" width="190" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-123" value="VkVertexInputAttributeDescription" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-115">
+          <mxGeometry y="70" width="190" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-107" value="VkDescriptorSetLayout (scene global)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-280" y="750" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-108" value="VkDescriptorSetLayout (object local)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-280" y="780" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-109" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="NwW8g2TU3WmbBtwsWACN-107" target="NwW8g2TU3WmbBtwsWACN-100">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-40" y="760" />
+              <mxPoint x="-40" y="790" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-110" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="NwW8g2TU3WmbBtwsWACN-108" target="NwW8g2TU3WmbBtwsWACN-100">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-30" y="790" />
+              <mxPoint x="-30" y="790" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-124" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="NwW8g2TU3WmbBtwsWACN-16" target="NwW8g2TU3WmbBtwsWACN-117">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-125" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="NwW8g2TU3WmbBtwsWACN-16" target="NwW8g2TU3WmbBtwsWACN-118">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="940" />
+              <mxPoint x="200" y="960" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-126" value="UniformBlock" style="swimlane;" vertex="1" parent="1">
+          <mxGeometry x="140" y="1010" width="360" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-127" value="VkDeviceSize" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;glass=0;shadow=0;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-126">
+          <mxGeometry y="30" width="360" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-132" value="std::vector&amp;lt;VkDescriptorSet&amp;gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-126">
+          <mxGeometry x="180" y="140" width="180" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-136" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="NwW8g2TU3WmbBtwsWACN-126" source="NwW8g2TU3WmbBtwsWACN-133" target="NwW8g2TU3WmbBtwsWACN-132">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-133" value="std::vector&amp;lt;VkBuffer&amp;gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-126">
+          <mxGeometry y="60" width="160" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-137" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="NwW8g2TU3WmbBtwsWACN-126" source="NwW8g2TU3WmbBtwsWACN-134" target="NwW8g2TU3WmbBtwsWACN-132">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-134" value="std::vector&amp;lt;VkImageView&amp;gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-126">
+          <mxGeometry y="80" width="160" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-138" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="NwW8g2TU3WmbBtwsWACN-126" source="NwW8g2TU3WmbBtwsWACN-135" target="NwW8g2TU3WmbBtwsWACN-132">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-135" value="std::vector&amp;lt;VkSampler&amp;gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="NwW8g2TU3WmbBtwsWACN-126">
+          <mxGeometry y="100" width="160" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-140" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="NwW8g2TU3WmbBtwsWACN-16" target="NwW8g2TU3WmbBtwsWACN-133">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-141" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="NwW8g2TU3WmbBtwsWACN-23" target="NwW8g2TU3WmbBtwsWACN-135">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-142" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="NwW8g2TU3WmbBtwsWACN-8" target="NwW8g2TU3WmbBtwsWACN-134">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-300" y="730" />
+              <mxPoint x="-300" y="1100" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-145" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="NwW8g2TU3WmbBtwsWACN-144" target="NwW8g2TU3WmbBtwsWACN-132">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="160" y="1260" />
+              <mxPoint x="160" y="1160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NwW8g2TU3WmbBtwsWACN-144" value="VkDescriptorSetLayout" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-70" y="1250" width="170" height="20" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
