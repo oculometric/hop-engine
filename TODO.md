@@ -3,7 +3,6 @@
 - blur post process effect
 - full colour grading + LUT post process
 - scene deserialisation
-- controller support
 - shader & other resource reloading at runtime
 - deferred rendering demo scene, showing off the different light types, normal mapping, PBR materials
 - better support for object transforms, including world-space transform operations and quaternion support

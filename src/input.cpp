@@ -90,6 +90,54 @@ bool Input::wasMousePressed(int button)
 	return true;
 }
 
+void Input::pollGamepads()
+{
+	for (int i = 0; i <= GLFW_JOYSTICK_LAST; ++i)
+	{
+		GLFWgamepadstate state;
+		if (glfwGetGamepadState(i, &state))
+		{
+			GamepadState compacted_state;
+			compacted_state.buttons[GAMEPAD_RTRIGGER] = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] > 0.0f;
+			compacted_state.buttons[GAMEPAD_LTRIGGER] = state.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] > 0.0f;
+			compacted_state.buttons[GAMEPAD_A] = state.buttons[GLFW_GAMEPAD_BUTTON_A];
+			compacted_state.buttons[GAMEPAD_B] = state.buttons[GLFW_GAMEPAD_BUTTON_B];
+			compacted_state.buttons[GAMEPAD_X] = state.buttons[GLFW_GAMEPAD_BUTTON_X];
+			compacted_state.buttons[GAMEPAD_Y] = state.buttons[GLFW_GAMEPAD_BUTTON_Y];
+			compacted_state.buttons[GAMEPAD_UP] = state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP];
+			compacted_state.buttons[GAMEPAD_DOWN] = state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN];
+			compacted_state.buttons[GAMEPAD_LEFT] = state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT];
+			compacted_state.buttons[GAMEPAD_RIGHT] = state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT];
+			compacted_state.buttons[GAMEPAD_RBUTTON] = state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER];
+			compacted_state.buttons[GAMEPAD_LBUTTON] = state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER];
+			compacted_state.buttons[GAMEPAD_RSTICK] = state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB];
+			compacted_state.buttons[GAMEPAD_LSTICK] = state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_THUMB];
+			compacted_state.axes[GAMEPAD_RTRIGGER] = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
+			compacted_state.axes[GAMEPAD_LTRIGGER] = state.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
+			compacted_state.axes[GAMEPAD_RX] = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X];
+			compacted_state.axes[GAMEPAD_RY] = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y];
+			compacted_state.axes[GAMEPAD_LX] = state.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
+			compacted_state.axes[GAMEPAD_LY] = state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
+			compacted_state.axes[GAMEPAD_BX] = (float)(compacted_state.buttons[GAMEPAD_RIGHT]) - (float)(compacted_state.buttons[GAMEPAD_LEFT]);
+			compacted_state.axes[GAMEPAD_BY] = (float)(compacted_state.buttons[GAMEPAD_UP]) - (float)(compacted_state.buttons[GAMEPAD_DOWN]);
+			compacted_state.axes[GAMEPAD_BUTTONS] = (float)(compacted_state.buttons[GAMEPAD_RBUTTON]) - (float)(compacted_state.buttons[GAMEPAD_LBUTTON]);
+			application_instance->gamepad_states[i] = compacted_state;
+		}
+		else
+			application_instance->gamepad_states.erase(i);
+	}
+}
+
+bool Input::isGamepadButtonDown(GamepadButton button, int controller)
+{
+	return application_instance->gamepad_states[controller].buttons[button];
+}
+
+float Input::getGamepadAxis(GamepadAxis axis, int controller)
+{
+	return application_instance->gamepad_states[controller].axes[axis];
+}
+
 Input::Input(Ref<Window> _window)
 {
 	window = _window;

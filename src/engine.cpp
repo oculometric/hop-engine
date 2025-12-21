@@ -77,6 +77,7 @@ void Engine::mainLoop()
         chrono::duration<float> delta = this_frame - last_frame;
         last_frame = this_frame;
         engine->window->pollEvents();
+        Input::pollGamepads();
         if (engine->window->isMinified())
             continue;
         if (engine->window->isResized())

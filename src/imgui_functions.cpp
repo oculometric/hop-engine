@@ -462,17 +462,19 @@ void Engine::debugCamera(float delta_time)
 	if (!selected_camera)
 		return;
 
-	glm::vec2 mouse_delta = Input::getMouseDelta() * 0.25f;
+	glm::vec2 mouse_delta = { 0, 0 };
+	mouse_delta += glm::vec2{ Input::getGamepadAxis(Input::GAMEPAD_RX), Input::getGamepadAxis(Input::GAMEPAD_RY) } * delta_time * 160.0f;
 	if (Input::isMouseDown(GLFW_MOUSE_BUTTON_2))
-		selected_camera->transform.rotateLocal({ -mouse_delta.y, 0, -mouse_delta.x });
+		mouse_delta += Input::getMouseDelta() * 0.25f;
+	selected_camera->transform.rotateLocal({ -mouse_delta.y, 0, -mouse_delta.x });
 
 	glm::mat4 camera_matrix = selected_camera->transform.getMatrix();
 	glm::vec3 local_move_vector = glm::vec3{
-		Input::getAxis('A', 'D'),
-		Input::getAxis('Q', 'E'),
-		Input::getAxis('W', 'S')
+		Input::getAxis('A', 'D') + Input::getGamepadAxis(Input::GAMEPAD_LX),
+		Input::getAxis('Q', 'E') + Input::getGamepadAxis(Input::GAMEPAD_BUTTONS),
+		Input::getAxis('W', 'S') + Input::getGamepadAxis(Input::GAMEPAD_LY)
 	} * delta_time * 1.5f;
-	if (Input::isKeyDown(GLFW_KEY_LEFT_SHIFT))
+	if (Input::isKeyDown(GLFW_KEY_LEFT_SHIFT) || Input::isGamepadButtonDown(Input::GAMEPAD_B))
 		local_move_vector *= 3.0f;
 	selected_camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
 }

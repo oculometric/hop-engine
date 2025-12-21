@@ -598,7 +598,6 @@ void RenderServer::initImGui()
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
     ImGui_ImplGlfw_InitForVulkan(window->getWindow(), true);
     ImGui_ImplVulkan_InitInfo init_info{ };
     init_info.ApiVersion = VK_API_VERSION_1_4;
