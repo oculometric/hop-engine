@@ -303,9 +303,9 @@ void initMaterialScene(Ref<Scene> scene)
             }));
     auto fog_mat = scene->render_graph->getMaterialForStep(1);
     fog_mat->setFloatUniform("fog_start", 4.0f);
-    fog_mat->setFloatUniform("fog_end", 32.0f);
-    fog_mat->setFloatUniform("fog_exponent", 2.0f);
-    fog_mat->setVec4Uniform("fog_colour", { 1, 0, 1, 0 });
+    fog_mat->setFloatUniform("fog_end", 24.0f);
+    fog_mat->setFloatUniform("fog_exponent", 0.5f);
+    fog_mat->setVec4Uniform("fog_colour", { 0.005, 0.006, 0.002, 0 });
     
     cc_material = scene->render_graph->getMaterialForStep(2);
     cc_material->setFloatUniform("gamma", 1.0f);

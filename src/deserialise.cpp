@@ -174,11 +174,7 @@ Ref<Material> Material::deserialise(string name)
 	map<string, Ref<Shader>> shaders;
 	map<string, Ref<Texture>> textures;
 
-	VkCompareOp operation = VK_COMPARE_OP_LESS;
-	VkBool32 test = VK_TRUE;
-	VkBool32 write = VK_TRUE;
-	VkCullModeFlags cull = VK_CULL_MODE_BACK_BIT;
-	VkPolygonMode polygon = VK_POLYGON_MODE_FILL;
+	PipelineBuilder pipeline_builder;
 	Ref<Shader> main_shader;
 
 	vector<TokenReader::Statement> uniforms;
@@ -218,32 +214,35 @@ Ref<Material> Material::deserialise(string name)
 			auto it = args.find("operation");
 			if (it != args.end())
 			{
-				operation = getCompareOp(it->second.s_value);
+				VkCompareOp operation = getCompareOp(it->second.s_value);
 				if (operation == VK_COMPARE_OP_MAX_ENUM)
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid depth operation value");
 					return nullptr;
 				}
+				pipeline_builder.depthOp(operation);
 			}
 			it = args.find("test");
 			if (it != args.end())
 			{
-				test = getBool(it->second.s_value);
+				VkBool32 test = getBool(it->second.s_value);
 				if (test == (VkBool32)-1)
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid depth test value");
 					return nullptr;
 				}
+				pipeline_builder.depthTest(test);
 			}
 			it = args.find("write");
 			if (it != args.end())
 			{
-				write = getBool(it->second.s_value);
+				VkBool32 write = getBool(it->second.s_value);
 				if (write == (VkBool32)-1)
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid depth write value");
 					return nullptr;
 				}
+				pipeline_builder.depthWrite(write);
 			}
 		}
 		else if (statement.keyword == "Culling")
@@ -257,12 +256,13 @@ Ref<Material> Material::deserialise(string name)
 			auto it = args.find("mode");
 			if (it != args.end())
 			{
-				cull = getCullMode(it->second.s_value);
+				VkCullModeFlags cull = getCullMode(it->second.s_value);
 				if (cull == VK_CULL_MODE_FLAG_BITS_MAX_ENUM)
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid culling mode value");
 					return nullptr;
 				}
+				pipeline_builder.cullMode(cull);
 			}
 		}
 		else if (statement.keyword == "Polygon")
@@ -276,13 +276,36 @@ Ref<Material> Material::deserialise(string name)
 			auto it = args.find("mode");
 			if (it != args.end())
 			{
-				polygon = getPolygonMode(it->second.s_value);
+				VkPolygonMode polygon = getPolygonMode(it->second.s_value);
 				if (polygon == VK_POLYGON_MODE_MAX_ENUM)
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid polygon mode value");
 					return nullptr;
 				}
+				pipeline_builder.polygonMode(polygon);
 			}
+		}
+		else if (statement.keyword == "Stencil")
+		{
+			map<string, TokenReader::Token> args;
+			if (!TokenReader::readStatement(statement, false, false,
+				{
+					{ "compare", { TokenReader::TEXT, true } },
+					{ "compare_value", { TokenReader::INT, true } },
+					{ "compare_mask", { TokenReader::INT, true } },
+					{ "write_mask", { TokenReader::INT, false } },
+				}, args, "error deserialising material '" + name + "'"))
+				return nullptr;
+			VkCompareOp compare = getCompareOp(args["compare"].s_value);
+			if (compare == VK_COMPARE_OP_MAX_ENUM)
+			{
+				DBG_ERROR("error deserialising material '" + name + "': invalid stencil compare op value");
+				return nullptr;
+			}
+			pipeline_builder.stencilCompare(compare, args["compare_value"].i_value, args["compare_mask"].i_value);
+			auto it = args.find("write_mask");
+			if (it != args.end())
+				pipeline_builder.stencilWrite(it->second.i_value);
 		}
 		else if (statement.keyword == "Shader")
 		{
@@ -338,7 +361,7 @@ Ref<Material> Material::deserialise(string name)
 
 	if (!main_shader)
 		return nullptr;
-	Ref<Material> material = new Material(main_shader, PipelineBuilder().cullMode(cull).polygonMode(polygon).depthWrite(write).depthTest(test).depthOp(operation));
+	Ref<Material> material = new Material(main_shader, pipeline_builder);
 	if (!material)
 		return nullptr;
 
@@ -353,31 +376,32 @@ Ref<Material> Material::deserialise(string name)
 		}
 		string binding;
 		binding = args.find("binding")->second.s_value;
-		VkFilter filter = VK_FILTER_LINEAR;
+		SamplerBuilder sampler_builder;
 		it = args.find("filter");
 		if (it != args.end())
 		{
-			filter = getFilter(it->second.s_value);
+			VkFilter filter = getFilter(it->second.s_value);
 			if (filter == VK_FILTER_MAX_ENUM)
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor filter value");
 				return nullptr;
 			}
+			sampler_builder.filter(filter);
 		}
-		VkSamplerAddressMode address = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 		it = args.find("address");
 		if (it != args.end())
 		{
-			address = getAddressMode(it->second.s_value);
+			VkSamplerAddressMode address = getAddressMode(it->second.s_value);
 			if (address == VK_SAMPLER_ADDRESS_MODE_MAX_ENUM)
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor address value");
 				return nullptr;
 			}
+			sampler_builder.address(address);
 		}
 		material->setTexture(binding, texture_it->second);
-		if (address != VK_SAMPLER_ADDRESS_MODE_REPEAT || filter != VK_FILTER_LINEAR)
-			material->setSampler(binding, new Sampler(SamplerBuilder().filter(filter).address(address)));
+		if (sampler_builder.address_mode != VK_SAMPLER_ADDRESS_MODE_REPEAT || sampler_builder.filtering_mode != VK_FILTER_LINEAR)
+			material->setSampler(binding, new Sampler(sampler_builder));
 	}
 
 	for (const TokenReader::Statement& statement : uniforms)

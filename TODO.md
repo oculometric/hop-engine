@@ -11,5 +11,4 @@
 - fix SSAO pass (currently doesn't look quite right and very inefficient, has to be rendered at quarter resolution) [H]
 - tux-racer ripoff demo game [L]
 - separate engine from game resources [M]
-- material deserialisation needs support for stencil pipeline controls [M]
 - custom shader format to keep stuff in one file [L]
