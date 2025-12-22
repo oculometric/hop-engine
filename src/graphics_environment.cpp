@@ -233,7 +233,7 @@ RenderServer::RenderServer(Ref<Window> main_window)
     offscreen_pass = new RenderPass(1, 1, { 3, true });
 
     uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
-    default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, default_image_data);
+    default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, TextureBuilder().data(default_image_data));
     default_sampler = new Sampler(SamplerBuilder());
 
     axes_gizmo = new Mesh("res://engine/axes_gizmo.obj");

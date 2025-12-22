@@ -13,65 +13,73 @@
 using namespace HopEngine;
 using namespace std;
 
-Texture::Texture(size_t _width, size_t _height, VkFormat _format, void* data, VkImageUsageFlags _usage)
+Texture::Texture(size_t _width, size_t _height, VkFormat _format, TextureBuilder builder)
 {
     format = _format;
-    usage = _usage;
-    width = _width; height = _height;
+    usage = builder.usage_flags;
+    extent = { 
+        static_cast<uint32_t>(_width) / builder.layer_arrangement.width, 
+        static_cast<uint32_t>(_height) / builder.layer_arrangement.height, 
+        builder.layer_arrangement.width * builder.layer_arrangement.height 
+    };
 
-    if (data != nullptr || width == 0 || height == 0)
+    if (builder.data_ptr != nullptr || extent.width == 0 || extent.height == 0)
     {
-        loadFromMemory(data);
-        DBG_INFO("created image from memory with size " + to_string(width) + "x" + to_string(height) + " and format " + vk::to_string((vk::Format)format));
+        loadFromMemory(builder.data_ptr, builder.layer_arrangement);
+        DBG_INFO("created image from memory with size " + to_string(extent.width) + "x" + to_string(extent.height) + " and format " + vk::to_string((vk::Format)format));
     }
     else
     {
-        if (width == 0)
+        if (extent.width == 0)
         {
-            width = 1;
+            extent.width = 1;
             DBG_WARNING("image width is not allowed to be zero");
         }
-        if (height == 0)
+        if (extent.height == 0)
         {
             DBG_WARNING("image height is not allowed to be zero");
-            height = 1;
+            extent.height = 1;
         }
         createImage();
-        DBG_INFO("created blank image with size " + to_string(width) + "x" + to_string(height) + " and format " + vk::to_string((vk::Format)format));
+        DBG_INFO("created blank image with size " + to_string(extent.width) + "x" + to_string(extent.height) + " and format " + vk::to_string((vk::Format)format));
     }
 }
 
-Texture::Texture(string file, VkImageUsageFlags _usage)
+Texture::Texture(string file, TextureBuilder builder)
 {
     origin = file;
     auto file_data = Package::tryLoadFile(file);
     int img_width, img_height, img_channels;
     stbi_uc* pixels = stbi_load_from_memory(file_data.data(), static_cast<int>(file_data.size()), &img_width, &img_height, &img_channels, STBI_rgb_alpha);
     format = VK_FORMAT_R8G8B8A8_SRGB;
-    usage = _usage;
-    width = img_width; height = img_height;
+    usage = builder.usage_flags;
+    extent = {
+        static_cast<uint32_t>(img_width) / builder.layer_arrangement.width, 
+        static_cast<uint32_t>(img_height) / builder.layer_arrangement.height, 
+        builder.layer_arrangement.width * builder.layer_arrangement.height
+    };
 
     if (pixels == nullptr)
     {
-        DBG_ERROR("failed to load image file");
-        width = 1; height = 1;
+        DBG_ERROR("failed to load image '" + file + "'");
+        extent = { 1, 1, 1 };
         createImage();
     }
     else
     {
-        size_t row_size = width * 4;
+        size_t row_size = extent.width * 4;
         void* tmp = new uint8_t[row_size];
-        for (size_t i = 0; i < height / 2; ++i)
+        for (size_t i = 0; i < extent.height / 2; ++i)
         {
             memcpy(tmp, pixels + (i * row_size), row_size);
-            memcpy(pixels + (i * row_size), pixels + ((height - i - 1) * row_size), row_size);
-            memcpy(pixels + ((height - i - 1) * row_size), tmp, row_size);
+            memcpy(pixels + (i * row_size), pixels + ((extent.height - i - 1) * row_size), row_size);
+            memcpy(pixels + ((extent.height - i - 1) * row_size), tmp, row_size);
         }
 
-        loadFromMemory(pixels);
+        loadFromMemory(pixels, builder.layer_arrangement);
         stbi_image_free(pixels);
 
-        DBG_INFO("created image from " + file + " with size " + to_string(width) + "x" + to_string(height) + " and format " + vk::to_string((vk::Format)format));
+        DBG_INFO("created image from " + file + " with size " + to_string(extent.width) + "x" + to_string(extent.height) + " and format " + vk::to_string((vk::Format)format));
     }
 }
 
@@ -148,11 +156,7 @@ void Texture::copyBufferToImage(Ref<Buffer> buffer)
     image_copy.imageSubresource.layerCount = 1;
 
     image_copy.imageOffset = { 0, 0, 0 };
-    image_copy.imageExtent = {
-        static_cast<uint32_t>(width),
-        static_cast<uint32_t>(height),
-        1
-    };
+    image_copy.imageExtent = extent;
 
     Ref<CommandBuffer> cmd_buf = new CommandBuffer();
 
@@ -173,7 +177,7 @@ VkImageView Texture::getView(bool stencil)
     VkImageViewCreateInfo view_create_info{ };
     view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     view_create_info.image = image;
-    view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    view_create_info.viewType = extent.depth == 1 ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_3D;
     view_create_info.format = format;
     if (format == VK_FORMAT_D16_UNORM
         || format == VK_FORMAT_D16_UNORM_S8_UINT
@@ -202,10 +206,8 @@ void Texture::createImage()
 {
     VkImageCreateInfo image_create_info{ };
     image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    image_create_info.imageType = VK_IMAGE_TYPE_2D;
-    image_create_info.extent.width = static_cast<uint32_t>(width);
-    image_create_info.extent.height = static_cast<uint32_t>(height);
-    image_create_info.extent.depth = 1;
+    image_create_info.imageType = extent.depth == 1 ? VK_IMAGE_TYPE_2D : VK_IMAGE_TYPE_3D;
+    image_create_info.extent = extent;
     image_create_info.mipLevels = 1;
     image_create_info.arrayLayers = 1;
     image_create_info.format = format;
@@ -239,11 +241,35 @@ void Texture::createImage()
     vkBindImageMemory(RenderServer::getDevice(), image, memory, 0);
 }
 
-void Texture::loadFromMemory(void* data)
+void Texture::loadFromMemory(void* data, VkExtent2D layers)
 {
-    VkDeviceSize image_length = width * height * 4;
+    VkDeviceSize image_length = extent.width * extent.height * extent.depth * 4;
     Ref<Buffer> staging_buffer = new Buffer(image_length, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    memcpy(staging_buffer->mapMemory(), data, image_length);
+    
+    if (layers.width != 1 || layers.height != 1)
+    {
+        size_t input_width = extent.width * layers.width * 4;
+        size_t layer_width = extent.width * 4;
+        size_t layer_height = extent.height;
+        vector<uint8_t> rearranged(image_length);
+        
+        for (size_t slice = 0; slice < extent.depth; ++slice)
+        {
+            size_t origin_offset = (layer_width * (slice % layers.width)) + (input_width * (slice / layers.width) * layer_height);
+            size_t destination_offset = layer_width * layer_height * slice;
+            for (size_t row = 0; row < layer_height; ++row)
+            {
+                memcpy(rearranged.data() + destination_offset, (uint8_t*)data + origin_offset, layer_width);
+                destination_offset += layer_width;
+                origin_offset += input_width;
+            }
+        }
+        memcpy(staging_buffer->mapMemory(), rearranged.data(), image_length);
+    }
+    else
+    {
+        memcpy(staging_buffer->mapMemory(), data, image_length);
+    }
     staging_buffer->unmapMemory();
 
     createImage();

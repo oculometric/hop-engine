@@ -182,6 +182,19 @@ Ref<Texture> Engine::loadTexture(const string& path)
     return it->second;
 }
 
+Ref<Texture> Engine::loadTexture3D(const string& path, int layers_wide, int layers_high)
+{
+    const auto it = engine->loaded_textures.find(path);
+    if (it == engine->loaded_textures.end())
+    {
+        Ref<Texture> thing = new Texture(path, TextureBuilder().layers({ static_cast<uint32_t>(layers_wide), static_cast<uint32_t>(layers_high) }));
+        engine->loaded_textures[path] = thing;
+        return thing;
+    }
+    DBG_VERBOSE("reused texture 3D '" + path + "' instead of duplicating");
+    return it->second;
+}
+
 Ref<Mesh> Engine::loadMesh(const string& path)
 {
     const auto it = engine->loaded_meshes.find(path);

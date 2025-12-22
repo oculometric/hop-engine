@@ -311,9 +311,10 @@ void initMaterialScene(Ref<Scene> scene)
     cc_material->setFloatUniform("gamma", 1.0f);
     cc_material->setFloatUniform("exposure", 1.0f);
     cc_material->setFloatUniform("offset", 0.0f);
-    cc_material->setTexture("lut", Engine::loadTexture("res://museum/lut.png"));
+    cc_material->setTexture("lut", Engine::loadTexture3D("res://museum/lut.png", 8, 8));
+    cc_material->setSampler("lut", new Sampler(SamplerBuilder().address(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE)));
     cc_material->setFloatUniform("use_lut", 1);
-    
+
     scene->skybox = Engine::loadTexture("res://nasa_goddard_gaia_dr2_deep_star_map.png");
 }
 
@@ -416,8 +417,6 @@ int main()
 
         Engine::debugClearSelection();
         Engine::destroy();
-
-        return 0;
     }
 
     return 0;

@@ -240,14 +240,14 @@ void RenderPass::createResources(VkFormat main_colour_format, uint32_t width, ui
 {
     extent = VkExtent2D{ width, height };
     // create texture buffers to back everything
-    additional_textures.push_back(new Texture(width, height, main_colour_format, nullptr,
-        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT));
+    additional_textures.push_back(new Texture(width, height, main_colour_format,
+        TextureBuilder().usage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)));
     if (output_config.has_depth_attachment)
-        depth_texture = new Texture(width, height, Texture::depth_format, nullptr,
-            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+        depth_texture = new Texture(width, height, Texture::depth_format,
+            TextureBuilder().usage(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT));
     for (size_t i = 0; i < output_config.additional_attachments; ++i)
-        additional_textures.push_back(new Texture(width, height, Texture::data_format, nullptr,
-            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT));
+        additional_textures.push_back(new Texture(width, height, Texture::data_format,
+            TextureBuilder().usage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)));
 
     // create framebuffers to actually render into
     framebuffers.resize(1);

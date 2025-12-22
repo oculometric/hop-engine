@@ -8,7 +8,18 @@
 
 namespace HopEngine
 {
-
+	
+struct TextureBuilder
+{
+	void* data_ptr = nullptr;
+	VkImageUsageFlags usage_flags = VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM;
+	VkExtent2D layer_arrangement = { 1, 1 };
+	
+	inline TextureBuilder data(void* value) { data_ptr = value; return *this; }
+	inline TextureBuilder usage(VkImageUsageFlags value) { usage_flags = value; return *this; }
+	inline TextureBuilder layers(VkExtent2D arrangement) { layer_arrangement = arrangement; return *this; }
+};
+	
 class Texture : public Destructible
 {
 public:
@@ -16,8 +27,7 @@ public:
 	static constexpr VkFormat data_format = VK_FORMAT_R16G16B16A16_SFLOAT;
 
 private:
-	size_t width;
-	size_t height;
+	VkExtent3D extent;
 	VkImageLayout current_layout;
 	VkFormat format;
 	VkImageUsageFlags usage;
@@ -30,20 +40,20 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Texture);
 
-	Texture(size_t width, size_t height, VkFormat format, void* data = nullptr, VkImageUsageFlags usage = VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM);
-	Texture(std::string file, VkImageUsageFlags usage = VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM);
+	Texture(size_t width, size_t height, VkFormat format, TextureBuilder builder = TextureBuilder());
+	Texture(std::string file, TextureBuilder builder = TextureBuilder());
 	~Texture() override;
 
 	void transitionLayout(VkImageLayout new_layout);
 	void copyBufferToImage(Ref<Buffer> buffer);
 	VkImageView getView(bool stencil = false);
-	inline glm::ivec2 getSize() const { return { width, height }; }
+	inline glm::ivec2 getSize() const { return { extent.width, extent.height }; }
 	inline VkFormat getFormat() const { return format; }
 	inline std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 
 private:
 	void createImage();
-	void loadFromMemory(void* data);
+	void loadFromMemory(void* data, VkExtent2D layers);
 };
 
 }

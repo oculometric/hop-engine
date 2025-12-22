@@ -8,7 +8,7 @@
 layout(location = 0) out vec4 out_colour;
 
 layout(set = 2, binding = 0) uniform sampler2D tex;
-layout(set = 2, binding = 1) uniform sampler2D lut;
+layout(set = 2, binding = 1) uniform sampler3D lut;
 
 layout(set = 2, binding = 2) uniform Params
 {
@@ -23,11 +23,13 @@ vec3 gammaAdjust(vec3 value)
     return (exposure * pow(value + offset, vec3(gamma)));
 }
 
+float invert(float f) { return 1.0f - f; }
+
 vec3 sampleLut(vec3 colour)
 {
-    float blue_chunk = floor(colour.b * 8.0f * 8.0f);
-    vec2 uv_base = vec2(mod(blue_chunk, 8.0f) / 8.0f, floor(blue_chunk / 8.0f) / 8.0f);
-    return toLinear(texture(lut, (colour.rg / 8.0f) + uv_base).bgr);
+    vec3 linear = toSRGB(colour);
+    vec3 flipped = vec3(linear.r, linear.g, linear.b);
+    return (texture(lut, flipped).rgb);
 }
 
 void main()

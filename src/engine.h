@@ -78,6 +78,7 @@ public:
 	static Ref<Shader> loadShader(const std::string& path);
 	static Ref<Material> loadMaterial(const std::string& path);
 	static Ref<Texture> loadTexture(const std::string& path);
+	static Ref<Texture> loadTexture3D(const std::string& path, int layers_wide, int layer_high);
 	static Ref<Mesh> loadMesh(const std::string& path);
 	
 private:

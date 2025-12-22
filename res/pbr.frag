@@ -85,7 +85,7 @@ void main()
     vec4 albedo = texture(albedo_tex, uv);
     if (albedo.a < 0.5f)
         discard;
-    vec3 normal_val = normalize((toLinear(texture(normal_map, uv).rgb) * 2.0f - 1.0f));
+    vec3 normal_val = normalize((toSRGB(texture(normal_map, uv).rgb) * 2.0f - 1.0f));
     normal_val.y *= -1;
     vec3 bitangent = normalize(cross(frag.tangent.xyz, frag.normal.xyz));
     mat3 tbn = mat3(frag.tangent.xyz, bitangent, frag.normal.xyz);
