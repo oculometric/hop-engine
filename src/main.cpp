@@ -400,11 +400,12 @@ INT_PTR dialogFunc(HWND handle, UINT message, WPARAM unnamedParam3, LPARAM unnam
 
 int main()
 {
-    while (true)
-    {
-#if defined(_WIN32)
-        DialogBox(NULL, MAKEINTRESOURCE(IDD_DIALOG1), NULL, dialogFunc);
-#endif
+    selected_scene = 2;
+//     while (true)
+//     {
+// #if defined(_WIN32)
+//         DialogBox(NULL, MAKEINTRESOURCE(IDD_DIALOG1), NULL, dialogFunc);
+// #endif
         Engine::init();
         Engine::debugClearSelection();
 
@@ -417,7 +418,7 @@ int main()
 
         Engine::debugClearSelection();
         Engine::destroy();
-    }
+    // }
 
     return 0;
 }

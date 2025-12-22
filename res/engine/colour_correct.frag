@@ -23,19 +23,17 @@ vec3 gammaAdjust(vec3 value)
     return (exposure * pow(value + offset, vec3(gamma)));
 }
 
-float invert(float f) { return 1.0f - f; }
-
 vec3 sampleLut(vec3 colour)
 {
-    vec3 linear = toSRGB(colour);
+    vec3 linear = toSRGB((colour * (63.0f / 64.0f)) + (0.5f / 64.0f));
     vec3 flipped = vec3(linear.r, linear.g, linear.b);
-    return (texture(lut, flipped).rgb);
+    return (textureLod(lut, flipped, 0.0f).rgb);
 }
 
 void main()
 {
     if (use_lut > 0.5f)
-        out_colour = vec4(sampleLut(texture(tex, frag.uv).rgb), 1);
+        out_colour = vec4(gammaAdjust(sampleLut(texture(tex, frag.uv).rgb)), 1);
     else
         out_colour = vec4(gammaAdjust(texture(tex, frag.uv).rgb), 1);
 }
