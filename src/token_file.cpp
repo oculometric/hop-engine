@@ -42,12 +42,12 @@ vector<TokenReader::Token> TokenReader::tokenise(const string& content, bool tri
         Token finished_token = Token(current_type);
         finished_token.start_offset = start_offset;
 
-        if (char_type == INVALID && current_type != STRING)
+        if (char_type == INVALID && !(current_type == STRING || current_type == COMMENT))
         {
             reportError("illegal character", offset, trimmed_content);
             return { };
         }
-        if (char_type == END_VECTOR && current_type != VECTOR)
+        if (char_type == END_VECTOR && !(current_type == VECTOR || current_type == STRING || current_type == COMMENT))
         {
             reportError("invalid end of vector token", offset, trimmed_content);
             return { };
@@ -176,8 +176,8 @@ vector<TokenReader::Token> TokenReader::tokenise(const string& content, bool tri
                 reset_token = true;
                 break;
             }
-            else
-                break;
+            new_type = COMMENT;
+            break;
         case WHITESPACE:
             if (char_type == WHITESPACE)
                 break;

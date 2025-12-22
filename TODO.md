@@ -12,5 +12,4 @@
 - tux-racer ripoff demo game [L]
 - separate engine from game resources [M]
 - material deserialisation needs support for stencil pipeline controls [M]
-- fix broken comments in deserialiser (does not detect end correctly) [H]
 - custom shader format to keep stuff in one file [L]
