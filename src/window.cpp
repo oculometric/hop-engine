@@ -7,17 +7,6 @@
 using namespace HopEngine;
 using namespace std;
 
-Window::Window(uint32_t _width, uint32_t _height, string title)
-{
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-    width = _width;
-    height = _height;
-    window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
-    DBG_INFO("created window at " + to_string(width) + "x" + to_string(height) + ", titled '" + title + "'");
-}
-
 void Window::initEnvironment()
 {
     DBG_INFO("initialising GLFW");
@@ -90,6 +79,17 @@ void Window::setIcon(string path)
 
     glfwSetWindowIcon(window, 1, &image);
     stbi_image_free(image.pixels);
+}
+
+Window::Window(uint32_t _width, uint32_t _height, string title)
+{
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    width = _width;
+    height = _height;
+    window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+    DBG_INFO("created window at " + to_string(width) + "x" + to_string(height) + ", titled '" + title + "'");
 }
 
 Window::~Window()

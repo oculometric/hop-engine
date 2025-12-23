@@ -78,9 +78,6 @@ private:
 public:
 	DELETE_CONSTRUCTORS(RenderGraph);
 
-	RenderGraph(RenderGraphBuilder config);
-	~RenderGraph() override;
-
 	void updateUniforms(uint32_t image_index, float time_since_start, Ref<Scene> scene);
 	void recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Scene> scene, FrameStats& stats, Ref<RenderPass>
 	                         final_render_pass) const;
@@ -93,6 +90,9 @@ public:
 	
 	static Ref<RenderGraph> deserialise(std::string name);
 
+	RenderGraph(RenderGraphBuilder config);
+	~RenderGraph() override;
+	
 private:
 	void recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands, FrameStats& stats) const;
 	void recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Material> material, VkDescriptorSet scene_descriptor_set, FrameStats& stats) const;

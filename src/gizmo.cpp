@@ -8,12 +8,6 @@
 using namespace HopEngine;
 using namespace std;
 
-Gizmo::Gizmo() : StaticMesh(RenderServer::getGizmoMesh(0), RenderServer::getGizmoMaterial()->duplicate())
-{
-    camera_mask = 0xF0000000;
-    name = "gizmo";
-}
-
 void Gizmo::trackObject(WeakRef<Object> object, WeakRef<Camera> camera)
 {
     if (!object)
@@ -64,6 +58,12 @@ void Gizmo::trackObject(WeakRef<Object> object, WeakRef<Camera> camera)
                 setHighlightColour({ 0, 0, 1 });
         }
     }
+}
+
+Gizmo::Gizmo() : StaticMesh(RenderServer::getGizmoMesh(0), RenderServer::getGizmoMaterial()->duplicate())
+{
+    camera_mask = 0xF0000000;
+    name = "gizmo";
 }
 
 void Gizmo::setHighlightColour(glm::vec3 new_colour)

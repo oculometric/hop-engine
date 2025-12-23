@@ -19,33 +19,6 @@
 using namespace HopEngine;
 using namespace std;
 
-RenderGraph::RenderGraph(RenderGraphBuilder config)
-{
-    passthrough = new Material(new Shader("res://engine/passthrough", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), RenderServer::getFinalRenderPass());
-    execution_steps = config.execution_steps;
-    if (!config.execution_steps.empty())
-        expected_extent = config.execution_steps[0].render_pass->getExtent();
-
-    for (RenderStep& step : execution_steps)
-    {
-        if (step.is_camera)
-            continue;
-
-        for (const auto& pair : step.texture_bindings)
-        {
-            step.material->setTexture(pair.first, execution_steps[pair.second.step_index].render_pass->getImage(pair.second.output_index));
-            step.material->setSampler(pair.first, new Sampler(SamplerBuilder().filter(pair.second.filter_mode).address(pair.second.address_mode)));
-        }
-    }
-}
-
-RenderGraph::~RenderGraph()
-{
-    DBG_INFO("destroying render graph " + PTR(this));
-    execution_steps.clear();
-    passthrough = nullptr;
-}
-
 void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, Ref<Scene> scene)
 {
     for (const RenderStep& step : execution_steps)
@@ -245,6 +218,33 @@ Ref<Material> RenderGraph::getMaterialForStep(size_t step)
     }
 
     return execution_steps[step].material;
+}
+
+RenderGraph::RenderGraph(RenderGraphBuilder config)
+{
+    passthrough = new Material(new Shader("res://engine/passthrough", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), RenderServer::getFinalRenderPass());
+    execution_steps = config.execution_steps;
+    if (!config.execution_steps.empty())
+        expected_extent = config.execution_steps[0].render_pass->getExtent();
+
+    for (RenderStep& step : execution_steps)
+    {
+        if (step.is_camera)
+            continue;
+
+        for (const auto& pair : step.texture_bindings)
+        {
+            step.material->setTexture(pair.first, execution_steps[pair.second.step_index].render_pass->getImage(pair.second.output_index));
+            step.material->setSampler(pair.first, new Sampler(SamplerBuilder().filter(pair.second.filter_mode).address(pair.second.address_mode)));
+        }
+    }
+}
+
+RenderGraph::~RenderGraph()
+{
+    DBG_INFO("destroying render graph " + PTR(this));
+    execution_steps.clear();
+    passthrough = nullptr;
 }
 
 void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands, FrameStats& stats) const

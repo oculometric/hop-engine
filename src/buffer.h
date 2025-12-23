@@ -18,15 +18,15 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Buffer);
 
-	Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
-	~Buffer();
-
 	void* mapMemory();
 	void unmapMemory();
 	inline VkBuffer getBuffer() const { return buffer; }
 	inline VkDeviceSize getSize() const { return buffer_size; }
 	static uint32_t findMemoryType(uint32_t type_bits, VkMemoryPropertyFlags properties);
 	void copyToBuffer(Ref<Buffer> other);
+	
+	Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+	~Buffer();
 };
 
 }

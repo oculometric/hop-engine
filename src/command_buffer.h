@@ -16,11 +16,11 @@ private:
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(CommandBuffer);
 
-	CommandBuffer();
-	~CommandBuffer() override;
-
 	inline VkCommandBuffer getBuffer() const { return buffer; }
 	void submit();
+	
+	CommandBuffer();
+	~CommandBuffer() override;
 };
 
 }

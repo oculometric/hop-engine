@@ -40,16 +40,16 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Texture);
 
-	Texture(size_t width, size_t height, VkFormat format, TextureBuilder builder = TextureBuilder());
-	Texture(std::string file, TextureBuilder builder = TextureBuilder());
-	~Texture() override;
-
 	void transitionLayout(VkImageLayout new_layout);
 	void copyBufferToImage(Ref<Buffer> buffer);
 	VkImageView getView(bool stencil = false);
 	inline glm::ivec2 getSize() const { return { extent.width, extent.height }; }
 	inline VkFormat getFormat() const { return format; }
 	inline std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
+
+	Texture(size_t width, size_t height, VkFormat format, TextureBuilder builder = TextureBuilder());
+	Texture(std::string file, TextureBuilder builder = TextureBuilder());
+	~Texture() override;
 
 private:
 	void createImage();

@@ -25,12 +25,12 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Sampler);
 
-	Sampler(SamplerBuilder config);
-	~Sampler() override;
-
 	inline VkSampler getSampler() const { return sampler; }
 	inline SamplerBuilder getBuilder() const { return builder; }
 	bool drawImGuiDebug();
+	
+	Sampler(SamplerBuilder config);
+	~Sampler() override;
 };
 
 }

@@ -13,87 +13,6 @@
 using namespace HopEngine;
 using namespace std;
 
-Texture::Texture(size_t _width, size_t _height, VkFormat _format, TextureBuilder builder)
-{
-    format = _format;
-    usage = builder.usage_flags;
-    extent = { 
-        static_cast<uint32_t>(_width) / builder.layer_arrangement.width, 
-        static_cast<uint32_t>(_height) / builder.layer_arrangement.height, 
-        builder.layer_arrangement.width * builder.layer_arrangement.height 
-    };
-
-    if (builder.data_ptr != nullptr || extent.width == 0 || extent.height == 0)
-    {
-        loadFromMemory(builder.data_ptr, builder.layer_arrangement);
-        DBG_INFO("created image from memory with size " + to_string(extent.width) + "x" + to_string(extent.height) + " and format " + vk::to_string((vk::Format)format));
-    }
-    else
-    {
-        if (extent.width == 0)
-        {
-            extent.width = 1;
-            DBG_WARNING("image width is not allowed to be zero");
-        }
-        if (extent.height == 0)
-        {
-            DBG_WARNING("image height is not allowed to be zero");
-            extent.height = 1;
-        }
-        createImage();
-        DBG_INFO("created blank image with size " + to_string(extent.width) + "x" + to_string(extent.height) + " and format " + vk::to_string((vk::Format)format));
-    }
-}
-
-Texture::Texture(string file, TextureBuilder builder)
-{
-    origin = file;
-    auto file_data = Package::tryLoadFile(file);
-    int img_width, img_height, img_channels;
-    stbi_uc* pixels = stbi_load_from_memory(file_data.data(), static_cast<int>(file_data.size()), &img_width, &img_height, &img_channels, STBI_rgb_alpha);
-    format = VK_FORMAT_R8G8B8A8_SRGB;
-    usage = builder.usage_flags;
-    extent = {
-        static_cast<uint32_t>(img_width) / builder.layer_arrangement.width, 
-        static_cast<uint32_t>(img_height) / builder.layer_arrangement.height, 
-        builder.layer_arrangement.width * builder.layer_arrangement.height
-    };
-
-    if (pixels == nullptr)
-    {
-        DBG_ERROR("failed to load image '" + file + "'");
-        extent = { 1, 1, 1 };
-        createImage();
-    }
-    else
-    {
-        size_t row_size = extent.width * 4;
-        void* tmp = new uint8_t[row_size];
-        for (size_t i = 0; i < extent.height / 2; ++i)
-        {
-            memcpy(tmp, pixels + (i * row_size), row_size);
-            memcpy(pixels + (i * row_size), pixels + ((extent.height - i - 1) * row_size), row_size);
-            memcpy(pixels + ((extent.height - i - 1) * row_size), tmp, row_size);
-        }
-
-        loadFromMemory(pixels, builder.layer_arrangement);
-        stbi_image_free(pixels);
-
-        DBG_INFO("created image from " + file + " with size " + to_string(extent.width) + "x" + to_string(extent.height) + " and format " + vk::to_string((vk::Format)format));
-    }
-}
-
-Texture::~Texture()
-{
-    DBG_INFO("destroying image " + PTR(this));
-    if (view != VK_NULL_HANDLE)
-        vkDestroyImageView(RenderServer::getDevice(), view, nullptr);
-    if (stencil_view != VK_NULL_HANDLE)
-        vkDestroyImageView(RenderServer::getDevice(), stencil_view, nullptr);
-    vkDestroyImage(RenderServer::getDevice(), image, nullptr);
-    vkFreeMemory(RenderServer::getDevice(), memory, nullptr);
-}
-
 void Texture::transitionLayout(VkImageLayout new_layout)
 {
     DBG_VERBOSE("transitioning image " + PTR(this) + " layout from " + vk::to_string((vk::ImageLayout)current_layout) + " to " + vk::to_string((vk::ImageLayout)new_layout));
@@ -200,6 +119,87 @@ VkImageView Texture::getView(bool stencil)
         DBG_ERROR("vkCreateImageView failed");
 
     return stencil ? stencil_view : view;
+}
+
+Texture::Texture(size_t _width, size_t _height, VkFormat _format, TextureBuilder builder)
+{
+    format = _format;
+    usage = builder.usage_flags;
+    extent = { 
+        static_cast<uint32_t>(_width) / builder.layer_arrangement.width, 
+        static_cast<uint32_t>(_height) / builder.layer_arrangement.height, 
+        builder.layer_arrangement.width * builder.layer_arrangement.height 
+    };
+
+    if (builder.data_ptr != nullptr || extent.width == 0 || extent.height == 0)
+    {
+        loadFromMemory(builder.data_ptr, builder.layer_arrangement);
+        DBG_INFO("created image from memory with size " + to_string(extent.width) + "x" + to_string(extent.height) + " and format " + vk::to_string((vk::Format)format));
+    }
+    else
+    {
+        if (extent.width == 0)
+        {
+            extent.width = 1;
+            DBG_WARNING("image width is not allowed to be zero");
+        }
+        if (extent.height == 0)
+        {
+            DBG_WARNING("image height is not allowed to be zero");
+            extent.height = 1;
+        }
+        createImage();
+        DBG_INFO("created blank image with size " + to_string(extent.width) + "x" + to_string(extent.height) + " and format " + vk::to_string((vk::Format)format));
+    }
+}
+
+Texture::Texture(string file, TextureBuilder builder)
+{
+    origin = file;
+    auto file_data = Package::tryLoadFile(file);
+    int img_width, img_height, img_channels;
+    stbi_uc* pixels = stbi_load_from_memory(file_data.data(), static_cast<int>(file_data.size()), &img_width, &img_height, &img_channels, STBI_rgb_alpha);
+    format = VK_FORMAT_R8G8B8A8_SRGB;
+    usage = builder.usage_flags;
+    extent = {
+        static_cast<uint32_t>(img_width) / builder.layer_arrangement.width, 
+        static_cast<uint32_t>(img_height) / builder.layer_arrangement.height, 
+        builder.layer_arrangement.width * builder.layer_arrangement.height
+    };
+
+    if (pixels == nullptr)
+    {
+        DBG_ERROR("failed to load image '" + file + "'");
+        extent = { 1, 1, 1 };
+        createImage();
+    }
+    else
+    {
+        size_t row_size = extent.width * 4;
+        void* tmp = new uint8_t[row_size];
+        for (size_t i = 0; i < extent.height / 2; ++i)
+        {
+            memcpy(tmp, pixels + (i * row_size), row_size);
+            memcpy(pixels + (i * row_size), pixels + ((extent.height - i - 1) * row_size), row_size);
+            memcpy(pixels + ((extent.height - i - 1) * row_size), tmp, row_size);
+        }
+
+        loadFromMemory(pixels, builder.layer_arrangement);
+        stbi_image_free(pixels);
+
+        DBG_INFO("created image from " + file + " with size " + to_string(extent.width) + "x" + to_string(extent.height) + " and format " + vk::to_string((vk::Format)format));
+    }
+}
+
+Texture::~Texture()
+{
+    DBG_INFO("destroying image " + PTR(this));
+    if (view != VK_NULL_HANDLE)
+        vkDestroyImageView(RenderServer::getDevice(), view, nullptr);
+    if (stencil_view != VK_NULL_HANDLE)
+        vkDestroyImageView(RenderServer::getDevice(), stencil_view, nullptr);
+    vkDestroyImage(RenderServer::getDevice(), image, nullptr);
+    vkFreeMemory(RenderServer::getDevice(), memory, nullptr);
 }
 
 void Texture::createImage()

@@ -19,13 +19,13 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Font);
 
-	Font(std::string atlas, glm::ivec2 character_bitmap_size);
-	~Font() override;
-
 	inline glm::vec2 getCharacterSize() const { return character_size; }
 	Ref<Texture> getAtlas() const;
 	glm::vec2 getCharUVOffset(char c) const;
 	inline glm::vec2 getCharUVSize() const { return char_uv_size; }
+	
+	Font(std::string atlas, glm::ivec2 character_bitmap_size);
+	~Font() override;
 };
 
 }

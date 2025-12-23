@@ -247,6 +247,76 @@ bool Package::storeCompressedPackage(string store_path)
 	return true;
 }
 
+vector<uint8_t> Package::loadData(string identifier)
+{
+	if (!application_package)
+		Package::init();
+
+	DBG_VERBOSE("loading '" + identifier + "'");
+	auto it = application_package->database.find(identifier);
+	if (it != application_package->database.end())
+		return it->second;
+	DBG_WARNING("found no data associated with '" + identifier + "'");
+	return { };
+}
+
+void Package::storeData(string identifier, vector<uint8_t> data)
+{
+	if (!application_package)
+		Package::init();
+
+	DBG_VERBOSE("storing '" + identifier + "'; " + to_string(data.size()) + " bytes");
+	application_package->database[identifier] = data;
+}
+
+vector<uint8_t> Package::tryLoadFile(string path_or_identifier)
+{
+	if (!application_package)
+		Package::init();
+
+	static string res_prefix = "res://";
+	if (path_or_identifier.substr(0, res_prefix.size()) == res_prefix)
+	{
+		// load package resource
+		return Package::loadData(path_or_identifier.substr(res_prefix.size()));
+	}
+	else
+	{
+		DBG_VERBOSE("loading '" + path_or_identifier + "' from file");
+		// load file data
+		ifstream file(path_or_identifier, ios::ate | ios::binary);
+		if (!file.is_open())
+		{
+			DBG_WARNING("failed to load '" + path_or_identifier + "'; file not accessible");
+			return { };
+		}
+
+		size_t size = (size_t)file.tellg();
+		vector<uint8_t> content(size);
+		file.seekg(0);
+		file.read((char*)(content.data()), size);
+		file.close();
+
+		return content;
+	}
+}
+
+void Package::tryWriteFile(string path, vector<uint8_t> data)
+{
+	if (!application_package)
+		Package::init();
+
+	DBG_VERBOSE("storing '" + path + "' to file; " + to_string(data.size()) + " bytes");
+	ofstream file(path, ios::binary);
+	if (!file.is_open())
+	{
+		DBG_ERROR("failed to store '" + path + "'; file not accessible");
+		return;
+	}
+	file.write((char*)(data.data()), data.size());
+	file.close();
+}
+
 vector<uint8_t> Package::loadCompressedPackage(vector<uint8_t> data)
 {
 	if (!application_package)
@@ -348,78 +418,6 @@ vector<uint8_t> Package::loadCompressedPackage(vector<uint8_t> data)
 	DBG_INFO("unpacked compressed package");
 	return content;
 }
-
-vector<uint8_t> Package::loadData(string identifier)
-{
-	if (!application_package)
-		Package::init();
-
-	DBG_VERBOSE("loading '" + identifier + "'");
-	auto it = application_package->database.find(identifier);
-	if (it != application_package->database.end())
-		return it->second;
-	DBG_WARNING("found no data associated with '" + identifier + "'");
-	return { };
-}
-
-void Package::storeData(string identifier, vector<uint8_t> data)
-{
-	if (!application_package)
-		Package::init();
-
-	DBG_VERBOSE("storing '" + identifier + "'; " + to_string(data.size()) + " bytes");
-	application_package->database[identifier] = data;
-}
-
-vector<uint8_t> Package::tryLoadFile(string path_or_identifier)
-{
-	if (!application_package)
-		Package::init();
-
-	static string res_prefix = "res://";
-	if (path_or_identifier.substr(0, res_prefix.size()) == res_prefix)
-	{
-		// load package resource
-		return Package::loadData(path_or_identifier.substr(res_prefix.size()));
-	}
-	else
-	{
-		DBG_VERBOSE("loading '" + path_or_identifier + "' from file");
-		// load file data
-		ifstream file(path_or_identifier, ios::ate | ios::binary);
-		if (!file.is_open())
-		{
-			DBG_WARNING("failed to load '" + path_or_identifier + "'; file not accessible");
-			return { };
-		}
-
-		size_t size = (size_t)file.tellg();
-		vector<uint8_t> content(size);
-		file.seekg(0);
-		file.read((char*)(content.data()), size);
-		file.close();
-
-		return content;
-	}
-}
-
-void Package::tryWriteFile(string path, vector<uint8_t> data)
-{
-	if (!application_package)
-		Package::init();
-
-	DBG_VERBOSE("storing '" + path + "' to file; " + to_string(data.size()) + " bytes");
-	ofstream file(path, ios::binary);
-	if (!file.is_open())
-	{
-		DBG_ERROR("failed to store '" + path + "'; file not accessible");
-		return;
-	}
-	file.write((char*)(data.data()), data.size());
-	file.close();
-}
-
-Package::Package() {}
 
 Package::~Package()
 {

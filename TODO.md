@@ -1,8 +1,8 @@
 # TODO
 
+- scene deserialisation [M]
 - do some performance profiling to see where the inefficiency is [H]
 - blur post process effect [L]
-- scene deserialisation [M]
 - shader & other resource reloading at runtime [H]
 - deferred rendering demo scene, showing off the different light types, normal mapping, PBR materials [M]
 - better support for object transforms, including world-space transform operations and quaternion support [H]

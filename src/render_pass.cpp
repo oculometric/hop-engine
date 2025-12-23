@@ -10,33 +10,6 @@
 using namespace HopEngine;
 using namespace std;
 
-RenderPass::RenderPass(Ref<Swapchain> _swapchain, RenderOutput config)
-{
-    output_config = config;
-    swapchain = _swapchain;
-
-    createRenderPass(swapchain->getFormat(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, false);
-
-    createResources(swapchain);
-
-    DBG_INFO(string("created render pass with colour buffer, ") + (config.has_depth_attachment ? "depth buffer, " : "") + "and " + to_string(config.additional_attachments) + " data attachments");
-}
-
-RenderPass::RenderPass(uint32_t width, uint32_t height, RenderOutput config)
-{
-    output_config = config;
-
-    createRenderPass(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, true);
-    createResources(VK_FORMAT_R8G8B8A8_SRGB, width, height);
-}
-
-RenderPass::~RenderPass()
-{
-    DBG_INFO("destroying render pass " + PTR(this));
-    destroyResources();
-    vkDestroyRenderPass(RenderServer::getDevice(), render_pass, nullptr);
-}
-
 vector<VkClearValue> RenderPass::getClearValues() const
 {
     vector<VkClearValue> values = { { VkClearColorValue{{1.0f, 0.0f, 1.0f, 1.0f}} } };
@@ -79,6 +52,33 @@ bool RenderPass::isCompatible(const Ref<RenderPass>& other) const
     if (other->output_config.additional_attachments != output_config.additional_attachments)
         return false;
     return true;
+}
+
+RenderPass::RenderPass(Ref<Swapchain> _swapchain, RenderOutput config)
+{
+    output_config = config;
+    swapchain = _swapchain;
+
+    createRenderPass(swapchain->getFormat(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, false);
+
+    createResources(swapchain);
+
+    DBG_INFO(string("created render pass with colour buffer, ") + (config.has_depth_attachment ? "depth buffer, " : "") + "and " + to_string(config.additional_attachments) + " data attachments");
+}
+
+RenderPass::RenderPass(uint32_t width, uint32_t height, RenderOutput config)
+{
+    output_config = config;
+
+    createRenderPass(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, true);
+    createResources(VK_FORMAT_R8G8B8A8_SRGB, width, height);
+}
+
+RenderPass::~RenderPass()
+{
+    DBG_INFO("destroying render pass " + PTR(this));
+    destroyResources();
+    vkDestroyRenderPass(RenderServer::getDevice(), render_pass, nullptr);
 }
 
 void RenderPass::createRenderPass(VkFormat main_colour_format, VkImageLayout final_main_colour_layout, bool make_readable)

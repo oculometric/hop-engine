@@ -53,15 +53,15 @@ private:
 
 public:
 	DELETE_CONSTRUCTORS(Shader);
-		
-	Shader(std::string base_path, bool is_precompiled);
-	~Shader() override;
-
+	
 	inline VkPipelineLayout getPipelineLayout() const { return pipeline_layout; }
 	std::vector<VkPipelineShaderStageCreateInfo> getShaderStageCreateInfos() const;
 	ShaderLayout getShaderLayout() const;
 	inline std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
-	bool reloadShader();
+	bool reloadShader(); // TODO: shader reload
+	
+	Shader(std::string base_path, bool is_precompiled);
+	~Shader() override;
 
 private:
 	static std::vector<DescriptorBinding> mergeBindings(std::vector<DescriptorBinding> list_a, std::vector<DescriptorBinding> list_b);

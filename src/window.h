@@ -19,8 +19,6 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Window);
 
-	Window(uint32_t width, uint32_t height, std::string title);
-
 	static void initEnvironment();
 	static void terminateEnvironment();
 
@@ -34,6 +32,7 @@ public:
 	void setVisible(bool visible);
 	void setIcon(std::string path);
 
+	Window(uint32_t width, uint32_t height, std::string title);
 	~Window() override;
 };
 

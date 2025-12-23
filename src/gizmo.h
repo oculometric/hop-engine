@@ -16,9 +16,9 @@ private:
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Gizmo);
 
-    Gizmo();
-
     void trackObject(WeakRef<Object> object, WeakRef<Camera> camera);
+    
+    Gizmo();
 
 private:
     void setHighlightColour(glm::vec3 new_colour);

@@ -40,11 +40,11 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Pipeline);
 
-	Pipeline(Ref<Shader> shader, PipelineBuilder config, Ref<RenderPass> render_pass);
-	~Pipeline() override;
-
 	inline VkPipeline getPipeline() const { return pipeline; }
 	inline PipelineBuilder getConfig() const { return pipeline_config; }
+	
+	Pipeline(Ref<Shader> shader, PipelineBuilder config, Ref<RenderPass> render_pass);
+	~Pipeline() override;
 };
 
 }

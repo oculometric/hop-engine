@@ -12,13 +12,9 @@
 using namespace HopEngine;
 using namespace std;
 
-Object::Object()
+Ref<Object> Object::getParent()
 {
-	transform = Transform();
-	uniforms = new UniformBlock(ShaderLayout{ RenderServer::getObjectDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(ObjectUniforms) }} });
-	name = "object";
-
-	DBG_VERBOSE("created object");
+	return parent;
 }
 
 void Object::_setParent(Ref<Object> new_parent)
@@ -30,11 +26,6 @@ void Object::_setParent(Ref<Object> new_parent)
 	else
 		transform.parent_transform = nullptr;
 	transform.setMatrix(world_transform);
-}
-
-Ref<Object> Object::getParent()
-{
-	return parent;
 }
 
 void Object::pushToDescriptorSet(size_t index)
@@ -53,15 +44,18 @@ vector<DrawCommand> Object::getDrawCommands() const
 	//return { { RenderServer::getGizmoMaterial(), RenderServer::getGizmoMesh(0), uniforms } };
 }
 
+Object::Object()
+{
+	transform = Transform();
+	uniforms = new UniformBlock(ShaderLayout{ RenderServer::getObjectDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(ObjectUniforms) }} });
+	name = "object";
+
+	DBG_VERBOSE("created object");
+}
+
 Object::~Object()
 {
 	DBG_VERBOSE("destroying object " + PTR(this));
-}
-
-Camera::Camera() : Object()
-{
-	uniforms = new UniformBlock(ShaderLayout{ RenderServer::getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
-	name = "camera";
 }
 
 void Camera::pushToDescriptorSet(size_t index) { }
@@ -108,11 +102,10 @@ VkDescriptorSet Camera::getDescriptorSet(size_t index) const
 	return uniforms->getDescriptorSet(index);
 }
 
-StaticMesh::StaticMesh(Ref<Mesh> _mesh, Ref<Material> _material) : Object()
+Camera::Camera() : Object()
 {
-	mesh = _mesh;
-	material = _material;
-	name = "static mesh";
+	uniforms = new UniformBlock(ShaderLayout{ RenderServer::getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
+	name = "camera";
 }
 
 void StaticMesh::pushToDescriptorSet(size_t index)
@@ -130,10 +123,11 @@ vector<DrawCommand> StaticMesh::getDrawCommands() const
 	return commands;
 }
 
-Light::Light(LightType _type)
+StaticMesh::StaticMesh(Ref<Mesh> _mesh, Ref<Material> _material) : Object()
 {
-	type = _type;
-	name = "light";
+	mesh = _mesh;
+	material = _material;
+	name = "static mesh";
 }
 
 LightParams Light::getParamsStructure()
@@ -146,4 +140,10 @@ LightParams Light::getParamsStructure()
 	params.position = glm::vec4(transform.getPosition(), 0);
 	params.direction = glm::normalize(transform.getMatrix() * glm::vec4{ 0, 0, -1, 0 });
 	return params;
+}
+
+Light::Light(LightType _type)
+{
+	type = _type;
+	name = "light";
 }

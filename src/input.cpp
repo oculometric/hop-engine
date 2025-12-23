@@ -136,18 +136,6 @@ float Input::getGamepadAxis(GamepadAxis axis, int controller)
 	return application_instance->gamepad_states[controller].axes[axis];
 }
 
-Input::Input(Ref<Window> _window)
-{
-	window = _window;
-	glfwSetKeyCallback(window->getWindow(), Input::keyCallback);
-	glfwSetMouseButtonCallback(window->getWindow(), Input::mouseButtonCallback);
-}
-
-Input::~Input()
-{
-	window = nullptr;
-}
-
 void Input::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (ImGui::GetIO().WantTextInput)
@@ -164,5 +152,14 @@ void Input::mouseButtonCallback(GLFWwindow* window, int button, int action, int 
 		application_instance->pressed_since_checked.insert(button);
 }
 
+Input::Input(Ref<Window> _window)
+{
+	window = _window;
+	glfwSetKeyCallback(window->getWindow(), Input::keyCallback);
+	glfwSetMouseButtonCallback(window->getWindow(), Input::mouseButtonCallback);
+}
 
-
+Input::~Input()
+{
+	window = nullptr;
+}

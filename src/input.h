@@ -82,11 +82,11 @@ public:
 	static float getGamepadAxis(GamepadAxis axis, int controller = 0);
 
 private:
-	Input(Ref<Window> window);
-	~Input();
-
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+	
+	Input(Ref<Window> window);
+	~Input();
 };
 
 }

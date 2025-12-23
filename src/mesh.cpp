@@ -12,54 +12,6 @@
 using namespace HopEngine;
 using namespace std;
 
-Mesh::Mesh(string path)
-{
-    origin = path;
-    vector<Vertex> verts;
-    vector<uint16_t> inds;
-
-    if (readFileToArrays(path, verts, inds))
-        createFromArrays(verts, inds);
-    else
-        DBG_ERROR("failed to load mesh " + path);
-
-    DBG_INFO("created mesh from " + path + " with " + to_string(verts.size()) + " vertices and " + to_string(inds.size()) + " indices");
-}
-
-Mesh::Mesh(vector<Vertex> vertices, vector<uint16_t> indices, bool keep_accessible)
-{
-    accessible = keep_accessible;
-    if (!keep_accessible)
-        createFromArrays(vertices, indices);
-    else
-    {
-        vertex_buffer = new Buffer(sizeof(Vertex) * vertices.size(),
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        memcpy(vertex_buffer->mapMemory(), vertices.data(), vertex_buffer->getSize());
-        vertex_buffer->unmapMemory();
-
-        index_buffer = new Buffer(sizeof(uint16_t) * indices.size(),
-            VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        memcpy(index_buffer->mapMemory(), indices.data(), index_buffer->getSize());
-        index_buffer->unmapMemory();
-
-        vertex_space = vertices.size();
-        index_space = indices.size();
-        index_count = index_space;
-    }
-
-    DBG_INFO("created mesh from arrays with " + to_string(vertices.size()) + " vertices and " + to_string(indices.size()) + " indices");
-}
-
-Mesh::~Mesh()
-{
-    DBG_INFO("destroying mesh " + PTR(this));
-    vertex_buffer = nullptr;
-    index_buffer = nullptr;
-}
-
 VkBuffer Mesh::getVertexBuffer() const
 {
     return vertex_buffer->getBuffer();
@@ -146,6 +98,54 @@ array<VkVertexInputAttributeDescription, 5> Mesh::getAttributeDescriptions()
     attributes[4].offset = offsetof(Vertex, uv);
 
     return attributes;
+}
+
+Mesh::Mesh(string path)
+{
+    origin = path;
+    vector<Vertex> verts;
+    vector<uint16_t> inds;
+
+    if (readFileToArrays(path, verts, inds))
+        createFromArrays(verts, inds);
+    else
+        DBG_ERROR("failed to load mesh " + path);
+
+    DBG_INFO("created mesh from " + path + " with " + to_string(verts.size()) + " vertices and " + to_string(inds.size()) + " indices");
+}
+
+Mesh::Mesh(vector<Vertex> vertices, vector<uint16_t> indices, bool keep_accessible)
+{
+    accessible = keep_accessible;
+    if (!keep_accessible)
+        createFromArrays(vertices, indices);
+    else
+    {
+        vertex_buffer = new Buffer(sizeof(Vertex) * vertices.size(),
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        memcpy(vertex_buffer->mapMemory(), vertices.data(), vertex_buffer->getSize());
+        vertex_buffer->unmapMemory();
+
+        index_buffer = new Buffer(sizeof(uint16_t) * indices.size(),
+            VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        memcpy(index_buffer->mapMemory(), indices.data(), index_buffer->getSize());
+        index_buffer->unmapMemory();
+
+        vertex_space = vertices.size();
+        index_space = indices.size();
+        index_count = index_space;
+    }
+
+    DBG_INFO("created mesh from arrays with " + to_string(vertices.size()) + " vertices and " + to_string(indices.size()) + " indices");
+}
+
+Mesh::~Mesh()
+{
+    DBG_INFO("destroying mesh " + PTR(this));
+    vertex_buffer = nullptr;
+    index_buffer = nullptr;
 }
 
 struct FaceCorner { uint16_t co; uint16_t uv; uint16_t vn; };

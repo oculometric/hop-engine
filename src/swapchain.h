@@ -30,9 +30,6 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Swapchain);
 
-	Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR surface);
-	~Swapchain() override;
-
 	inline VkFormat getFormat() const { return format; }
 	inline VkExtent2D getExtent() const { return extent; }
 	inline uint32_t getImageCount() const { return static_cast<uint32_t>(image_views.size()); }
@@ -44,6 +41,9 @@ public:
 	static VkSurfaceFormatKHR getIdealSurfaceFormat(const SwapchainSupportInfo& info);
 	static VkPresentModeKHR getIdealPresentMode(const SwapchainSupportInfo& info);
 	static VkExtent2D getIdealExtent(const SwapchainSupportInfo& info, uint32_t window_width, uint32_t window_height);
+
+	Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR surface);
+	~Swapchain() override;
 
 private:
 	void createImageViews();

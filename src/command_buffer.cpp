@@ -5,6 +5,24 @@
 using namespace HopEngine;
 using namespace std;
 
+void CommandBuffer::submit()
+{
+    if (already_submitted)
+        return;
+    already_submitted = true;
+
+    DBG_BABBLE("submitting transient command buffer " + PTR(this));
+    vkEndCommandBuffer(buffer);
+
+    VkSubmitInfo submit_info{ };
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &buffer;
+
+    vkQueueSubmit(RenderServer::getGraphicsQueue(), 1, &submit_info, VK_NULL_HANDLE);
+    vkQueueWaitIdle(RenderServer::getGraphicsQueue());
+}
+
 CommandBuffer::CommandBuffer()
 {
     VkCommandBufferAllocateInfo allocate_info{ };
@@ -28,22 +46,4 @@ CommandBuffer::~CommandBuffer()
     submit();
     DBG_BABBLE("destroying command buffer " + PTR(this));
     vkFreeCommandBuffers(RenderServer::getDevice(), RenderServer::getCommandPool(), 1, &buffer);
-}
-
-void CommandBuffer::submit()
-{
-    if (already_submitted)
-        return;
-    already_submitted = true;
-
-    DBG_BABBLE("submitting transient command buffer " + PTR(this));
-    vkEndCommandBuffer(buffer);
-
-    VkSubmitInfo submit_info{ };
-    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submit_info.commandBufferCount = 1;
-    submit_info.pCommandBuffers = &buffer;
-
-    vkQueueSubmit(RenderServer::getGraphicsQueue(), 1, &submit_info, VK_NULL_HANDLE);
-    vkQueueWaitIdle(RenderServer::getGraphicsQueue());
 }

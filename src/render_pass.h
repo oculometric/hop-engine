@@ -28,10 +28,6 @@ private:
 public:
 	DELETE_CONSTRUCTORS(RenderPass);
 
-	RenderPass(Ref<Swapchain> swapchain, RenderOutput config);
-	RenderPass(uint32_t width, uint32_t height, RenderOutput config);
-	~RenderPass() override;
-
 	inline RenderOutput getOutputConfig() const { return output_config; }
 	inline VkRenderPass getRenderPass() const { return render_pass; }
 	inline VkFramebuffer getFramebuffer(size_t index) const { return framebuffers[index % framebuffers.size()]; }
@@ -42,6 +38,10 @@ public:
 	Ref<RenderPass> duplicate() const;
 	bool isCompatible(const Ref<RenderPass>& other) const;
 
+	RenderPass(Ref<Swapchain> swapchain, RenderOutput config);
+	RenderPass(uint32_t width, uint32_t height, RenderOutput config);
+	~RenderPass() override;
+	
 private:
 	void createRenderPass(VkFormat main_colour_format, VkImageLayout final_main_colour_layout, bool make_readable);
 	void destroyResources();

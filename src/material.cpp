@@ -15,39 +15,6 @@
 using namespace HopEngine;
 using namespace std;
 
-Material::Material(Ref<Shader> _shader, PipelineBuilder config, Ref<RenderPass> _render_pass)
-{
-	render_pass = _render_pass.isValid() ? _render_pass : RenderServer::getMainRenderPass();
-	shader = _shader;
-	pipeline = new Pipeline(shader, config, render_pass);
-
-	auto layout = shader->getShaderLayout();
-	uniforms = new UniformBlock(layout);
-	
-	for (auto binding : layout.bindings)
-	{
-		if (binding.type == UNIFORM)
-		{
-			for (auto variable : binding.variables)
-			{
-				variable_name_to_binding[variable.name] = variable;
-			}
-		}
-		else if (binding.type == TEXTURE)
-			texture_name_to_binding[binding.name] = binding.binding;
-	}
-
-	DBG_INFO("created material from shader " + PTR(shader.get()) + " with config " + vk::to_string((vk::CullModeFlags)config.culling_mode) + ", " + vk::to_string((vk::PolygonMode)config.polygon_mode));
-}
-
-Material::~Material()
-{
-	DBG_INFO("destroying material " + PTR(this));
-	uniforms = nullptr;
-	pipeline = nullptr;
-	shader = nullptr;
-}
-
 VkPipeline Material::getPipeline() const
 {
 	return pipeline->getPipeline();
@@ -134,4 +101,37 @@ void Material::setUniform(string name, void* data, size_t size)
 	size_t clamped_size = min(size, var.size);
 	memcpy(((uint8_t*)uniforms->getBuffer()) + var.offset, data, clamped_size);
 	DBG_VERBOSE("material " + PTR(this) + " updated uniform '" + name + '\'');
+}
+
+Material::Material(Ref<Shader> _shader, PipelineBuilder config, Ref<RenderPass> _render_pass)
+{
+	render_pass = _render_pass.isValid() ? _render_pass : RenderServer::getMainRenderPass();
+	shader = _shader;
+	pipeline = new Pipeline(shader, config, render_pass);
+
+	auto layout = shader->getShaderLayout();
+	uniforms = new UniformBlock(layout);
+	
+	for (auto binding : layout.bindings)
+	{
+		if (binding.type == UNIFORM)
+		{
+			for (auto variable : binding.variables)
+			{
+				variable_name_to_binding[variable.name] = variable;
+			}
+		}
+		else if (binding.type == TEXTURE)
+			texture_name_to_binding[binding.name] = binding.binding;
+	}
+
+	DBG_INFO("created material from shader " + PTR(shader.get()) + " with config " + vk::to_string((vk::CullModeFlags)config.culling_mode) + ", " + vk::to_string((vk::PolygonMode)config.polygon_mode));
+}
+
+Material::~Material()
+{
+	DBG_INFO("destroying material " + PTR(this));
+	uniforms = nullptr;
+	pipeline = nullptr;
+	shader = nullptr;
 }

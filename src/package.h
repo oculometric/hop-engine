@@ -35,10 +35,10 @@ public:
 #endif
 
 private:
-	Package();
-	~Package();
-
 	static std::vector<uint8_t> loadCompressedPackage(std::vector<uint8_t> data);
+	
+	Package() = default;
+	~Package();
 };
 
 }

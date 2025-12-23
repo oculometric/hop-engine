@@ -7,6 +7,18 @@
 using namespace HopEngine;
 using namespace std;
 
+Ref<Texture> Font::getAtlas() const
+{
+    return atlas;
+}
+
+glm::vec2 Font::getCharUVOffset(char c) const
+{
+    return { 
+        glm::fract(c / static_cast<float>(chars_resolution.x)), 
+        glm::floor(c / static_cast<float>(chars_resolution.x)) / static_cast<float>(chars_resolution.y) };
+}
+
 Font::Font(string atlas_name, glm::ivec2 character_texture_size)
 {
     atlas = new Texture(atlas_name);
@@ -21,14 +33,4 @@ Font::~Font()
 {
     DBG_INFO("destroying font " + PTR(this));
     atlas = nullptr;
-}
-
-Ref<Texture> Font::getAtlas() const
-{
-    return atlas;
-}
-
-glm::vec2 Font::getCharUVOffset(char c) const
-{
-    return { glm::fract(c / (float)chars_resolution.x), glm::floor(c / (float)chars_resolution.x) / (float)chars_resolution.y };
 }

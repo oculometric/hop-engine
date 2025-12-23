@@ -27,9 +27,6 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Material);
 
-	Material(Ref<Shader> shader, PipelineBuilder config = PipelineBuilder(), Ref<RenderPass> render_pass = nullptr);
-	~Material() override;
-
 	VkPipeline getPipeline() const;
 	VkPipelineLayout getPipelineLayout() const;
 	void pushToDescriptorSet(size_t index);
@@ -68,7 +65,8 @@ public:
 
 	void drawImGuiDebug();
 
-private:
+	Material(Ref<Shader> shader, PipelineBuilder config = PipelineBuilder(), Ref<RenderPass> render_pass = nullptr);
+	~Material() override;
 };
 
 }

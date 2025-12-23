@@ -80,14 +80,14 @@ private:
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(NodeView);
-
-	NodeView();
-	~NodeView();
-
+	
 	inline Style getStyle() { return style; }
 	void setStyle(Style new_style);
 	void updateMesh();
 	Ref<Node> select(glm::vec2 world_position);
+
+	NodeView();
+	~NodeView() override;
 
 private:
 	void addQuad(glm::vec2 position, glm::vec2 size, glm::vec4 colour, glm::vec3 tint, bool clip_uv, int uv_index);
@@ -99,8 +99,8 @@ private:
 	void addText(std::string text, glm::vec2 start, glm::vec3 tint);
 	void addLinkElem(glm::vec2 position, glm::vec3 tint, int type);
 	void addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, glm::vec3 tint);
-	glm::vec3 getForegroundColour(int index);
-	glm::vec3 getBackgroundColour(glm::vec3 fg_col);
+	glm::vec3 getForegroundColour(int index) const;
+	glm::vec3 getBackgroundColour(glm::vec3 fg_col) const;
 };
 
 }

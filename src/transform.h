@@ -21,9 +21,6 @@ private:
 	glm::mat4 world_matrix;
 
 public:
-	Transform() : local_position({ 0, 0, 0 }), local_euler({ 0, 0, 0 }), local_scale({ 1, 1, 1 }) { updateMatrix(); };
-	Transform(glm::vec3 position, glm::vec3 euler, glm::vec3 scale) : local_position(position), local_euler(euler), local_scale(scale) { updateMatrix(); }
-	
 	inline glm::vec3 getLocalPosition() const { return local_position; }
 	inline void setLocalPosition(glm::vec3 position) { local_position = position; updateMatrix(); }
 	inline glm::vec3 getLocalEuler() const { return local_euler; }
@@ -55,6 +52,9 @@ public:
 
 	void lookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up);
 
+	Transform() : local_position({ 0, 0, 0 }), local_euler({ 0, 0, 0 }), local_scale({ 1, 1, 1 }) { updateMatrix(); };
+	Transform(glm::vec3 position, glm::vec3 euler, glm::vec3 scale) : local_position(position), local_euler(euler), local_scale(scale) { updateMatrix(); }
+	
 private:
 	void correctLocalMatrix();
 	void updateWorldMatrix();

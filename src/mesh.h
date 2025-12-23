@@ -35,10 +35,6 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Mesh);
 
-	Mesh(std::string path);
-	Mesh(std::vector<Vertex> vertices, std::vector<uint16_t> indices, bool keep_accessible = false);
-	~Mesh() override;
-
 	VkBuffer getVertexBuffer() const;
 	VkBuffer getIndexBuffer() const;
 	inline size_t getVertexCount() const { return vertex_count; }
@@ -48,6 +44,10 @@ public:
 
 	static VkVertexInputBindingDescription getBindingDescription();
 	static std::array<VkVertexInputAttributeDescription, 5> getAttributeDescriptions();
+	
+	Mesh(std::string path);
+	Mesh(std::vector<Vertex> vertices, std::vector<uint16_t> indices, bool keep_accessible = false);
+	~Mesh() override;
 
 private:
 	bool readFileToArrays(std::string path, std::vector<Vertex>& verts, std::vector<uint16_t>& inds);
