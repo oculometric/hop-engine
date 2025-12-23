@@ -9,7 +9,7 @@ Resource(material, "res://museum/PalmFrond.hmat") : palm_frond_mat;
 Resource(mesh, "res://museum/Pedestal3.obj") : pedestal_mesh;
 Resource(material, "res://museum/Marble.hmat") : marble_mat;
 Resource(render_graph, "res://museum/RenderGraph.hrgr") : render_graph;
-Resource(texture, "res://nasa_goddard_gaia_dr2_deep_star_map.png") : starry_backdrop;
+Resource(texture, "res://samples/nasa_goddard_gaia_dr2_deep_star_map.png") : starry_backdrop;
 
 Skybox(resource = @starry_backdrop);
 AmbientLight([ 0.0156, 0.0117, 0.0039 ]);

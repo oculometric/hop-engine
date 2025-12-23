@@ -220,19 +220,21 @@
     <ClInclude Include="src\window.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\engine\colour_correct.frag" />
-    <None Include="res\engine\colour_correct.vert" />
-    <None Include="res\engine\common.glsl" />
     <None Include="res\engine\node_shader.frag" />
     <None Include="res\engine\node_shader.vert" />
-    <None Include="res\engine\passthrough.frag" />
-    <None Include="res\engine\passthrough.vert" />
-    <None Include="res\engine\ssao.frag" />
-    <None Include="res\engine\ssao.vert" />
-    <None Include="res\engine\shader.frag" />
-    <None Include="res\engine\shader.vert" />
-    <None Include="res\engine\skybox.frag" />
-    <None Include="res\engine\skybox.vert" />
+    <None Include="res\engine\shaders\colour_correct.frag" />
+    <None Include="res\engine\shaders\colour_correct.vert" />
+    <None Include="res\engine\shaders\common.glsl" />
+    <None Include="res\engine\shaders\default_shader.frag" />
+    <None Include="res\engine\shaders\default_shader.vert" />
+    <None Include="res\engine\shaders\passthrough.frag" />
+    <None Include="res\engine\shaders\passthrough.vert" />
+    <None Include="res\engine\shaders\pbr.frag" />
+    <None Include="res\engine\shaders\pbr.vert" />
+    <None Include="res\engine\shaders\skybox.frag" />
+    <None Include="res\engine\shaders\skybox.vert" />
+    <None Include="res\engine\shaders\ssao.frag" />
+    <None Include="res\engine\shaders\ssao.vert" />
     <None Include="res\half_and_half.frag" />
     <None Include="res\half_and_half.vert" />
     <None Include="res\museum\BlackBricks.hmat" />
@@ -241,11 +243,8 @@
     <None Include="res\museum\PalmFrond.hmat" />
     <None Include="res\museum\Museum.hscn" />
     <None Include="res\museum\WhitePlaster.hmat" />
-    <None Include="res\pbr.frag" />
-    <None Include="res\pbr.vert" />
     <None Include="res\psx.frag" />
     <None Include="res\psx.vert" />
-    <None Include="res\test_mat.hmat" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="hop-engine.rc" />
@@ -255,8 +254,22 @@
     <Image Include="res\icon.ico" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="res\engine\meshes\axes_gizmo.obj" />
+    <Content Include="res\engine\meshes\rotate_gizmo.obj" />
+    <Content Include="res\engine\meshes\skybox.obj" />
+    <Content Include="res\engine\shaders\dither.glsl" />
+    <Content Include="res\engine\shaders\fog.frag" />
+    <Content Include="res\engine\shaders\fog.vert" />
+    <Content Include="res\engine\shaders\gizmo.frag" />
+    <Content Include="res\engine\shaders\gizmo.vert" />
+    <Content Include="res\engine\textures\basic_lut.png" />
     <Content Include="res\museum\RenderGraph.hrgr" />
-    <Content Include="res\test.hrgr" />
+    <Content Include="res\samples\asha.obj" />
+    <Content Include="res\samples\asha.png" />
+    <Content Include="res\samples\bunny.obj" />
+    <Content Include="res\samples\bunny.png" />
+    <Content Include="res\samples\cube.obj" />
+    <Content Include="res\samples\nasa_goddard_gaia_dr2_deep_star_map.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

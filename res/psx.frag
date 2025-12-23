@@ -1,7 +1,7 @@
 #version 450
 
 #define FRAGMENT
-#include "engine/common.glsl"
+#include "engine/shaders/common.glsl"
 
 layout(set = 2, binding = 1) uniform sampler2D albedo;
 

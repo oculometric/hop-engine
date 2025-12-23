@@ -1,4 +1,4 @@
-Resource(shader, "res://pbr") : shader;
+Resource(shader, "res://engine/shaders/pbr") : shader;
 Resource(texture, "res://museum/BlackBricks_t.png") : albedo;
 Resource(texture, "res://museum/BlackBricks_n.png") : normal;
 

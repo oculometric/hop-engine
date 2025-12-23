@@ -674,19 +674,19 @@ RenderServer::RenderServer(Ref<Window> main_window)
     default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, TextureBuilder().data(default_image_data));
     default_sampler = new Sampler(SamplerBuilder());
 
-    axes_gizmo = new Mesh("res://engine/axes_gizmo.obj");
-    rotations_gizmo = new Mesh("res://engine/rotate_gizmo.obj");
+    axes_gizmo = new Mesh("res://engine/meshes/axes_gizmo.obj");
+    rotations_gizmo = new Mesh("res://engine/meshes/rotate_gizmo.obj");
     quad = new Mesh({
         { { -1, -1, 0, 1 }, {}, {}, {}, { 0, 0 } },
         { { 1, -1, 0, 1 }, {}, {}, {}, { 1, 0 } },
         { { -1, 1, 0, 1 }, {}, {}, {}, { 0, 1 } },
         { { 1, 1, 0, 1 }, {}, {}, {}, { 1, 1 } }
         }, { 0, 3, 1, 0, 2, 3 });
-    skybox_cube = new Mesh("res://engine/skybox.obj");
+    skybox_cube = new Mesh("res://engine/meshes/skybox.obj");
 
-    default_material = new Material(new Shader("res://engine/shader", false));
-    gizmo_material = new Material(new Shader("res://engine/gizmo", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE), final_render_pass);
-    skybox_material = new Material(new Shader("res://engine/skybox", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
+    default_material = new Material(new Shader("res://engine/shaders/default_shader", false));
+    gizmo_material = new Material(new Shader("res://engine/shaders/gizmo", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE), final_render_pass);
+    skybox_material = new Material(new Shader("res://engine/shaders/skybox", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
     
     initImGui();
 

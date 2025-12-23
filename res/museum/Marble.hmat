@@ -1,4 +1,4 @@
-Resource(shader, "res://pbr") : shader;
+Resource(shader, "res://engine/shaders/pbr") : shader;
 Resource(texture, "res://museum/Marble_t.png") : albedo;
 Resource(texture, "res://museum/Marble_n.png") : normal;
 

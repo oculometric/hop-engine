@@ -1,5 +1,5 @@
-Resource(shader, "res://engine/fog") : fog;
-Resource(shader, "res://engine/colour_correct") : colour_corrector;
+Resource(shader, "res://engine/shaders/fog") : fog;
+Resource(shader, "res://engine/shaders/colour_correct") : colour_corrector;
 
 Camera(slot = 0, scale = 0.5) : camera;
 PostProcess(shader = @fog, scale = 0.5) : fog

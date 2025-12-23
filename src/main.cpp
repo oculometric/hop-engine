@@ -36,19 +36,19 @@ static Ref<Scene> initScene()
     Ref<Shader> shader = Engine::loadShader("res://psx");
     Ref<Sampler> sampler = new Sampler(SamplerBuilder().filter(VK_FILTER_NEAREST));
     asha = scene->insertObject<StaticMesh>(new StaticMesh(
-        Engine::loadMesh("res://asha/asha.obj"),
+        Engine::loadMesh("res://samples/asha.obj"),
         Engine::keepLoaded(new Material(
             shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE).stencilWrite(1)
         ))));
-    asha->material->setTexture("albedo", Engine::loadTexture("res://asha/asha.png"));
+    asha->material->setTexture("albedo", Engine::loadTexture("res://samples/asha.png"));
     asha->material->setSampler("albedo", sampler);
     asha->transform.setLocalPosition({ 0, 0, -0.9f });
 
     Ref<StaticMesh> bunny = scene->insertObject<StaticMesh>(new StaticMesh(
-        Engine::loadMesh("res://bunny.obj"),
+        Engine::loadMesh("res://samples/bunny.obj"),
         Engine::keepLoaded(new Material(shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE).stencilWrite(2)
         ))));
-    bunny->material->setTexture("albedo", Engine::loadTexture("res://bunny.png"));
+    bunny->material->setTexture("albedo", Engine::loadTexture("res://samples/bunny.png"));
     bunny->material->setSampler("albedo", sampler);
     bunny->setParent(asha);
     bunny->transform.setLocalPosition({ 0, -0.5f, 0.9f });
@@ -71,7 +71,7 @@ static Ref<Scene> initScene()
         glm::vec3(0.0f, 0.0f, 1.0f));
 
     gizmo = scene->insertObject<Gizmo>(new Gizmo());
-    scene->skybox = Engine::loadTexture("res://nasa_goddard_gaia_dr2_deep_star_map.png");
+    scene->skybox = Engine::loadTexture("res://samples/nasa_goddard_gaia_dr2_deep_star_map.png");
 
     Ref<Camera> second_cam = new Camera();
     scene->insertObject(second_cam);

@@ -121,7 +121,7 @@ Shader::Shader(string base_path, bool is_precompiled)
 		if (!compileShaders(base_path, proper_path))
 		{
 			DBG_ERROR(base_path + " shader compilation failed");
-			if (!compileShaders("res://engine/shader", proper_path))
+			if (!compileShaders("res://engine/shaders/default_shader", proper_path))
 				DBG_FAULT("failed to load default shader!");
 		}
 	}

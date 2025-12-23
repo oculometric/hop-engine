@@ -3,7 +3,7 @@
 #define FRAGMENT
 #define NONSTANDARD_FRAG_OUT
 #define OMIT_OBJECT_SET
-#include "engine/common.glsl"
+#include "engine/shaders/common.glsl"
 
 layout(location = 0) out vec4 out_colour;
 

@@ -1,7 +1,7 @@
 #version 450
 
 #define FRAGMENT
-#include "common.glsl"
+#include "shaders/common.glsl"
 
 layout(set = 2, binding = 0) uniform MaterialUniforms
 {
