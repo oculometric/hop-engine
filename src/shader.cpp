@@ -177,7 +177,7 @@ Shader::Shader(string base_path, bool is_precompiled)
 
 Shader::~Shader()
 {
-	DBG_INFO("destroyed shader " + PTR(this));
+	DBG_INFO("destroyed shader '" + getOrigin() + '\'');
 
 	vkDestroyPipelineLayout(RenderServer::getDevice(), pipeline_layout, nullptr);
 	vkDestroyDescriptorSetLayout(RenderServer::getDevice(), descriptor_set_layout, nullptr);

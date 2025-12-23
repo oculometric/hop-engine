@@ -1,7 +1,7 @@
 #version 450
 
 #define VERTEX
-#include "engine/common.glsl"
+#include "common.glsl"
 
 void main()
 {

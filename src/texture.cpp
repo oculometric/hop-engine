@@ -15,7 +15,7 @@ using namespace std;
 
 void Texture::transitionLayout(VkImageLayout new_layout)
 {
-    DBG_VERBOSE("transitioning image " + PTR(this) + " layout from " + vk::to_string((vk::ImageLayout)current_layout) + " to " + vk::to_string((vk::ImageLayout)new_layout));
+    DBG_VERBOSE("transitioning image '" + getOrigin() + "' layout from " + vk::to_string((vk::ImageLayout)current_layout) + " to " + vk::to_string((vk::ImageLayout)new_layout));
 
     VkImageMemoryBarrier memory_barrier{ };
     memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -62,7 +62,7 @@ void Texture::transitionLayout(VkImageLayout new_layout)
 
 void Texture::copyBufferToImage(Ref<Buffer> buffer)
 {
-    DBG_VERBOSE("copying buffer " + PTR(buffer.get()) + " to image " + PTR(this));
+    DBG_VERBOSE("copying buffer " + PTR(buffer.get()) + " to image '" + getOrigin() + '\'');
 
     VkBufferImageCopy image_copy{ };
     image_copy.bufferOffset = 0;
@@ -91,7 +91,7 @@ VkImageView Texture::getView(bool stencil)
     if (stencil && stencil_view != VK_NULL_HANDLE)
         return stencil_view;
 
-    DBG_VERBOSE("creating image view for image " + PTR(this));
+    DBG_VERBOSE("creating image view for image '" + getOrigin() + '\'');
 
     VkImageViewCreateInfo view_create_info{ };
     view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -193,7 +193,7 @@ Texture::Texture(string file, TextureBuilder builder)
 
 Texture::~Texture()
 {
-    DBG_INFO("destroying image " + PTR(this));
+    DBG_INFO("destroying image '" + getOrigin() + '\'');
     if (view != VK_NULL_HANDLE)
         vkDestroyImageView(RenderServer::getDevice(), view, nullptr);
     if (stencil_view != VK_NULL_HANDLE)

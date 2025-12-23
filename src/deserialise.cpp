@@ -718,7 +718,7 @@ Ref<Object> deserialiseLight(const map<string, TokenReader::Token>& args, Ref<Sc
 		else if (it->second.s_value == "POINT")
 			obj->type = Light::POINT;
 		else if (it->second.s_value == "SPOT")
-			obj->type == Light::SPOT;
+			obj->type = Light::SPOT;
 		else
 		{
 			DBG_ERROR("error deserialising light, invalid light type '" + it->second.s_value + "'");

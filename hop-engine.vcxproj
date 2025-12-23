@@ -270,6 +270,7 @@
     <Content Include="res\samples\bunny.png" />
     <Content Include="res\samples\cube.obj" />
     <Content Include="res\samples\nasa_goddard_gaia_dr2_deep_star_map.png" />
+    <Content Include="res\test_graph.hrgr" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

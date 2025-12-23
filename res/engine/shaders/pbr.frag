@@ -1,7 +1,7 @@
 #version 450
 
 #define FRAGMENT
-#include "engine/common.glsl"
+#include "common.glsl"
 
 layout(set = 2, binding = 0) uniform MaterialInfo
 {

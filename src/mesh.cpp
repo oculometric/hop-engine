@@ -26,7 +26,7 @@ void Mesh::updateData(vector<Vertex> vertices, vector<uint16_t> indices, size_t 
 {
     if (!accessible)
     {
-        DBG_WARNING("attempted to update mesh " + PTR(this) + " which is not accessible to CPU memory");
+        DBG_WARNING("attempted to update mesh '" + getOrigin() + "' which is not accessible to CPU memory");
         return;
     }
 
@@ -143,7 +143,7 @@ Mesh::Mesh(vector<Vertex> vertices, vector<uint16_t> indices, bool keep_accessib
 
 Mesh::~Mesh()
 {
-    DBG_INFO("destroying mesh " + PTR(this));
+    DBG_INFO("destroying mesh '" + getOrigin() + '\'');
     vertex_buffer = nullptr;
     index_buffer = nullptr;
 }

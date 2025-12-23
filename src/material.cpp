@@ -27,7 +27,7 @@ VkPipelineLayout Material::getPipelineLayout() const
 
 void Material::pushToDescriptorSet(size_t index)
 {
-	DBG_BABBLE("material " + PTR(this) + " pushing to descriptor set " + to_string(index));
+	DBG_BABBLE("material '" + getOrigin() + "' pushing to descriptor set " + to_string(index));
 	uniforms->pushToDescriptorSet(index);
 }
 
@@ -53,13 +53,13 @@ Ref<Material> Material::duplicate() const
 
 void Material::setTexture(uint32_t binding, Ref<Texture> texture, bool use_stencil)
 {
-	DBG_VERBOSE("material " + PTR(this) + " assigned texture " + PTR(texture.get()) + " to binding " + to_string(binding));
+	DBG_VERBOSE("material '" + getOrigin() + "' assigned texture '" + texture->getOrigin() + "' to binding " + to_string(binding));
 	uniforms->setTexture(binding, texture, use_stencil);
 }
 
 void Material::setSampler(uint32_t binding, Ref<Sampler> sampler)
 {
-	DBG_VERBOSE("material " + PTR(this) + " assigned sampler " + PTR(sampler.get()) + " to binding " + to_string(binding));
+	DBG_VERBOSE("material '" + getOrigin() + "' assigned sampler " + PTR(sampler.get()) + " to binding " + to_string(binding));
 	uniforms->setSampler(binding, sampler);
 }
 
@@ -68,11 +68,11 @@ void Material::setTexture(string name, Ref<Texture> texture, bool use_stencil)
 	auto it = texture_name_to_binding.find(name);
 	if (it != texture_name_to_binding.end())
 	{
-		DBG_VERBOSE("material " + PTR(this) + " assigned texture " + PTR(texture.get()) + " to binding '" + name + '\'');
+		DBG_VERBOSE("material '" + getOrigin + "' assigned texture '" + texture->getOrigin() + "' to binding '" + name + '\'');
 		uniforms->setTexture(it->second, texture, use_stencil);
 	}
 	else
-		DBG_WARNING("material " + PTR(this) + " has no such binding '" + name + '\'');
+		DBG_WARNING("material '" + getOrigin() + "' has no such binding '" + name + '\'');
 }
 
 void Material::setSampler(string name, Ref<Sampler> sampler)
@@ -80,11 +80,11 @@ void Material::setSampler(string name, Ref<Sampler> sampler)
 	auto it = texture_name_to_binding.find(name);
 	if (it != texture_name_to_binding.end())
 	{
-		DBG_VERBOSE("material " + PTR(this) + " assigned sampler " + PTR(sampler.get()) + " to binding '" + name + '\'');
+		DBG_VERBOSE("material '" + getOrigin() + "' assigned sampler " + PTR(sampler.get()) + " to binding '" + name + '\'');
 		uniforms->setSampler(it->second, sampler);
 	}
 	else
-		DBG_WARNING("material " + PTR(this) + " has no such binding '" + name + '\'');
+		DBG_WARNING("material '" + getOrigin() + "' has no such binding '" + name + '\'');
 }
 
 void Material::setUniform(string name, void* data, size_t size)
@@ -92,15 +92,15 @@ void Material::setUniform(string name, void* data, size_t size)
 	auto it = variable_name_to_binding.find(name);
 	if (it == variable_name_to_binding.end())
 	{
-		DBG_WARNING("material " + PTR(this) + " has no such uniform '" + name + '\'');
+		DBG_WARNING("material '" + getOrigin() + "' has no such uniform '" + name + '\'');
 		return;
 	}
 	UniformVariable var = it->second;
 	if (size != var.size)
-		DBG_WARNING("material " + PTR(this) + " uniform '" + name + "' size mismatch (given " + to_string(size) + ", expected " + to_string(var.size) + ")");
+		DBG_WARNING("material '" + getOrigin() + "' uniform '" + name + "' size mismatch (given " + to_string(size) + ", expected " + to_string(var.size) + ")");
 	size_t clamped_size = min(size, var.size);
 	memcpy(((uint8_t*)uniforms->getBuffer()) + var.offset, data, clamped_size);
-	DBG_VERBOSE("material " + PTR(this) + " updated uniform '" + name + '\'');
+	DBG_VERBOSE("material '" + getOrigin() + "' updated uniform '" + name + '\'');
 }
 
 Material::Material(Ref<Shader> _shader, PipelineBuilder config, Ref<RenderPass> _render_pass)
@@ -125,12 +125,12 @@ Material::Material(Ref<Shader> _shader, PipelineBuilder config, Ref<RenderPass> 
 			texture_name_to_binding[binding.name] = binding.binding;
 	}
 
-	DBG_INFO("created material from shader " + PTR(shader.get()) + " with config " + vk::to_string((vk::CullModeFlags)config.culling_mode) + ", " + vk::to_string((vk::PolygonMode)config.polygon_mode));
+	DBG_INFO("created material from shader '" + shader->getOrigin() + "' with config " + vk::to_string((vk::CullModeFlags)config.culling_mode) + ", " + vk::to_string((vk::PolygonMode)config.polygon_mode));
 }
 
 Material::~Material()
 {
-	DBG_INFO("destroying material " + PTR(this));
+	DBG_INFO("destroying material '" + getOrigin() + '\'');
 	uniforms = nullptr;
 	pipeline = nullptr;
 	shader = nullptr;

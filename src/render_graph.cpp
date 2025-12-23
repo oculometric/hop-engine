@@ -222,7 +222,7 @@ Ref<Material> RenderGraph::getMaterialForStep(size_t step)
 
 RenderGraph::RenderGraph(RenderGraphBuilder config)
 {
-    passthrough = new Material(new Shader("res://engine/passthrough", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), RenderServer::getFinalRenderPass());
+    passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough"), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), RenderServer::getFinalRenderPass());
     execution_steps = config.execution_steps;
     if (!config.execution_steps.empty())
         expected_extent = config.execution_steps[0].render_pass->getExtent();

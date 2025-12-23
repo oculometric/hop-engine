@@ -85,7 +85,7 @@ static Ref<Scene> initScene()
     third_cam->transform.lookAt({ 0, -0.2f, 0.8f }, { 0, 0, 0.7f }, { 0, 0, 1 });
     third_cam->fov = 120.0f;
 
-    scene->render_graph = RenderGraph::deserialise("res://test.hrgr");
+    scene->render_graph = RenderGraph::deserialise("res://test_graph.hrgr");
 
     glm::vec4 samples[64];
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
@@ -363,11 +363,11 @@ INT_PTR dialogFunc(HWND handle, UINT message, WPARAM unnamedParam3, LPARAM unnam
 int main()
 {
     selected_scene = 2;
-//     while (true)
-//     {
-// #if defined(_WIN32)
-//         DialogBox(NULL, MAKEINTRESOURCE(IDD_DIALOG1), NULL, dialogFunc);
-// #endif
+    while (true)
+    {
+#if defined(_WIN32)
+        DialogBox(NULL, MAKEINTRESOURCE(IDD_DIALOG1), NULL, dialogFunc);
+#endif
         Engine::init();
         Engine::debugClearSelection();
 
@@ -380,7 +380,7 @@ int main()
 
         Engine::debugClearSelection();
         Engine::destroy();
-    // }
+    }
 
     return 0;
 }

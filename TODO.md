@@ -3,6 +3,7 @@
 ## v0.5
 - fix SSAO pass (currently doesn't look quite right and very inefficient, has to be rendered at quarter resolution) [H]
 - ability to load stuff in the UI, including a list of items in the package [M]
+- ability to prune unused-but-still-loaded meshes [M]
 - more scene control using ImGui (modify the render graph, material uniforms) [M]
 ---
 - do some performance profiling to see where the inefficiency is [H]

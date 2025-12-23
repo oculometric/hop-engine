@@ -1,0 +1,22 @@
+Resource(shader, "res://engine/shaders/ssao") : ssao_shader;
+Resource(shader, "res://half_and_half") : half_shader;
+Resource(shader, "res://engine/shaders/colour_correct") : cc_shader;
+
+Camera(slot = 0) : main_cam;
+Camera(slot = 1) : right_cam;
+Camera(slot = 2, scale = 0.1) : ring_doorbell;
+PostProcess(shader = @ssao_shader, scale = 0.25) : ssao
+{
+    Input(binding = 0, step = @main_cam, attachment = 1);
+    Input(binding = 1, step = @main_cam, attachment = 4);
+};
+PostProcess(shader = @half_shader) : multi_composite
+{
+    Input(binding = 0, step = @main_cam, attachment = 0);
+    Input(binding = 1, step = @right_cam, attachment = 1, address = REPEAT);
+    Input(binding = 2, step = @ring_doorbell, attachment = 0, address = REPEAT, filter = NEAREST);
+};
+PostProcess(shader = @cc_shader) : final_pass
+{
+    Input(binding = 0, step = @multi_composite, attachment = 0, filter = NEAREST);
+};

@@ -52,7 +52,7 @@ inline Ref<T> Scene::insertObject(Ref<T> obj)
 	static_assert(std::is_convertible<T*, Object*>::value, "object must be a HopEngine::Object subclass");
 	if (obj.get() == root.get())
 	{
-		DBG_ERROR("attempt to insert object " + PTR(obj.get()) + " into scene " + PTR(this) + " but it is already present in the tree!");
+		DBG_ERROR("attempt to insert object '" + obj->name + "' (" + PTR(obj.get()) + ") into scene " + PTR(this) + " but it is already present in the tree!");
 		return nullptr;
 	}
 
@@ -60,7 +60,7 @@ inline Ref<T> Scene::insertObject(Ref<T> obj)
 	{
 		if (test_obj.get() == obj.get())
 		{
-			DBG_ERROR("attempt to insert object " + PTR(obj.get()) + " into scene " + PTR(this) + " but it is already present in the tree!");
+			DBG_ERROR("attempt to insert object '" + obj->name + "' (" + PTR(obj.get()) + ") into scene " + PTR(this) + " but it is already present in the tree!");
 			return obj;
 		}
 	}

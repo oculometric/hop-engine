@@ -55,7 +55,7 @@ Object::Object()
 
 Object::~Object()
 {
-	DBG_VERBOSE("destroying object " + PTR(this));
+	DBG_VERBOSE("destroying object '" + name + "' (" + PTR(this) + ')');
 }
 
 void Camera::pushToDescriptorSet(size_t index) { }
