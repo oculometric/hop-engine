@@ -1,0 +1,13 @@
+Resource(shader, "res://engine/fog") : fog;
+Resource(shader, "res://engine/colour_correct") : colour_corrector;
+
+Camera(slot = 0, scale = 0.5) : camera;
+PostProcess(shader = @fog, scale = 0.5) : fog
+{
+    Input(binding = 0, step = @camera, attachment = 0);
+    Input(binding = 1, step = @camera, attachment = 4);
+};
+PostProcess(shader = @colour_corrector, scale = 0.5) : colour_grading
+{
+    Input(binding = 0, step = @fog, attachment = 0);
+};

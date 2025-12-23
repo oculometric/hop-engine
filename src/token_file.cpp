@@ -443,7 +443,7 @@ vector<TokenReader::Statement> TokenReader::extractSyntaxTree(const vector<Token
     return statements;
 }
 
-bool TokenReader::readStatement(const Statement& statement, bool children_allowed, bool requires_identifier, const vector<TokenType> expected_args, vector<Token>& extracted_args, string error_base)
+bool TokenReader::readStatementAnonymous(const Statement& statement, bool children_allowed, bool requires_identifier, const vector<TokenType> expected_args, vector<Token>& extracted_args, string error_base)
 {
     // check if there are children
     if (!statement.children.empty() && !children_allowed)
@@ -493,7 +493,7 @@ bool TokenReader::readStatement(const Statement& statement, bool children_allowe
     return true;
 }
 
-bool TokenReader::readStatement(const Statement& statement, bool children_allowed, bool requires_identifier, const std::map<std::string, std::pair<TokenType, bool>> expected_args, std::map<std::string, Token>& extracted_args, std::string error_base)
+bool TokenReader::readStatementNamed(const Statement& statement, bool children_allowed, bool requires_identifier, const std::map<std::string, std::pair<TokenType, bool>> expected_args, std::map<std::string, Token>& extracted_args, std::string error_base)
 {
     // check if there are children
     if (!statement.children.empty() && !children_allowed)

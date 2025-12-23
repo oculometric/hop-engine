@@ -4,7 +4,6 @@
 
 #include "texture.h"
 #include "render_graph.h"
-#include "uniform_block.h"
 
 using namespace HopEngine;
 using namespace std;

@@ -1,0 +1,31 @@
+Resource(mesh, "res://museum/Room01Concrete.obj") : room01_concrete_mesh;
+Resource(material, "res://museum/ConcretePanels.hmat") : concrete_panels_mat;
+Resource(mesh, "res://museum/Room01Bricks.obj") : room01_bricks_mesh;
+Resource(material, "res://museum/BlackBricks.hmat") : black_bricks_mat;
+Resource(mesh, "res://museum/Room01Plaster.obj") : room01_plaster_mesh;
+Resource(material, "res://museum/WhitePlaster.hmat") : white_plaster_mat;
+Resource(mesh, "res://museum/PalmTree1.obj") : palm_tree_mesh;
+Resource(material, "res://museum/PalmFrond.hmat") : palm_frond_mat;
+Resource(mesh, "res://museum/Pedestal3.obj") : pedestal_mesh;
+Resource(mesh, "res://museum/Marble.hmat") : marble_mat;
+Resource(render_graph, "res://museum/RenderGraph.hrgr") : render_graph;
+Resource(texture, "res://nasa_goddard_gaia_dr2_deep_star_map.png") : starry_backdrop;
+
+Skybox(resource = @starry_backdrop);
+AmbientLight([ 0.0156, 0.0117, 0.0039 ]);
+RenderGraph(resource = @render_graph);
+
+StaticMesh(mesh = @room01_concrete_mesh, material = @concrete_panels_mat);
+StaticMesh(mesh = @room01_bricks_mesh, material = @black_bricks_mat);
+StaticMesh(mesh = @room01_plaster_mesh, material = @white_plaster_mat);
+
+StaticMesh(mesh = @palm_tree_mesh, material = @palm_frond_mat);
+StaticMesh(mesh = @pedestal_mesh, material = @marble_mat, position = [ 0, 4, 0 ]);
+StaticMesh(mesh = @pedestal_mesh, material = @marble_mat, position = [ 0, 6, 0 ]);
+StaticMesh(mesh = @pedestal_mesh, material = @marble_mat, position = [ 0, 8, 0 ]);
+
+Light(type = DIRECTIONAL, position = [ 1, 0, 2 ], euler = [ 20, 30, 0 ], colour = [ 1, 1, 1 ]);
+Camera(slot = 0)
+{
+    Light(type = POINT, colour = [ 0.5, 0.5, 0.5 ]);
+};

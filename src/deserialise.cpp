@@ -8,6 +8,7 @@
 #include "sampler.h"
 #include "render_graph.h"
 #include "engine.h"
+#include "scene.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -185,7 +186,7 @@ Ref<Material> Material::deserialise(string name)
 		if (statement.keyword == "Resource")
 		{
 			vector<TokenReader::Token> args;
-			if (!TokenReader::readStatement(statement, false, true,
+			if (!TokenReader::readStatementAnonymous(statement, false, true,
 				{
 					TokenReader::TEXT,
 					TokenReader::STRING
@@ -204,7 +205,7 @@ Ref<Material> Material::deserialise(string name)
 		else if (statement.keyword == "Depth")
 		{
 			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatement(statement, false, false,
+			if (!TokenReader::readStatementNamed(statement, false, false,
 				{
 					{ "operation", { TokenReader::TEXT, false } },
 					{ "test", { TokenReader::TEXT, false } },
@@ -248,7 +249,7 @@ Ref<Material> Material::deserialise(string name)
 		else if (statement.keyword == "Culling")
 		{
 			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatement(statement, false, false,
+			if (!TokenReader::readStatementNamed(statement, false, false,
 				{
 					{ "mode", { TokenReader::TEXT, false } },
 				}, args, "error deserialising material '" + name + "'"))
@@ -268,7 +269,7 @@ Ref<Material> Material::deserialise(string name)
 		else if (statement.keyword == "Polygon")
 		{
 			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatement(statement, false, false,
+			if (!TokenReader::readStatementNamed(statement, false, false,
 				{
 					{ "mode", { TokenReader::TEXT, false } },
 				}, args, "error deserialising material '" + name + "'"))
@@ -288,7 +289,7 @@ Ref<Material> Material::deserialise(string name)
 		else if (statement.keyword == "Stencil")
 		{
 			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatement(statement, false, false,
+			if (!TokenReader::readStatementNamed(statement, false, false,
 				{
 					{ "compare", { TokenReader::TEXT, true } },
 					{ "compare_value", { TokenReader::INT, true } },
@@ -310,7 +311,7 @@ Ref<Material> Material::deserialise(string name)
 		else if (statement.keyword == "Shader")
 		{
 			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatement(statement, false, false,
+			if (!TokenReader::readStatementNamed(statement, false, false,
 				{
 					{ "resource", { TokenReader::IDENTIFIER, true } },
 				}, args, "error deserialising material '" + name + "'"))
@@ -342,7 +343,7 @@ Ref<Material> Material::deserialise(string name)
 		else if (statement.keyword == "Texture")
 		{
 			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatement(statement, false, false,
+			if (!TokenReader::readStatementNamed(statement, false, false,
 				{
 					{ "resource", { TokenReader::IDENTIFIER, true } },
 					{ "binding", { TokenReader::STRING, true } },
@@ -474,7 +475,7 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 		if (statement.keyword == "Resource")
 		{
 			vector<TokenReader::Token> args;
-			if (!TokenReader::readStatement(statement, false, true,
+			if (!TokenReader::readStatementAnonymous(statement, false, true,
 				{
 					TokenReader::TEXT,
 					TokenReader::STRING
@@ -491,7 +492,7 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 		else if (statement.keyword == "RenderPass")
 		{
 			vector<TokenReader::Token> args;
-			if (!TokenReader::readStatement(statement, false, true,
+			if (!TokenReader::readStatementAnonymous(statement, false, true,
 				{
 					TokenReader::TEXT,
 					TokenReader::INT
@@ -509,7 +510,7 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 		else if (statement.keyword == "Camera")
 		{
 			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatement(statement, false, true,
+			if (!TokenReader::readStatementNamed(statement, false, true,
 				{
 					{ "slot", { TokenReader::INT, true } },
 					{ "scale", { TokenReader::FLOAT, false } },
@@ -552,7 +553,7 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 		else if (statement.keyword == "PostProcess")
 		{
 			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatement(statement, true, true,
+			if (!TokenReader::readStatementNamed(statement, true, true,
 				{
 					{ "shader", { TokenReader::IDENTIFIER, true } },
 					{ "scale", { TokenReader::FLOAT, false } },
@@ -586,7 +587,7 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 					return nullptr;
 				}
 				map<string, TokenReader::Token> args2;
-				if (!TokenReader::readStatement(sub_statement, false, false,
+				if (!TokenReader::readStatementNamed(sub_statement, false, false,
 					{
 						{ "binding", { TokenReader::INT, true } },
 						{ "step", { TokenReader::IDENTIFIER, true } },
@@ -660,4 +661,83 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 		}
 	}
 	return new RenderGraph(builder);
+}
+
+Ref<Scene> Scene::deserialise(string name)
+{
+	auto raw_data = Package::tryLoadFile(name);
+	if (raw_data.empty())
+		return nullptr;
+
+	std::string token_str((char*)raw_data.data(), raw_data.size());
+	auto tokens = TokenReader::tokenise(token_str);
+	if (tokens.empty())
+		return nullptr;
+
+	auto syntax_tree = TokenReader::extractSyntaxTree(tokens, token_str);
+	if (syntax_tree.empty())
+		return nullptr;
+
+	map<string, Ref<Material>> materials;
+	map<string, Ref<Mesh>> meshes;
+	map<string, Ref<Texture>> textures;
+	
+	Ref<Scene> scene = new Scene();
+	
+	for (const TokenReader::Statement& statement : syntax_tree)
+	{
+		if (statement.keyword == "Resource")
+		{
+			vector<TokenReader::Token> args;
+			if (!TokenReader::readStatementAnonymous(statement, false, true,
+				{
+					TokenReader::TEXT,
+					TokenReader::STRING
+				}, args, "error deserialising scene '" + name + "'"))
+				return nullptr;
+			if (args[0].s_value == "material")
+				materials[statement.identifier] = Engine::loadMaterial(args[1].s_value);
+			else if (args[0].s_value == "texture")
+				textures[statement.identifier] = Engine::loadTexture(args[1].s_value);
+			else if (args[0].s_value == "mesh")
+				meshes[statement.identifier] = Engine::loadMesh(args[1].s_value);
+		// TODO: render graph resource
+			else
+			{
+				DBG_ERROR("error deserialising scene '" + name + "': invalid resource type");
+				return nullptr;
+			}
+		}
+		else if (statement.keyword == "AmbientLight")
+		{
+			vector<TokenReader::Token> args;
+			if (!TokenReader::readStatementAnonymous(statement, false, false,
+				{
+					TokenReader::VECTOR
+				}, args, "error deserialising scene '" + name + "'"))
+				return nullptr;
+			scene->ambient_colour = args[0].c_value;
+		}
+		else if (statement.keyword == "Skybox")
+		{
+			map<string, TokenReader::Token> args;
+			if (!TokenReader::readStatementNamed(statement, false, false,
+				{
+					{ "resource", { TokenReader::VECTOR, true } }
+				}, args, "error deserialising scene '" + name + "'"))
+				return nullptr;
+			scene->skybox = Engine::loadTexture(args["resource"].s_value);
+		}
+		else if (statement.keyword == "Object")
+		{
+			// TODO: objects
+		}
+		else
+		{
+			DBG_ERROR("error deserialising material '" + name + "': invalid keyword '" + statement.keyword + "'");;
+			return nullptr;
+		}
+	}
+	
+	return scene;
 }

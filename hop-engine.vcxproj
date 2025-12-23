@@ -239,13 +239,13 @@
     <None Include="res\museum\ConcretePanels.hmat" />
     <None Include="res\museum\Marble.hmat" />
     <None Include="res\museum\PalmFrond.hmat" />
+    <None Include="res\museum\Museum.hscn" />
     <None Include="res\museum\WhitePlaster.hmat" />
     <None Include="res\pbr.frag" />
     <None Include="res\pbr.vert" />
     <None Include="res\psx.frag" />
     <None Include="res\psx.vert" />
     <None Include="res\test_mat.hmat" />
-    <None Include="res\test_scene.hscn" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="hop-engine.rc" />
@@ -255,6 +255,7 @@
     <Image Include="res\icon.ico" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="res\museum\RenderGraph.hrgr" />
     <Content Include="res\test.hrgr" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -160,8 +160,8 @@ public:
     static std::vector<Token>::const_iterator findClosingBrace(const std::vector<Token>& tokens, const std::vector<Token>::const_iterator open_index, const std::string& original_content);
     static std::vector<Statement> extractSyntaxTree(const std::vector<Token>& tokens, const std::string& original_content);
 
-    static bool readStatement(const Statement& statement, bool children_allowed, bool requires_identifier, const std::vector<TokenType> expected_args, std::vector<Token>& extracted_args, std::string error_base);
-    static bool readStatement(const Statement& statement, bool children_allowed, bool requires_identifier, const std::map<std::string, std::pair<TokenType, bool>> expected_args, std::map<std::string, Token>& extracted_args, std::string error_base);
+    static bool readStatementAnonymous(const Statement& statement, bool children_allowed, bool requires_identifier, const std::vector<TokenType> expected_args, std::vector<Token>& extracted_args, std::string error_base);
+    static bool readStatementNamed(const Statement& statement, bool children_allowed, bool requires_identifier, const std::map<std::string, std::pair<TokenType, bool>> expected_args, std::map<std::string, Token>& extracted_args, std::string error_base);
     static bool checkNamedArgs(const Statement& statement, bool named);
 
 private:

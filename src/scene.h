@@ -39,6 +39,8 @@ public:
 	Ref<RenderGraph> getRenderGraph() const;
 	std::vector<DrawCommand> getDrawCommands() const;
 	void drawImGuiDebug();
+	
+	static Ref<Scene> deserialise(std::string name);
 
 	Scene();
 	~Scene() override;
