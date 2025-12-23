@@ -30,8 +30,9 @@ static WeakRef<Gizmo> gizmo;
 static WeakRef<NodeView::Node> selected_node;
 static WeakRef<Material> cc_material;
 
-static void initScene(Ref<Scene> scene)
+static Ref<Scene> initScene()
 {
+    Ref<Scene> scene = new Scene();
     Ref<Shader> shader = Engine::loadShader("res://psx");
     Ref<Sampler> sampler = new Sampler(SamplerBuilder().filter(VK_FILTER_NEAREST));
     asha = scene->insertObject<StaticMesh>(new StaticMesh(
@@ -100,6 +101,7 @@ static void initScene(Ref<Scene> scene)
     cc_material = scene->render_graph->getMaterialForStep(5);
 
     Engine::debugClearSelection(asha.cast<Object>(), asha->material);
+    return scene;
 }
 
 static void updateScene(Ref<Scene> scene, float delta_time)
@@ -118,8 +120,9 @@ static void updateScene(Ref<Scene> scene, float delta_time)
     Input::resetMouseDelta();
 }
 
-static void initNodeScene(Ref<Scene> scene)
+static Ref<Scene> initNodeScene()
 {
+    Ref<Scene> scene = new Scene();
     node_view = scene->insertObject<NodeView>(new NodeView());
     node_view->nodes.push_back(new NodeView::Node
         { "Hello, World!",
@@ -201,6 +204,8 @@ static void initNodeScene(Ref<Scene> scene)
 
     scene->getCamera(0)->transform.lookAt({ 0, 0, 6 }, { 0, 0, 0 }, { 0, 1, 0 });
     scene->getCamera(0)->clear_colour = {0, 0, 0};
+    
+    return scene;
 }
 
 void updateNodeScene(Ref<Scene> scene, float delta_time)
@@ -249,58 +254,15 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
     Input::resetMouseDelta();
 }
 
-void initMaterialScene(Ref<Scene> scene)
+Ref<Scene> initMaterialScene()
 {
-    scene->insertObject<StaticMesh>(new StaticMesh(
-        Engine::loadMesh("res://museum/Room01Concrete.obj"),
-        Engine::loadMaterial("res://museum/ConcretePanels.hmat")));
-    scene->insertObject<StaticMesh>(new StaticMesh(
-        Engine::loadMesh("res://museum/Room01Bricks.obj"),
-        Engine::loadMaterial("res://museum/BlackBricks.hmat")));
-    scene->insertObject<StaticMesh>(new StaticMesh(
-        Engine::loadMesh("res://museum/Room01Plaster.obj"),
-        Engine::loadMaterial("res://museum/WhitePlaster.hmat")));
-    
-    auto palm = scene->insertObject<StaticMesh>(new StaticMesh(
-        Engine::loadMesh("res://museum/PalmTree1.obj"),
-        Engine::loadMaterial("res://museum/PalmFrond.hmat")));
-    palm->transform.setPosition({ 0, 0, 0 });
-    
-    auto pillar = scene->insertObject<StaticMesh>(new StaticMesh(
-        Engine::loadMesh("res://museum/Pedestal3.obj"),
-        Engine::loadMaterial("res://museum/Marble.hmat")));
-    pillar->transform.setPosition({ 0, 4, 0 });
-    auto pillar2 = scene->insertObject<StaticMesh>(new StaticMesh(
-        Engine::loadMesh("res://museum/Pedestal3.obj"),
-        Engine::loadMaterial("res://museum/Marble.hmat")));
-    pillar2->transform.setPosition({ 0, 6, 0 });
-    auto pillar3 = scene->insertObject<StaticMesh>(new StaticMesh(
-        Engine::loadMesh("res://museum/Pedestal3.obj"),
-        Engine::loadMaterial("res://museum/Marble.hmat")));
-    pillar3->transform.setPosition({ 0, 8, 0 });
-
-    auto sun_lamp = scene->insertObject<Light>(new Light(Light::DIRECTIONAL));
-    sun_lamp->transform.setLocalPosition({ 1, 0, 2 });
-    sun_lamp->transform.rotateLocal({ 20.0f, 30.0f, 0.0f });
-    sun_lamp->colour = { 1.0f, 1.0f, 1.0f, 0.0f };
-
-    auto other_lamp = scene->insertObject<Light>(new Light(Light::POINT));
-    other_lamp->colour = { 0.5f, 0.5f, 0.5f, 0.0f };
-    other_lamp->setParent(scene->getCamera(0));
+    Ref<Scene> scene = Scene::deserialise("res://museum/Museum.hscn");
+    if (!scene) return scene;
     
     scene->getCamera(0)->transform.lookAt(glm::vec3(0.0f, -7.5f, 1.73f),
-        glm::vec3(0.0f, 1.0f, 1.73f),
-        glm::vec3(0.0f, 0.0f, 1.0f));
+         glm::vec3(0.0f, 1.0f, 1.73f),
+         glm::vec3(0.0f, 0.0f, 1.0f));
     
-    scene->render_graph = new RenderGraph(RenderGraphBuilder()
-        .addCamera(0)
-        .addPostProcess(Engine::loadShader("res://engine/fog"), { 
-                { 0, RenderTextureBinding(0, 0) },
-                { 1, RenderTextureBinding(0, 4) },
-            })
-        .addPostProcess(Engine::loadShader("res://engine/colour_correct"), { 
-            { 0, RenderTextureBinding(1, 0) },
-            }));
     auto fog_mat = scene->render_graph->getMaterialForStep(1);
     fog_mat->setFloatUniform("fog_start", 4.0f);
     fog_mat->setFloatUniform("fog_end", 24.0f);
@@ -315,7 +277,7 @@ void initMaterialScene(Ref<Scene> scene)
     cc_material->setSampler("lut", new Sampler(SamplerBuilder().address(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE)));
     cc_material->setFloatUniform("use_lut", 1);
 
-    scene->skybox = Engine::loadTexture("res://nasa_goddard_gaia_dr2_deep_star_map.png");
+    return scene;
 }
 
 static int selected_scene = 0;
@@ -352,7 +314,7 @@ void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
 struct SceneFuncSet
 {
     std::wstring name;
-    void(*init_func)(Ref<Scene>);
+    Ref<Scene>(*init_func)();
     void(*update_func)(Ref<Scene>, float);
     void(*imgui_func)(Ref<Scene>, float);
 };

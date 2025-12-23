@@ -1,7 +1,6 @@
 # TODO
 
 ## v0.5
-- scene deserialisation [M] (IN PROGRESS)
 - engine demo objects [H]
 - fix SSAO pass (currently doesn't look quite right and very inefficient, has to be rendered at quarter resolution) [H]
 - ability to load stuff in the UI, including a list of items in the package [M]

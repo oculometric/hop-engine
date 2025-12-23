@@ -25,15 +25,14 @@ void Engine::destroy()
         delete engine;
 }
 
-void Engine::setup(void(* init_func)(Ref<Scene>), void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>, float))
+void Engine::setup(Ref<Scene>(* init_func)(), void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>, float))
 {
     RenderServer::waitIdle();
 
     engine->imgui_func = _imgui_func;
     engine->update_func = _update_func;
-    engine->scene = new Scene();
     if (init_func)
-        init_func(engine->scene);
+        engine->scene = init_func();
 }
 
 void Engine::mainLoop()

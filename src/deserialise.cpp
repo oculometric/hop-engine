@@ -9,6 +9,9 @@
 #include "render_graph.h"
 #include "engine.h"
 #include "scene.h"
+#include "mesh.h"
+#include "object.h"
+#include "token_file.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -663,13 +666,195 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 	return new RenderGraph(builder);
 }
 
+struct SceneResources
+{
+	map<string, Ref<Material>> materials;
+	map<string, Ref<Mesh>> meshes;
+	map<string, Ref<Texture>> textures;
+};
+
+Ref<Object> deserialiseStaticMesh(const map<string, TokenReader::Token>& args, Ref<Scene> scene, const SceneResources& resources)
+{
+	Ref<StaticMesh> obj = new StaticMesh(nullptr, nullptr);
+	auto it = args.find("mesh");
+	if (it != args.end())
+	{
+		auto mesh_it = resources.meshes.find(it->second.s_value);
+		if (mesh_it == resources.meshes.end())
+		{
+			DBG_ERROR("error deserialising static mesh, invalid mesh identifier '" + it->second.s_value + "'");
+			return nullptr;
+		}
+		obj->mesh = mesh_it->second;
+	}
+	it = args.find("material");
+	if (it != args.end())
+	{
+		auto material_it = resources.materials.find(it->second.s_value);
+		if (material_it == resources.materials.end())
+		{
+			DBG_ERROR("error deserialising static mesh, invalid material identifier '" + it->second.s_value + "'");
+			return nullptr;
+		}
+		obj->material = material_it->second;
+	}
+	it = args.find("camera_mask");
+	if (it != args.end())
+	{
+		obj->camera_mask = it->second.i_value;
+	}
+	
+	return obj.cast<Object>();
+}
+
+Ref<Object> deserialiseLight(const map<string, TokenReader::Token>& args, Ref<Scene> scene, const SceneResources& resources)
+{
+	Ref<Light> obj = new Light(Light::DIRECTIONAL);
+	auto it = args.find("type");
+	if (it != args.end())
+	{
+		if (it->second.s_value == "DIRECTIONAL")
+			obj->type = Light::DIRECTIONAL;
+		else if (it->second.s_value == "POINT")
+			obj->type = Light::POINT;
+		else if (it->second.s_value == "SPOT")
+			obj->type == Light::SPOT;
+		else
+		{
+			DBG_ERROR("error deserialising light, invalid light type '" + it->second.s_value + "'");
+			return nullptr;
+		}
+	}
+	it = args.find("colour");
+	if (it != args.end())
+	{
+		obj->colour = it->second.c_value;
+	}
+	it = args.find("angle");
+	if (it != args.end())
+	{
+		obj->spot_angle = it->second.f_value;
+	}
+	
+	return obj.cast<Object>();
+}
+
+Ref<Object> deserialiseCamera(const map<string, TokenReader::Token>& args, Ref<Scene> scene, const SceneResources& resources)
+{
+	Ref<Camera> obj = new Camera();
+	auto it = args.find("slot");
+	if (it != args.end())
+		scene->setCameraSlot(obj, it->second.i_value);
+	else
+		DBG_WARNING("deserialising a camera object without a slot binding, this camera will not render!");
+	it = args.find("clear_colour");
+	if (it != args.end())
+		obj->clear_colour = it->second.c_value;
+	it = args.find("near_clip");
+	if (it != args.end())
+		obj->near_clip = it->second.f_value;
+	it = args.find("far_clip");
+	if (it != args.end())
+		obj->far_clip = it->second.f_value;
+	it = args.find("fov");
+	if (it != args.end())
+		obj->fov = it->second.f_value;
+	
+	return obj.cast<Object>();
+}
+
+struct ObjectDeserialiseConfig
+{
+	Ref<Object> (* builder_function)(const map<string, TokenReader::Token>&, Ref<Scene>, const SceneResources& resources);
+	map<string, TokenReader::TokenType> arguments;
+};
+
+static map<string, ObjectDeserialiseConfig> object_deserialisers = {
+	{ "StaticMesh", { deserialiseStaticMesh, {
+						{ "mesh", TokenReader::IDENTIFIER },
+						{ "material", TokenReader::IDENTIFIER },
+                        { "camera_mask", TokenReader::INT }
+	} } },
+	{ "Light", { deserialiseLight, {
+						{ "type", TokenReader::TEXT },
+						{ "colour", TokenReader::VECTOR },
+						{ "angle", TokenReader::FLOAT }
+	} } },
+	{ "Camera", { deserialiseCamera, {
+						{ "slot", TokenReader::INT },
+						{ "clear_colour", TokenReader::VECTOR },
+						{ "near_clip", TokenReader::FLOAT },
+						{ "far_clip", TokenReader::FLOAT },
+						{ "fov", TokenReader::FLOAT },
+	} } }
+};
+
+bool deserialiseObject(TokenReader::Statement statement, Ref<Scene> scene, const SceneResources& resources, Ref<Object> parent, string name)
+{
+	Ref<Object> obj;
+	map<string, pair<TokenReader::TokenType, bool>> expected = {
+		{ "position", { TokenReader::VECTOR, false } },
+		{ "euler", { TokenReader::VECTOR, false } },
+		{ "scale", { TokenReader::VECTOR, false } }
+	};
+	ObjectDeserialiseConfig info;
+	if (statement.keyword != "Object")
+	{
+		info = object_deserialisers[statement.keyword];
+		for (const auto& thing : info.arguments)
+			expected[thing.first] = { thing.second, false };
+	}
+	map<string, TokenReader::Token> args;
+	if (!TokenReader::readStatementNamed(statement, true, false,
+				expected, args, "error deserialising scene '" + name + "'"))
+		return false;
+	
+	if (statement.keyword == "Object")
+		obj = new Object();
+	else
+		obj = info.builder_function(args, scene, resources);
+	if (obj == nullptr)
+		return false;
+	
+	auto it = args.find("position");
+	if (it != args.end())
+		obj->transform.setLocalPosition(it->second.c_value);
+	it = args.find("euler");
+	if (it != args.end())
+		obj->transform.setLocalEuler(it->second.c_value);
+	it = args.find("scale");
+	if (it != args.end())
+		obj->transform.setLocalScale(it->second.c_value);
+	if (!statement.identifier.empty())
+		obj->name = statement.identifier;
+	
+	scene->insertObject(obj);
+	if (parent)
+		obj->setParent(parent);
+	
+	for (TokenReader::Statement child : statement.children)
+	{
+		if (object_deserialisers.contains(child.keyword) || child.keyword == "Object")
+		{
+			if (!deserialiseObject(child, scene, resources, obj, name))
+				return false;
+		}
+		else
+		{
+			DBG_ERROR("error deserialising scene '" + name + "': invalid keyword '" + child.keyword + "'");
+			return false;
+		}
+	}
+	return true;
+}
+
 Ref<Scene> Scene::deserialise(string name)
 {
 	auto raw_data = Package::tryLoadFile(name);
 	if (raw_data.empty())
 		return nullptr;
 
-	std::string token_str((char*)raw_data.data(), raw_data.size());
+	std::string token_str(reinterpret_cast<char*>(raw_data.data()), raw_data.size());
 	auto tokens = TokenReader::tokenise(token_str);
 	if (tokens.empty())
 		return nullptr;
@@ -681,6 +866,7 @@ Ref<Scene> Scene::deserialise(string name)
 	map<string, Ref<Material>> materials;
 	map<string, Ref<Mesh>> meshes;
 	map<string, Ref<Texture>> textures;
+	map<string, Ref<RenderGraph>> render_graphs;
 	
 	Ref<Scene> scene = new Scene();
 	
@@ -701,7 +887,8 @@ Ref<Scene> Scene::deserialise(string name)
 				textures[statement.identifier] = Engine::loadTexture(args[1].s_value);
 			else if (args[0].s_value == "mesh")
 				meshes[statement.identifier] = Engine::loadMesh(args[1].s_value);
-		// TODO: render graph resource
+			else if (args[0].s_value == "render_graph")
+				render_graphs[statement.identifier] = RenderGraph::deserialise(args[1].s_value);
 			else
 			{
 				DBG_ERROR("error deserialising scene '" + name + "': invalid resource type");
@@ -723,18 +910,41 @@ Ref<Scene> Scene::deserialise(string name)
 			map<string, TokenReader::Token> args;
 			if (!TokenReader::readStatementNamed(statement, false, false,
 				{
-					{ "resource", { TokenReader::VECTOR, true } }
+					{ "resource", { TokenReader::IDENTIFIER, true } }
 				}, args, "error deserialising scene '" + name + "'"))
 				return nullptr;
-			scene->skybox = Engine::loadTexture(args["resource"].s_value);
+			auto it = textures.find(args["resource"].s_value);
+			if (it == textures.end())
+			{
+				DBG_ERROR("error deserialising scene '" + name + "': no such texture loaded '" + args["resource"].s_value + "'");;
+				return nullptr;
+			}
+			scene->skybox = it->second;
 		}
-		else if (statement.keyword == "Object")
+		else if (statement.keyword == "RenderGraph")
 		{
-			// TODO: objects
+			map<string, TokenReader::Token> args;
+			if (!TokenReader::readStatementNamed(statement, false, false,
+				{
+					{ "resource", { TokenReader::IDENTIFIER, true } }
+				}, args, "error deserialising scene '" + name + "'"))
+				return nullptr;
+			auto it = render_graphs.find(args["resource"].s_value);
+			if (it == render_graphs.end())
+			{
+				DBG_ERROR("error deserialising scene '" + name + "': no such render graph loaded '" + args["resource"].s_value + "'");;
+				return nullptr;
+			}
+			scene->render_graph = it->second;
+		}
+		else if (object_deserialisers.contains(statement.keyword) || statement.keyword == "Object")
+		{
+			if (!deserialiseObject(statement, scene, { materials, meshes, textures }, nullptr, name))
+				return nullptr;
 		}
 		else
 		{
-			DBG_ERROR("error deserialising material '" + name + "': invalid keyword '" + statement.keyword + "'");;
+			DBG_ERROR("error deserialising scene '" + name + "': invalid keyword '" + statement.keyword + "'");
 			return nullptr;
 		}
 	}

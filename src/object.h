@@ -37,7 +37,7 @@ public:
 	virtual void pushToDescriptorSet(size_t index);
 	virtual std::vector<DrawCommand> getDrawCommands() const;
 	virtual void drawImGuiDebug();
-
+	
 	Object();
 	virtual ~Object() override;
 

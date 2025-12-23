@@ -33,11 +33,11 @@ Sampler::Sampler(SamplerBuilder config)
 	if (vkCreateSampler(RenderServer::getDevice(), &create_info, nullptr, &sampler) != VK_SUCCESS)
 		DBG_FAULT("vkCreateSampler failed");
 
-	DBG_INFO("created sampler for " + vk::to_string((vk::Filter)config.filtering_mode) + ", " + vk::to_string((vk::SamplerAddressMode)config.address_mode));
+	DBG_VERBOSE("created sampler for " + vk::to_string((vk::Filter)config.filtering_mode) + ", " + vk::to_string((vk::SamplerAddressMode)config.address_mode));
 }
 
 Sampler::~Sampler()
 {
-	DBG_INFO("destroying sampler " + PTR(this));
+	DBG_VERBOSE("destroying sampler " + PTR(this));
 	vkDestroySampler(RenderServer::getDevice(), sampler, nullptr);
 }

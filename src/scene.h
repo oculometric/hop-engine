@@ -68,7 +68,7 @@ inline Ref<T> Scene::insertObject(Ref<T> obj)
 	auto ref = obj.template cast<Object>();
 	objects.push_back(ref);
 	if (!ref->getParent()) ref->setParent(root);
-	if (std::is_convertible<T*, Light*>::value)
+	if (dynamic_cast<Light*>(obj.get()) != nullptr)
 	{
 		auto ref2 = obj.template cast<Light>();
 		lights.push_back(ref2);

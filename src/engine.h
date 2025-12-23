@@ -53,7 +53,7 @@ public:
 	static void init();
 	static void destroy();
 
-	static void setup(void(* init_func)(Ref<Scene>), void(* update_func)(Ref<Scene>, float), void(* imgui_func)(Ref<Scene>, float));
+	static void setup(Ref<Scene>(* init_func)(), void(* update_func)(Ref<Scene>, float), void(* imgui_func)(Ref<Scene>, float));
 	static void mainLoop();
 	static Ref<Scene> getScene();
 	static void summariseTrackedObjects();
