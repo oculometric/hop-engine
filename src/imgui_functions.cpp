@@ -404,6 +404,68 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 
 void Engine::_drawImGuiDebug(float delta_time)
 {
+	ImGui::Begin("resources", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::LabelText("total references", "%u", getEngine()->allocated_refs.size());
+	// TODO: should these use the allocated_refs list instead?
+	ImGui::Text("the categories below only show resources loaded with Engine::loadX(), not internal resources");
+	if (ImGui::CollapsingHeader(("materials (" + to_string(getEngine()->loaded_materials.size()) + " loaded)").c_str()))
+	{
+		for (const auto& item : getEngine()->loaded_materials)
+		{
+			ImGui::LabelText(("(" + to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
+		}
+	}
+	if (ImGui::CollapsingHeader(("meshes (" + to_string(getEngine()->loaded_meshes.size()) + " loaded)").c_str()))
+	{
+		for (const auto& item : getEngine()->loaded_meshes)
+		{
+			ImGui::LabelText(("(" + to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
+		}
+	}
+	if (ImGui::CollapsingHeader(("textures (" + to_string(getEngine()->loaded_textures.size()) + " loaded)").c_str()))
+	{
+		for (const auto& item : getEngine()->loaded_textures)
+		{
+			ImGui::LabelText(("(" + to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
+		}
+	}
+	if (ImGui::CollapsingHeader(("shaders (" + to_string(getEngine()->loaded_shaders.size()) + " loaded)").c_str()))
+	{
+		for (const auto& item : getEngine()->loaded_shaders)
+		{
+			ImGui::LabelText(("(" + to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
+		}
+	}
+	if (ImGui::Button("prune loaded resources"))
+		ImGui::OpenPopup("prune_are_you_sure");
+	static size_t pruned_count = 0;
+	if (ImGui::BeginPopup("prune_are_you_sure", ImGuiWindowFlags_NoTitleBar))
+	{
+		ImGui::Text("are you sure you want to unload all unused resources?");
+		if (ImGui::Button("continue"))
+		{
+			pruned_count = Engine::pruneUnusedResources();
+			ImGui::CloseCurrentPopup();
+			ImGui::OpenPopup("pruned_done");
+		}
+		if (ImGui::Button("cancel"))
+			ImGui::CloseCurrentPopup();
+		ImGui::EndPopup();
+	}
+	if (ImGui::BeginPopup("pruned_done"))
+	{
+		ImGui::Text("pruned %i resources", pruned_count);
+		ImGui::EndPopup();
+	}
+	
+	ImGui::Button("load resource");
+	// TODO: interface to load
+	ImGui::End();
+	
 	if (selected_object)
 	{
 		ImGui::Begin("object", nullptr, ImGuiWindowFlags_AlwaysAutoResize);

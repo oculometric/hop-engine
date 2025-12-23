@@ -81,8 +81,10 @@ public:
 	static Ref<Texture> loadTexture(const std::string& path);
 	static Ref<Texture> loadTexture3D(const std::string& path, int layers_wide, int layer_high);
 	static Ref<Mesh> loadMesh(const std::string& path);
+	static size_t pruneUnusedResources();
 	
 private:
+	static Engine* getEngine();
 	static void _keepLoaded(Ref<Destructible> ref);
 	static std::vector<WeakRef<void>> getRefsWithType(const char* type_name);
 	void updateStats(FrameStats stats);
@@ -105,7 +107,7 @@ inline std::vector<WeakRef<T>> Engine::getAllRefs()
 template<class T>
 inline Ref<T> Engine::keepLoaded(Ref<T> ref)
 {
-	static_assert(std::is_convertible<T*, Destructible*>::value, "reference must be a HopEngine::Destructible subclass");
+	static_assert(std::is_convertible_v<T*, Destructible*>, "reference must be a HopEngine::Destructible subclass");
 	_keepLoaded(ref.template cast<Destructible>());
 	return ref;
 }

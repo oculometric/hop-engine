@@ -203,6 +203,75 @@ Ref<Mesh> Engine::loadMesh(const string& path)
     return it->second;
 }
 
+size_t Engine::pruneUnusedResources()
+{
+    DBG_INFO("pruning currently loaded unused resources...");
+    size_t pruned_refs = 0;
+    auto mesh_it = engine->loaded_meshes.begin();
+    while (mesh_it != engine->loaded_meshes.end())
+    {
+        if (mesh_it->second.getCount() == 1)
+        {
+            auto next = mesh_it;
+            ++next;
+            engine->loaded_meshes.erase(mesh_it);
+            ++pruned_refs;
+            mesh_it = next;
+        }
+        else
+            ++mesh_it;
+    }
+    auto mat_it = engine->loaded_materials.begin();
+    while (mat_it != engine->loaded_materials.end())
+    {
+        if (mat_it->second.getCount() == 1)
+        {
+            auto next = mat_it;
+            ++next;
+            engine->loaded_materials.erase(mat_it);
+            ++pruned_refs;
+            mat_it = next;
+        }
+        else
+            ++mat_it;
+    }
+    auto shr_it = engine->loaded_shaders.begin();
+    while (shr_it != engine->loaded_shaders.end())
+    {
+        if (shr_it->second.getCount() == 1)
+        {
+            auto next = shr_it;
+            ++next;
+            engine->loaded_shaders.erase(shr_it);
+            ++pruned_refs;
+            shr_it = next;
+        }
+        else
+            ++shr_it;
+    }
+    auto tex_it = engine->loaded_textures.begin();
+    while (tex_it != engine->loaded_textures.end())
+    {
+        if (tex_it->second.getCount() == 1)
+        {
+            auto next = tex_it;
+            ++next;
+            engine->loaded_textures.erase(tex_it);
+            ++pruned_refs;
+            tex_it = next;
+        }
+        else
+            ++tex_it;
+    }
+    DBG_INFO("pruned " + to_string(pruned_refs) + " total reference counted objects");
+    return pruned_refs;
+}
+
+Engine* Engine::getEngine()
+{
+    return engine;
+}
+
 void Engine::_keepLoaded(Ref<Destructible> ref)
 {
     engine->keep_loaded_refs.push_back(ref);

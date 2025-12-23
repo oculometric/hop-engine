@@ -114,6 +114,7 @@ public:
 		invalidateSelf();
 	}
 
+	inline size_t getCount() const { return *ref_counter; }
 	inline bool isValid() const { return payload != nullptr; }
 	inline operator bool() const { return isValid(); }
 	inline bool operator==(const Ref<T>& other) const { return other.payload == payload; }
@@ -216,6 +217,7 @@ public:
 	inline ~WeakRef()
 	{ }
 
+	inline size_t getCount() const { return *ref_counter; }
 	inline bool isValid() const { return payload != nullptr; }
 	inline operator bool() const { return isValid(); }
 	inline bool operator==(const WeakRef<T>& other) const { return other.payload == payload; }

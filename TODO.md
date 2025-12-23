@@ -3,7 +3,7 @@
 ## v0.5
 - fix SSAO pass (currently doesn't look quite right and very inefficient, has to be rendered at quarter resolution) [H]
 - ability to load stuff in the UI, including a list of items in the package [M]
-- ability to prune unused-but-still-loaded meshes [M]
+- engine does not need to be destroyed when we switch scenes (use a menu to switch!) [H]
 - more scene control using ImGui (modify the render graph, material uniforms) [M]
 ---
 - do some performance profiling to see where the inefficiency is [H]
@@ -15,3 +15,4 @@
 - tux-racer ripoff demo game [L]
 - blur post process effect [L]
 - custom shader format to keep stuff in one file [L]
+- origin variables for render graph, scene, better name generation for objects [L]
