@@ -73,6 +73,16 @@ void RenderServer::waitIdle()
     vkDeviceWaitIdle(environment->device);
 }
 
+VkDevice RenderServer::getDevice()
+{
+    return environment->device;
+}
+
+VkPhysicalDevice RenderServer::getPhysicalDevice()
+{
+    return environment->physical_device;
+}
+
 Ref<RenderPass> RenderServer::getMainRenderPass()
 {
     return environment->offscreen_pass;
@@ -81,6 +91,17 @@ Ref<RenderPass> RenderServer::getMainRenderPass()
 Ref<RenderPass> RenderServer::getFinalRenderPass()
 {
     return environment->final_render_pass;
+}
+
+glm::vec2 RenderServer::getFramebufferSize()
+{
+    auto ext = environment->swapchain->getExtent();
+    return glm::vec2{ (float)ext.width, (float)ext.height };
+}
+
+size_t RenderServer::getFramesInFlight()
+{
+    return environment->MAX_FRAMES_IN_FLIGHT;
 }
 
 RenderServer::QueueFamilies RenderServer::getQueueFamilies(VkPhysicalDevice device)
@@ -107,14 +128,19 @@ RenderServer::QueueFamilies RenderServer::getQueueFamilies(VkPhysicalDevice devi
     return families;
 }
 
-VkPhysicalDevice RenderServer::getPhysicalDevice()
+VkQueue RenderServer::getGraphicsQueue()
 {
-    return environment->physical_device;
+    return environment->graphics_queue;
 }
 
-VkDevice RenderServer::getDevice()
+VkCommandPool RenderServer::getCommandPool()
 {
-    return environment->device;
+    return environment->command_pool;
+}
+
+VkDescriptorPool RenderServer::getDescriptorPool()
+{
+    return environment->descriptor_pool;
 }
 
 VkDescriptorSetLayout RenderServer::getSceneDescriptorSetLayout()
@@ -125,26 +151,6 @@ VkDescriptorSetLayout RenderServer::getSceneDescriptorSetLayout()
 VkDescriptorSetLayout RenderServer::getObjectDescriptorSetLayout()
 {
     return environment->object_descriptor_set_layout;
-}
-
-size_t RenderServer::getFramesInFlight()
-{
-    return environment->MAX_FRAMES_IN_FLIGHT;
-}
-
-VkDescriptorPool RenderServer::getDescriptorPool()
-{
-    return environment->descriptor_pool;
-}
-
-VkCommandPool RenderServer::getCommandPool()
-{
-    return environment->command_pool;
-}
-
-VkQueue RenderServer::getGraphicsQueue()
-{
-    return environment->graphics_queue;
 }
 
 pair<Ref<Texture>, Ref<Sampler>> RenderServer::getDefaultTextureSampler()
@@ -188,12 +194,6 @@ Ref<Material> RenderServer::getSkyboxMaterial()
     return environment->skybox_material;
 }
 
-glm::vec2 RenderServer::getFramebufferSize()
-{
-    auto ext = environment->swapchain->getExtent();
-    return glm::vec2{ (float)ext.width, (float)ext.height };
-}
-
 FrameStats RenderServer::draw()
 {
     return environment->drawFrame();
@@ -202,115 +202,6 @@ FrameStats RenderServer::draw()
 void RenderServer::resize()
 {
     environment->resizeSwapchain();
-}
-
-RenderServer::RenderServer(Ref<Window> main_window)
-{
-    environment = this;
-
-    window = main_window;
-
-#if defined(_WIN32)
-    auto data = Package::tryLoadFile("res://engine/glslc.exe");
-    Package::tryWriteFile(Shader::compiler_path, data);
-#endif
-
-    createInstance();
-    if (glfwCreateWindowSurface(instance, window->getWindow(), nullptr, &surface) != VK_SUCCESS)
-        DBG_FAULT("glfwCreateWindowSurface failed");
-    createDevice();
-
-    auto framebuffer_size = window->getSize();
-    swapchain = new Swapchain(framebuffer_size.first, framebuffer_size.second, surface);
-    MAX_FRAMES_IN_FLIGHT = swapchain->getImageCount();
-    DBG_VERBOSE("adjusted frames in flight to " + to_string(MAX_FRAMES_IN_FLIGHT));
-
-    createDescriptorPoolAndSets();
-    createCommandPool();
-    createSyncObjects();
-
-    final_render_pass = new RenderPass(swapchain, { 0, true });
-    offscreen_pass = new RenderPass(1, 1, { 3, true });
-
-    uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
-    default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, TextureBuilder().data(default_image_data));
-    default_sampler = new Sampler(SamplerBuilder());
-
-    axes_gizmo = new Mesh("res://engine/axes_gizmo.obj");
-    rotations_gizmo = new Mesh("res://engine/rotate_gizmo.obj");
-    quad = new Mesh({
-        { { -1, -1, 0, 1 }, {}, {}, {}, { 0, 0 } },
-        { { 1, -1, 0, 1 }, {}, {}, {}, { 1, 0 } },
-        { { -1, 1, 0, 1 }, {}, {}, {}, { 0, 1 } },
-        { { 1, 1, 0, 1 }, {}, {}, {}, { 1, 1 } }
-        }, { 0, 3, 1, 0, 2, 3 });
-    skybox_cube = new Mesh("res://engine/skybox.obj");
-
-    default_material = new Material(new Shader("res://engine/shader", false));
-    gizmo_material = new Material(new Shader("res://engine/gizmo", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE), final_render_pass);
-    skybox_material = new Material(new Shader("res://engine/skybox", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
-    
-    initImGui();
-
-    DBG_INFO("graphics environment initialised");
-}
-
-RenderServer::~RenderServer()
-{
-#if defined(_WIN32)
-    filesystem::remove(Shader::compiler_path);
-#endif
-    vkDeviceWaitIdle(device);
-
-    DBG_VERBOSE("\033[31mkilling imgui with a gun\033[0m");
-    ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
-    DBG_VERBOSE("destroying sync resources");
-    for (size_t i = 0; i < image_available_semaphores.size(); ++i)
-    {
-        vkDestroySemaphore(device, image_available_semaphores[i], nullptr);
-        vkDestroySemaphore(device, render_finished_semaphores[i], nullptr);
-        vkDestroyFence(device, in_flight_fences[i], nullptr);
-    }
-
-    DBG_VERBOSE("destroying command pool");
-    vkDestroyCommandPool(device, command_pool, nullptr);
-    
-    skybox_material = nullptr;
-    skybox_cube = nullptr;
-    default_material = nullptr;
-    gizmo_material = nullptr;
-    axes_gizmo = nullptr;
-    rotations_gizmo = nullptr;
-    scale_gizmo = nullptr;
-    quad = nullptr;
-    default_image = nullptr;
-    default_sampler = nullptr;
-
-    DBG_VERBOSE("destroying descriptors");
-    vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
-    vkDestroyDescriptorSetLayout(device, scene_descriptor_set_layout, nullptr);
-    vkDestroyDescriptorSetLayout(device, object_descriptor_set_layout, nullptr);
-    vkDestroyQueryPool(device, query_pool, nullptr);
-
-    offscreen_pass = nullptr;
-    final_render_pass = nullptr;
-    swapchain = nullptr;
-
-#if !defined(NDEBUG)
-    DBG_VERBOSE("\033[31mkilling the (debug) messenger\033[0m");
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-    func(instance, debug_messenger, nullptr);
-#endif
-
-    DBG_VERBOSE("destroying device");
-    vkDestroyDevice(device, nullptr);
-    vkDestroySurfaceKHR(instance, surface, nullptr);
-    vkDestroyInstance(instance, nullptr);
-
-    environment = nullptr;
 }
 
 void RenderServer::createInstance()
@@ -749,6 +640,115 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
     vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, query_pool, (image_index * 2) + 1);
     if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS)
         DBG_FAULT("vkEndCommandBuffer failed");
+}
+
+RenderServer::RenderServer(Ref<Window> main_window)
+{
+    environment = this;
+
+    window = main_window;
+
+#if defined(_WIN32)
+    auto data = Package::tryLoadFile("res://engine/glslc.exe");
+    Package::tryWriteFile(Shader::compiler_path, data);
+#endif
+
+    createInstance();
+    if (glfwCreateWindowSurface(instance, window->getWindow(), nullptr, &surface) != VK_SUCCESS)
+        DBG_FAULT("glfwCreateWindowSurface failed");
+    createDevice();
+
+    auto framebuffer_size = window->getSize();
+    swapchain = new Swapchain(framebuffer_size.first, framebuffer_size.second, surface);
+    MAX_FRAMES_IN_FLIGHT = swapchain->getImageCount();
+    DBG_VERBOSE("adjusted frames in flight to " + to_string(MAX_FRAMES_IN_FLIGHT));
+
+    createDescriptorPoolAndSets();
+    createCommandPool();
+    createSyncObjects();
+
+    final_render_pass = new RenderPass(swapchain, { 0, true });
+    offscreen_pass = new RenderPass(1, 1, { 3, true });
+
+    uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
+    default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, TextureBuilder().data(default_image_data));
+    default_sampler = new Sampler(SamplerBuilder());
+
+    axes_gizmo = new Mesh("res://engine/axes_gizmo.obj");
+    rotations_gizmo = new Mesh("res://engine/rotate_gizmo.obj");
+    quad = new Mesh({
+        { { -1, -1, 0, 1 }, {}, {}, {}, { 0, 0 } },
+        { { 1, -1, 0, 1 }, {}, {}, {}, { 1, 0 } },
+        { { -1, 1, 0, 1 }, {}, {}, {}, { 0, 1 } },
+        { { 1, 1, 0, 1 }, {}, {}, {}, { 1, 1 } }
+        }, { 0, 3, 1, 0, 2, 3 });
+    skybox_cube = new Mesh("res://engine/skybox.obj");
+
+    default_material = new Material(new Shader("res://engine/shader", false));
+    gizmo_material = new Material(new Shader("res://engine/gizmo", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE), final_render_pass);
+    skybox_material = new Material(new Shader("res://engine/skybox", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
+    
+    initImGui();
+
+    DBG_INFO("graphics environment initialised");
+}
+
+RenderServer::~RenderServer()
+{
+#if defined(_WIN32)
+    filesystem::remove(Shader::compiler_path);
+#endif
+    vkDeviceWaitIdle(device);
+
+    DBG_VERBOSE("\033[31mkilling imgui with a gun\033[0m");
+    ImGui_ImplVulkan_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    DBG_VERBOSE("destroying sync resources");
+    for (size_t i = 0; i < image_available_semaphores.size(); ++i)
+    {
+        vkDestroySemaphore(device, image_available_semaphores[i], nullptr);
+        vkDestroySemaphore(device, render_finished_semaphores[i], nullptr);
+        vkDestroyFence(device, in_flight_fences[i], nullptr);
+    }
+
+    DBG_VERBOSE("destroying command pool");
+    vkDestroyCommandPool(device, command_pool, nullptr);
+    
+    skybox_material = nullptr;
+    skybox_cube = nullptr;
+    default_material = nullptr;
+    gizmo_material = nullptr;
+    axes_gizmo = nullptr;
+    rotations_gizmo = nullptr;
+    scale_gizmo = nullptr;
+    quad = nullptr;
+    default_image = nullptr;
+    default_sampler = nullptr;
+
+    DBG_VERBOSE("destroying descriptors");
+    vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
+    vkDestroyDescriptorSetLayout(device, scene_descriptor_set_layout, nullptr);
+    vkDestroyDescriptorSetLayout(device, object_descriptor_set_layout, nullptr);
+    vkDestroyQueryPool(device, query_pool, nullptr);
+
+    offscreen_pass = nullptr;
+    final_render_pass = nullptr;
+    swapchain = nullptr;
+
+#if !defined(NDEBUG)
+    DBG_VERBOSE("\033[31mkilling the (debug) messenger\033[0m");
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+    func(instance, debug_messenger, nullptr);
+#endif
+
+    DBG_VERBOSE("destroying device");
+    vkDestroyDevice(device, nullptr);
+    vkDestroySurfaceKHR(instance, surface, nullptr);
+    vkDestroyInstance(instance, nullptr);
+
+    environment = nullptr;
 }
 
 bool DrawCommand::operator()(const DrawCommand& a, const DrawCommand& b) const

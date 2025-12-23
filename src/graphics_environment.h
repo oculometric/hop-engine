@@ -102,7 +102,7 @@ public:
 	static VkDescriptorSetLayout getSceneDescriptorSetLayout();
 	static VkDescriptorSetLayout getObjectDescriptorSetLayout();
 	static std::pair<Ref<Texture>, Ref<Sampler>> getDefaultTextureSampler();
-	static Ref<Material> getGizmoMaterial();
+	static Ref<Material> getGizmoMaterial(); // TODO: this (and more) can be deprecated, loaded and kept loaded by the engine
 	static Ref<Mesh> getGizmoMesh(int type);
 	static Ref<Material> getDefaultMaterial();
 	static Ref<Mesh> getQuad();
@@ -113,9 +113,6 @@ public:
 	static void resize();
 
 private:
-	RenderServer(Ref<Window> main_window);
-	~RenderServer();
-
 	void createInstance();
 	void createDevice();
 	void createDescriptorPoolAndSets();
@@ -127,6 +124,9 @@ private:
 	void resizeSwapchain();
 
 	void recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index, FrameStats& stats);
+	
+	RenderServer(Ref<Window> main_window);
+	~RenderServer();
 };
 
 }
