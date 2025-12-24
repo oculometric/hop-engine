@@ -183,6 +183,15 @@ bool Package::storePackage(string store_path)
 	return true;
 }
 
+vector<string> Package::listLoadedEntries()
+{
+	vector<string> names;
+	names.reserve(application_package->database.size());
+	for (const auto& item : application_package->database)
+		names.push_back(item.first);
+	return names;
+}
+
 bool Package::storeCompressedPackage(string store_path)
 {
 	if (!application_package)

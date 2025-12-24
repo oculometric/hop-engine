@@ -1,4 +1,5 @@
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <map>
 #include <string>
 #include <vulkan/vulkan.hpp>
@@ -15,8 +16,8 @@
 #include "sampler.h"
 #include "render_graph.h"
 #include "graphics_environment.h"
-
-// TODO: be able to load resources at runtime
+#include "package.h"
+#include "main.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -402,76 +403,211 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 	}
 }
 
-void Engine::_drawImGuiDebug(float delta_time)
+void Engine::drawImGuiDebug(float delta_time)
 {
-	ImGui::Begin("resources", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-	ImGui::LabelText("total references", "%u", getEngine()->allocated_refs.size());
-	// TODO: should these use the allocated_refs list instead?
-	ImGui::Text("the categories below only show resources loaded with Engine::loadX(), not internal resources");
-	if (ImGui::CollapsingHeader(("materials (" + to_string(getEngine()->loaded_materials.size()) + " loaded)").c_str()))
-	{
-		for (const auto& item : getEngine()->loaded_materials)
-		{
-			ImGui::LabelText(("(" + to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
-			if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
-		}
-	}
-	if (ImGui::CollapsingHeader(("meshes (" + to_string(getEngine()->loaded_meshes.size()) + " loaded)").c_str()))
-	{
-		for (const auto& item : getEngine()->loaded_meshes)
-		{
-			ImGui::LabelText(("(" + to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
-			if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
-		}
-	}
-	if (ImGui::CollapsingHeader(("textures (" + to_string(getEngine()->loaded_textures.size()) + " loaded)").c_str()))
-	{
-		for (const auto& item : getEngine()->loaded_textures)
-		{
-			ImGui::LabelText(("(" + to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
-			if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
-		}
-	}
-	if (ImGui::CollapsingHeader(("shaders (" + to_string(getEngine()->loaded_shaders.size()) + " loaded)").c_str()))
-	{
-		for (const auto& item : getEngine()->loaded_shaders)
-		{
-			ImGui::LabelText(("(" + to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
-			if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
-		}
-	}
-	if (ImGui::Button("prune loaded resources"))
-		ImGui::OpenPopup("prune_are_you_sure");
-	static size_t pruned_count = 0;
-	if (ImGui::BeginPopup("prune_are_you_sure", ImGuiWindowFlags_NoTitleBar))
-	{
-		ImGui::Text("are you sure you want to unload all unused resources?");
-		if (ImGui::Button("continue"))
-		{
-			pruned_count = Engine::pruneUnusedResources();
-			ImGui::CloseCurrentPopup();
-			ImGui::OpenPopup("pruned_done");
-		}
-		if (ImGui::Button("cancel"))
-			ImGui::CloseCurrentPopup();
-		ImGui::EndPopup();
-	}
-	if (ImGui::BeginPopup("pruned_done"))
-	{
-		ImGui::Text("pruned %i resources", pruned_count);
-		ImGui::EndPopup();
-	}
+	static bool show_imgui = true;
+	static bool align_windows = false;
 	
-	ImGui::Button("load resource");
-	// TODO: interface to load
-	ImGui::End();
+	ImGui::BeginMainMenuBar();
+	if (ImGui::BeginMenu("file"))
+	{
+		if (ImGui::BeginMenu("open scene"))
+		{
+			if (ImGui::MenuItem("bunnygirl"))
+			{
+				auto scn = ::getScene(0);
+				debugClearSelection();
+				Engine::setup(scn.init_func, scn.update_func, scn.imgui_func);
+			}
+			if (ImGui::MenuItem("museum"))
+			{
+				auto scn = ::getScene(2);
+				debugClearSelection();
+				Engine::setup(scn.init_func, scn.update_func, scn.imgui_func);
+			}
+			ImGui::EndMenu();
+		}
+		if (ImGui::MenuItem("quit"))
+			stop();
+		ImGui::EndMenu();
+	}
+	if (ImGui::BeginMenu("view"))
+	{
+		ImGui::Checkbox("show/hide ImGui windows", &show_imgui);
+		if (ImGui::MenuItem("arrange ImGui windows"))
+			align_windows = true;
+		ImGui::EndMenu();
+	}
+	ImGui::EndMainMenuBar();	
+	
+	if (!show_imgui)
+		return;
+	
+	float last_window_height = 0;
+	if (Engine::getScene())
+	{
+		if (align_windows)
+			ImGui::SetNextWindowPos({ 10, 30 });
+		ImGui::Begin("scene", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+		Engine::getScene()->drawImGuiDebug();
+		Engine::getScene()->render_graph->drawImGuiDebug();
+		last_window_height = ImGui::GetWindowHeight();
+		ImGui::End();
+	}
 	
 	if (selected_object)
 	{
+		if (align_windows)
+			ImGui::SetNextWindowPos({ 10, last_window_height + 40 });
 		ImGui::Begin("object", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 		selected_object->drawImGuiDebug();
 		if (ImGui::Button("close"))
 			selected_object = nullptr;
+		ImGui::End();
+	}
+	
+	float rightmost_window_width = 0;
+	last_window_height = 0;
+	{
+		ImGui::Begin("performance", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::LabelText("delta time", "%fms", last_frame_stats.delta_time * 1000.0f);
+		ImGui::LabelText("smoothed FPS", "%f", smoothed_fps);
+		if (ImGui::CollapsingHeader("time details", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::LabelText("render imgui", "%fms", last_frame_stats.imgui_time * 1000.0f);
+			ImGui::LabelText("build buffers", "%fms", last_frame_stats.build_time * 1000.0f);
+			ImGui::LabelText("record commands", "%fms", last_frame_stats.record_time * 1000.0f);
+			ImGui::LabelText("render time", "%fms", last_frame_stats.render_time * 1000.0f);
+			ImGui::LabelText("update scene", "%fms", last_frame_stats.update_time * 1000.0f);
+		}
+		if (ImGui::CollapsingHeader("scene stats", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::LabelText("draw calls", "%i", last_frame_stats.draw_calls);
+			ImGui::LabelText("pipeline rebinds", "%i", last_frame_stats.pipeline_rebinds);
+			ImGui::LabelText("triangles", "%i", last_frame_stats.triangles);
+			ImGui::LabelText("vertices", "%i", last_frame_stats.vertices);
+			ImGui::LabelText("render passes", "%i", last_frame_stats.passes);
+			ImGui::LabelText("camera rendering", "%i", last_frame_stats.cameras);
+			ImGui::LabelText("lights rendering", "%i", last_frame_stats.lights);
+		}
+		ImGui::Spacing();
+		ImGui::PlotLines("##xx", delta_time_history, 512, history_offset, "delta time", 0.0001f, 0.2f, ImVec2{0, 160}, 4);
+		//ImGui::PlotLines("##xxx", fps_history, 512, history_offset, "FPS", 10.0f, 200.0f, ImVec2{ 0, 160 }, 4);
+		auto size = ImGui::GetWindowSize();
+		if (align_windows)
+			ImGui::SetWindowPos({ window->getSize().first - size.x - 10.0f, 30 });
+		last_window_height = size.y;
+		rightmost_window_width = max(rightmost_window_width, size.x);
+		ImGui::End();
+	}
+	
+	{
+		ImGui::Begin("resources", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::LabelText("total references", "%u", allocated_refs.size());
+		ImGui::Text("the categories below only show\nresources loaded with Engine::loadXXX(),\nnot internal resources");
+		if (ImGui::CollapsingHeader(("materials (" + to_string(loaded_materials.size()) + " loaded)").c_str()))
+		{
+			for (const auto& item : loaded_materials)
+			{
+				ImGui::LabelText(("(" + to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
+			}
+		}
+		if (ImGui::CollapsingHeader(("meshes (" + to_string(loaded_meshes.size()) + " loaded)").c_str()))
+		{
+			for (const auto& item : loaded_meshes)
+			{
+				ImGui::LabelText(("(" + to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
+			}
+		}
+		if (ImGui::CollapsingHeader(("textures (" + to_string(loaded_textures.size()) + " loaded)").c_str()))
+		{
+			for (const auto& item : loaded_textures)
+			{
+				ImGui::LabelText(("(" + to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
+			}
+		}
+		if (ImGui::CollapsingHeader(("shaders (" + to_string(getEngine()->loaded_shaders.size()) + " loaded)").c_str()))
+		{
+			for (const auto& item : getEngine()->loaded_shaders)
+			{
+				ImGui::LabelText(("(" + to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
+			}
+		}
+		if (ImGui::Button("prune loaded resources"))
+			ImGui::OpenPopup("prune_are_you_sure");
+		static size_t pruned_count = 0;
+		if (ImGui::BeginPopup("prune_are_you_sure"))
+		{
+			ImGui::Text("are you sure you want to unload all unused resources?");
+			if (ImGui::Button("continue"))
+			{
+				pruned_count = Engine::pruneUnusedResources();
+				ImGui::CloseCurrentPopup();
+				ImGui::OpenPopup("pruned_done");
+			}
+			if (ImGui::Button("cancel"))
+				ImGui::CloseCurrentPopup();
+			ImGui::EndPopup();
+		}
+		if (ImGui::BeginPopup("pruned_done"))
+		{
+			ImGui::Text("pruned %i resources", pruned_count);
+			ImGui::EndPopup();
+		}
+	
+		if (ImGui::Button("load resource"))
+			ImGui::OpenPopup("load_resource");
+		if (ImGui::BeginPopup("load_resource"))
+		{
+			const auto entries = Package::listLoadedEntries();
+			ImGui::BeginTable("resources_table", 1);
+			for (const auto& entry : entries)
+			{
+				string extension;
+				size_t extension_start = entry.find_last_of('.');
+				if (extension_start != string::npos)
+					extension = entry.substr(extension_start + 1);
+				int type = -1;
+				string type_string;
+				if (extension == "obj")
+				{ type = 0; type_string = "mesh"; }
+				else if (extension == "png")
+				{ type = 1; type_string = "texture"; }
+				else if (extension == "hmat")
+				{ type = 2; type_string = "material"; }
+				else if (extension == "vert")
+				{ type = 3; type_string = "shader"; }
+				else if (extension == "frag")
+				{ type = 3; type_string = "shader"; }
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("%s", entry.c_str());
+				if (ImGui::IsItemHovered() && type != -1)
+					ImGui::SetTooltip("loads as %s", type_string.c_str());
+				if (ImGui::IsItemClicked() && type != -1)
+				{
+					switch (type)
+					{
+					case 0: Engine::loadMesh("res://" + entry); break;
+					case 1: Engine::loadTexture("res://" + entry); break;
+					case 2: Engine::loadMaterial("res://" + entry); break;
+					case 3: Engine::loadShader("res://" + entry.substr(0, extension_start)); break;
+					default: break;
+					}
+					ImGui::CloseCurrentPopup();				
+				}
+			}
+			ImGui::EndTable();
+			ImGui::EndPopup();
+		}
+		auto size = ImGui::GetWindowSize();
+		if (align_windows)
+			ImGui::SetWindowPos({ window->getSize().first - size.x - 10.0f, last_window_height + 40 });
+		rightmost_window_width = max(rightmost_window_width, size.x);
 		ImGui::End();
 	}
 
@@ -481,42 +617,13 @@ void Engine::_drawImGuiDebug(float delta_time)
 		selected_material->drawImGuiDebug();
 		if (ImGui::Button("close"))
 			selected_material = nullptr;
+		auto size = ImGui::GetWindowSize();
+		if (align_windows)
+			ImGui::SetWindowPos({ window->getSize().first - size.x - rightmost_window_width - 20.0f, 30 });
 		ImGui::End();
 	}
-
-	if (Engine::getScene())
-	{
-		ImGui::Begin("scene", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-		Engine::getScene()->drawImGuiDebug();
-		Engine::getScene()->render_graph->drawImGuiDebug();
-		ImGui::End();
-	}
-
-	ImGui::Begin("performance", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-	ImGui::LabelText("delta time", "%fms", last_frame_stats.delta_time * 1000.0f);
-	ImGui::LabelText("smoothed FPS", "%f", smoothed_fps);
-	if (ImGui::CollapsingHeader("time details", ImGuiTreeNodeFlags_DefaultOpen))
-	{
-		ImGui::LabelText("render imgui", "%fms", last_frame_stats.imgui_time * 1000.0f);
-		ImGui::LabelText("build buffers", "%fms", last_frame_stats.build_time * 1000.0f);
-		ImGui::LabelText("record commands", "%fms", last_frame_stats.record_time * 1000.0f);
-		ImGui::LabelText("render time", "%fms", last_frame_stats.render_time * 1000.0f);
-		ImGui::LabelText("update scene", "%fms", last_frame_stats.update_time * 1000.0f);
-	}
-	if (ImGui::CollapsingHeader("scene stats", ImGuiTreeNodeFlags_DefaultOpen))
-	{
-		ImGui::LabelText("draw calls", "%i", last_frame_stats.draw_calls);
-		ImGui::LabelText("pipeline rebinds", "%i", last_frame_stats.pipeline_rebinds);
-		ImGui::LabelText("triangles", "%i", last_frame_stats.triangles);
-		ImGui::LabelText("vertices", "%i", last_frame_stats.vertices);
-		ImGui::LabelText("render passes", "%i", last_frame_stats.passes);
-		ImGui::LabelText("camera rendering", "%i", last_frame_stats.cameras);
-		ImGui::LabelText("lights rendering", "%i", last_frame_stats.lights);
-	}
-	ImGui::Spacing();
-	ImGui::PlotLines("##xx", delta_time_history, 512, history_offset, "delta time", 0.0001f, 0.2f, ImVec2{0, 160}, 4);
-	//ImGui::PlotLines("##xxx", fps_history, 512, history_offset, "FPS", 10.0f, 200.0f, ImVec2{ 0, 160 }, 4);
-	ImGui::End();
+	
+	align_windows = false;
 }
 
 void Engine::debugCamera(float delta_time)
@@ -541,14 +648,11 @@ void Engine::debugCamera(float delta_time)
 	selected_camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
 }
 
-void Engine::debugClearSelection(WeakRef<Object> object, WeakRef<Material> material)
+void Engine::debugClearSelection(WeakRef<Object> object, WeakRef<Material> material, WeakRef<Camera> camera)
 {
 	selected_object = object;
 	selected_material = material;
-	if (Engine::getScene())
-		selected_camera = Engine::getScene()->getCamera(0).get();
-	else
-		selected_camera = nullptr;
+	selected_camera = camera.get();
 }
 
 WeakRef<Object> Engine::getDebugSelection()

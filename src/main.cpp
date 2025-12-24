@@ -20,6 +20,7 @@
 #include "token_file.h"
 #include "pbr.h"
 #include "gizmo.h"
+#include "main.h"
 
 using namespace HopEngine;
 
@@ -99,8 +100,11 @@ static Ref<Scene> initScene()
     }
     scene->render_graph->getMaterialForStep(3)->setUniform("samples", samples, sizeof(glm::vec4) * 64);
     cc_material = scene->render_graph->getMaterialForStep(5);
-
-    Engine::debugClearSelection(asha.cast<Object>(), asha->material);
+    cc_material->setFloatUniform("gamma", 1.0f);
+    cc_material->setFloatUniform("exposure", 1.0f);
+    cc_material->setFloatUniform("offset", 0.0f);
+    
+    Engine::debugClearSelection(asha.cast<Object>(), asha->material, scene->getCamera(0));
     return scene;
 }
 
@@ -276,6 +280,7 @@ Ref<Scene> initMaterialScene()
     cc_material->setTexture("lut", Engine::loadTexture3D("res://museum/lut.png", 8, 8));
     cc_material->setSampler("lut", new Sampler(SamplerBuilder().address(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE)));
     cc_material->setFloatUniform("use_lut", 1);
+    Engine::debugClearSelection(WeakRef<Object>(), WeakRef<Material>(), scene->getCamera(0));
 
     return scene;
 }
@@ -307,17 +312,7 @@ void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
         offset = new_offset;
         ImGui::End();
     }
-
-    Engine::drawImGuiDebug(delta_time);
 }
-
-struct SceneFuncSet
-{
-    std::wstring name;
-    Ref<Scene>(*init_func)();
-    void(*update_func)(Ref<Scene>, float);
-    void(*imgui_func)(Ref<Scene>, float);
-};
 
 static std::vector<SceneFuncSet> scenes =
 {
@@ -325,6 +320,11 @@ static std::vector<SceneFuncSet> scenes =
     { L"nodes", initNodeScene, updateNodeScene, imGuiDrawFunc },
     { L"museum", initMaterialScene, updateScene, imGuiDrawFunc },
 };
+
+SceneFuncSet getScene(int i)
+{
+    return scenes[i];
+}
 
 #if defined(_WIN32)
 INT_PTR dialogFunc(HWND handle, UINT message, WPARAM unnamedParam3, LPARAM unnamedParam4)
@@ -362,25 +362,22 @@ INT_PTR dialogFunc(HWND handle, UINT message, WPARAM unnamedParam3, LPARAM unnam
 
 int main()
 {
+    Engine::init();
+    
     selected_scene = 2;
-    while (true)
-    {
 #if defined(_WIN32)
-        DialogBox(NULL, MAKEINTRESOURCE(IDD_DIALOG1), NULL, dialogFunc);
+    DialogBox(NULL, MAKEINTRESOURCE(IDD_DIALOG1), NULL, dialogFunc);
 #endif
-        Engine::init();
-        Engine::debugClearSelection();
+    Engine::debugClearSelection();
 
-        const auto& scene = scenes[selected_scene];
+    const auto& scene = getScene(selected_scene);
 
-        Engine::setup(scene.init_func, scene.update_func, scene.imgui_func);
-        Engine::debugClearSelection();
+    Engine::setup(scene.init_func, scene.update_func, scene.imgui_func);
 
-        Engine::mainLoop();
+    Engine::mainLoop();
 
-        Engine::debugClearSelection();
-        Engine::destroy();
-    }
+    Engine::debugClearSelection();
+    Engine::destroy();
 
     return 0;
 }

@@ -68,7 +68,7 @@ void Material::setTexture(string name, Ref<Texture> texture, bool use_stencil)
 	auto it = texture_name_to_binding.find(name);
 	if (it != texture_name_to_binding.end())
 	{
-		DBG_VERBOSE("material '" + getOrigin + "' assigned texture '" + texture->getOrigin() + "' to binding '" + name + '\'');
+		DBG_VERBOSE("material '" + getOrigin() + "' assigned texture '" + texture->getOrigin() + "' to binding '" + name + '\'');
 		uniforms->setTexture(it->second, texture, use_stencil);
 	}
 	else

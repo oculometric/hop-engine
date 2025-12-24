@@ -46,12 +46,15 @@ private:
 	float delta_time_history[512];
 	float fps_history[512];
 	int history_offset = 0;
+	
+	bool stop_requested = false;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Engine);
 
 	static void init();
 	static void destroy();
+	static void stop();
 
 	static void setup(Ref<Scene>(* init_func)(), void(* update_func)(Ref<Scene>, float), void(* imgui_func)(Ref<Scene>, float));
 	static void mainLoop();
@@ -71,9 +74,8 @@ public:
 	static float getSmoothedDeltaTime();
 	static float getSmoothedFPS();
 	
-	static void drawImGuiDebug(float delta_time);
 	static void debugCamera(float delta_time);
-	static void debugClearSelection(WeakRef<Object> object = WeakRef<Object>(), WeakRef<Material> material = WeakRef<Material>());
+	static void debugClearSelection(WeakRef<Object> object = WeakRef<Object>(), WeakRef<Material> material = WeakRef<Material>(), WeakRef<Camera> camera = WeakRef<Camera>());
 	static WeakRef<Object> getDebugSelection();
 	
 	static Ref<Shader> loadShader(const std::string& path);
@@ -88,7 +90,7 @@ private:
 	static void _keepLoaded(Ref<Destructible> ref);
 	static std::vector<WeakRef<void>> getRefsWithType(const char* type_name);
 	void updateStats(FrameStats stats);
-	void _drawImGuiDebug(float delta_time);
+	void drawImGuiDebug(float delta_time);
 	
 	Engine();
 	~Engine();

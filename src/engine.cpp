@@ -25,6 +25,11 @@ void Engine::destroy()
         delete engine;
 }
 
+void Engine::stop()
+{
+    engine->stop_requested = true;
+}
+
 void Engine::setup(Ref<Scene>(* init_func)(), void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>, float))
 {
     RenderServer::waitIdle();
@@ -39,7 +44,7 @@ void Engine::mainLoop()
 {
     auto last_frame = chrono::steady_clock::now();
 
-    while (!engine->window->getShouldClose())
+    while (!engine->window->getShouldClose() && !engine->stop_requested)
     {
         auto this_frame = chrono::steady_clock::now();
         chrono::duration<float> delta = this_frame - last_frame;
@@ -59,6 +64,7 @@ void Engine::mainLoop()
 
             RenderServer::waitIdle();
             engine->imgui_func(engine->scene, delta.count());
+            engine->drawImGuiDebug(delta.count());
 
             ImGui::Render();
         }
@@ -131,11 +137,6 @@ float Engine::getSmoothedDeltaTime()
 float Engine::getSmoothedFPS()
 {
     return engine->smoothed_fps;
-}
-
-void Engine::drawImGuiDebug(float delta_time)
-{
-    engine->_drawImGuiDebug(delta_time);
 }
 
 Ref<Shader> Engine::loadShader(const string& path)

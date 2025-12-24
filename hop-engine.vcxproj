@@ -200,6 +200,7 @@
     <ClInclude Include="src\hop_forward.h" />
     <ClInclude Include="src\hop_engine.h" />
     <ClInclude Include="src\input.h" />
+    <ClInclude Include="src\main.h" />
     <ClInclude Include="src\node_view.h" />
     <ClInclude Include="src\package.h" />
     <ClInclude Include="src\pbr.h" />
