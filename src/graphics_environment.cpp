@@ -143,6 +143,16 @@ VkDescriptorPool RenderServer::getDescriptorPool()
     return environment->descriptor_pool;
 }
 
+VkQueryPool RenderServer::getQueryPool()
+{
+    return environment->query_pool;
+}
+
+void RenderServer::writeTimestamp(uint32_t image_index, VkPipelineStageFlagBits stage)
+{
+    vkCmdWriteTimestamp(environment->command_buffers[image_index], stage, environment->query_pool, (image_index * 512) + environment->query_offset++);
+}
+
 VkDescriptorSetLayout RenderServer::getSceneDescriptorSetLayout()
 {
     return environment->scene_descriptor_set_layout;
@@ -430,7 +440,7 @@ void RenderServer::createDescriptorPoolAndSets()
     
     VkQueryPoolCreateInfo query_pool_create_info{ };
     query_pool_create_info.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
-    query_pool_create_info.queryCount = MAX_FRAMES_IN_FLIGHT * 2;
+    query_pool_create_info.queryCount = MAX_FRAMES_IN_FLIGHT * 512;
     query_pool_create_info.queryType = VK_QUERY_TYPE_TIMESTAMP;
     if (vkCreateQueryPool(device, &query_pool_create_info, nullptr, &query_pool) != VK_SUCCESS)
         DBG_FAULT("vkCreateQueryPool failed");
@@ -553,6 +563,7 @@ FrameStats RenderServer::drawFrame()
     stats.build_time = build_duration.count();
 
     auto record_start = chrono::steady_clock::now();
+    query_offset = 0;
     vkResetCommandBuffer(command_buffers[image_index], 0);
     recordRenderCommands(command_buffers[image_index], image_index, stats);
     chrono::duration<float> record_duration = chrono::steady_clock::now() - record_start;
@@ -585,11 +596,17 @@ FrameStats RenderServer::drawFrame()
     DBG_BABBLE("submitting present");
     vkQueuePresentKHR(present_queue, &present_info);
     
-    uint32_t results_buf[6 * 2] = { 0 };
-    vkGetQueryPoolResults(device, query_pool, image_index * 2, 2, 6 * 2 * sizeof(uint32_t), results_buf, 4, VK_QUERY_RESULT_WAIT_BIT);
+    vector<uint32_t> results_buf;
+    results_buf.resize(query_offset, 0);
+    vkGetQueryPoolResults(device, query_pool, image_index * 512, query_offset, results_buf.size() * sizeof(uint32_t), results_buf.data(), 4, VK_QUERY_RESULT_WAIT_BIT);
 
-    float render_time = (float)(results_buf[1] - results_buf[0]) / (1000.0f * 1000.0f * 100.0f);
+    float render_time = (float)(results_buf[results_buf.size() - 1] - results_buf[0]) / (1000.0f * 1000.0f * 100.0f);
     stats.render_time = render_time;
+    for (size_t offset = 1; offset < results_buf.size() - 1; offset += 2)
+    {   
+        float pass_time = (float)(results_buf[offset + 1] - results_buf[offset]) / (1000.0f * 1000.0f * 100.0f);
+        stats.pass_times.push_back(pass_time);
+    }
     return stats;
 }
 
@@ -612,8 +629,8 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
 
     if (vkBeginCommandBuffer(command_buffer, &cmd_buffer_begin_info) != VK_SUCCESS)
         DBG_FAULT("vkBeginCommandBuffer failed");
-    vkCmdResetQueryPool(command_buffer, query_pool, 0, MAX_FRAMES_IN_FLIGHT * 2);
-    vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, query_pool, (image_index * 2) + 0);
+    vkCmdResetQueryPool(command_buffer, query_pool, 0, MAX_FRAMES_IN_FLIGHT * 512);
+    writeTimestamp(image_index, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
     Ref<Scene> scene = Engine::getScene();
 
@@ -637,7 +654,7 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
         vkCmdEndRenderPass(command_buffer);
     }
 
-    vkCmdWriteTimestamp(command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, query_pool, (image_index * 2) + 1);
+    writeTimestamp(image_index, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
     if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS)
         DBG_FAULT("vkEndCommandBuffer failed");
 }

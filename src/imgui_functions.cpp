@@ -487,6 +487,12 @@ void Engine::drawImGuiDebug(float delta_time)
 			ImGui::LabelText("triangles", "%i", last_frame_stats.triangles);
 			ImGui::LabelText("vertices", "%i", last_frame_stats.vertices);
 			ImGui::LabelText("render passes", "%i", last_frame_stats.passes);
+			if (ImGui::CollapsingHeader("pass durations"))
+			{
+				int i = 1;
+				for (float dur : last_frame_stats.pass_times)
+					ImGui::LabelText(("pass " + to_string(i++)).c_str(), "%fms", dur * 1000.0f);
+			}
 			ImGui::LabelText("camera rendering", "%i", last_frame_stats.cameras);
 			ImGui::LabelText("lights rendering", "%i", last_frame_stats.lights);
 		}

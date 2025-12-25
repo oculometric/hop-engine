@@ -108,6 +108,7 @@ void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t i
     render_pass_begin_info.pClearValues = clear_values.data();
 
     vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+    RenderServer::writeTimestamp(image_index, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
     stats.passes++;
 
     VkRect2D scissor{ };
@@ -168,6 +169,7 @@ void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t i
     ImDrawData* draw_data = ImGui::GetDrawData();
     if (draw_data) ImGui_ImplVulkan_RenderDrawData(draw_data, command_buffer);
 
+    RenderServer::writeTimestamp(image_index, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
     vkCmdEndRenderPass(command_buffer);
 }
 
@@ -263,6 +265,7 @@ void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t imag
     render_pass_begin_info.pClearValues = clear_values.data();
 
     vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+    RenderServer::writeTimestamp(image_index, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
     stats.passes++;
 
     VkRect2D scissor{ };
@@ -356,6 +359,7 @@ void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t imag
         stats.vertices += last_used_mesh->getVertexCount();
     }
 
+    RenderServer::writeTimestamp(image_index, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
     vkCmdEndRenderPass(command_buffer);
 }
 
@@ -372,6 +376,7 @@ void RenderGraph::recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t
     render_pass_begin_info.pClearValues = clear_values.data();
 
     vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+    RenderServer::writeTimestamp(image_index, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
     stats.passes++;
 
     VkRect2D scissor{ };
@@ -405,6 +410,7 @@ void RenderGraph::recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t
     stats.triangles += 2;
     stats.vertices += 4;
 
+    RenderServer::writeTimestamp(image_index, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
     vkCmdEndRenderPass(command_buffer);
 }
 
