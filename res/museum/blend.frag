@@ -12,5 +12,5 @@ layout(set = 2, binding = 1) uniform sampler2D multiply;
 
 void main()
 {
-    out_colour = vec4(texture(original, frag.uv).rgb * (1.0f - texture(multiply, frag.uv).rgb), 1);
+    out_colour = vec4(texture(original, frag.uv).rgb * texture(multiply, frag.uv).rgb, 1);
 }

@@ -273,17 +273,22 @@ Ref<Scene> initMaterialScene()
     fog_mat->setFloatUniform("fog_exponent", 0.5f);
     fog_mat->setVec4Uniform("fog_colour", { 0.005, 0.006, 0.002, 0 });
     
-    glm::vec4 samples[16];
+    constexpr int SAMPLES_COUNT = 64;
+    glm::vec4 samples[SAMPLES_COUNT];
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     std::default_random_engine rand;
-    for (int i = 0; i < 16; ++i)
+    for (int i = 0; i < SAMPLES_COUNT; ++i)
     {
-        glm::vec4 s = glm::vec4((dist(rand) * 2.0f) - 1.0f, (dist(rand) * 2.0f) - 1.0f, -dist(rand), 0.0f);
-        const float fi = static_cast<float>(i) / 16.0f;
-        glm::vec4 v = glm::normalize(s * (0.05f + ((1.0f - 0.05f) * fi * fi)));
-        samples[i] = v;
+        glm::vec3 s = glm::vec3(
+            (dist(rand) * 2.0f) - 1.0f,
+            (dist(rand) * 2.0f) - 1.0f,
+            dist(rand));
+        s = glm::normalize(s);
+        const float fi = static_cast<float>(i) / SAMPLES_COUNT;
+        glm::vec3 v = s * glm::mix(0.1f, 1.0f, fi * fi);
+        samples[i] = glm::vec4(v, 0.0f);
     }
-    scene->render_graph->getMaterialForStep(2)->setUniform("samples", samples, sizeof(glm::vec4) * 16);
+    scene->render_graph->getMaterialForStep(2)->setUniform("samples", samples, sizeof(glm::vec4) * SAMPLES_COUNT);
     
     cc_material = scene->render_graph->getMaterialForStep(4);
     cc_material->setFloatUniform("gamma", 1.0f);

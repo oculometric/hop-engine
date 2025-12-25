@@ -12,7 +12,7 @@ layout(set = 2, binding = 1) uniform sampler2D depth_texture;
 
 #include "dither.glsl"
 
-#define NUM_SAMPLES 16
+#define NUM_SAMPLES 64
 
 layout(set = 2, binding = 2) uniform AOParams
 {
@@ -63,8 +63,9 @@ void main()
         view_resample /= view_resample.w;
         float linear_resample_depth = -view_resample.z;
         
+        // TODO check all of this and make it less horribly slow
         float r = smoothstep(0.0f, 1.0f, radius / abs(linear_depth - linear_resample_depth));
-        occlusion += ((linear_sample_depth > linear_resample_depth + 0.025f) ? 1.0f : 0.0f) * r;
+        occlusion += ((linear_depth > linear_resample_depth + 0.025f) ? 1.0f : 0.0f) * r;
     }
     
     occlusion = pow(smoothstep(0.0f, 1.0f, 1.0f - (occlusion / NUM_SAMPLES)), 3.0f);
