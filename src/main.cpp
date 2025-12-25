@@ -88,17 +88,17 @@ static Ref<Scene> initScene()
 
     scene->render_graph = RenderGraph::deserialise("res://test_graph.hrgr");
 
-    glm::vec4 samples[64];
+    glm::vec4 samples[16];
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     std::default_random_engine rand;
-    for (int i = 0; i < 64; ++i)
+    for (int i = 0; i < 16; ++i)
     {
         glm::vec4 s = glm::vec4((dist(rand) * 2.0f) - 1.0f, (dist(rand) * 2.0f) - 1.0f, -dist(rand), 0.0f);
-        const float fi = static_cast<float>(i) / 64.0f;
+        const float fi = static_cast<float>(i) / 16.0f;
         glm::vec4 v = glm::normalize(s * (0.05f + ((1.0f - 0.05f) * fi * fi)));
         samples[i] = v;
     }
-    scene->render_graph->getMaterialForStep(3)->setUniform("samples", samples, sizeof(glm::vec4) * 64);
+    scene->render_graph->getMaterialForStep(3)->setUniform("samples", samples, sizeof(glm::vec4) * 16);
     cc_material = scene->render_graph->getMaterialForStep(5);
     cc_material->setFloatUniform("gamma", 1.0f);
     cc_material->setFloatUniform("exposure", 1.0f);
@@ -273,7 +273,19 @@ Ref<Scene> initMaterialScene()
     fog_mat->setFloatUniform("fog_exponent", 0.5f);
     fog_mat->setVec4Uniform("fog_colour", { 0.005, 0.006, 0.002, 0 });
     
-    cc_material = scene->render_graph->getMaterialForStep(2);
+    glm::vec4 samples[16];
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    std::default_random_engine rand;
+    for (int i = 0; i < 16; ++i)
+    {
+        glm::vec4 s = glm::vec4((dist(rand) * 2.0f) - 1.0f, (dist(rand) * 2.0f) - 1.0f, -dist(rand), 0.0f);
+        const float fi = static_cast<float>(i) / 16.0f;
+        glm::vec4 v = glm::normalize(s * (0.05f + ((1.0f - 0.05f) * fi * fi)));
+        samples[i] = v;
+    }
+    scene->render_graph->getMaterialForStep(2)->setUniform("samples", samples, sizeof(glm::vec4) * 16);
+    
+    cc_material = scene->render_graph->getMaterialForStep(4);
     cc_material->setFloatUniform("gamma", 1.0f);
     cc_material->setFloatUniform("exposure", 1.0f);
     cc_material->setFloatUniform("offset", 0.0f);

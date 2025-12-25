@@ -1,4 +1,6 @@
 Resource(shader, "res://engine/shaders/fog") : fog;
+Resource(shader, "res://engine/shaders/ssao") : ssao;
+Resource(shader, "res://museum/blend") : blend;
 Resource(shader, "res://engine/shaders/colour_correct") : colour_corrector;
 
 Camera(slot = 0, scale = 0.5) : camera;
@@ -7,7 +9,17 @@ PostProcess(shader = @fog, scale = 0.5) : fog
     Input(binding = 0, step = @camera, attachment = 0, filter = NEAREST);
     Input(binding = 1, step = @camera, attachment = 4, filter = NEAREST);
 };
-PostProcess(shader = @colour_corrector, scale = 0.5) : colour_grading
+PostProcess(shader = @ssao, scale = 0.5) : ssao
+{
+    Input(binding = 0, step = @camera, attachment = 1, filter = NEAREST);
+    Input(binding = 1, step = @camera, attachment = 4, filter = NEAREST);
+};
+PostProcess(shader = @blend, scale = 0.5) : blend
 {
     Input(binding = 0, step = @fog, attachment = 0, filter = NEAREST);
+    Input(binding = 1, step = @ssao, attachment = 0, filter = NEAREST);
+};
+PostProcess(shader = @colour_corrector) : colour_grading
+{
+    Input(binding = 0, step = @blend, attachment = 0, filter = NEAREST);
 };

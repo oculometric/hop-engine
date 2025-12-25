@@ -674,10 +674,9 @@ void RenderGraph::drawImGuiDebug()
 		ImGui::SliderInt("show attachment", &output_image, 0, 5);
 
 		static int pass_details_index = 0;
-		ImGui::BeginTable("passes", 7, ImGuiTableFlags_Borders);
+		ImGui::BeginTable("passes", 6, ImGuiTableFlags_Borders);
 		ImGui::TableSetupColumn("type");
 		ImGui::TableSetupColumn("slot");
-		ImGui::TableSetupColumn("material");
 		ImGui::TableSetupColumn("inputs");
 		ImGui::TableSetupColumn("outputs");
 		ImGui::TableSetupColumn("extent");
@@ -693,17 +692,15 @@ void RenderGraph::drawImGuiDebug()
 			ImGui::TableSetColumnIndex(1);
 			if (pass.is_camera)
 				ImGui::Text("%i", pass.camera_slot);
+			
 			ImGui::TableSetColumnIndex(2);
 			if (!pass.is_camera)
-				ImGui::Text("%s", pass.material->getOrigin().c_str());
-			ImGui::TableSetColumnIndex(3);
-			if (!pass.is_camera)
 				ImGui::Text("%i", pass.texture_bindings.size());
-			ImGui::TableSetColumnIndex(4);
+			ImGui::TableSetColumnIndex(3);
 			ImGui::Text("%i", pass.render_pass->getClearValues().size());
-			ImGui::TableSetColumnIndex(5);
+			ImGui::TableSetColumnIndex(4);
 			ImGui::Text("%i x %i", pass.render_pass->getExtent().width, pass.render_pass->getExtent().height);
-			ImGui::TableSetColumnIndex(6);
+			ImGui::TableSetColumnIndex(5);
 			if (ImGui::SmallButton(">"))
 				pass_details_index = current_pass;
 			++current_pass;
@@ -712,11 +709,12 @@ void RenderGraph::drawImGuiDebug()
 		ImGui::EndTable();
 		if (pass_details_index < execution_steps.size())
 		{
-			if (ImGui::CollapsingHeader(("pass " + to_string(pass_details_index) + " details").c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+			if (ImGui::CollapsingHeader(("pass " + to_string(pass_details_index + 1) + " details").c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 			{
 				const auto& pass = execution_steps[pass_details_index];
 				if (!pass.is_camera)
 				{
+					ImGui::LabelText("shader", "%s", pass.material->getShader()->getOrigin().c_str());
 					ImGui::Text("input texture bindings:");
 					ImGui::BeginTable("bindings", 5, ImGuiTableFlags_Borders);
 					ImGui::TableSetupColumn("binding");

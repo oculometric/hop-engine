@@ -68,7 +68,7 @@ private:
 	static std::vector<DescriptorBinding> getReflectedBindings(std::vector<uint8_t> blob);
 	static bool compileFile(std::string path, std::string out_path);
 	static VkShaderModule createShaderModule(const std::vector<uint8_t>& blob);
-	static void fixIncludes(std::vector<uint8_t>& source_code, std::string path_prefix);
+	static void fixIncludes(std::vector<uint8_t>& source_code, std::string path_prefix, bool res_relative);
 	static bool compileShaders(std::string path, std::string out_path);
 };
 

@@ -318,7 +318,7 @@ VkShaderModule Shader::createShaderModule(const vector<uint8_t>& blob)
 	return shader_module;
 }
 
-void Shader::fixIncludes(vector<uint8_t>& source_code, string path_prefix)
+void Shader::fixIncludes(vector<uint8_t>& source_code, string path_prefix, bool res_relative)
 {
 	string source_code_text(source_code.size(), ' ');
 	memcpy(source_code_text.data(), source_code.data(), source_code.size());
@@ -338,7 +338,14 @@ void Shader::fixIncludes(vector<uint8_t>& source_code, string path_prefix)
 			return;
 		}
 		source_code_text.erase(offset, (end - offset) + 1);
-		auto include_data = Package::tryLoadFile(path_prefix + path);
+		string target_path = path_prefix + path;
+		filesystem::path fixed_path = target_path;
+		auto lex = fixed_path.lexically_normal();
+		string real_path = lex.string();
+		for (char& value : real_path) 
+			if (value == '\\')
+				value = '/';
+		auto include_data = Package::tryLoadFile(res_relative ? ("res://" + real_path) : real_path);
 		string include_string(include_data.size(), ' ');
 		memcpy(include_string.data(), include_data.data(), include_data.size());
 		source_code_text.insert(source_code_text.begin() + offset, include_data.begin(), include_data.end());
@@ -366,10 +373,19 @@ bool Shader::compileShaders(string path, string out_path)
 		return false;
 	}
 
-	filesystem::path _path = path;
+	
+	filesystem::path _path;
+	bool is_res_relative = false;
+	if (path.substr(0, 6) == "res://")
+	{
+		_path = path.substr(6);
+		is_res_relative = true;		
+	}
+	else
+		_path = path;
 	string prefix = _path.remove_filename().string();
-	Shader::fixIncludes(vert_data, prefix);
-	Shader::fixIncludes(frag_data, prefix);
+	Shader::fixIncludes(vert_data, prefix, is_res_relative);
+	Shader::fixIncludes(frag_data, prefix, is_res_relative);
 
 	string input_path = Package::getTempPath() + "temp_shader";
 	Package::tryWriteFile(input_path + ".vert", vert_data);

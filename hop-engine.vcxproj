@@ -264,6 +264,8 @@
     <Content Include="res\engine\shaders\gizmo.frag" />
     <Content Include="res\engine\shaders\gizmo.vert" />
     <Content Include="res\engine\textures\basic_lut.png" />
+    <Content Include="res\museum\blend.frag" />
+    <Content Include="res\museum\blend.vert" />
     <Content Include="res\museum\RenderGraph.hrgr" />
     <Content Include="res\samples\asha.obj" />
     <Content Include="res\samples\asha.png" />
