@@ -15,7 +15,7 @@ struct DrawCommand
 
 	bool operator()(const DrawCommand& a, const DrawCommand& b) const;
 
-	inline DrawCommand(WeakRef<Material> _material, WeakRef<Mesh> _mesh, WeakRef<UniformBlock> _uniforms = WeakRef<UniformBlock>(nullptr))
+	inline DrawCommand(WeakRef<Material> _material, WeakRef<Mesh> _mesh, WeakRef<UniformBlock> _uniforms = WeakRef<UniformBlock>())
 		: material(_material), mesh(_mesh), uniforms(_uniforms) { }
 
 	inline DrawCommand() { }

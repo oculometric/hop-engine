@@ -6,7 +6,7 @@
 namespace HopEngine
 {
 
-#define REGISTER registerCountedRef(typeid(T).name(), WeakRef<void>(this->cast<void>()))
+#define REGISTER registerCountedRef(typeid(T).name(), weak().template cast<void>())
 #define UNREGISTER unregisterCountedRef(payload)
 
 template <typename T>
@@ -114,6 +114,7 @@ public:
 		invalidateSelf();
 	}
 
+	inline WeakRef<T> weak() const;
 	inline size_t getCount() const { return *ref_counter; }
 	inline bool isValid() const { return payload != nullptr; }
 	inline operator bool() const { return isValid(); }
@@ -244,6 +245,12 @@ inline Ref<T>::Ref(WeakRef<T>& other)
 	ref_counter = other.ref_counter;
 	if (ref_counter != nullptr)
 		++(*ref_counter);
+}
+
+template<typename T>
+inline WeakRef<T> Ref<T>::weak() const
+{
+    return WeakRef<T>(*this);
 }
 
 };
