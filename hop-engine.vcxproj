@@ -258,6 +258,10 @@
     <Content Include="res\engine\meshes\axes_gizmo.obj" />
     <Content Include="res\engine\meshes\rotate_gizmo.obj" />
     <Content Include="res\engine\meshes\skybox.obj" />
+    <Content Include="res\engine\shaders\deferred.frag" />
+    <Content Include="res\engine\shaders\deferred.vert" />
+    <Content Include="res\engine\shaders\deferred_post.frag" />
+    <Content Include="res\engine\shaders\deferred_post.vert" />
     <Content Include="res\engine\shaders\dither.glsl" />
     <Content Include="res\engine\shaders\fog.frag" />
     <Content Include="res\engine\shaders\fog.vert" />
