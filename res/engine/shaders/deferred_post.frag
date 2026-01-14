@@ -22,7 +22,6 @@ vec3 pbrSurface(vec3 albedo, vec3 position, vec3 mapped_normal, vec3 specular_co
     vec3 final_colour = mix(vec3(0.0f), scene.ambient_light.rgb * albedo, roughness);
     for (uint i = 0; i < 8; ++i)
     {
-        // TODO: evaluate lights
         Light light = scene.lights[i];
         
         if (!light.enabled)
@@ -106,6 +105,4 @@ void main()
     // TODO: view space lighting?
     
     out_colour = pbrSurface(colour_val.rgb, world_position, texture(normal_tex, frag.uv).rgb, texture(custom_tex, frag.uv).rgb, param_val.r, param_val.g, colour_val.a);
-    
-    // TODO: compute SSAO??
 }

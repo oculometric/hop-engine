@@ -479,12 +479,20 @@ bool TokenReader::readStatementAnonymous(const Statement& statement, bool childr
     size_t index = 0;
     for (const auto& arg : statement.arguments)
     {
-        if (arg.second.type != expected_args[index])
+        if (expected_args[index] == FLOAT && arg.second.type == INT)
+        {
+            Token t = arg.second;
+            t.type = FLOAT;
+            t.f_value = arg.second.i_value;
+            extracted.push_back(t);
+        }
+        else if (arg.second.type != expected_args[index])
         {
             DBG_ERROR(error_base + ": argument " + to_string(index) + " in a '" + statement.keyword + "' statement must be a " + typeToString(expected_args[index]));
             return false;
         }
-        extracted.push_back(arg.second);
+        else
+            extracted.push_back(arg.second);
         ++index;
     }
 
@@ -529,12 +537,20 @@ bool TokenReader::readStatementNamed(const Statement& statement, bool children_a
             DBG_ERROR(error_base + ": duplicate argument '" + arg.first + "' in '" + statement.keyword + "' statement");
             return false;
         }
-        if (arg.second.type != it->second.first)
+        if (it->second.first == FLOAT && arg.second.type == INT)
+        {
+            Token t = arg.second;
+            t.type = FLOAT;
+            t.f_value = arg.second.i_value;
+            extracted_args[arg.first] = t;
+        }
+        else if (arg.second.type != it->second.first)
         {
             DBG_ERROR(error_base + ": argument '" + arg.first + "' has wrong type for '" + statement.keyword + "' statement, must be a " + typeToString(it->second.first));
             return false;
         }
-        extracted_args[arg.first] = arg.second;
+        else
+            extracted_args[arg.first] = arg.second;
     }
     // check if all args are present
     for (const auto& expected : expected_args)

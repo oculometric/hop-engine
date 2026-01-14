@@ -258,14 +258,14 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
     Input::resetMouseDelta();
 }
 
-Ref<Scene> initMaterialScene()
+Ref<Scene> initMuseumScene()
 {
     Ref<Scene> scene = Scene::deserialise("res://museum/Museum.hscn");
     if (!scene) return scene;
     
-    scene->getCamera(0)->transform.lookAt(glm::vec3(0.0f, -7.5f, 1.73f),
-         glm::vec3(0.0f, 1.0f, 1.73f),
-         glm::vec3(0.0f, 0.0f, 1.0f));
+    // scene->getCamera(0)->transform.lookAt(glm::vec3(0.0f, -7.5f, 1.73f),
+    //      glm::vec3(0.0f, 1.0f, 1.73f),
+    //      glm::vec3(0.0f, 0.0f, 1.0f));
     
     auto fog_mat = scene->render_graph->getMaterialForStep(1);
     fog_mat->setFloatUniform("fog_start", 4.0f);
@@ -333,9 +333,9 @@ void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
 
 static std::vector<SceneFuncSet> scenes =
 {
+    { L"museum", initMuseumScene, updateScene, imGuiDrawFunc },
     { L"bunnygirl", initScene, updateScene, imGuiDrawFunc },
     { L"nodes", initNodeScene, updateNodeScene, imGuiDrawFunc },
-    { L"museum", initMaterialScene, updateScene, imGuiDrawFunc },
 };
 
 SceneFuncSet getScene(int i)
@@ -381,10 +381,10 @@ int main()
 {
     Engine::init();
     
-    selected_scene = 2;
-#if defined(_WIN32)
-    DialogBox(NULL, MAKEINTRESOURCE(IDD_DIALOG1), NULL, dialogFunc);
-#endif
+    selected_scene = 0;
+// #if defined(_WIN32)
+//     DialogBox(NULL, MAKEINTRESOURCE(IDD_DIALOG1), NULL, dialogFunc);
+// #endif
     Engine::debugClearSelection();
 
     const auto& scene = getScene(selected_scene);

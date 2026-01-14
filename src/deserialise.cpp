@@ -816,21 +816,27 @@ bool deserialiseObject(TokenReader::Statement statement, Ref<Scene> scene, const
 	if (obj == nullptr)
 		return false;
 	
-	auto it = args.find("position");
-	if (it != args.end())
-		obj->transform.setLocalPosition(it->second.c_value);
-	it = args.find("euler");
-	if (it != args.end())
-		obj->transform.setLocalEuler(it->second.c_value);
-	it = args.find("scale");
-	if (it != args.end())
-		obj->transform.setLocalScale(it->second.c_value);
-	if (!statement.identifier.empty())
-		obj->name = statement.identifier;
-	
 	scene->insertObject(obj);
 	if (parent)
 		obj->setParent(parent);
+	
+	auto it = args.find("position");
+	if (it != args.end())
+		obj->transform.setLocalPosition(it->second.c_value);
+	else
+		obj->transform.setLocalPosition({ 0, 0, 0 });
+	it = args.find("euler");
+	if (it != args.end())
+		obj->transform.setLocalEuler(it->second.c_value);
+	else
+		obj->transform.setLocalEuler({ 0, 0, 0 });
+	it = args.find("scale");
+	if (it != args.end())
+		obj->transform.setLocalScale(it->second.c_value);
+	else
+		obj->transform.setLocalScale({ 1, 1, 1 });
+	if (!statement.identifier.empty())
+		obj->name = statement.identifier;
 	
 	for (TokenReader::Statement child : statement.children)
 	{

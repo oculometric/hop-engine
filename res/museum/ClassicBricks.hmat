@@ -11,7 +11,7 @@ Uniform()
     vec4("specular", [ 1, 1, 1, 1 ]);
     vec4("emissive", [ 0, 0, 0, 0 ]);
     float("specular_exponent", 16);
-    float("specular_factor", 0.2);
+    float("specular_factor", 0.0);
     float("use_triplanar", 1);
     float("triplanar_scale", 0.25);
 };
