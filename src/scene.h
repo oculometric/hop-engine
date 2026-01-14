@@ -80,7 +80,7 @@ template<class T>
 inline Ref<T> Scene::findObject(std::string name) const
 {
 	static_assert(std::is_convertible<T*, Object*>::value, "expected type must be a HopEngine::Object subclass");
-	for (auto& test_obj : objects)
+	for (auto test_obj : objects)
 	{
 		if (test_obj->name == name)
 		{

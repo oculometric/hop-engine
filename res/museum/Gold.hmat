@@ -1,0 +1,11 @@
+Resource(shader, "res://engine/shaders/pbr") : shader;
+
+Shader(resource = @shader);
+Uniform()
+{
+    vec4("diffuse", [ 1, 0.6, 0.2, 1 ]);
+    vec4("specular", [ 1, 1, 0.2, 1 ]);
+    vec4("emissive", [ 0, 0, 0, 0 ]);
+    float("specular_exponent", 64);
+    float("specular_factor", 0.85);
+};

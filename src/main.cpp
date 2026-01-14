@@ -26,6 +26,9 @@ using namespace HopEngine;
 
 static WeakRef<StaticMesh> asha;
 static WeakRef<StaticMesh> obj;
+static WeakRef<StaticMesh> obj2;
+static WeakRef<StaticMesh> obj3;
+static WeakRef<StaticMesh> obj4;
 static WeakRef<NodeView> node_view;
 static WeakRef<Gizmo> gizmo;
 static WeakRef<NodeView::Node> selected_node;
@@ -117,6 +120,12 @@ static void updateScene(Ref<Scene> scene, float delta_time)
 
     if (obj)
         obj->transform.rotateLocal({ 0, 0, 20 * delta_time });
+    if (obj2)
+        obj2->transform.rotateLocal({ 35 * delta_time, 0, 0 });
+    if (obj3)
+        obj3->transform.rotateLocal({ 0, 0, 10 * delta_time });
+    if (obj4)
+        obj4->transform.rotateLocal({ 0, 0, -16 * delta_time });
 
     if (gizmo)
         gizmo->trackObject(Engine::getDebugSelection(), scene->getCamera(0));
@@ -263,9 +272,10 @@ Ref<Scene> initMuseumScene()
     Ref<Scene> scene = Scene::deserialise("res://museum/Museum.hscn");
     if (!scene) return scene;
     
-    // scene->getCamera(0)->transform.lookAt(glm::vec3(0.0f, -7.5f, 1.73f),
-    //      glm::vec3(0.0f, 1.0f, 1.73f),
-    //      glm::vec3(0.0f, 0.0f, 1.0f));
+    obj2 = scene->findObject<StaticMesh>("orrery_mid");
+    obj = scene->findObject<StaticMesh>("orrery_core");
+    obj3 = scene->findObject<StaticMesh>("orrery_orbit_a");
+    obj4 = scene->findObject<StaticMesh>("orrery_orbit_b");
     
     auto fog_mat = scene->render_graph->getMaterialForStep(1);
     fog_mat->setFloatUniform("fog_start", 4.0f);
@@ -333,9 +343,9 @@ void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
 
 static std::vector<SceneFuncSet> scenes =
 {
-    { L"museum", initMuseumScene, updateScene, imGuiDrawFunc },
     { L"bunnygirl", initScene, updateScene, imGuiDrawFunc },
     { L"nodes", initNodeScene, updateNodeScene, imGuiDrawFunc },
+    { L"museum", initMuseumScene, updateScene, imGuiDrawFunc },
 };
 
 SceneFuncSet getScene(int i)
@@ -381,7 +391,7 @@ int main()
 {
     Engine::init();
     
-    selected_scene = 0;
+    selected_scene = 2;
 // #if defined(_WIN32)
 //     DialogBox(NULL, MAKEINTRESOURCE(IDD_DIALOG1), NULL, dialogFunc);
 // #endif
