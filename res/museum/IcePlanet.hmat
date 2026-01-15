@@ -1,0 +1,13 @@
+Resource(shader, "res://engine/shaders/deferred") : shader;
+Resource(texture, "res://museum/IcePlanet_t.png") : albedo;
+
+Shader(resource = @shader);
+Texture(binding = "albedo_tex", resource = @albedo, filter = NEAREST);
+Uniform()
+{
+    vec4("base_colour", [ 1, 1, 1, 1 ]);
+    vec4("specular_colour", [ 1, 1, 1, 1 ]);
+    
+    float("roughness_factor_add", 0.9);
+    float("emission_strength", 0.5);
+};

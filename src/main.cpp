@@ -29,6 +29,8 @@ static WeakRef<StaticMesh> obj;
 static WeakRef<StaticMesh> obj2;
 static WeakRef<StaticMesh> obj3;
 static WeakRef<StaticMesh> obj4;
+static WeakRef<StaticMesh> spline_obj;
+static Spline spline; static float spline_progress = 0.0f; static bool spline_tracked = false;
 static WeakRef<NodeView> node_view;
 static WeakRef<Gizmo> gizmo;
 static WeakRef<NodeView::Node> selected_node;
@@ -129,6 +131,18 @@ static void updateScene(Ref<Scene> scene, float delta_time)
 
     if (gizmo)
         gizmo->trackObject(Engine::getDebugSelection(), scene->getCamera(0));
+    
+    if (spline_obj)
+    {
+        spline_progress += delta_time * 0.1f;
+        spline_obj->transform.setLocalPosition(spline[spline_progress]);
+        spline_obj->transform.lookAt(spline[spline_progress], spline[spline_progress - 0.01f], { 0, 0, 1 });
+        if (spline_tracked)
+        {
+            WeakRef<Camera> camera = scene->getCamera(0);
+            camera->transform.lookAt(camera->transform.getLocalPosition(), spline[spline_progress], { 0, 0, 1 });
+        }
+    }
 
     Input::resetMouseDelta();
 }
@@ -273,10 +287,24 @@ Ref<Scene> initMuseumScene()
     Ref<Scene> scene = Scene::deserialise("res://museum/Museum.hscn");
     if (!scene) return scene;
     
-    obj2 = scene->findObject<StaticMesh>("orrery_mid");
     obj = scene->findObject<StaticMesh>("orrery_core");
+    obj2 = scene->findObject<StaticMesh>("orrery_mid");
     obj3 = scene->findObject<StaticMesh>("orrery_orbit_a");
     obj4 = scene->findObject<StaticMesh>("orrery_orbit_b");
+    
+    spline_obj = scene->insertObject<StaticMesh>(
+        new StaticMesh(
+            Engine::loadMesh("res://museum/IcePlanet.obj"), 
+            Engine::loadMaterial("res://museum/IcePlanet.hmat")));
+    spline_obj->transform.setLocalScale({ 0.3f, 0.3f, 0.3f });
+    spline.loop = true;
+    spline.points = {
+        { 10.5, -9.5, 1 },
+        { 13, -10.5, 2.5 },
+        { 8.5, -8.5, 3.5 },
+        { 11, -7.5, 4.5 },
+        { 14, -8, 1.5 }
+    };
     
     auto fog_mat = scene->render_graph->getMaterialForStep(2);
     fog_mat->setFloatUniform("fog_start", 4.0f);
@@ -338,6 +366,13 @@ void imGuiDrawFunc(Ref<Scene> scene, float delta_time)
         gamma = new_gamma;
         exposure = new_exposure;
         offset = new_offset;
+        ImGui::End();
+    }
+    
+    if (spline_obj)
+    {
+        ImGui::Begin("spline control", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::Checkbox("camera track spline", &spline_tracked);
         ImGui::End();
     }
 }
