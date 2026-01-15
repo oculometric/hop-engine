@@ -33,6 +33,7 @@ struct SceneUniforms
     glm::mat4 world_to_view;
     glm::mat4 view_to_clip;
     glm::mat4 clip_to_view;
+    glm::mat4 view_to_world;
     glm::ivec2 viewport_size = { 0, 0 };
     glm::vec2 padding = { 0, 0 };
     glm::vec3 eye_position = { 0, 0, 0 };

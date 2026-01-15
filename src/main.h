@@ -9,3 +9,4 @@ struct SceneFuncSet
 };
 
 SceneFuncSet getScene(int i);
+void unloadScene();

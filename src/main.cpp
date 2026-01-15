@@ -27,6 +27,7 @@
 using namespace HopEngine;
 
 static WeakRef<StaticMesh> asha;
+static WeakRef<StaticMesh> crt;
 static WeakRef<StaticMesh> obj;
 static WeakRef<StaticMesh> obj2;
 static WeakRef<StaticMesh> obj3;
@@ -146,7 +147,8 @@ static void updateScene(Ref<Scene> scene, float delta_time)
         }
     }
     
-    scene->findObject<StaticMesh>("crt_screen")->material->setTexture("albedo_tex", scene->render_graph->getFinalImage().first);
+    if (crt)
+        crt->material->setTexture("albedo_tex", scene->render_graph->getFinalImage().first);
 
     Input::resetMouseDelta();
 }
@@ -310,6 +312,8 @@ Ref<Scene> initMuseumScene()
         { 14, -8, 1.5 }
     };
     
+    crt = scene->findObject<StaticMesh>("crt_screen");
+    
     auto fog_mat = scene->render_graph->getMaterialForStep(2);
     fog_mat->setFloatUniform("fog_start", 4.0f);
     fog_mat->setFloatUniform("fog_end", 24.0f);
@@ -391,6 +395,21 @@ static std::vector<SceneFuncSet> scenes =
 SceneFuncSet getScene(int i)
 {
     return scenes[i];
+}
+
+void unloadScene()
+{
+    asha = nullptr;
+    crt = nullptr;
+    obj = nullptr;
+    obj2 = nullptr;
+    obj3 = nullptr;
+    obj4 = nullptr;
+    spline_obj = nullptr;
+    node_view = nullptr;
+    gizmo = nullptr;
+    selected_node = nullptr;
+    cc_material = nullptr;
 }
 
 #if defined(_WIN32)

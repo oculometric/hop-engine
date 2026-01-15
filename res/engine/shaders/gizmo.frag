@@ -17,5 +17,4 @@ void main()
         out_colour = vec4(1);
     else
         out_colour = vec4(frag.colour.rgb, 1);
-    out_params.w = 0.0f;
 }

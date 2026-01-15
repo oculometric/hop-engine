@@ -432,12 +432,14 @@ void Engine::drawImGuiDebug(float delta_time)
 		{
 			if (ImGui::MenuItem("bunnygirl"))
 			{
+				unloadScene();
 				auto scn = ::getScene(0);
 				debugClearSelection();
 				Engine::setup(scn.init_func, scn.update_func, scn.imgui_func);
 			}
 			if (ImGui::MenuItem("museum"))
 			{
+				unloadScene();
 				auto scn = ::getScene(2);
 				debugClearSelection();
 				Engine::setup(scn.init_func, scn.update_func, scn.imgui_func);

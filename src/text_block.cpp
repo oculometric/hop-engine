@@ -5,6 +5,7 @@
 #include "font.h"
 #include "material.h"
 #include "sampler.h"
+#include "texture.h"
 
 using namespace HopEngine;
 using namespace std;

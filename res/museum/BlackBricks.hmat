@@ -10,10 +10,8 @@ Uniform()
     vec4("base_colour", [ 1, 1, 1, 1 ]);
     vec4("specular_colour", [ 1, 1, 1, 1 ]);
     
-    float("roughness_factor_add", 0.7);
-    float("metallic_factor_add", 0.0);
+    float("roughness_factor_add", 0.2);
     float("normal_strength", 1.0);
-    float("emission_strength", 0.0);
     float("use_triplanar", 1.0);
     float("triplanar_scale", 0.25);
 };

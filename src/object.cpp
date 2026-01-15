@@ -78,6 +78,7 @@ SceneUniforms Camera::getSceneUniforms(glm::ivec2 viewport_size, float time, std
 	scene_uniforms.view_to_clip = glm::perspective(glm::radians(fov), viewport_size.x / (float)(viewport_size.y), near_clip, far_clip);
 	scene_uniforms.view_to_clip[1][1] *= -1;
 	scene_uniforms.clip_to_view = glm::inverse(scene_uniforms.view_to_clip);
+	scene_uniforms.view_to_world = transform.getMatrix();
 	scene_uniforms.near_far = { near_clip, far_clip };
 	memcpy(scene_uniforms.lights, lights.data(), lights.size() * sizeof(LightParams));
 	scene_uniforms.ambient_light = ambient;

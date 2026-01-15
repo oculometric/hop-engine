@@ -9,9 +9,9 @@ Texture(binding = "normal_tex", resource = @normal, filter = NEAREST);
 Uniform()
 {
     vec4("base_colour", [ 1, 1, 1, 1 ]);
-    vec4("specular_colour", [ 0.2, 1, 0.2, 1 ]);
+    vec4("specular_colour", [ 0.05, 0.3, 0.01, 1 ]);
     
-    float("roughness_factor_add", 0.2);
-    float("metallic_factor_add", 0.5);
-    float("normal_strength", 1.0);
+    float("roughness_factor_add", 0.6);
+    float("metallic_factor_add", 0.4);
+    float("normal_strength", 0.8);
 };
