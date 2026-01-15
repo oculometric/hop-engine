@@ -133,7 +133,7 @@ StaticMesh::StaticMesh(Ref<Mesh> _mesh, Ref<Material> _material) : Object()
 LightParams Light::getParamsStructure()
 {
 	LightParams params{ };
-	params.colour = colour;
+	params.colour = glm::vec4(colour, strength);
 	params.enabled = true;
 	params.spot_angle = spot_angle;
 	params.light_type = type;

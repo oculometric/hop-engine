@@ -72,14 +72,14 @@ vec3 pbrSurface(vec3 albedo, vec3 position, vec3 mapped_normal, vec3 specular_co
         float gf_sggx = (saturate(wo_dot_n) / ((saturate(wo_dot_n) * (1.0f - k)) + k))
             * (saturate(wi_dot_n) / ((saturate(wi_dot_n) * (1.0f - k)) + k)); // modified to add saturate functions
         // Fresnel-Schlick fresnel approximation, ref as above
-        vec3 f0 = mix(float3(0.04f, 0.04f, 0.04f), albedo, metallic);
+        vec3 f0 = mix(vec3(0.04f, 0.04f, 0.04f), albedo, metallic);
         vec3 ff_fs = f0 + ((1.0f - f0) * pow(saturate(1.0f - max(n_dot_h, 0.0f)), 5.0f));
         // Cook-Torrance specular BRDF, ref as above
         vec3 f_ct = (ndf_trggx * gf_sggx * ff_fs) / ((4.0f * max(wi_dot_n, 0.0f) * max(wo_dot_n, 0.0f)) + 0.0001f);
         // Lambertian diffuse BRDF, ref as above
         vec3 f_lambert = albedo / 3.14159f;
         vec3 k_s = ff_fs;
-        vec3 k_d = float3(1.0f, 1.0f, 1.0f) - k_s;
+        vec3 k_d = vec3(1.0f, 1.0f, 1.0f) - k_s;
         k_d *= 1.0f - metallic;
         // Cook-Torrance BRDF (combined), ref as above
         vec3 f_r = ((k_d * f_lambert) + (f_ct));
@@ -97,12 +97,15 @@ void main()
 {
     vec4 colour_val = texture(colour_tex, frag.uv);
     vec4 param_val = texture(param_tex, frag.uv);
+    vec4 normal_val = texture(normal_tex, frag.uv);
+    vec4 specular_val = texture(custom_tex, frag.uv);
     float z = texture(depth_tex, frag.uv).r;
     vec4 clip_position = vec4(frag.position.xy, z, 1.0f);
     vec4 view_position = scene.clip_to_view * clip_position;
     view_position /= view_position.w;
+    // TODO: eliminate this inverse!
     vec4 world_position = inverse(scene.world_to_view) * view_position;
     // TODO: view space lighting?
     
-    out_colour = pbrSurface(colour_val.rgb, world_position, texture(normal_tex, frag.uv).rgb, texture(custom_tex, frag.uv).rgb, param_val.r, param_val.g, colour_val.a);
+    out_colour = vec4(pbrSurface(colour_val.rgb, world_position.xyz, normal_val.xyz, specular_val.rgb, param_val.r, param_val.g, param_val.b), 1.0f);
 }

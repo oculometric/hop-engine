@@ -68,7 +68,7 @@ static Ref<Scene> initScene()
 
     auto sun_lamp = scene->insertObject<Light>(new Light(Light::DIRECTIONAL));
     sun_lamp->transform.rotateLocal({ -17.0f, -34.0f, -189.0f });
-    sun_lamp->colour = { 1.0f, 1.0f, 1.0f, 0.0f };
+    sun_lamp->colour = { 1.0f, 1.0f, 1.0f };
 
     scene->getCamera(0)->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
         glm::vec3(0.0f, 0.0f, 0.0f),
@@ -91,13 +91,13 @@ static Ref<Scene> initScene()
 
     scene->render_graph = RenderGraph::deserialise("res://test_graph.hrgr");
 
-    glm::vec4 samples[16];
+    glm::vec4 samples[24];
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     std::default_random_engine rand;
-    for (int i = 0; i < 16; ++i)
+    for (int i = 0; i < 24; ++i)
     {
         glm::vec4 s = glm::vec4((dist(rand) * 2.0f) - 1.0f, (dist(rand) * 2.0f) - 1.0f, -dist(rand), 0.0f);
-        const float fi = static_cast<float>(i) / 16.0f;
+        const float fi = static_cast<float>(i) / 24.0f;
         glm::vec4 v = glm::normalize(s * (0.05f + ((1.0f - 0.05f) * fi * fi)));
         samples[i] = v;
     }
@@ -269,6 +269,7 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
 
 Ref<Scene> initMuseumScene()
 {
+    Debug::setLogLevel(Debug::DEBUG_WARNING);
     Ref<Scene> scene = Scene::deserialise("res://museum/Museum.hscn");
     if (!scene) return scene;
     
@@ -277,13 +278,13 @@ Ref<Scene> initMuseumScene()
     obj3 = scene->findObject<StaticMesh>("orrery_orbit_a");
     obj4 = scene->findObject<StaticMesh>("orrery_orbit_b");
     
-    auto fog_mat = scene->render_graph->getMaterialForStep(1);
+    auto fog_mat = scene->render_graph->getMaterialForStep(2);
     fog_mat->setFloatUniform("fog_start", 4.0f);
     fog_mat->setFloatUniform("fog_end", 24.0f);
     fog_mat->setFloatUniform("fog_exponent", 0.5f);
     fog_mat->setVec4Uniform("fog_colour", { 0.005, 0.006, 0.002, 0 });
     
-    constexpr int SAMPLES_COUNT = 64;
+    constexpr int SAMPLES_COUNT = 24;
     glm::vec4 samples[SAMPLES_COUNT];
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     std::default_random_engine rand;
@@ -298,9 +299,9 @@ Ref<Scene> initMuseumScene()
         glm::vec3 v = s * glm::mix(0.1f, 1.0f, fi * fi);
         samples[i] = glm::vec4(v, 0.0f);
     }
-    scene->render_graph->getMaterialForStep(2)->setUniform("samples", samples, sizeof(glm::vec4) * SAMPLES_COUNT);
+    scene->render_graph->getMaterialForStep(3)->setUniform("samples", samples, sizeof(glm::vec4) * SAMPLES_COUNT);
     
-    cc_material = scene->render_graph->getMaterialForStep(4);
+    cc_material = scene->render_graph->getMaterialForStep(5);
     cc_material->setFloatUniform("gamma", 1.0f);
     cc_material->setFloatUniform("exposure", 1.0f);
     cc_material->setFloatUniform("offset", 0.0f);

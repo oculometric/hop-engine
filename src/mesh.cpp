@@ -237,7 +237,7 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
             file >> tmp3.z;
             tmp_co.push_back(tmp3);
             auto peeked = file.peek();
-            if (peeked != -1)
+            if (peeked != -1 && peeked != '\n' && peeked != '\r')
             {
                 file >> tmp3.x;
                 file >> tmp3.y;

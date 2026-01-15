@@ -12,7 +12,7 @@ layout(set = 2, binding = 1) uniform sampler2D depth_texture;
 
 #include "dither.glsl"
 
-#define NUM_SAMPLES 64
+#define NUM_SAMPLES 24
 
 layout(set = 2, binding = 2) uniform AOParams
 {

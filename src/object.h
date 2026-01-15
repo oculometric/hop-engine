@@ -95,7 +95,8 @@ public:
 
 public:
 	LightType type;
-	glm::vec4 colour = { 1, 0, 0, 0 };
+	glm::vec3 colour = { 1, 0, 0 };
+	float strength = 1.0f;
 	float spot_angle = 0.0f;
 
 public:

@@ -17,3 +17,4 @@
 - custom shader format to keep stuff in one file [L]
 - ability to toggle skipping passes [L]
 - proper text rendering demo [L]
+- occlusion culling [L]

@@ -1,15 +1,15 @@
-Resource(shader, "res://engine/shaders/pbr") : shader;
+Resource(shader, "res://engine/shaders/deferred") : shader;
 Resource(texture, "res://museum/Wood_t.png") : albedo;
 Resource(texture, "res://museum/Wood_n.png") : normal;
 
 Shader(resource = @shader);
 Texture(binding = "albedo_tex", resource = @albedo, filter = NEAREST);
-Texture(binding = "normal_map", resource = @normal, filter = NEAREST);
+Texture(binding = "normal_tex", resource = @normal, filter = NEAREST);
 Uniform()
 {
-    vec4("diffuse", [ 1, 1, 1, 1 ]);
-    vec4("specular", [ 1, 1, 1, 1 ]);
-    vec4("emissive", [ 0, 0, 0, 0 ]);
-    float("specular_exponent", 16);
-    float("specular_factor", 0.2);
+    vec4("base_colour", [ 1, 1, 1, 1 ]);
+    vec4("specular_colour", [ 1, 1, 1, 1 ]);
+    
+    float("roughness_factor_add", 0.4);
+    float("normal_strength", 1.0);
 };

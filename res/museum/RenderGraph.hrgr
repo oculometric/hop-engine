@@ -1,12 +1,21 @@
 Resource(shader, "res://engine/shaders/fog") : fog;
 Resource(shader, "res://engine/shaders/ssao") : ssao;
 Resource(shader, "res://museum/blend") : blend;
+Resource(shader, "res://engine/shaders/deferred_post") : shading;
 Resource(shader, "res://engine/shaders/colour_correct") : colour_corrector;
 
 Camera(slot = 0, scale = 0.5) : camera;
-PostProcess(shader = @fog, scale = 0.5) : fog
+PostProcess(shader = @shading, scale = 0.5) : shaded
 {
     Input(binding = 0, step = @camera, attachment = 0, filter = NEAREST);
+    Input(binding = 1, step = @camera, attachment = 1, filter = NEAREST);
+    Input(binding = 2, step = @camera, attachment = 2, filter = NEAREST);
+    Input(binding = 3, step = @camera, attachment = 3, filter = NEAREST);
+    Input(binding = 4, step = @camera, attachment = 4, filter = NEAREST);
+};
+PostProcess(shader = @fog, scale = 0.5) : fog
+{
+    Input(binding = 0, step = @shaded, attachment = 0, filter = NEAREST);
     Input(binding = 1, step = @camera, attachment = 4, filter = NEAREST);
 };
 PostProcess(shader = @ssao, scale = 0.5) : ssao
