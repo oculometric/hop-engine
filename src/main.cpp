@@ -22,6 +22,8 @@
 #include "gizmo.h"
 #include "main.h"
 
+#include "text_block.h"
+
 using namespace HopEngine;
 
 static WeakRef<StaticMesh> asha;
@@ -307,6 +309,8 @@ Ref<Scene> initMuseumScene()
         { 11, -7.5, 4.5 },
         { 14, -8, 1.5 }
     };
+    
+    scene->insertObject<TextBlock>(new TextBlock("Hello, World!"));
         
     auto fog_mat = scene->render_graph->getMaterialForStep(2);
     fog_mat->setFloatUniform("fog_start", 4.0f);

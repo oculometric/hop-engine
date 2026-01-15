@@ -18,6 +18,7 @@
 #include "graphics_environment.h"
 #include "package.h"
 #include "main.h"
+#include "text_block.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -152,6 +153,22 @@ void StaticMesh::drawImGuiDebug()
 			}
 			ImGui::EndTable();
 		}
+	}
+}
+
+void TextBlock::drawImGuiDebug()
+{
+	Object::drawImGuiDebug();
+	if (ImGui::CollapsingHeader("text block params", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		static char tmp[513] = { '\0' };
+		memcpy(tmp, text.data(), std::min((size_t)512, (size_t)text.size()));
+		tmp[std::min((size_t)512, (size_t)text.size())] = '\0';
+		ImGui::InputText("text", tmp, 513);
+		text = tmp;
+		ImGui::ColorEdit3("tint", (float*)&tint);
+		
+		updateGeometry();
 	}
 }
 

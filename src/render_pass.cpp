@@ -14,7 +14,7 @@ vector<VkClearValue> RenderPass::getClearValues() const
 {
     vector<VkClearValue> values = { { VkClearColorValue{{1.0f, 0.0f, 1.0f, 1.0f}} } };
     for (size_t i = 0; i < output_config.additional_attachments; ++i)
-        values.push_back({ VkClearColorValue{{0.0f, 0.0f, 0.0f, 1.0f}} });
+        values.push_back({ VkClearColorValue{{0.0f, 0.0f, 0.0f, 0.0f}} });
     if (output_config.has_depth_attachment)
         values.push_back({ 1.0f, 0 });
 

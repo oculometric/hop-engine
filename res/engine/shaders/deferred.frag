@@ -55,11 +55,11 @@ void main()
     // out_params.x   <- roughness
     // out_params.y   <- metallic
     // out_params.z   <- emission strength
-    // out_params.w   <- EMPTY
+    // out_params.w   <- 1 if shading enabled, 0 if not
     // out_custom.rgb <- specular colour
     // out_custom.a   <- EMPTY
     out_colour = vec4(albedo_val.rgb * frag.colour.rgb, 1.0f);
     out_normal = vec4(normalize(mix(frag.normal.xyz, perturbed_normal, normal_strength)), 0.0f);
-    out_params = vec4(pbr_val.xyz, 0.0f);
+    out_params = vec4(pbr_val.xyz, 1.0f);
     out_custom = vec4(specular_colour.rgb, 0.0f);
 }

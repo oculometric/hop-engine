@@ -180,6 +180,7 @@
     <ClCompile Include="src\shader.cpp" />
     <ClCompile Include="src\swapchain.cpp" />
     <ClCompile Include="src\texture.cpp" />
+    <ClCompile Include="src\text_block.cpp" />
     <ClCompile Include="src\token_file.cpp" />
     <ClCompile Include="src\transform.cpp" />
     <ClCompile Include="src\uniform_block.cpp" />
@@ -215,6 +216,7 @@
     <ClInclude Include="src\render_pass.h" />
     <ClInclude Include="src\shader.h" />
     <ClInclude Include="src\swapchain.h" />
+    <ClInclude Include="src\text_block.h" />
     <ClInclude Include="src\token_file.h" />
     <ClInclude Include="src\transform.h" />
     <ClInclude Include="src\uniform_block.h" />
@@ -267,6 +269,8 @@
     <Content Include="res\engine\shaders\fog.vert" />
     <Content Include="res\engine\shaders\gizmo.frag" />
     <Content Include="res\engine\shaders\gizmo.vert" />
+    <Content Include="res\engine\shaders\text.frag" />
+    <Content Include="res\engine\shaders\text.vert" />
     <Content Include="res\engine\textures\basic_lut.png" />
     <Content Include="res\museum\blend.frag" />
     <Content Include="res\museum\blend.vert" />
@@ -279,6 +283,9 @@
     <Content Include="res\samples\cube.obj" />
     <Content Include="res\samples\nasa_goddard_gaia_dr2_deep_star_map.png" />
     <Content Include="res\test_graph.hrgr" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="res\engine\materials\" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
