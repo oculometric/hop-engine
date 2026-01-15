@@ -436,6 +436,8 @@ void Engine::drawImGuiDebug(float delta_time)
 		ImGui::Checkbox("show/hide ImGui windows", &show_imgui);
 		if (ImGui::MenuItem("arrange ImGui windows"))
 			align_windows = true;
+		if (ImGui::MenuItem("toggle wireframe"))
+			Engine::setForceWireframe(!Engine::isWireframeMode());
 		ImGui::EndMenu();
 	}
 	ImGui::EndMainMenuBar();	

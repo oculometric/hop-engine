@@ -18,6 +18,7 @@ class Material : public Destructible
 private:
 	Ref<Shader> shader;
 	Ref<Pipeline> pipeline;
+	Ref<Pipeline> debug_pipeline;
 	Ref<UniformBlock> uniforms;
 	Ref<RenderPass> render_pass;
 	std::map<std::string, uint32_t> texture_name_to_binding;
@@ -28,6 +29,7 @@ public:
 	DELETE_CONSTRUCTORS(Material);
 
 	VkPipeline getPipeline() const;
+	VkPipeline getDebugPipeline() const;
 	VkPipelineLayout getPipelineLayout() const;
 	void pushToDescriptorSet(size_t index);
 	VkDescriptorSet getDescriptorSet(size_t index) const;

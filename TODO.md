@@ -4,7 +4,6 @@
 - deferred rendering demo scene, showing off the different light types, normal mapping, PBR materials [M]
 - proper text rendering demo [L]
 - blur post process effect (demo in the deferred scene using stencil buffer??? michelangelo statue with blurred cock?) [L]
-- render onto cube/screen ingame [M]
 ---
 ## v0.6
 - more scene control using ImGui (modify the render graph, material uniforms) [M]
@@ -18,3 +17,6 @@
 - custom shader format to keep stuff in one file [L]
 - ability to toggle skipping passes [L]
 - occlusion culling [L]
+- shadows
+- backside lighting behaviour in pbr
+- improve scene tree so that objects know about their scene, and children, and can be removed

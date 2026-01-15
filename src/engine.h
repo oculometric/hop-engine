@@ -48,6 +48,8 @@ private:
 	float fps_history[512];
 	int history_offset = 0;
 	
+	bool wireframe_view = false;
+	
 	bool stop_requested = false;
 
 public:
@@ -85,6 +87,9 @@ public:
 	static Ref<Texture> loadTexture3D(const std::string& path, int layers_wide, int layer_high);
 	static Ref<Mesh> loadMesh(const std::string& path);
 	static size_t pruneUnusedResources();
+	
+	static bool isWireframeMode();
+	static void setForceWireframe(bool value);
 	
 private:
 	static Engine* getEngine();

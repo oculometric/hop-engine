@@ -328,7 +328,8 @@ void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t imag
 
         if (rebind_material || rebind_layout)
         {
-            vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, last_used_material->getPipeline());
+            vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                Engine::isWireframeMode() ? last_used_material->getDebugPipeline() : last_used_material->getPipeline());
             stats.pipeline_rebinds++;
         }
         if (rebind_layout || rebind_material)

@@ -20,6 +20,11 @@ VkPipeline Material::getPipeline() const
 	return pipeline->getPipeline();
 }
 
+VkPipeline Material::getDebugPipeline() const
+{
+	return debug_pipeline->getPipeline();
+}
+
 VkPipelineLayout Material::getPipelineLayout() const
 {
 	return shader->getPipelineLayout();
@@ -108,6 +113,7 @@ Material::Material(Ref<Shader> _shader, PipelineBuilder config, Ref<RenderPass> 
 	render_pass = _render_pass.isValid() ? _render_pass : RenderServer::getMainRenderPass();
 	shader = _shader;
 	pipeline = new Pipeline(shader, config, render_pass);
+	debug_pipeline = new Pipeline(shader, PipelineBuilder().polygonMode(VK_POLYGON_MODE_LINE), render_pass);
 
 	auto layout = shader->getShaderLayout();
 	uniforms = new UniformBlock(layout);

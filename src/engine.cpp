@@ -268,6 +268,16 @@ size_t Engine::pruneUnusedResources()
     return pruned_refs;
 }
 
+bool Engine::isWireframeMode()
+{
+    return engine->wireframe_view;
+}
+
+void Engine::setForceWireframe(bool value)
+{
+    engine->wireframe_view = value;
+}
+
 Engine* Engine::getEngine()
 {
     return engine;
