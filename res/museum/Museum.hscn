@@ -59,7 +59,7 @@ StaticMesh(mesh = @room01_plaster_mesh, material = @white_plaster_mat);
 StaticMesh(mesh = @pedestal_medium_mesh, material = @marble_mat, position = [ 12, -4, 0 ]);
 StaticMesh(mesh = @desk_mesh, material = @wood_mat, position = [ 15.2, -4, 0 ], euler = [ 0, 0, 180 ]);
 StaticMesh(mesh = @crt_mesh, material = @crt_mat, position = [ 15.0, -3.4, 0.8 ], euler = [ 0, 0, 180 ]);
-StaticMesh(mesh = @crt_screen_mesh, material = @crt_screen_mat, position = [ 15.0, -3.4, 0.8 ], euler = [ 0, 0, 180 ]);
+StaticMesh(mesh = @crt_screen_mesh, material = @crt_screen_mat, position = [ 15.0, -3.4, 0.8 ], euler = [ 0, 0, 180 ]) : crt_screen;
 
 StaticMesh(mesh = @planter_marble_mesh, material = @marble_mat, position = [ 14, 0, 0 ])
 {

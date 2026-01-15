@@ -143,6 +143,8 @@ static void updateScene(Ref<Scene> scene, float delta_time)
             camera->transform.lookAt(camera->transform.getLocalPosition(), spline[spline_progress], { 0, 0, 1 });
         }
     }
+    
+    scene->findObject<StaticMesh>("crt_screen")->material->setTexture("albedo_tex", scene->render_graph->getFinalImage().first);
 
     Input::resetMouseDelta();
 }
@@ -305,7 +307,7 @@ Ref<Scene> initMuseumScene()
         { 11, -7.5, 4.5 },
         { 14, -8, 1.5 }
     };
-    
+        
     auto fog_mat = scene->render_graph->getMaterialForStep(2);
     fog_mat->setFloatUniform("fog_start", 4.0f);
     fog_mat->setFloatUniform("fog_end", 24.0f);
