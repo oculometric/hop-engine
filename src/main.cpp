@@ -123,6 +123,16 @@ static void updateScene(Ref<Scene> scene, float delta_time)
 
     Engine::debugCamera(delta_time);
 
+    if (Input::isMouseDown(GLFW_MOUSE_BUTTON_LEFT))
+    {
+        glm::vec2 mouse_clip = ((Input::getMousePosition() / RenderServer::getFramebufferSize()) * 2.0f) - 1.0f;
+        glm::mat4 screen_to_world = glm::inverse(scene->getCamera(0)->getWorldToScreenMatrix());
+        glm::vec4 mouse_transformed = screen_to_world * glm::vec4(mouse_clip, 1.0f, 1.0f);
+        mouse_transformed /= mouse_transformed.w;
+        glm::vec3 mouse_world = glm::normalize(glm::xyz(mouse_transformed) - scene->getCamera(0)->transform.getPosition());
+        Engine::debugSelect(scene->raycast(scene->getCamera(0)->transform.getPosition(), mouse_world));
+    }
+    
     if (obj)
         obj->transform.rotateLocal({ 0, 0, 20 * delta_time });
     if (obj2)
@@ -149,6 +159,8 @@ static void updateScene(Ref<Scene> scene, float delta_time)
     
     if (crt)
         crt->material->setTexture("albedo_tex", scene->render_graph->getFinalImage().first);
+    
+    
 
     Input::resetMouseDelta();
 }

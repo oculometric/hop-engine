@@ -1,7 +1,6 @@
 # TODO
 
 ## v0.5 (assignment)
-- left-click AABB object selection
 - blur post process effect (demo in the deferred scene using stencil buffer??? michelangelo statue with blurred cock?) [L]
 - origin variables for render graph, scene, better name generation for objects [L]
 ---

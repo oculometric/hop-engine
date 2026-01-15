@@ -124,6 +124,11 @@ vector<DrawCommand> StaticMesh::getDrawCommands() const
 	return commands;
 }
 
+BoundingBox StaticMesh::getLocalBounds() const
+{
+	return mesh->getBoundingBox();
+}
+
 StaticMesh::StaticMesh(Ref<Mesh> _mesh, Ref<Material> _material) : Object()
 {
 	mesh = _mesh;

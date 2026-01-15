@@ -99,6 +99,11 @@ void Object::drawImGuiDebug()
 	}
 }
 
+BoundingBox Object::getLocalBounds() const
+{
+	return BoundingBox{ { 0, 0, 0 }, { 0.25f, 0.25f, 0.25f } };
+}
+
 void Camera::drawImGuiDebug()
 {
 	Object::drawImGuiDebug();
@@ -673,6 +678,11 @@ void Engine::debugCamera(float delta_time)
 	if (Input::isKeyDown(GLFW_KEY_LEFT_SHIFT) || Input::isGamepadButtonDown(Input::GAMEPAD_B))
 		local_move_vector *= 3.0f;
 	selected_camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
+}
+
+void Engine::debugSelect(WeakRef<Object> object)
+{
+	selected_object = object;
 }
 
 void Engine::debugClearSelection(WeakRef<Object> object, WeakRef<Material> material, WeakRef<Camera> camera)

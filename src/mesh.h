@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 
 #include "common.h"
+#include "math_helpers.h"
 
 namespace HopEngine
 {
@@ -31,6 +32,7 @@ private:
 	size_t index_count = 0;
 	bool accessible = false;
 	std::string origin;
+	BoundingBox bounding_box;
 
 public:
 	DELETE_CONSTRUCTORS(Mesh);
@@ -41,7 +43,8 @@ public:
 	inline size_t getIndexCount() const { return index_count; }
 	void updateData(std::vector<Vertex> vertices, std::vector<uint16_t> indices, size_t vertex_alloc = 0, size_t index_alloc = 0);
 	inline std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
-
+	inline BoundingBox getBoundingBox() const { return bounding_box; }
+	
 	static VkVertexInputBindingDescription getBindingDescription();
 	static std::array<VkVertexInputAttributeDescription, 5> getAttributeDescriptions();
 	
@@ -52,6 +55,7 @@ public:
 private:
 	bool readFileToArrays(std::string path, std::vector<Vertex>& verts, std::vector<uint16_t>& inds);
 	void createFromArrays(std::vector<Vertex> verts, std::vector<uint16_t> inds);
+	void recomputeBoundingBox(std::vector<Vertex> verts);
 };
 
 }

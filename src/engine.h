@@ -78,6 +78,7 @@ public:
 	static float getSmoothedFPS();
 	
 	static void debugCamera(float delta_time);
+	static void debugSelect(WeakRef<Object> object);
 	static void debugClearSelection(WeakRef<Object> object = WeakRef<Object>(), WeakRef<Material> material = WeakRef<Material>(), WeakRef<Camera> camera = WeakRef<Camera>());
 	static WeakRef<Object> getDebugSelection();
 	

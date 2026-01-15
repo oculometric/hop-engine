@@ -38,6 +38,7 @@ public:
 	std::vector<LightParams> getLightParams() const;
 	Ref<RenderGraph> getRenderGraph() const;
 	std::vector<DrawCommand> getDrawCommands() const;
+	WeakRef<Object> raycast(glm::vec3 origin, glm::vec3 direction);
 	void drawImGuiDebug();
 	
 	static Ref<Scene> deserialise(std::string name);

@@ -9,6 +9,7 @@
 #include "transform.h"
 #include "pbr.h"
 #include "draw_command.h"
+#include "math_helpers.h"
 
 namespace HopEngine
 {
@@ -37,6 +38,8 @@ public:
 	virtual void pushToDescriptorSet(size_t index);
 	virtual std::vector<DrawCommand> getDrawCommands() const;
 	virtual void drawImGuiDebug();
+	
+	virtual BoundingBox getLocalBounds() const;
 	
 	Object();
 	virtual ~Object() override;
@@ -79,6 +82,7 @@ public:
 	void pushToDescriptorSet(size_t index) override;
 	std::vector<DrawCommand> getDrawCommands() const override;
 	virtual void drawImGuiDebug() override;
+	virtual BoundingBox getLocalBounds() const override;
 	
 	StaticMesh(Ref<Mesh> mesh, Ref<Material> material);
 };

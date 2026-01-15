@@ -4,6 +4,7 @@
 
 #include "texture.h"
 #include "render_graph.h"
+#include "math_helpers.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -71,6 +72,24 @@ vector<DrawCommand> Scene::getDrawCommands() const
 		commands.insert(commands.begin(), obj_commands.begin(), obj_commands.end());
 	}
 	return commands;
+}
+
+WeakRef<Object> Scene::raycast(glm::vec3 origin, glm::vec3 direction)
+{
+	float min_dist = INFINITY;
+	WeakRef<Object> closest_obj;
+	for (auto& object : objects)
+	{
+		float result = intersect(origin, direction, object->getLocalBounds(), object->transform);
+		if (result < 0.01f)
+			continue;
+		if (result < min_dist)
+		{
+			min_dist = result;
+			closest_obj = object;
+		}
+	}
+	return closest_obj;
 }
 
 Scene::Scene()

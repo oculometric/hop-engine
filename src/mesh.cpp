@@ -57,6 +57,8 @@ void Mesh::updateData(vector<Vertex> vertices, vector<uint16_t> indices, size_t 
     index_buffer->unmapMemory();
     index_space = index_alloc;
     index_count = indices.size();
+    
+    recomputeBoundingBox(vertices);
 }
 
 VkVertexInputBindingDescription Mesh::getBindingDescription()
@@ -136,6 +138,7 @@ Mesh::Mesh(vector<Vertex> vertices, vector<uint16_t> indices, bool keep_accessib
         vertex_space = vertices.size();
         index_space = indices.size();
         index_count = index_space;
+        recomputeBoundingBox(vertices);
     }
 
     DBG_INFO("created mesh from arrays with " + to_string(vertices.size()) + " vertices and " + to_string(indices.size()) + " indices");
@@ -396,4 +399,26 @@ void Mesh::createFromArrays(vector<Vertex> verts, vector<uint16_t> inds)
     index_space = inds.size();
     vertex_count = verts.size();
     index_count = index_space;
+    
+    recomputeBoundingBox(verts);
+}
+
+void Mesh::recomputeBoundingBox(vector<Vertex> verts)
+{
+    if (verts.empty())
+    {
+        bounding_box = BoundingBox{ { 0, 0, 0 }, { 0.25f, 0.25f, 0.25f } };
+        return;
+    }
+    
+    glm::vec3 min = verts[0].position;
+    glm::vec3 max = verts[0].position;
+    
+    for (const auto& vert : verts)
+    {
+        min = glm::min(glm::vec3(vert.position), min);
+        max = glm::max(glm::vec3(vert.position), max);
+    }
+    
+    bounding_box = BoundingBox{ (min + max) * 0.5f, max - min };
 }
