@@ -11,6 +11,7 @@
 #include "scene.h"
 #include "mesh.h"
 #include "object.h"
+#include "text_block.h"
 #include "token_file.h"
 
 using namespace HopEngine;
@@ -763,6 +764,18 @@ Ref<Object> deserialiseCamera(const map<string, TokenReader::Token>& args, Ref<S
 	return obj.cast<Object>();
 }
 
+Ref<Object> deserialiseTextBlock(const map<string, TokenReader::Token>& args, Ref<Scene> scene, const SceneResources& resources)
+{
+	Ref<TextBlock> obj = new TextBlock("Text");
+	auto it = args.find("text");
+	if (it != args.end())
+		obj->setText(it->second.s_value);
+	it = args.find("tint");
+	if (it != args.end())
+		obj->setTint(it->second.c_value);
+	
+	return obj.cast<Object>();
+}
 struct ObjectDeserialiseConfig
 {
 	Ref<Object> (* builder_function)(const map<string, TokenReader::Token>&, Ref<Scene>, const SceneResources& resources);
@@ -786,6 +799,10 @@ static map<string, ObjectDeserialiseConfig> object_deserialisers = {
 						{ "near_clip", TokenReader::FLOAT },
 						{ "far_clip", TokenReader::FLOAT },
 						{ "fov", TokenReader::FLOAT },
+	} } },
+	{ "TextBlock", { deserialiseTextBlock, {
+							{ "text", TokenReader::STRING },
+							{ "tint", TokenReader::VECTOR }
 	} } }
 };
 

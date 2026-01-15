@@ -310,8 +310,6 @@ Ref<Scene> initMuseumScene()
         { 14, -8, 1.5 }
     };
     
-    scene->insertObject<TextBlock>(new TextBlock("Hello, World!"));
-        
     auto fog_mat = scene->render_graph->getMaterialForStep(2);
     fog_mat->setFloatUniform("fog_start", 4.0f);
     fog_mat->setFloatUniform("fog_end", 24.0f);

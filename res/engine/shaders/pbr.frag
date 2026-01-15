@@ -99,4 +99,5 @@ void main()
 
     out_colour = vec4(col, 1);
     out_normal = vec4(perturbed_normal, 1);
+    out_params.w = 0.0f;
 }

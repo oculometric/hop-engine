@@ -18,7 +18,7 @@ public:
 	void drawImGuiDebug() override;
     void setText(const std::string& value) { text = value; updateGeometry(); }
     std::string getText() const { return text; }
-    void setTint(const glm::vec3& value) { tint = value; }
+    void setTint(const glm::vec3& value) { tint = value; updateGeometry(); }
     
     TextBlock(const std::string& _text);
     
