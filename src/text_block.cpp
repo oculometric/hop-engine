@@ -36,6 +36,12 @@ void TextBlock::updateGeometry()
     glm::vec2 position = { 0.0f, 0.0f };
     for (char c : text)
     {
+        if (c == '\n')
+        {
+            position.y += font->getCharacterSize().y * 0.02f;
+            position.x = 0.0f;
+            continue;
+        }
         glm::vec2 uv_base = font->getCharUVOffset(c);
         glm::vec2 uv_size = font->getCharUVSize();
 
