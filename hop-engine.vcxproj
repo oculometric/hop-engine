@@ -262,6 +262,8 @@
     <Content Include="res\engine\meshes\axes_gizmo.obj" />
     <Content Include="res\engine\meshes\rotate_gizmo.obj" />
     <Content Include="res\engine\meshes\skybox.obj" />
+    <Content Include="res\engine\shaders\blur.frag" />
+    <Content Include="res\engine\shaders\blur.vert" />
     <Content Include="res\engine\shaders\deferred.frag" />
     <Content Include="res\engine\shaders\deferred.vert" />
     <Content Include="res\engine\shaders\deferred_post.frag" />

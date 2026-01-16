@@ -349,7 +349,7 @@ Ref<Scene> initMuseumScene()
     }
     scene->render_graph->getMaterialForStep(3)->setUniform("samples", samples, sizeof(glm::vec4) * SAMPLES_COUNT);
     
-    cc_material = scene->render_graph->getMaterialForStep(5);
+    cc_material = scene->render_graph->getMaterialForStep(6);
     cc_material->setFloatUniform("gamma", 1.0f);
     cc_material->setFloatUniform("exposure", 1.0f);
     cc_material->setFloatUniform("offset", 0.0f);

@@ -1,6 +1,8 @@
 # TODO
 
 ## v0.5 (assignment)
+- ability to toggle skipping passes [L]
+- get render pass by name
 - improve scene tree so that objects know about their scene, and children, and can be removed [M]
 - blur post process effect (demo in the deferred scene using stencil buffer??? michelangelo statue with blurred cock?) [H]
 ---
@@ -13,6 +15,5 @@
 - separate engine from game resources [M]
 - tux-racer ripoff demo game [L]
 - custom shader format to keep stuff in one file [L]
-- ability to toggle skipping passes [L]
 - frustrum culling [M]
 - shadows
