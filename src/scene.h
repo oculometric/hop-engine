@@ -23,6 +23,7 @@ private:
 	Ref<Camera> backup_camera;
 	Ref<Object> root;
 	std::vector<Ref<Light>> lights;
+	std::string origin;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Scene);
@@ -39,6 +40,8 @@ public:
 	Ref<RenderGraph> getRenderGraph() const;
 	std::vector<DrawCommand> getDrawCommands() const;
 	WeakRef<Object> raycast(glm::vec3 origin, glm::vec3 direction);
+	inline std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
+	
 	void drawImGuiDebug();
 	
 	static Ref<Scene> deserialise(std::string name);

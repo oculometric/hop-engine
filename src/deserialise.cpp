@@ -664,7 +664,10 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 			return nullptr;
 		}
 	}
-	return new RenderGraph(builder);
+	
+	auto rg = new RenderGraph(builder);
+	rg->origin = name;
+	return rg;
 }
 
 struct SceneResources
@@ -972,5 +975,6 @@ Ref<Scene> Scene::deserialise(string name)
 		}
 	}
 	
+	scene->origin = name;
 	return scene;
 }

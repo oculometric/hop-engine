@@ -74,6 +74,7 @@ private:
 	VkExtent2D expected_extent = { 0, 0 };
 	Ref<Material> passthrough;
 	WeakRef<Texture> passthrough_texture;
+	std::string origin;
 
 public:
 	DELETE_CONSTRUCTORS(RenderGraph);
@@ -85,6 +86,7 @@ public:
 	inline VkExtent2D getExpectedExtent() const { return expected_extent; }
 	std::pair<Ref<Texture>, bool> getFinalImage() const;
 	Ref<Material> getMaterialForStep(size_t step);
+	inline std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 
 	void drawImGuiDebug();
 	

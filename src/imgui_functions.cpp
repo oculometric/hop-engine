@@ -225,6 +225,7 @@ void collectDescendents(multimap<Object*, WeakRef<Object>>& parent_map, Object* 
 
 void Scene::drawImGuiDebug()
 {
+	ImGui::LabelText("scene", "%s", getOrigin().c_str());
 	ImGui::ColorEdit3("ambient light", (float*)&(ambient_colour));
 	int current_skybox_index = 0;
 	const char* skybox_items = "tex 1\0tex 2\0tex 3";
@@ -701,6 +702,7 @@ void RenderGraph::drawImGuiDebug()
 {
 	if (ImGui::CollapsingHeader("render graph", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
 	{
+		ImGui::LabelText("render graph", "%s", getOrigin().c_str());
 		ImGui::InputInt("show step", &output_step, 1, 1);
 		ImGui::SliderInt("show attachment", &output_image, 0, 5);
 
