@@ -326,7 +326,7 @@ Ref<Scene> initMuseumScene()
     
     crt = scene->findObject<StaticMesh>("crt_screen");
     
-    auto fog_mat = scene->render_graph->getMaterialForStep(2);
+    auto fog_mat = scene->render_graph->getMaterialForStep("fog");
     fog_mat->setFloatUniform("fog_start", 4.0f);
     fog_mat->setFloatUniform("fog_end", 24.0f);
     fog_mat->setFloatUniform("fog_exponent", 0.5f);
@@ -349,7 +349,7 @@ Ref<Scene> initMuseumScene()
     }
     scene->render_graph->getMaterialForStep(3)->setUniform("samples", samples, sizeof(glm::vec4) * SAMPLES_COUNT);
     
-    cc_material = scene->render_graph->getMaterialForStep(6);
+    cc_material = scene->render_graph->getMaterialForStep("colour_grading");
     cc_material->setFloatUniform("gamma", 1.0f);
     cc_material->setFloatUniform("exposure", 1.0f);
     cc_material->setFloatUniform("offset", 0.0f);

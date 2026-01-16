@@ -38,6 +38,7 @@ struct RenderTextureBinding
 
 struct RenderStep
 {
+	std::string name;
 	bool is_camera = true;
 	size_t camera_slot = 0;
 	Ref<Material> material;
@@ -86,6 +87,7 @@ public:
 	inline VkExtent2D getExpectedExtent() const { return expected_extent; }
 	std::pair<Ref<Texture>, bool> getFinalImage() const;
 	Ref<Material> getMaterialForStep(size_t step);
+	Ref<Material> getMaterialForStep(const std::string& name);
 	inline std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 
 	void drawImGuiDebug();

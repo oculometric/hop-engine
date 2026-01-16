@@ -222,6 +222,18 @@ Ref<Material> RenderGraph::getMaterialForStep(size_t step)
     return execution_steps[step].material;
 }
 
+Ref<Material> RenderGraph::getMaterialForStep(const string& name)
+{
+    for (auto& step : execution_steps)
+    {
+        if (step.name == name)
+            return step.material;
+    }
+    
+    DBG_ERROR("attempt to read material from step " + name + " of render graph " + PTR(this) + ", but there is no such step");
+    return nullptr;
+}
+
 RenderGraph::RenderGraph(RenderGraphBuilder config)
 {
     passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough"), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), RenderServer::getFinalRenderPass());

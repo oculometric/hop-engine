@@ -477,7 +477,8 @@ void Engine::drawImGuiDebug(float delta_time)
 			ImGui::SetNextWindowPos({ 10, 30 });
 		ImGui::Begin("scene", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 		Engine::getScene()->drawImGuiDebug();
-		Engine::getScene()->render_graph->drawImGuiDebug();
+		if (ImGui::CollapsingHeader("render graph", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
+			Engine::getScene()->render_graph->drawImGuiDebug();
 		last_window_height = ImGui::GetWindowHeight();
 		ImGui::End();
 	}
@@ -701,89 +702,76 @@ WeakRef<Object> Engine::getDebugSelection()
 
 void RenderGraph::drawImGuiDebug()
 {
-	if (ImGui::CollapsingHeader("render graph", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
-	{
-		ImGui::LabelText("render graph", "%s", getOrigin().c_str());
-		ImGui::InputInt("show step", &output_step, 1, 1);
-		ImGui::SliderInt("show attachment", &output_image, 0, 5);
+	ImGui::LabelText("render graph", "%s", getOrigin().c_str());
+	ImGui::InputInt("show step", &output_step, 1, 1);
+	ImGui::SliderInt("show attachment", &output_image, 0, 5);
 
-		static int pass_details_index = 0;
-		ImGui::BeginTable("passes", 6, ImGuiTableFlags_Borders);
-		ImGui::TableSetupColumn("type");
-		ImGui::TableSetupColumn("slot");
-		ImGui::TableSetupColumn("inputs");
-		ImGui::TableSetupColumn("outputs");
-		ImGui::TableSetupColumn("extent");
-		ImGui::TableSetupColumn("info");
-		ImGui::TableHeadersRow();
-		int current_pass = 0;
-		for (const auto& pass : execution_steps)
-		{
-			ImGui::PushID(current_pass);
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(0);
-			ImGui::Text(pass.is_camera ? "camera" : "post-process");
-			ImGui::TableSetColumnIndex(1);
-			if (pass.is_camera)
-				ImGui::Text("%i", pass.camera_slot);
-			
-			ImGui::TableSetColumnIndex(2);
-			if (!pass.is_camera)
-				ImGui::Text("%i", pass.texture_bindings.size());
-			ImGui::TableSetColumnIndex(3);
-			ImGui::Text("%i", pass.render_pass->getClearValues().size());
-			ImGui::TableSetColumnIndex(4);
-			ImGui::Text("%i x %i", pass.render_pass->getExtent().width, pass.render_pass->getExtent().height);
-			ImGui::TableSetColumnIndex(5);
-			if (ImGui::SmallButton(">"))
-				pass_details_index = current_pass;
-			++current_pass;
-			ImGui::PopID();
-		}
-		ImGui::EndTable();
-		if (pass_details_index < execution_steps.size())
-		{
-			if (ImGui::CollapsingHeader(("pass " + to_string(pass_details_index + 1) + " details").c_str(), ImGuiTreeNodeFlags_DefaultOpen))
-			{
-				const auto& pass = execution_steps[pass_details_index];
-				if (!pass.is_camera)
-				{
-					ImGui::LabelText("shader", "%s", pass.material->getShader()->getOrigin().c_str());
-					ImGui::Text("input texture bindings:");
-					ImGui::BeginTable("bindings", 5, ImGuiTableFlags_Borders);
-					ImGui::TableSetupColumn("binding");
-					ImGui::TableSetupColumn("pass");
-					ImGui::TableSetupColumn("attachment");
-					ImGui::TableSetupColumn("filtering");
-					ImGui::TableSetupColumn("addressing");
-					ImGui::TableHeadersRow();
-					for (const auto& pair : pass.texture_bindings)
-					{
-						ImGui::TableNextRow();
-						ImGui::TableSetColumnIndex(0);
-						ImGui::Text("%i", pair.first);
-						ImGui::TableSetColumnIndex(1);
-						ImGui::Text("%i", pair.second.step_index);
-						ImGui::TableSetColumnIndex(2);
-						ImGui::Text("%i", pair.second.output_index);
-						ImGui::TableSetColumnIndex(3);
-						ImGui::Text("%s", vk::to_string((vk::Filter)(pair.second.filter_mode)).c_str());
-						ImGui::TableSetColumnIndex(4);
-						ImGui::Text("%s", vk::to_string((vk::SamplerAddressMode)(pair.second.address_mode)).c_str());
-					}
-					ImGui::EndTable();
-					ImGui::Separator();
-				}
-				if (pass.resolution_scale > 0)
-					ImGui::LabelText("resolution scale", "%.2f", pass.resolution_scale);
-				else
-					ImGui::LabelText("custom resolution", "%i x %i", pass.custom_extent.width, pass.custom_extent.height);
-				ImGui::Separator();
-				ImGui::Text("output attachments:");
-				ImGui::LabelText("colour", "always present");
-				ImGui::LabelText("extras", "%i", pass.render_pass->getOutputConfig().additional_attachments);
-				ImGui::LabelText("depth", pass.render_pass->getOutputConfig().has_depth_attachment ? "present" : "disabled");
-			}
-		}
+	ImGui::BeginTable("passes", 3, ImGuiTableFlags_Borders);
+	ImGui::TableSetupColumn("name");
+	ImGui::TableSetupColumn("type");
+	ImGui::TableSetupColumn("extent");
+	ImGui::TableHeadersRow();
+	int current_pass = 0;
+	for (const auto& pass : execution_steps)
+	{
+		ImGui::PushID(current_pass);
+		ImGui::TableNextRow();
+		ImGui::TableSetColumnIndex(0);
+		ImGui::Text("%s", pass.name.c_str());
+		ImGui::TableSetColumnIndex(1);
+		ImGui::Text(pass.is_camera ? "camera" : "post-process");		
+		ImGui::TableSetColumnIndex(2);
+		ImGui::Text("%i x %i", pass.render_pass->getExtent().width, pass.render_pass->getExtent().height);
+		++current_pass;
+		ImGui::PopID();
 	}
+	int hovered = ImGui::TableGetHoveredRow();
+	ImGui::EndTable();
+	if (ImGui::IsItemHovered() && hovered > 0)
+	{
+		ImGui::BeginTooltip();
+		int pass_details_index = hovered - 1;
+		const auto& pass = execution_steps[pass_details_index];
+		if (!pass.is_camera)
+		{
+			ImGui::LabelText("shader", "%s", pass.material->getShader()->getOrigin().c_str());
+			ImGui::Text("input texture bindings:");
+			ImGui::BeginTable("bindings", 5, ImGuiTableFlags_Borders);
+			ImGui::TableSetupColumn("binding");
+			ImGui::TableSetupColumn("pass");
+			ImGui::TableSetupColumn("attachment");
+			ImGui::TableSetupColumn("filtering");
+			ImGui::TableSetupColumn("addressing");
+			ImGui::TableHeadersRow();
+			for (const auto& pair : pass.texture_bindings)
+			{
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("%i", pair.first);
+				ImGui::TableSetColumnIndex(1);
+				ImGui::Text("%i", pair.second.step_index);
+				ImGui::TableSetColumnIndex(2);
+				ImGui::Text("%i", pair.second.output_index);
+				ImGui::TableSetColumnIndex(3);
+				ImGui::Text("%s", vk::to_string((vk::Filter)(pair.second.filter_mode)).c_str());
+				ImGui::TableSetColumnIndex(4);
+				ImGui::Text("%s", vk::to_string((vk::SamplerAddressMode)(pair.second.address_mode)).c_str());
+			}
+			ImGui::EndTable();
+			ImGui::Separator();
+		}
+		else
+			ImGui::LabelText("camera slot", "%i", pass.camera_slot);
+		if (pass.resolution_scale > 0)
+			ImGui::LabelText("resolution scale", "%.2f", pass.resolution_scale);
+		else
+			ImGui::LabelText("custom resolution", "%i x %i", pass.custom_extent.width, pass.custom_extent.height);
+		ImGui::Separator();
+		ImGui::Text("output attachments:");
+		ImGui::LabelText("colour", "always present");
+		ImGui::LabelText("extras", "%i", pass.render_pass->getOutputConfig().additional_attachments);
+		ImGui::LabelText("depth", pass.render_pass->getOutputConfig().has_depth_attachment ? "present" : "disabled");
+		ImGui::EndTooltip();
+	}
+	ImGui::Text("hover over a render step for more info");
 }

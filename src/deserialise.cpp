@@ -552,6 +552,7 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 			}
 			else
 				builder.addCamera(slot, scale, { (uint32_t)custom_size.x, (uint32_t)custom_size.y });
+			builder.execution_steps[builder.execution_steps.size() - 1].name = statement.identifier;
 			step_identifiers[statement.identifier] = (int)builder.execution_steps.size() - 1;
 		}
 		else if (statement.keyword == "PostProcess")
@@ -656,6 +657,7 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 			}
 			else
 				builder.addPostProcess(shader_it->second, bindings, scale, { (uint32_t)custom_size.x, (uint32_t)custom_size.y });
+			builder.execution_steps[builder.execution_steps.size() - 1].name = statement.identifier;
 			step_identifiers[statement.identifier] = static_cast<int>(builder.execution_steps.size()) - 1;
 		}
 		else

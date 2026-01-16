@@ -2,7 +2,7 @@
 
 ## v0.5 (assignment)
 - ability to toggle skipping passes [L]
-- get render pass by name
+- modifiable render graph....
 - improve scene tree so that objects know about their scene, and children, and can be removed [M]
 ---
 ## v0.6
