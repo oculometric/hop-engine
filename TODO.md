@@ -1,7 +1,6 @@
 # TODO
 
 ## v0.51
-- deprecate/update PBR material to use same code as deferred
 - improve scene tree so that objects know about their scene, and children, and can be removed [M]
 - better support for object transforms, including world-space transform operations and quaternion support [H]
 - more scene control using ImGui (modify the render graph, material uniforms) [M]

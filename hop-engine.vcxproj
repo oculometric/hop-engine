@@ -234,8 +234,8 @@
     <None Include="res\engine\shaders\default_shader.vert" />
     <None Include="res\engine\shaders\passthrough.frag" />
     <None Include="res\engine\shaders\passthrough.vert" />
-    <None Include="res\engine\shaders\pbr.frag" />
-    <None Include="res\engine\shaders\pbr.vert" />
+    <None Include="res\engine\shaders\forward.frag" />
+    <None Include="res\engine\shaders\forward.vert" />
     <None Include="res\engine\shaders\skybox.frag" />
     <None Include="res\engine\shaders\skybox.vert" />
     <None Include="res\engine\shaders\ssao.frag" />
@@ -274,6 +274,7 @@
     <Content Include="res\engine\shaders\fog.vert" />
     <Content Include="res\engine\shaders\gizmo.frag" />
     <Content Include="res\engine\shaders\gizmo.vert" />
+    <Content Include="res\engine\shaders\pbr_util.glsl" />
     <Content Include="res\engine\shaders\text.frag" />
     <Content Include="res\engine\shaders\text.vert" />
     <Content Include="res\engine\textures\basic_lut.png" />

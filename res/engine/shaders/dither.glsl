@@ -43,3 +43,8 @@ float dither_8x8(float f, ivec2 coord)
 {
     return float(f * 64 >= dither_map_8[(coord.x % 8) + ((coord.y % 8) * 8)]);
 }
+
+ivec2 pixelCoord(vec2 uv, vec2 viewport_size)
+{
+    return ivec2(floor(uv * viewport_size));
+}

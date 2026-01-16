@@ -75,7 +75,7 @@ float computeSSAO(float radius, float power, float bias, vec2 uv, sampler2D norm
     view_position /= view_position.w;
 
     // use the dither matrix to compute randomized normal, tangent, bitangent vectors
-    ivec2 pixel_uv = ivec2(floor(uv * scene.viewport_size));
+    ivec2 pixel_uv = pixelCoord(uv, scene.viewport_size);
     float dither = (dither_map_4[(pixel_uv.x % 4) + ((pixel_uv.y % 4) * 4)] / 16.0f) * 2.0f - 1.0f;
     vec3 view_perp = cross(view_normal, vec3(0, 0, 1));
     vec3 view_perp2 = cross(view_perp, view_normal);

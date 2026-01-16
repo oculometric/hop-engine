@@ -80,3 +80,5 @@ vec3 toSRGB(vec3 linear)
         )
     );
 }
+
+float saturate(float f) { return min(max(f, 0.0f), 1.0f); }
