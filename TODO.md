@@ -1,15 +1,14 @@
 # TODO
 
 ## v0.51
+- deprecate/update PBR material to use same code as deferred
 - improve scene tree so that objects know about their scene, and children, and can be removed [M]
-- more scene control using ImGui (modify the render graph, material uniforms) [M]
 - better support for object transforms, including world-space transform operations and quaternion support [H]
+- more scene control using ImGui (modify the render graph, material uniforms) [M]
 - improved gizmo, better control, rotation and scale support [M]
 - shader & other resource reloading at runtime [H]
 - dithered transparency rather than simple scissoring [L]
 - deprecate getGizmoMaterial and similar family functions
-- deprecate/update PBR material to use same code as deferred
-- move post process effects to be single functions (thus callable by other passes)
 ---
 ## v0.6
 - audio loading and output

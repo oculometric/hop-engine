@@ -269,6 +269,7 @@
     <Content Include="res\engine\shaders\deferred_post.frag" />
     <Content Include="res\engine\shaders\deferred_post.vert" />
     <Content Include="res\engine\shaders\dither.glsl" />
+    <Content Include="res\engine\shaders\effects.glsl" />
     <Content Include="res\engine\shaders\fog.frag" />
     <Content Include="res\engine\shaders\fog.vert" />
     <Content Include="res\engine\shaders\gizmo.frag" />
