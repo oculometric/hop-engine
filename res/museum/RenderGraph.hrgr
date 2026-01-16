@@ -37,3 +37,7 @@ PostProcess(shader = @colour_corrector, scale = 0.5) : colour_grading
 {
     Input(binding = 0, step = @blend, attachment = 0, filter = NEAREST);
 };
+PostProcess(shader = @blur) : blurred2
+{
+    Input(binding = 0, step = @colour_grading, attachment = 0);
+};

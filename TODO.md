@@ -4,7 +4,6 @@
 - ability to toggle skipping passes [L]
 - get render pass by name
 - improve scene tree so that objects know about their scene, and children, and can be removed [M]
-- blur post process effect (demo in the deferred scene using stencil buffer??? michelangelo statue with blurred cock?) [H]
 ---
 ## v0.6
 - more scene control using ImGui (modify the render graph, material uniforms) [M]
