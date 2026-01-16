@@ -461,6 +461,7 @@ INT_PTR dialogFunc(HWND handle, UINT message, WPARAM unnamedParam3, LPARAM unnam
 int main()
 {
     Engine::init();
+    //ImGui::GetIO().IniFilename = nullptr;
     
     selected_scene = 2;
 // #if defined(_WIN32)

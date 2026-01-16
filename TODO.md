@@ -1,7 +1,6 @@
 # TODO
 
 ## v0.5 (assignment)
-- origin variables for render graph, scene, better name generation for objects [L]
 - improve scene tree so that objects know about their scene, and children, and can be removed [M]
 - blur post process effect (demo in the deferred scene using stencil buffer??? michelangelo statue with blurred cock?) [H]
 - improve SSAO performance [M]

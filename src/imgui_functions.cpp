@@ -429,7 +429,7 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 void Engine::drawImGuiDebug(float delta_time)
 {
 	static bool show_imgui = true;
-	static bool align_windows = false;
+	static unsigned int align_windows = 3;
 	
 	ImGui::BeginMainMenuBar();
 	if (ImGui::BeginMenu("file"))
@@ -460,7 +460,7 @@ void Engine::drawImGuiDebug(float delta_time)
 	{
 		ImGui::Checkbox("show/hide ImGui windows", &show_imgui);
 		if (ImGui::MenuItem("arrange ImGui windows"))
-			align_windows = true;
+			align_windows = 1;
 		if (ImGui::MenuItem("toggle wireframe"))
 			Engine::setForceWireframe(!Engine::isWireframeMode());
 		ImGui::EndMenu();
@@ -528,7 +528,7 @@ void Engine::drawImGuiDebug(float delta_time)
 		//ImGui::PlotLines("##xxx", fps_history, 512, history_offset, "FPS", 10.0f, 200.0f, ImVec2{ 0, 160 }, 4);
 		auto size = ImGui::GetWindowSize();
 		if (align_windows)
-			ImGui::SetWindowPos({ window->getSize().first - size.x - 10.0f, 30 });
+			ImGui::SetWindowPos({ ImGui::GetIO().DisplaySize.x - size.x - 10.0f, 30 });
 		last_window_height = size.y;
 		rightmost_window_width = max(rightmost_window_width, size.x);
 		ImGui::End();
@@ -639,7 +639,7 @@ void Engine::drawImGuiDebug(float delta_time)
 		}
 		auto size = ImGui::GetWindowSize();
 		if (align_windows)
-			ImGui::SetWindowPos({ window->getSize().first - size.x - 10.0f, last_window_height + 40 });
+			ImGui::SetWindowPos({ ImGui::GetIO().DisplaySize.x - size.x - 10.0f, last_window_height + 40 });
 		rightmost_window_width = max(rightmost_window_width, size.x);
 		ImGui::End();
 	}
@@ -652,11 +652,12 @@ void Engine::drawImGuiDebug(float delta_time)
 			selected_material = nullptr;
 		auto size = ImGui::GetWindowSize();
 		if (align_windows)
-			ImGui::SetWindowPos({ window->getSize().first - size.x - rightmost_window_width - 20.0f, 30 });
+			ImGui::SetWindowPos({ ImGui::GetIO().DisplaySize.x - size.x - rightmost_window_width - 20.0f, 30 });
 		ImGui::End();
 	}
 	
-	align_windows = false;
+	if (align_windows)
+		--align_windows;
 }
 
 void Engine::debugCamera(float delta_time)
