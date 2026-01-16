@@ -1,16 +1,26 @@
 # TODO
 
-## v0.5 (assignment)
+## v0.51
 - improve scene tree so that objects know about their scene, and children, and can be removed [M]
----
-## v0.6
 - more scene control using ImGui (modify the render graph, material uniforms) [M]
-- shader & other resource reloading at runtime [H]
 - better support for object transforms, including world-space transform operations and quaternion support [H]
 - improved gizmo, better control, rotation and scale support [M]
+- shader & other resource reloading at runtime [H]
+- dithered transparency rather than simple scissoring [L]
+- deprecate getGizmoMaterial and similar family functions
+- deprecate/update PBR material to use same code as deferred
+- move post process effects to be single functions (thus callable by other passes)
+---
+## v0.6
+- audio loading and output
+- binary repackaging (i.e. read in OBJs and turn them into binary meshes to reduce load times)
+- custom shader format to keep stuff in one file [L]
+- improved text block rendering with wrapping, alignment, font, etc
 ---
 - separate engine from game resources [M]
 - tux-racer ripoff demo game [L]
-- custom shader format to keep stuff in one file [L]
 - frustrum culling [M]
 - shadows
+- bytecode node language
+- shader node editor
+- render graph node editor
