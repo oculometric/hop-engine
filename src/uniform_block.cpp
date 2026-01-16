@@ -88,6 +88,7 @@ UniformBlock::~UniformBlock()
 
 void UniformBlock::applyDescriptorBindings()
 {
+    RenderServer::waitIdle();
     DBG_VERBOSE("uniform block " + PTR(this) + " updating " + to_string(layout.bindings.size()) + " descriptor bindings");
     for (size_t i = 0; i < descriptor_sets.size(); ++i)
     {

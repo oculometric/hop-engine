@@ -38,7 +38,6 @@ struct RenderTextureBinding
 
 struct RenderStep
 {
-	std::string name;
 	bool is_camera = true;
 	size_t camera_slot = 0;
 	Ref<Material> material;
@@ -49,6 +48,9 @@ struct RenderStep
 	Ref<RenderPass> render_pass;
 	Ref<UniformBlock> scene_uniforms;
 
+	std::string name;
+	bool skipped = false;
+	
 	~RenderStep();
 };
 
@@ -88,6 +90,10 @@ public:
 	std::pair<Ref<Texture>, bool> getFinalImage() const;
 	Ref<Material> getMaterialForStep(size_t step);
 	Ref<Material> getMaterialForStep(const std::string& name);
+	void setSkipStep(size_t step, bool skip);
+	void setSkipStep(const std::string& name, bool skip);
+	bool getSkipStep(size_t step) const;
+	bool getSkipStep(const std::string& name) const;
 	inline std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 
 	void drawImGuiDebug();
@@ -98,6 +104,8 @@ public:
 	~RenderGraph() override;
 	
 private:
+	size_t findStep(const std::string& name) const;
+	void rebuildBindings();
 	void recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands, FrameStats& stats) const;
 	void recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Material> material, VkDescriptorSet scene_descriptor_set, FrameStats& stats) const;
 };

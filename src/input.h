@@ -76,6 +76,7 @@ public:
 	static glm::vec2 getMousePosition();
 	static bool isMouseDown(int button);
 	static bool wasMousePressed(int button);
+	static void setMouseVisible(bool visible);
 	
 	static void pollGamepads();
 	static bool isGamepadButtonDown(GamepadButton button, int controller = 0);

@@ -668,8 +668,20 @@ void Engine::debugCamera(float delta_time)
 
 	glm::vec2 mouse_delta = { 0, 0 };
 	mouse_delta += glm::vec2{ Input::getGamepadAxis(Input::GAMEPAD_RX), Input::getGamepadAxis(Input::GAMEPAD_RY) } * delta_time * 160.0f;
-	if (Input::isMouseDown(GLFW_MOUSE_BUTTON_2))
+	static bool mouse_down = false;
+	if (Input::isMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
+	{
 		mouse_delta += Input::getMouseDelta() * 0.25f;
+		if (!mouse_down)
+			Input::setMouseVisible(false);
+		mouse_down = true;
+	}
+	else if (mouse_down)
+	{
+		Input::setMouseVisible(true);
+		mouse_down = false;		
+	}
+	
 	selected_camera->transform.rotateLocal({ -mouse_delta.y, 0, -mouse_delta.x });
 
 	glm::mat4 camera_matrix = selected_camera->transform.getMatrix();
@@ -706,22 +718,27 @@ void RenderGraph::drawImGuiDebug()
 	ImGui::InputInt("show step", &output_step, 1, 1);
 	ImGui::SliderInt("show attachment", &output_image, 0, 5);
 
-	ImGui::BeginTable("passes", 3, ImGuiTableFlags_Borders);
+	ImGui::BeginTable("passes", 4, ImGuiTableFlags_Borders);
 	ImGui::TableSetupColumn("name");
 	ImGui::TableSetupColumn("type");
 	ImGui::TableSetupColumn("extent");
+	ImGui::TableSetupColumn("enabled");
 	ImGui::TableHeadersRow();
 	int current_pass = 0;
-	for (const auto& pass : execution_steps)
+	for (auto& pass : execution_steps)
 	{
 		ImGui::PushID(current_pass);
 		ImGui::TableNextRow();
 		ImGui::TableSetColumnIndex(0);
 		ImGui::Text("%s", pass.name.c_str());
 		ImGui::TableSetColumnIndex(1);
-		ImGui::Text(pass.is_camera ? "camera" : "post-process");		
+		ImGui::Text("%s", pass.is_camera ? "camera" : "post-process");		
 		ImGui::TableSetColumnIndex(2);
 		ImGui::Text("%i x %i", pass.render_pass->getExtent().width, pass.render_pass->getExtent().height);
+		ImGui::TableSetColumnIndex(3);
+		bool b = !pass.skipped;
+		if (ImGui::Checkbox("", &b))
+			setSkipStep(current_pass, !b);
 		++current_pass;
 		ImGui::PopID();
 	}

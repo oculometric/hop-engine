@@ -90,6 +90,8 @@ void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t i
     for (size_t i = 0; i < execution_steps.size(); ++i)
     {
         const RenderStep& step = execution_steps[i];
+        if (step.skipped)
+            continue;
         if (step.is_camera)
             recordCameraStep(command_buffer, image_index, scene->getCamera(step.camera_slot), step.render_pass, step_commands[i], stats);
         else
@@ -195,7 +197,15 @@ pair<Ref<Texture>, bool> RenderGraph::getFinalImage() const
 {
     if (execution_steps.empty())
         return { nullptr, false };
-    auto& step = (output_step == (size_t)-1) ? execution_steps[execution_steps.size() - 1] : execution_steps[output_step % execution_steps.size()];
+    size_t step_index = output_step % execution_steps.size();
+    if (output_step == (size_t)-1)
+    {
+        step_index = execution_steps.size() - 1;
+        while (step_index > 0 && execution_steps[step_index].skipped)
+            --step_index;
+    }
+    
+    auto& step = execution_steps[step_index];
     size_t attachment = output_image;
     auto config = step.render_pass->getOutputConfig();
     size_t max_attachments = config.additional_attachments + (config.has_depth_attachment ? 2 : 1);
@@ -224,14 +234,40 @@ Ref<Material> RenderGraph::getMaterialForStep(size_t step)
 
 Ref<Material> RenderGraph::getMaterialForStep(const string& name)
 {
-    for (auto& step : execution_steps)
+    return getMaterialForStep(findStep(name));
+}
+
+void RenderGraph::setSkipStep(size_t step, bool skip)
+{
+    if (step >= execution_steps.size())
     {
-        if (step.name == name)
-            return step.material;
+        DBG_ERROR("attempt to skip step " + to_string(step) + " of render graph " + PTR(this) + ", but there is no such step");
+        return;
     }
     
-    DBG_ERROR("attempt to read material from step " + name + " of render graph " + PTR(this) + ", but there is no such step");
-    return nullptr;
+    execution_steps[step].skipped = skip;
+    rebuildBindings();
+}
+
+void RenderGraph::setSkipStep(const string& name, bool skip)
+{
+    setSkipStep(findStep(name), skip);
+}
+
+bool RenderGraph::getSkipStep(const std::string& name) const
+{
+    return getSkipStep(findStep(name));
+}
+
+bool RenderGraph::getSkipStep(size_t step) const
+{
+    if (step >= execution_steps.size())
+    {
+        DBG_ERROR("attempt to get skipped for step " + to_string(step) + " of render graph " + PTR(this) + ", but there is no such step");
+        return false;
+    }
+    
+    return execution_steps[step].skipped;
 }
 
 RenderGraph::RenderGraph(RenderGraphBuilder config)
@@ -241,17 +277,7 @@ RenderGraph::RenderGraph(RenderGraphBuilder config)
     if (!config.execution_steps.empty())
         expected_extent = config.execution_steps[0].render_pass->getExtent();
 
-    for (RenderStep& step : execution_steps)
-    {
-        if (step.is_camera)
-            continue;
-
-        for (const auto& pair : step.texture_bindings)
-        {
-            step.material->setTexture(pair.first, execution_steps[pair.second.step_index].render_pass->getImage(pair.second.output_index));
-            step.material->setSampler(pair.first, new Sampler(SamplerBuilder().filter(pair.second.filter_mode).address(pair.second.address_mode)));
-        }
-    }
+    rebuildBindings();
 }
 
 RenderGraph::~RenderGraph()
@@ -259,6 +285,49 @@ RenderGraph::~RenderGraph()
     DBG_INFO("destroying render graph " + PTR(this));
     execution_steps.clear();
     passthrough = nullptr;
+}
+
+size_t RenderGraph::findStep(const std::string& name) const
+{
+    size_t index = 0;
+    for (auto& step : execution_steps)
+    {
+        if (step.name == name)
+            return index;
+        ++index;
+    }
+    
+    DBG_ERROR("attempt to find step " + name + " of render graph " + PTR(this) + ", but there is no such step");
+    return 0;
+}
+
+void RenderGraph::rebuildBindings()
+{
+    for (RenderStep& step : execution_steps)
+    {
+        if (step.skipped)
+            continue;
+        if (step.is_camera)
+            continue;
+
+        for (const auto& pair : step.texture_bindings)
+        {
+            RenderStep binding_step = execution_steps[pair.second.step_index];
+            Ref<Texture> texture = binding_step.render_pass->getImage(pair.second.output_index);
+            while (binding_step.skipped)
+            {
+                if (binding_step.is_camera || binding_step.texture_bindings.empty())
+                {
+                    texture = RenderServer::getDefaultTextureSampler().first;
+                    break;                    
+                }
+                binding_step = execution_steps[binding_step.texture_bindings[0].step_index];
+                texture = binding_step.render_pass->getImage(0);
+            }
+            step.material->setTexture(pair.first, texture);
+            step.material->setSampler(pair.first, new Sampler(SamplerBuilder().filter(pair.second.filter_mode).address(pair.second.address_mode)));
+        }
+    }
 }
 
 void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands, FrameStats& stats) const

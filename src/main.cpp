@@ -160,8 +160,6 @@ static void updateScene(Ref<Scene> scene, float delta_time)
     if (crt)
         crt->material->setTexture("albedo_tex", scene->render_graph->getFinalImage().first);
     
-    
-
     Input::resetMouseDelta();
 }
 
@@ -347,7 +345,8 @@ Ref<Scene> initMuseumScene()
         glm::vec3 v = s * glm::mix(0.1f, 1.0f, fi * fi);
         samples[i] = glm::vec4(v, 0.0f);
     }
-    scene->render_graph->getMaterialForStep(3)->setUniform("samples", samples, sizeof(glm::vec4) * SAMPLES_COUNT);
+    scene->render_graph->getMaterialForStep("ssao")->setUniform("samples", samples, sizeof(glm::vec4) * SAMPLES_COUNT);
+    scene->render_graph->setSkipStep("blurred2", true);
     
     cc_material = scene->render_graph->getMaterialForStep("colour_grading");
     cc_material->setFloatUniform("gamma", 1.0f);

@@ -88,6 +88,11 @@ bool Input::wasMousePressed(int button)
 	return true;
 }
 
+void Input::setMouseVisible(bool visible)
+{
+	glfwSetInputMode(application_instance->window->getWindow(), GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+}
+
 void Input::pollGamepads()
 {
 	for (int i = 0; i <= GLFW_JOYSTICK_LAST; ++i)
