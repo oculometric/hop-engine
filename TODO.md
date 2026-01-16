@@ -3,7 +3,6 @@
 ## v0.5 (assignment)
 - improve scene tree so that objects know about their scene, and children, and can be removed [M]
 - blur post process effect (demo in the deferred scene using stencil buffer??? michelangelo statue with blurred cock?) [H]
-- improve SSAO performance [M]
 ---
 ## v0.6
 - more scene control using ImGui (modify the render graph, material uniforms) [M]

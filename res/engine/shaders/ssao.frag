@@ -30,6 +30,17 @@ float fbm_random(vec2 coord)
     return fract(sin(dot(coord, fbm_e)) * 43758.5f);
 }
 
+float clip_to_view_depth(vec4 clip_postion)
+{
+    mat4 cv = scene.clip_to_view;
+    vec4 row_2 = vec4(cv[0].z, cv[1].z, cv[2].z, cv[3].z);
+    vec4 row_3 = vec4(cv[0].w, cv[1].w, cv[2].w, cv[3].w);
+    float z = dot(row_2, clip_postion);
+    float w = dot(row_3, clip_postion);
+    
+    return z / w;
+}
+
 void main()
 {
     // original normal of the pixel in world and view space
@@ -65,11 +76,10 @@ void main()
         
         float resample_z = texture(depth_texture, (sample_clip_position.xy * 0.5f) + 0.5f).r;
         vec4 resample_clip_position = vec4(sample_clip_position.xy, resample_z, 1.0f);
-        vec4 resample_view_position = scene.clip_to_view * resample_clip_position;
-        resample_view_position /= resample_view_position.w;
+        float resample_view_z = clip_to_view_depth(resample_clip_position);
         
-        if (resample_view_position.z >= sample_position.z + bias)
-            occlusion += smoothstep(0.0f, 1.0f, radius / abs(resample_view_position.z - view_position.z));
+        if (resample_view_z >= sample_position.z + bias)
+            occlusion += smoothstep(0.0f, 1.0f, radius / abs(resample_view_z - view_position.z));
     }
     
     occlusion = pow(smoothstep(0.0f, 1.0f, 1.0f - (occlusion / NUM_SAMPLES)), power);
