@@ -1,6 +1,7 @@
 # TODO
 
 ## v0.51
+- implement imgui disable-enable
 - better support for object transforms, including world-space transform operations and quaternion support [H]
 - improve scene tree so that objects know about their scene, and children, and can be removed [M]
 ---

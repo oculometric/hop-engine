@@ -439,17 +439,15 @@ void Engine::drawImGuiDebug(float delta_time)
 	{
 		if (ImGui::BeginMenu("open scene"))
 		{
-			if (ImGui::MenuItem("bunnygirl"))
+			if (ImGui::MenuItem("bunnygirl")) // TODO: remove this once the module is over
 			{
-				unloadScene();
-				auto scn = ::getScene(0);
+				auto scn = getAshaScene();
 				debugClearSelection();
 				Engine::setup(scn.init_func, scn.update_func, scn.imgui_func);
 			}
 			if (ImGui::MenuItem("museum"))
 			{
-				unloadScene();
-				auto scn = ::getScene(2);
+				auto scn = getMuseumScene();
 				debugClearSelection();
 				Engine::setup(scn.init_func, scn.update_func, scn.imgui_func);
 			}

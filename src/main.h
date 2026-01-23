@@ -8,5 +8,6 @@ struct SceneFuncSet
     void(*imgui_func)(HopEngine::Ref<HopEngine::Scene>, float);
 };
 
-SceneFuncSet getScene(int i);
-void unloadScene();
+SceneFuncSet getAshaScene();
+SceneFuncSet getNodeScene();
+SceneFuncSet getMuseumScene();

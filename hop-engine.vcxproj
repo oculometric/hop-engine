@@ -176,6 +176,7 @@
     <ClCompile Include="lib\src\imgui_widgets.cpp" />
     <ClCompile Include="lib\src\spirv_reflect.c" />
     <ClCompile Include="lib\src\spirv_reflect.cpp" />
+    <ClCompile Include="src\asha_scene.cpp" />
     <ClCompile Include="src\buffer.cpp" />
     <ClCompile Include="src\command_buffer.cpp" />
     <ClCompile Include="src\debug.cpp" />
@@ -191,6 +192,8 @@
     <ClCompile Include="src\material.cpp" />
     <ClCompile Include="src\math_helpers.cpp" />
     <ClCompile Include="src\mesh.cpp" />
+    <ClCompile Include="src\museum_scene.cpp" />
+    <ClCompile Include="src\node_scene.cpp" />
     <ClCompile Include="src\node_view.cpp" />
     <ClCompile Include="src\object.cpp" />
     <ClCompile Include="src\package.cpp" />
