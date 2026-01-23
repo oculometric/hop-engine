@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "full start",
+    "Projects": [
+      {
+        "Path": "package-builder.vcxproj",
+        "Action": "StartWithoutDebugging"
+      },
+      {
+        "Path": "hop-engine.vcxproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

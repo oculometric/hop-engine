@@ -1,304 +1,246 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\External">
-      <UniqueIdentifier>{01f5b27a-50fa-4f0b-913b-bf5b27f86c46}</UniqueIdentifier>
+    <Filter Include="inc">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Header Files\Resource Types">
-      <UniqueIdentifier>{8fb14e16-80ce-4c13-826e-93851900b388}</UniqueIdentifier>
+    <Filter Include="src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Header Files\Singletons">
-      <UniqueIdentifier>{2305ce4f-e3d2-46c0-873a-0c26f74e3b47}</UniqueIdentifier>
+    <Filter Include="libsrc">
+      <UniqueIdentifier>{b3c72b9d-7f05-48c9-9864-7a9cc9cbebd1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\graphics_environment.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\swapchain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\shader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\pipeline.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\render_pass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mesh.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\buffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\material.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\uniform_block.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\object.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\texture.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\command_buffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\sampler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\package.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\transform.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\exec.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\input.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\node_view.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\debug.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\font.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\lib\imgui.cpp">
-      <Filter>Source Files\External</Filter>
-    </ClCompile>
-    <ClCompile Include="src\lib\imgui_demo.cpp">
-      <Filter>Source Files\External</Filter>
-    </ClCompile>
-    <ClCompile Include="src\lib\imgui_draw.cpp">
-      <Filter>Source Files\External</Filter>
-    </ClCompile>
-    <ClCompile Include="src\lib\imgui_impl_glfw.cpp">
-      <Filter>Source Files\External</Filter>
-    </ClCompile>
-    <ClCompile Include="src\lib\imgui_impl_vulkan.cpp">
-      <Filter>Source Files\External</Filter>
-    </ClCompile>
-    <ClCompile Include="src\lib\imgui_tables.cpp">
-      <Filter>Source Files\External</Filter>
-    </ClCompile>
-    <ClCompile Include="src\lib\imgui_widgets.cpp">
-      <Filter>Source Files\External</Filter>
-    </ClCompile>
-    <ClCompile Include="src\lib\spirv_reflect.cpp">
-      <Filter>Source Files\External</Filter>
-    </ClCompile>
-    <ClCompile Include="src\engine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\scene.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\token_file.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\deserialise.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\gizmo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\render_graph.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\imgui_functions.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\math_helpers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\text_block.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\common.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="inc\buffer.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\counted_ref.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="inc\command_buffer.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\hop_engine.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="inc\common.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\hop_forward.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="inc\counted_ref.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="inc\debug.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\buffer.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\draw_command.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\command_buffer.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\engine.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\font.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\font.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\material.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\gizmo.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\mesh.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\graphics_environment.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\uniform_block.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\hop_engine.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\texture.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\hop_forward.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\render_pass.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\input.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\pipeline.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\material.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\sampler.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\math_helpers.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\shader.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\mesh.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\swapchain.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\node_view.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\window.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\object.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\debug.h">
-      <Filter>Header Files\Singletons</Filter>
+    <ClInclude Include="inc\package.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine.h">
-      <Filter>Header Files\Singletons</Filter>
+    <ClInclude Include="inc\pbr.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\graphics_environment.h">
-      <Filter>Header Files\Singletons</Filter>
+    <ClInclude Include="inc\pipeline.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\input.h">
-      <Filter>Header Files\Singletons</Filter>
+    <ClInclude Include="inc\render_graph.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\package.h">
-      <Filter>Header Files\Singletons</Filter>
+    <ClInclude Include="inc\render_pass.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\transform.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="inc\sampler.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\token_file.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="inc\scene.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\pbr.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="inc\shader.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\object.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\swapchain.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\gizmo.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\text_block.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\scene.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\texture.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\render_graph.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\token_file.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\node_view.h">
-      <Filter>Header Files\Resource Types</Filter>
+    <ClInclude Include="inc\transform.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="src\draw_command.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="inc\uniform_block.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\window.h">
+      <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="src\main.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\math_helpers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\text_block.h">
-      <Filter>Header Files</Filter>
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\psx.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\psx.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\engine\node_shader.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\engine\node_shader.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\half_and_half.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\half_and_half.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\engine\shaders\colour_correct.frag" />
-    <None Include="res\engine\shaders\colour_correct.vert" />
-    <None Include="res\engine\shaders\common.glsl" />
-    <None Include="res\engine\shaders\default_shader.frag" />
-    <None Include="res\engine\shaders\default_shader.vert" />
-    <None Include="res\engine\shaders\passthrough.frag" />
-    <None Include="res\engine\shaders\passthrough.vert" />
-    <None Include="res\engine\shaders\forward.frag" />
-    <None Include="res\engine\shaders\forward.vert" />
-    <None Include="res\engine\shaders\skybox.frag" />
-    <None Include="res\engine\shaders\skybox.vert" />
-    <None Include="res\engine\shaders\ssao.frag" />
-    <None Include="res\engine\shaders\ssao.vert" />
-    <None Include="res\museum\BlackBricks.hmat" />
-    <None Include="res\museum\ConcretePanels.hmat" />
-    <None Include="res\museum\Marble.hmat" />
-    <None Include="res\museum\PalmFrond.hmat" />
-    <None Include="res\museum\Museum.hscn" />
-    <None Include="res\museum\WhitePlaster.hmat" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="hop-engine.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="icon1.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="res\icon.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
+    <ClCompile Include="lib\src\imgui.cpp">
+      <Filter>libsrc</Filter>
+    </ClCompile>
+    <ClCompile Include="lib\src\imgui_demo.cpp">
+      <Filter>libsrc</Filter>
+    </ClCompile>
+    <ClCompile Include="lib\src\imgui_draw.cpp">
+      <Filter>libsrc</Filter>
+    </ClCompile>
+    <ClCompile Include="lib\src\imgui_impl_glfw.cpp">
+      <Filter>libsrc</Filter>
+    </ClCompile>
+    <ClCompile Include="lib\src\imgui_impl_vulkan.cpp">
+      <Filter>libsrc</Filter>
+    </ClCompile>
+    <ClCompile Include="lib\src\imgui_tables.cpp">
+      <Filter>libsrc</Filter>
+    </ClCompile>
+    <ClCompile Include="lib\src\imgui_widgets.cpp">
+      <Filter>libsrc</Filter>
+    </ClCompile>
+    <ClCompile Include="lib\src\spirv_reflect.c">
+      <Filter>libsrc</Filter>
+    </ClCompile>
+    <ClCompile Include="lib\src\spirv_reflect.cpp">
+      <Filter>libsrc</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\deserialise.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\imgui_functions.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\object.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scene.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\input.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render_graph.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\uniform_block.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\text_block.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mesh.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\math_helpers.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pipeline.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render_pass.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\material.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\token_file.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\shader.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics_environment.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\package.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\texture.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sampler.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\window.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\transform.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\swapchain.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\node_view.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gizmo.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\font.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\command_buffer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\buffer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\debug.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\exec.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

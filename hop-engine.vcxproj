@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
@@ -26,19 +18,6 @@
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -57,12 +36,6 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -78,32 +51,6 @@
     <OutDir>$(ProjectDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)bin\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -111,12 +58,12 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\glm-1.0.2;$(ProjectDir)lib;$(ProjectDir)lib\spirv_reflect;$(ProjectDir)lib\imgui;$(ProjectDir)lib\imgui\backends;$(USERPROFILE)\Documents\1.4.335.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)lib\inc\GLFW\include;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\inc\glm-1.0.2;$(ProjectDir)lib\inc;$(ProjectDir)lib\inc\spirv_reflect;$(ProjectDir)lib\inc\imgui;$(ProjectDir)lib\inc\imgui\backends;$(USERPROFILE)\Documents\1.4.335.0\Include;C:\VulkanSDK\1.4.335.0\Include;%(AdditionalIncludeDirectories);$(ProjectDir)inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\lib-vc2019;C:\VulkanSDK\1.4.313.0\Lib;$(USERPROFILE)\Documents\1.4.335.0\Lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)lib\bin\glfw-3.4.bin.WIN64\lib-vc2019;C:\VulkanSDK\1.4.313.0\Lib;$(USERPROFILE)\Documents\1.4.335.0\Lib;C:\VulkanSDK\1.4.335.0\Lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -133,12 +80,12 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\glm-1.0.2;$(ProjectDir)lib;$(ProjectDir)lib\spirv_reflect;$(ProjectDir)lib\imgui;$(ProjectDir)lib\imgui\backends;$(USERPROFILE)\Documents\1.4.335.0\Include;C:\VulkanSDK\1.4.335.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)lib\inc\GLFW\include;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\inc\glm-1.0.2;$(ProjectDir)lib\inc;$(ProjectDir)lib\inc\spirv_reflect;$(ProjectDir)lib\inc\imgui;$(ProjectDir)lib\inc\imgui\backends;$(USERPROFILE)\Documents\1.4.335.0\Include;C:\VulkanSDK\1.4.335.0\Include;%(AdditionalIncludeDirectories);$(ProjectDir)inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)lib\glfw-3.4.bin.WIN64\lib-vc2019;C:\VulkanSDK\1.4.313.0\Lib;$(USERPROFILE)\Documents\1.4.335.0\Lib;C:\VulkanSDK\1.4.335.0\Lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)lib\bin\glfw-3.4.bin.WIN64\lib-vc2019;C:\VulkanSDK\1.4.313.0\Lib;$(USERPROFILE)\Documents\1.4.335.0\Lib;C:\VulkanSDK\1.4.335.0\Lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -146,118 +93,6 @@
       </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="src\buffer.cpp" />
-    <ClCompile Include="src\command_buffer.cpp" />
-    <ClCompile Include="src\debug.cpp" />
-    <ClCompile Include="src\deserialise.cpp" />
-    <ClCompile Include="src\engine.cpp" />
-    <ClCompile Include="src\exec.cpp" />
-    <ClCompile Include="src\font.cpp" />
-    <ClCompile Include="src\gizmo.cpp" />
-    <ClCompile Include="src\graphics_environment.cpp" />
-    <ClCompile Include="src\imgui_functions.cpp" />
-    <ClCompile Include="src\input.cpp" />
-    <ClCompile Include="src\lib\imgui.cpp" />
-    <ClCompile Include="src\lib\imgui_demo.cpp" />
-    <ClCompile Include="src\lib\imgui_draw.cpp" />
-    <ClCompile Include="src\lib\imgui_impl_glfw.cpp" />
-    <ClCompile Include="src\lib\imgui_impl_vulkan.cpp" />
-    <ClCompile Include="src\lib\imgui_tables.cpp" />
-    <ClCompile Include="src\lib\imgui_widgets.cpp" />
-    <ClCompile Include="src\lib\spirv_reflect.cpp" />
-    <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\material.cpp" />
-    <ClCompile Include="src\math_helpers.cpp" />
-    <ClCompile Include="src\mesh.cpp" />
-    <ClCompile Include="src\node_view.cpp" />
-    <ClCompile Include="src\object.cpp" />
-    <ClCompile Include="src\package.cpp" />
-    <ClCompile Include="src\pipeline.cpp" />
-    <ClCompile Include="src\render_graph.cpp" />
-    <ClCompile Include="src\render_pass.cpp" />
-    <ClCompile Include="src\sampler.cpp" />
-    <ClCompile Include="src\scene.cpp" />
-    <ClCompile Include="src\shader.cpp" />
-    <ClCompile Include="src\swapchain.cpp" />
-    <ClCompile Include="src\texture.cpp" />
-    <ClCompile Include="src\text_block.cpp" />
-    <ClCompile Include="src\token_file.cpp" />
-    <ClCompile Include="src\transform.cpp" />
-    <ClCompile Include="src\uniform_block.cpp" />
-    <ClCompile Include="src\window.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="src\buffer.h" />
-    <ClInclude Include="src\command_buffer.h" />
-    <ClInclude Include="src\common.h" />
-    <ClInclude Include="src\counted_ref.h" />
-    <ClInclude Include="src\debug.h" />
-    <ClInclude Include="src\draw_command.h" />
-    <ClInclude Include="src\engine.h" />
-    <ClInclude Include="src\font.h" />
-    <ClInclude Include="src\gizmo.h" />
-    <ClInclude Include="src\graphics_environment.h" />
-    <ClInclude Include="src\hop_engine.h" />
-    <ClInclude Include="src\hop_forward.h" />
-    <ClInclude Include="src\input.h" />
-    <ClInclude Include="src\main.h" />
-    <ClInclude Include="src\material.h" />
-    <ClInclude Include="src\math_helpers.h" />
-    <ClInclude Include="src\mesh.h" />
-    <ClInclude Include="src\node_view.h" />
-    <ClInclude Include="src\object.h" />
-    <ClInclude Include="src\package.h" />
-    <ClInclude Include="src\pbr.h" />
-    <ClInclude Include="src\pipeline.h" />
-    <ClInclude Include="src\render_graph.h" />
-    <ClInclude Include="src\render_pass.h" />
-    <ClInclude Include="src\sampler.h" />
-    <ClInclude Include="src\scene.h" />
-    <ClInclude Include="src\shader.h" />
-    <ClInclude Include="src\swapchain.h" />
-    <ClInclude Include="src\texture.h" />
-    <ClInclude Include="src\text_block.h" />
-    <ClInclude Include="src\token_file.h" />
-    <ClInclude Include="src\transform.h" />
-    <ClInclude Include="src\uniform_block.h" />
-    <ClInclude Include="src\window.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="res\engine\node_shader.frag" />
-    <None Include="res\engine\node_shader.vert" />
-    <None Include="res\engine\shaders\colour_correct.frag" />
-    <None Include="res\engine\shaders\colour_correct.vert" />
-    <None Include="res\engine\shaders\common.glsl" />
-    <None Include="res\engine\shaders\default_shader.frag" />
-    <None Include="res\engine\shaders\default_shader.vert" />
-    <None Include="res\engine\shaders\forward.frag" />
-    <None Include="res\engine\shaders\forward.vert" />
-    <None Include="res\engine\shaders\passthrough.frag" />
-    <None Include="res\engine\shaders\passthrough.vert" />
-    <None Include="res\engine\shaders\skybox.frag" />
-    <None Include="res\engine\shaders\skybox.vert" />
-    <None Include="res\engine\shaders\ssao.frag" />
-    <None Include="res\engine\shaders\ssao.vert" />
-    <None Include="res\half_and_half.frag" />
-    <None Include="res\half_and_half.vert" />
-    <None Include="res\museum\BlackBricks.hmat" />
-    <None Include="res\museum\ConcretePanels.hmat" />
-    <None Include="res\museum\Marble.hmat" />
-    <None Include="res\museum\Museum.hscn" />
-    <None Include="res\museum\PalmFrond.hmat" />
-    <None Include="res\museum\WhitePlaster.hmat" />
-    <None Include="res\psx.frag" />
-    <None Include="res\psx.vert" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="hop-engine.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="icon1.ico" />
-    <Image Include="res\icon.ico" />
-  </ItemGroup>
   <ItemGroup>
     <Content Include="res\engine\meshes\axes_gizmo.obj" />
     <Content Include="res\engine\meshes\rotate_gizmo.obj" />
@@ -294,6 +129,84 @@
     <Folder Include="Header Files\Resource Types\" />
     <Folder Include="Header Files\Singletons\" />
     <Folder Include="res\engine\materials\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="inc\buffer.h" />
+    <ClInclude Include="inc\command_buffer.h" />
+    <ClInclude Include="inc\common.h" />
+    <ClInclude Include="inc\counted_ref.h" />
+    <ClInclude Include="inc\debug.h" />
+    <ClInclude Include="inc\draw_command.h" />
+    <ClInclude Include="inc\engine.h" />
+    <ClInclude Include="inc\font.h" />
+    <ClInclude Include="inc\gizmo.h" />
+    <ClInclude Include="inc\graphics_environment.h" />
+    <ClInclude Include="inc\hop_engine.h" />
+    <ClInclude Include="inc\hop_forward.h" />
+    <ClInclude Include="inc\input.h" />
+    <ClInclude Include="inc\material.h" />
+    <ClInclude Include="inc\math_helpers.h" />
+    <ClInclude Include="inc\mesh.h" />
+    <ClInclude Include="inc\node_view.h" />
+    <ClInclude Include="inc\object.h" />
+    <ClInclude Include="inc\package.h" />
+    <ClInclude Include="inc\pbr.h" />
+    <ClInclude Include="inc\pipeline.h" />
+    <ClInclude Include="inc\render_graph.h" />
+    <ClInclude Include="inc\render_pass.h" />
+    <ClInclude Include="inc\sampler.h" />
+    <ClInclude Include="inc\scene.h" />
+    <ClInclude Include="inc\shader.h" />
+    <ClInclude Include="inc\swapchain.h" />
+    <ClInclude Include="inc\texture.h" />
+    <ClInclude Include="inc\text_block.h" />
+    <ClInclude Include="inc\token_file.h" />
+    <ClInclude Include="inc\transform.h" />
+    <ClInclude Include="inc\uniform_block.h" />
+    <ClInclude Include="inc\window.h" />
+    <ClInclude Include="src\main.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="lib\src\imgui.cpp" />
+    <ClCompile Include="lib\src\imgui_demo.cpp" />
+    <ClCompile Include="lib\src\imgui_draw.cpp" />
+    <ClCompile Include="lib\src\imgui_impl_glfw.cpp" />
+    <ClCompile Include="lib\src\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="lib\src\imgui_tables.cpp" />
+    <ClCompile Include="lib\src\imgui_widgets.cpp" />
+    <ClCompile Include="lib\src\spirv_reflect.c" />
+    <ClCompile Include="lib\src\spirv_reflect.cpp" />
+    <ClCompile Include="src\buffer.cpp" />
+    <ClCompile Include="src\command_buffer.cpp" />
+    <ClCompile Include="src\debug.cpp" />
+    <ClCompile Include="src\deserialise.cpp" />
+    <ClCompile Include="src\engine.cpp" />
+    <ClCompile Include="src\exec.cpp" />
+    <ClCompile Include="src\font.cpp" />
+    <ClCompile Include="src\gizmo.cpp" />
+    <ClCompile Include="src\graphics_environment.cpp" />
+    <ClCompile Include="src\imgui_functions.cpp" />
+    <ClCompile Include="src\input.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\material.cpp" />
+    <ClCompile Include="src\math_helpers.cpp" />
+    <ClCompile Include="src\mesh.cpp" />
+    <ClCompile Include="src\node_view.cpp" />
+    <ClCompile Include="src\object.cpp" />
+    <ClCompile Include="src\package.cpp" />
+    <ClCompile Include="src\pipeline.cpp" />
+    <ClCompile Include="src\render_graph.cpp" />
+    <ClCompile Include="src\render_pass.cpp" />
+    <ClCompile Include="src\sampler.cpp" />
+    <ClCompile Include="src\scene.cpp" />
+    <ClCompile Include="src\shader.cpp" />
+    <ClCompile Include="src\swapchain.cpp" />
+    <ClCompile Include="src\texture.cpp" />
+    <ClCompile Include="src\text_block.cpp" />
+    <ClCompile Include="src\token_file.cpp" />
+    <ClCompile Include="src\transform.cpp" />
+    <ClCompile Include="src\uniform_block.cpp" />
+    <ClCompile Include="src\window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
