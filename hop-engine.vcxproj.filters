@@ -135,6 +135,12 @@
     <ClCompile Include="src\imgui_functions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\math_helpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\text_block.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h">
@@ -233,6 +239,15 @@
     <ClInclude Include="src\draw_command.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\main.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\math_helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\text_block.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\psx.vert">
@@ -241,49 +256,10 @@
     <None Include="res\psx.frag">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="res\pbr.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\pbr.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\test_mat.hmat">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\test_scene.hscn">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\engine\common.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\engine\shader.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\engine\shader.frag">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="res\engine\node_shader.frag">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="res\engine\node_shader.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\engine\skybox.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\engine\skybox.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\engine\passthrough.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\engine\passthrough.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\engine\ssao.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\engine\ssao.vert">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="res\half_and_half.frag">
@@ -292,12 +268,25 @@
     <None Include="res\half_and_half.vert">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="res\engine\colour_correct.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\engine\colour_correct.vert">
-      <Filter>Resource Files</Filter>
-    </None>
+    <None Include="res\engine\shaders\colour_correct.frag" />
+    <None Include="res\engine\shaders\colour_correct.vert" />
+    <None Include="res\engine\shaders\common.glsl" />
+    <None Include="res\engine\shaders\default_shader.frag" />
+    <None Include="res\engine\shaders\default_shader.vert" />
+    <None Include="res\engine\shaders\passthrough.frag" />
+    <None Include="res\engine\shaders\passthrough.vert" />
+    <None Include="res\engine\shaders\forward.frag" />
+    <None Include="res\engine\shaders\forward.vert" />
+    <None Include="res\engine\shaders\skybox.frag" />
+    <None Include="res\engine\shaders\skybox.vert" />
+    <None Include="res\engine\shaders\ssao.frag" />
+    <None Include="res\engine\shaders\ssao.vert" />
+    <None Include="res\museum\BlackBricks.hmat" />
+    <None Include="res\museum\ConcretePanels.hmat" />
+    <None Include="res\museum\Marble.hmat" />
+    <None Include="res\museum\PalmFrond.hmat" />
+    <None Include="res\museum\Museum.hscn" />
+    <None Include="res\museum\WhitePlaster.hmat" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="hop-engine.rc">

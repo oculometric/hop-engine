@@ -333,6 +333,7 @@ void Material::drawImGuiDebug()
 
 bool Sampler::drawImGuiDebug()
 {
+	ImGui::PushID(this);
 	ImGui::LabelText("filter", "%s", vk::to_string((vk::Filter)builder.filtering_mode).c_str());
 	VkFilter new_mode = builder.filtering_mode;
 	if (ImGui::Button("switch filtering"))
@@ -367,8 +368,10 @@ bool Sampler::drawImGuiDebug()
 		create_info.maxLod = 0.0f;
 		if (vkCreateSampler(RenderServer::getDevice(), &create_info, nullptr, &sampler) != VK_SUCCESS)
 			DBG_FAULT("vkCreateSampler failed");
+		ImGui::PopID();
 		return true;
 	}
+	ImGui::PopID();
 	return false;
 }
 

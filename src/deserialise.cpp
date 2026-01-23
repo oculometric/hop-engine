@@ -405,8 +405,7 @@ Ref<Material> Material::deserialise(string name)
 			sampler_builder.address(address);
 		}
 		material->setTexture(binding, texture_it->second);
-		if (sampler_builder.address_mode != VK_SAMPLER_ADDRESS_MODE_REPEAT || sampler_builder.filtering_mode != VK_FILTER_LINEAR)
-			material->setSampler(binding, new Sampler(sampler_builder));
+		material->setSampler(binding, new Sampler(sampler_builder));
 	}
 
 	for (const TokenReader::Statement& statement : uniforms)

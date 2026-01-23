@@ -71,9 +71,12 @@ StaticMesh(mesh = @pedestal_medium_mesh, material = @marble_mat, position = [ 12
     TextBlock(text = "use WASD+QE to move", tint = [ 0.8, 0.8, 0.8 ], euler = [ 90, 0, 0 ], position = [ -0.9, -0.5, 0.65 ], scale = [ 0.5, 0.5, 0.5 ]);
     TextBlock(text = "right mouse drag to look around", tint = [ 0.8, 0.8, 0.8 ], euler = [ 90, 0, 0 ], position = [ -1.5, -0.5, 0.45 ], scale = [ 0.5, 0.5, 0.5 ]);
 };
+
 StaticMesh(mesh = @desk_mesh, material = @wood_mat, position = [ 15.2, -4, 0 ], euler = [ 0, 0, 180 ]);
-StaticMesh(mesh = @crt_mesh, material = @crt_mat, position = [ 15.0, -3.4, 0.8 ], euler = [ 0, 0, 180 ]);
-StaticMesh(mesh = @crt_screen_mesh, material = @crt_screen_mat, position = [ 15.0, -3.4, 0.8 ], euler = [ 0, 0, 180 ]) : crt_screen;
+StaticMesh(mesh = @crt_mesh, material = @crt_mat, position = [ 15.0, -3.4, 0.8 ], euler = [ 0, 0, 180 ])
+{
+    StaticMesh(mesh = @crt_screen_mesh, material = @crt_screen_mat) : crt_screen;
+};
 
 StaticMesh(mesh = @planter_marble_mesh, material = @marble_mat, position = [ 14, 0, 0 ])
 {
@@ -93,6 +96,13 @@ StaticMesh(mesh = @planter_marble_mesh, material = @marble_mat, position = [ 0, 
 };
 TextBlock(text = "all programming and art by", tint = [ 0.008, 0.016, 0.078 ], euler = [ 90, 0, 90 ], position = [ -2.6, -7.6, 2.2 ], scale = [ 0.5, 0.5, 0.5 ]);
 TextBlock(text = "Cassette Costen", tint = [ 0.545, 0.243, 0.000 ], euler = [ 90, 0, 90 ], position = [ -2.6, -6.2, 2.0 ]);
+TextBlock(text = "NASA SVS Deep Star Maps 2020 skybox
+credit to NASA/Goddard Space Flight Center
+Scientific Visualization Studio. Gaia DR2: 
+ESA/Gaia/DPAC. Constellation figures based
+on those developed for the IAU by Alan 
+MacRobert of Sky and Telescope magazine 
+(Roger Sinnott and Rick Fienberg).", tint = [ 0.001, 0.001, 0.001 ], euler = [ 90, 0, 90 ], position = [ -2.6, -7.6, 1.6 ], scale = [ 0.5, 0.5, 0.5 ]);
 
 StaticMesh(mesh = @pedestal_short_mesh, material = @marble_mat, position = [ -2, 24, -0.4 ]);
 StaticMesh(mesh = @pedestal_short_mesh, material = @marble_mat, position = [ 2, 24, -0.4 ]);
