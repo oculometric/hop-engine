@@ -242,5 +242,14 @@
     <ClCompile Include="src\exec.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\node_scene.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\asha_scene.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\museum_scene.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

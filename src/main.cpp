@@ -1,9 +1,10 @@
+#if !defined(STANDALONE)
+
+
 #include "hop_engine.h"
 #include "main.h"
 
 using namespace HopEngine;
-
-static int selected_scene = 0;
 
 int main()
 {
@@ -19,3 +20,5 @@ int main()
     
     return 0;
 }
+
+#endif

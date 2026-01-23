@@ -1,3 +1,5 @@
+#if !defined(STANDALONE)
+
 #include <random>
 #include <imgui.h>
 
@@ -128,3 +130,5 @@ SceneFuncSet getAshaScene()
 {
     return { L"bunnygirl", initAshaScene, updateAshaScene, imGuiAshaScene };
 }
+
+#endif

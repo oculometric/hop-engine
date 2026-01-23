@@ -1,3 +1,5 @@
+#if !defined(STANDALONE)
+
 #include "hop_engine.h"
 #include "main.h"
 
@@ -144,3 +146,5 @@ SceneFuncSet getNodeScene()
 {
     return { L"nodes", initNodeScene, updateNodeScene, nullptr };
 }
+
+#endif

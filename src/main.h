@@ -1,3 +1,5 @@
+#if !defined(STANDALONE)
+
 #include "common.h"
 
 struct SceneFuncSet
@@ -11,3 +13,5 @@ struct SceneFuncSet
 SceneFuncSet getAshaScene();
 SceneFuncSet getNodeScene();
 SceneFuncSet getMuseumScene();
+
+#endif

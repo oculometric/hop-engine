@@ -44,6 +44,11 @@ vector<DrawCommand> Object::getDrawCommands() const
 	//return { { RenderServer::getGizmoMaterial(), RenderServer::getGizmoMesh(0), uniforms } };
 }
 
+BoundingBox Object::getLocalBounds() const
+{
+	return BoundingBox{ { 0, 0, 0 }, { 0.25f, 0.25f, 0.25f } };
+}
+
 Object::Object()
 {
 	transform = Transform();

@@ -1,3 +1,5 @@
+#if !defined(STANDALONE)
+
 #include <random>
 #include <imgui.h>
 
@@ -195,3 +197,5 @@ SceneFuncSet getMuseumScene()
 {
     return { L"museum", initMuseumScene, updateMuseumScene, imGuiMuseumScene };
 }
+
+#endif
