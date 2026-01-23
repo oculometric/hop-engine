@@ -329,10 +329,12 @@ Engine::Engine()
     Engine::summariseTrackedObjects();
     RenderServer::draw();
     window->setVisible(true);
+    debugClearSelection();
 }
 
 Engine::~Engine()
 {
+    debugClearSelection();
     scene = nullptr;
     keep_loaded_refs.clear();
     loaded_shaders.clear();

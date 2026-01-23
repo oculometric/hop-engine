@@ -1,28 +1,16 @@
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
 #include <imgui.h>
-#include <vulkan/vulkan.h>
-#include <iostream>
 #include <chrono>
 #include <random>
-#include <thread>
 #include <string>
 #if defined(_WIN32)
 #undef APIENTRY
 #include <Windows.h>
-#endif
 #include "../resource.h"
+#endif
 
 #include "hop_engine.h"
-#include "node_view.h"
 
-#include "token_file.h"
-#include "pbr.h"
-#include "gizmo.h"
 #include "main.h"
-
-#include "text_block.h"
 
 using namespace HopEngine;
 
@@ -501,13 +489,11 @@ INT_PTR dialogFunc(HWND handle, UINT message, WPARAM unnamedParam3, LPARAM unnam
 int main()
 {
     Engine::init();
-    //ImGui::GetIO().IniFilename = nullptr;
     
     selected_scene = 2;
 // #if defined(_WIN32)
 //     DialogBox(NULL, MAKEINTRESOURCE(IDD_DIALOG1), NULL, dialogFunc);
 // #endif
-    Engine::debugClearSelection();
 
     const auto& scene = getScene(selected_scene);
 
@@ -515,8 +501,7 @@ int main()
 
     Engine::mainLoop();
 
-    Engine::debugClearSelection();
     Engine::destroy();
-
+    
     return 0;
 }

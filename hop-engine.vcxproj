@@ -199,25 +199,25 @@
     <ClInclude Include="src\font.h" />
     <ClInclude Include="src\gizmo.h" />
     <ClInclude Include="src\graphics_environment.h" />
-    <ClInclude Include="src\hop_forward.h" />
     <ClInclude Include="src\hop_engine.h" />
+    <ClInclude Include="src\hop_forward.h" />
     <ClInclude Include="src\input.h" />
     <ClInclude Include="src\main.h" />
+    <ClInclude Include="src\material.h" />
     <ClInclude Include="src\math_helpers.h" />
+    <ClInclude Include="src\mesh.h" />
     <ClInclude Include="src\node_view.h" />
+    <ClInclude Include="src\object.h" />
     <ClInclude Include="src\package.h" />
     <ClInclude Include="src\pbr.h" />
+    <ClInclude Include="src\pipeline.h" />
     <ClInclude Include="src\render_graph.h" />
+    <ClInclude Include="src\render_pass.h" />
     <ClInclude Include="src\sampler.h" />
     <ClInclude Include="src\scene.h" />
-    <ClInclude Include="src\texture.h" />
-    <ClInclude Include="src\material.h" />
-    <ClInclude Include="src\mesh.h" />
-    <ClInclude Include="src\object.h" />
-    <ClInclude Include="src\pipeline.h" />
-    <ClInclude Include="src\render_pass.h" />
     <ClInclude Include="src\shader.h" />
     <ClInclude Include="src\swapchain.h" />
+    <ClInclude Include="src\texture.h" />
     <ClInclude Include="src\text_block.h" />
     <ClInclude Include="src\token_file.h" />
     <ClInclude Include="src\transform.h" />
@@ -232,10 +232,10 @@
     <None Include="res\engine\shaders\common.glsl" />
     <None Include="res\engine\shaders\default_shader.frag" />
     <None Include="res\engine\shaders\default_shader.vert" />
-    <None Include="res\engine\shaders\passthrough.frag" />
-    <None Include="res\engine\shaders\passthrough.vert" />
     <None Include="res\engine\shaders\forward.frag" />
     <None Include="res\engine\shaders\forward.vert" />
+    <None Include="res\engine\shaders\passthrough.frag" />
+    <None Include="res\engine\shaders\passthrough.vert" />
     <None Include="res\engine\shaders\skybox.frag" />
     <None Include="res\engine\shaders\skybox.vert" />
     <None Include="res\engine\shaders\ssao.frag" />
@@ -245,8 +245,8 @@
     <None Include="res\museum\BlackBricks.hmat" />
     <None Include="res\museum\ConcretePanels.hmat" />
     <None Include="res\museum\Marble.hmat" />
-    <None Include="res\museum\PalmFrond.hmat" />
     <None Include="res\museum\Museum.hscn" />
+    <None Include="res\museum\PalmFrond.hmat" />
     <None Include="res\museum\WhitePlaster.hmat" />
     <None Include="res\psx.frag" />
     <None Include="res\psx.vert" />
@@ -291,6 +291,8 @@
     <Content Include="res\test_graph.hrgr" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Header Files\Resource Types\" />
+    <Folder Include="Header Files\Singletons\" />
     <Folder Include="res\engine\materials\" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
