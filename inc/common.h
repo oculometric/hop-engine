@@ -20,7 +20,7 @@
 class Destructible
 {
 public:
-    inline virtual ~Destructible() { }
+    virtual ~Destructible() { }
 };
 
 int exec(std::string command, std::string& output);

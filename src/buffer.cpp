@@ -1,7 +1,7 @@
 #include "buffer.h"
 
 #include <stdexcept>
-#include <string>
+#include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_to_string.hpp>
 
 #include "graphics_environment.h"
@@ -41,7 +41,7 @@ uint32_t Buffer::findMemoryType(uint32_t type_bits, VkMemoryPropertyFlags proper
     return 0;
 }
 
-void Buffer::copyToBuffer(Ref<Buffer> other)
+void Buffer::copyToBuffer(Ref<Buffer> other) const
 {
     DBG_VERBOSE("copying from " + PTR(this) + " to buffer " + PTR(other.get()));
     Ref<CommandBuffer> cmd_buf = new CommandBuffer();
@@ -55,8 +55,20 @@ void Buffer::copyToBuffer(Ref<Buffer> other)
     cmd_buf->submit();
 }
 
-Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
+static constexpr VkBufferUsageFlagBits vulkan_buffer_usage[5] = 
 {
+    VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+};
+
+
+Buffer::Buffer(VkDeviceSize size, BufferUsage _usage, VkMemoryPropertyFlags properties)
+{
+    const VkBufferUsageFlags usage = //vulkan_buffer_usage[_usage]; // TODO: convert buffer usage BITS into vulkan buffer usage
+    
     if (size == 0)
     {
         DBG_ERROR("buffer size was zero, this is not allowed");

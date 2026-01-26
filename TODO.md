@@ -5,6 +5,7 @@
 - improve scene tree so that objects know about their scene, and children, and can be removed [M]
 ---
 ## v0.6
+- clean up all the little warnings
 - eliminate header-file vulkan/glfw dependency [H]
 - separate engine from game resources [H]
 - binary repackaging (i.e. read in OBJs and turn them into binary meshes to reduce load times)
@@ -15,6 +16,7 @@
 - improved text block rendering with wrapping, alignment, font, etc
 - deprecate getGizmoMaterial and similar family functions
 ---
+- eliminate vulkan types being exposed outside of class implementations entirely
 - more scene control using ImGui (modify the render graph, material uniforms) [M]
 - improved gizmo, better control, rotation and scale support [M]
 - tux-racer ripoff demo game [L]

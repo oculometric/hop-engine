@@ -1,10 +1,9 @@
 #include "shader.h"
 
 #include <map>
-#include <iostream>
-#include <fstream>
 #include <vector>
 #include <string>
+#include <vulkan/vulkan.hpp>
 #include <spirv_reflect/spirv_reflect.h>
 #include <filesystem>
 

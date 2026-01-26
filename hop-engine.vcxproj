@@ -203,6 +203,7 @@
     <ClInclude Include="inc\token_file.h" />
     <ClInclude Include="inc\transform.h" />
     <ClInclude Include="inc\uniform_block.h" />
+    <ClInclude Include="inc\vulkan_typedefs.h" />
     <ClInclude Include="inc\window.h" />
     <ClInclude Include="src\main.h" />
   </ItemGroup>

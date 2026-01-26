@@ -1,7 +1,7 @@
 #include "render_pass.h"
 
 #include <array>
-#include <stdexcept>
+#include <vulkan/vulkan.hpp>
 
 #include "graphics_environment.h"
 #include "swapchain.h"

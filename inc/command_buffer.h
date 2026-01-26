@@ -1,8 +1,7 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
-
 #include "common.h"
+#include "vulkan_typedefs.h"
 
 namespace HopEngine
 {
@@ -16,7 +15,7 @@ private:
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(CommandBuffer);
 
-	inline VkCommandBuffer getBuffer() const { return buffer; }
+	VkCommandBuffer getBuffer() const { return buffer; }
 	void submit();
 	
 	CommandBuffer();

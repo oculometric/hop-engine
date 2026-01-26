@@ -1,11 +1,11 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <vector>
 
 #include "common.h"
+#include "vulkan_typedefs.h"
 #include "transform.h"
 #include "pbr.h"
 #include "draw_command.h"
@@ -29,10 +29,8 @@ private:
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Object);
 
-	template <class T>
-	void setParent(Ref<T> new_parent);
-	template <class T>
-	void setParent(WeakRef<T> new_parent);
+	template <class T> void setParent(Ref<T> new_parent);
+	template <class T> void setParent(WeakRef<T> new_parent);
 	Ref<Object> getParent();
 
 	virtual void pushToDescriptorSet(size_t index);
@@ -42,7 +40,7 @@ public:
 	virtual BoundingBox getLocalBounds() const;
 	
 	Object();
-	virtual ~Object() override;
+	~Object() override;
 
 private:
 	void _setParent(Ref<Object> new_parent);
@@ -64,7 +62,7 @@ public:
 	SceneUniforms getSceneUniforms(glm::ivec2 viewport_size, float time, std::vector<LightParams> lights, glm::vec4 ambient);
 	glm::mat4 getWorldToScreenMatrix();
 	VkDescriptorSet getDescriptorSet(size_t index) const;
-	virtual void drawImGuiDebug() override;
+	void drawImGuiDebug() override;
 	
 	Camera();
 };
@@ -81,8 +79,8 @@ public:
 
 	void pushToDescriptorSet(size_t index) override;
 	std::vector<DrawCommand> getDrawCommands() const override;
-	virtual void drawImGuiDebug() override;
-	virtual BoundingBox getLocalBounds() const override;
+	void drawImGuiDebug() override;
+	BoundingBox getLocalBounds() const override;
 	
 	StaticMesh(Ref<Mesh> mesh, Ref<Material> material);
 };
@@ -107,23 +105,23 @@ public:
 	DELETE_CONSTRUCTORS(Light);
 
 	LightParams getParamsStructure();
-	virtual void drawImGuiDebug() override;
+	void drawImGuiDebug() override;
 	
 	Light(LightType type);
 };
 
 template<class T>
-inline void Object::setParent(Ref<T> new_parent)
+void Object::setParent(Ref<T> new_parent)
 {
-	static_assert(std::is_convertible<T*, Object*>::value, "parent must be a HopEngine::Object subclass");
+	static_assert(std::is_convertible_v<T*, Object*>, "parent must be a HopEngine::Object subclass");
 	auto cast = new_parent ? new_parent.template cast<Object>() : Ref<Object>();
 	_setParent(cast);
 }
 
 template<class T>
-inline void Object::setParent(WeakRef<T> new_parent)
+void Object::setParent(WeakRef<T> new_parent)
 {
-	static_assert(std::is_convertible<T*, Object*>::value, "parent must be a HopEngine::Object subclass");
+	static_assert(std::is_convertible_v<T*, Object*>, "parent must be a HopEngine::Object subclass");
 	Ref<T> strong_ref = new_parent;
 	setParent(strong_ref);
 }

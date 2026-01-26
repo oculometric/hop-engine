@@ -691,16 +691,16 @@ void Engine::debugCamera(float delta_time)
 	glm::vec2 mouse_delta = { 0, 0 };
 	mouse_delta += glm::vec2{ Input::getGamepadAxis(Input::GAMEPAD_RX), Input::getGamepadAxis(Input::GAMEPAD_RY) } * delta_time * 160.0f;
 	static bool mouse_down = false;
-	if (Input::isMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
+	if (Input::isMouseDown(Input::MOUSE_RIGHT))
 	{
 		mouse_delta += Input::getMouseDelta() * 0.25f;
 		if (!mouse_down)
-			Input::setMouseVisible(false);
+			Input::setCursorVisible(false);
 		mouse_down = true;
 	}
 	else if (mouse_down)
 	{
-		Input::setMouseVisible(true);
+		Input::setCursorVisible(true);
 		mouse_down = false;		
 	}
 	
@@ -712,7 +712,7 @@ void Engine::debugCamera(float delta_time)
 		Input::getAxis('Q', 'E') + Input::getGamepadAxis(Input::GAMEPAD_BUTTONS),
 		Input::getAxis('W', 'S') + Input::getGamepadAxis(Input::GAMEPAD_LY)
 	} * delta_time * 1.5f;
-	if (Input::isKeyDown(GLFW_KEY_LEFT_SHIFT) || Input::isGamepadButtonDown(Input::GAMEPAD_B))
+	if (Input::isKeyDown(Input::KEY_LEFT_SHIFT) || Input::isGamepadButtonDown(Input::GAMEPAD_B))
 		local_move_vector *= 3.0f;
 	selected_camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
 }

@@ -1,5 +1,7 @@
 #include "command_buffer.h"
 
+#include <vulkan/vulkan.hpp>
+
 #include "graphics_environment.h"
 
 using namespace HopEngine;

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
 #include <vector>
 
 #include "common.h"
+#include "vulkan_typedefs.h"
 
 namespace HopEngine
 {
@@ -28,12 +28,12 @@ private:
 public:
 	DELETE_CONSTRUCTORS(RenderPass);
 
-	inline RenderOutput getOutputConfig() const { return output_config; }
-	inline VkRenderPass getRenderPass() const { return render_pass; }
-	inline VkFramebuffer getFramebuffer(size_t index) const { return framebuffers[index % framebuffers.size()]; }
+	RenderOutput getOutputConfig() const { return output_config; }
+	VkRenderPass getRenderPass() const { return render_pass; }
+	VkFramebuffer getFramebuffer(size_t index) const { return framebuffers[index % framebuffers.size()]; }
 	std::vector<VkClearValue> getClearValues() const;
 	void resize(uint32_t width = 0, uint32_t height = 0);
-	inline VkExtent2D getExtent() const { return extent; }
+	VkExtent2D getExtent() const { return extent; }
 	Ref<Texture> getImage(size_t attachment) const;
 	Ref<RenderPass> duplicate() const;
 	bool isCompatible(const Ref<RenderPass>& other) const;

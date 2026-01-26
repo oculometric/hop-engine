@@ -1,6 +1,8 @@
 #include "input.h"
 
 #include <imgui.h>
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 
 using namespace HopEngine;
 using namespace std;
@@ -72,23 +74,23 @@ glm::vec2 Input::getMousePosition()
 	return glm::vec2{ (float)new_x, (float)new_y };
 }
 
-bool Input::isMouseDown(int button)
+bool Input::isMouseDown(MouseButton button)
 {
 	if (ImGui::GetIO().WantCaptureMouse)
 		return false;
 	return glfwGetMouseButton(application_instance->window->getWindow(), button) == GLFW_PRESS;
 }
 
-bool Input::wasMousePressed(int button)
+bool Input::wasMousePressed(MouseButton button)
 {
-	auto it = application_instance->pressed_since_checked.find(button);
-	if (it == application_instance->pressed_since_checked.end())
+	auto it = application_instance->pressed_since_checked_mouse.find(button);
+	if (it == application_instance->pressed_since_checked_mouse.end())
 		return false;
-	application_instance->pressed_since_checked.erase(it);
+	application_instance->pressed_since_checked_mouse.erase(it);
 	return true;
 }
 
-void Input::setMouseVisible(bool visible)
+void Input::setCursorVisible(bool visible)
 {
 	glfwSetInputMode(application_instance->window->getWindow(), GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 }
@@ -154,7 +156,7 @@ void Input::mouseButtonCallback(GLFWwindow* window, int button, int action, int 
 	if (ImGui::GetIO().WantCaptureMouse)
 		return;
 	if (action == GLFW_PRESS)
-		application_instance->pressed_since_checked.insert(button);
+		application_instance->pressed_since_checked_mouse.insert((MouseButton)button);
 }
 
 Input::Input(Ref<Window> _window)

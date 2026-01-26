@@ -2,10 +2,10 @@
 
 #include <vector>
 #include <map>
-#include <vulkan/vulkan.hpp>
 
-#include "shader.h"
 #include "common.h"
+#include "vulkan_typedefs.h"
+#include "shader.h"
 
 namespace HopEngine
 {
@@ -30,12 +30,12 @@ private:
 public:
 	DELETE_CONSTRUCTORS(UniformBlock);
 
-	inline void* getBuffer() { return live_uniform_buffer.data(); }
+	void* getBuffer() { return live_uniform_buffer.data(); }
 	void setTexture(uint32_t binding, Ref<Texture> image, bool use_stencil = false);
 	void setSampler(uint32_t binding, Ref<Sampler> sampler);
-	inline VkDeviceSize getSize() const { return size; }
+	VkDeviceSize getSize() const { return size; }
 	void pushToDescriptorSet(size_t index);
-	inline VkDescriptorSet getDescriptorSet(size_t index) const { return descriptor_sets[index]; }
+	VkDescriptorSet getDescriptorSet(size_t index) const { return descriptor_sets[index]; }
 	void drawImGuiDebug(const std::map<std::string, uint32_t>& texture_name_to_binding);
 
 	UniformBlock(ShaderLayout layout_info);

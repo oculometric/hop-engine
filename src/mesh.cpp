@@ -1,8 +1,8 @@
 #include "mesh.h"
 
+#include <vulkan/vulkan.hpp>
 #include <stdexcept>
 #include <fstream>
-#include <glm/gtc/matrix_access.hpp>
 #include <sstream>
 
 #include "graphics_environment.h"

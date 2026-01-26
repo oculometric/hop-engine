@@ -21,7 +21,7 @@ void Gizmo::trackObject(WeakRef<Object> object, WeakRef<Camera> camera)
         mesh = RenderServer::getGizmoMesh(1);
 
     transform.setMatrix(object->transform.getMatrix());
-    if (Input::isMouseDown(GLFW_MOUSE_BUTTON_LEFT))
+    if (Input::isMouseDown(Input::MOUSE_LEFT))
     {
         glm::vec4 mouse_delta = glm::vec4(Input::getMouseDelta() / (RenderServer::getFramebufferSize() / 4.0f), 0, 0);
         glm::mat4 screen_to_local = glm::inverse(camera->getWorldToScreenMatrix() * transform.getMatrix());

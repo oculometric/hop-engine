@@ -100,7 +100,7 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
 {
     bool node_view_dirty = false;
 
-    if (Input::wasMousePressed(GLFW_MOUSE_BUTTON_LEFT))
+    if (Input::wasMousePressed(Input::MOUSE_LEFT))
     {
         if (selected_node)
             selected_node->highlighted = false;
@@ -114,14 +114,14 @@ void updateNodeScene(Ref<Scene> scene, float delta_time)
     }
 
     glm::vec2 mouse_delta = Input::getMouseDelta() * 0.025f;
-    float move_x = Input::getAxis(GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
-    float move_y = Input::getAxis(GLFW_KEY_UP, GLFW_KEY_DOWN);
-    if (Input::isMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
+    float move_x = Input::getAxis(Input::KEY_LEFT, Input::KEY_RIGHT);
+    float move_y = Input::getAxis(Input::KEY_UP, Input::KEY_DOWN);
+    if (Input::isMouseDown(Input::MOUSE_RIGHT))
     {
         glm::vec2 mouse_world_delta = glm::vec2{ -mouse_delta.x, -mouse_delta.y };// / RenderServer::getFramebufferSize();
         scene->getCamera(0)->transform.translateLocal({mouse_world_delta.x, mouse_world_delta.y, 0});
     }
-    else if (Input::isMouseDown(GLFW_MOUSE_BUTTON_LEFT))
+    else if (Input::isMouseDown(Input::MOUSE_LEFT))
     {
         move_x = mouse_delta.x * 20.0f;
         move_y = mouse_delta.y * 20.0f;

@@ -3,11 +3,11 @@
 #include <array>
 #include <string>
 #include <vector>
-#include <vulkan/vulkan.hpp>
 #include <glm/glm.hpp>
 
 #include "common.h"
 #include "math_helpers.h"
+#include "vulkan_typedefs.h"
 
 namespace HopEngine
 {

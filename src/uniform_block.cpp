@@ -1,6 +1,6 @@
 #include "uniform_block.h"
 
-#include <stdexcept>
+#include <vulkan/vulkan.hpp>
 
 #include "graphics_environment.h"
 #include "buffer.h"

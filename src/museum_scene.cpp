@@ -121,7 +121,7 @@ static void updateMuseumScene(Ref<Scene> scene, float delta_time)
 
     Engine::debugCamera(delta_time);
 
-    if (Input::isMouseDown(GLFW_MOUSE_BUTTON_LEFT))
+    if (Input::isMouseDown(Input::MOUSE_LEFT))
     {
         glm::vec2 mouse_clip = ((Input::getMousePosition() / RenderServer::getFramebufferSize()) * 2.0f) - 1.0f;
         glm::mat4 screen_to_world = glm::inverse(scene->getCamera(0)->getWorldToScreenMatrix());

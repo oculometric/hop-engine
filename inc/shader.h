@@ -2,9 +2,9 @@
 
 #include <string>
 #include <vector>
-#include <vulkan/vulkan.hpp>
 
 #include "common.h"
+#include "vulkan_typedefs.h"
 
 namespace HopEngine
 {
@@ -54,7 +54,7 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Shader);
 	
-	inline VkPipelineLayout getPipelineLayout() const { return pipeline_layout; }
+	VkPipelineLayout getPipelineLayout() const { return pipeline_layout; }
 	std::vector<VkPipelineShaderStageCreateInfo> getShaderStageCreateInfos() const;
 	ShaderLayout getShaderLayout() const;
 	inline std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }

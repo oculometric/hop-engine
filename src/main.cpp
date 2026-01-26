@@ -1,6 +1,5 @@
 #if !defined(STANDALONE)
 
-
 #include "hop_engine.h"
 #include "main.h"
 
