@@ -1,11 +1,11 @@
 #include "graphics_environment.h"
 
-#include <stdexcept>
-#include <iostream>
 #include <vector>
 #include <array>
 #include <map>
 #include <chrono>
+#include <filesystem>
+#include <vulkan/vulkan.hpp>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
@@ -14,15 +14,34 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <filesystem>
-#include <random>
 
 #include "hop_engine.h"
+#include "swapchain_vulkan.h"
 
 using namespace HopEngine;
 using namespace std;
 
 static RenderServer* environment = nullptr;
+
+static const vector<const char*> required_validation_layers =
+{
+#if !defined(NDEBUG)
+    "VK_LAYER_KHRONOS_validation"
+#endif
+};
+
+static const vector<const char*> required_instance_extensions =
+{
+#if !defined(NDEBUG)
+    VK_EXT_DEBUG_UTILS_EXTENSION_NAME
+#endif
+};
+
+static const vector<const char*> required_extensions =
+{
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
+
 
 #if !defined(NDEBUG)
 static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
@@ -96,7 +115,7 @@ Ref<RenderPass> RenderServer::getFinalRenderPass()
 glm::vec2 RenderServer::getFramebufferSize()
 {
     auto ext = environment->swapchain->getExtent();
-    return glm::vec2{ (float)ext.width, (float)ext.height };
+    return glm::vec2{ (float)ext.x, (float)ext.y };
 }
 
 size_t RenderServer::getFramesInFlight()
@@ -344,7 +363,7 @@ void RenderServer::createDevice()
 
         if (score != 0)
         {
-            auto swapchain_info = Swapchain::getSupportInfo(device, surface);
+            auto swapchain_info = getSwapchainSupportInfo(device, surface);
             if (swapchain_info.surface_formats.empty() || swapchain_info.present_modes.empty())
                 score = 0;
         }
@@ -541,10 +560,10 @@ FrameStats RenderServer::drawFrame()
     if (scene && scene->getRenderGraph())
     {
         stats.lights = scene->getLightParams().size();
-        VkExtent2D extent = swapchain->getExtent();
-        VkExtent2D graph_extent = scene->getRenderGraph()->getExpectedExtent();
-        if (graph_extent.width != extent.width || graph_extent.height != extent.height)
-            scene->getRenderGraph()->resizeBuffers(extent.width, extent.height);
+        glm::u32vec2 extent = swapchain->getExtent();
+        glm::u32vec2 graph_extent = scene->getRenderGraph()->getExpectedExtent();
+        if (graph_extent.x != extent.x || graph_extent.y != extent.y)
+            scene->getRenderGraph()->resizeBuffers(extent.x, extent.y);
         scene->getRenderGraph()->updateUniforms(image_index, since_start.count(), scene);
         if (scene->skybox && current_skybox != scene->skybox)
         {
@@ -643,7 +662,8 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
         render_pass_begin_info.renderPass = final_render_pass->getRenderPass();
         render_pass_begin_info.framebuffer = final_render_pass->getFramebuffer(image_index);
         render_pass_begin_info.renderArea.offset = { 0, 0 };
-        render_pass_begin_info.renderArea.extent = final_render_pass->getExtent();
+        auto extent = final_render_pass->getExtent();
+        render_pass_begin_info.renderArea.extent = { extent.x, extent.y };
         vector<VkClearValue> clear_values = final_render_pass->getClearValues();
         clear_values[0].color = { 0.02f, 0.02f, 0.02f };
         render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
@@ -702,8 +722,8 @@ RenderServer::RenderServer(Ref<Window> main_window)
     skybox_cube = new Mesh("res://engine/meshes/skybox.obj");
 
     default_material = new Material(new Shader("res://engine/shaders/default_shader", false));
-    gizmo_material = new Material(new Shader("res://engine/shaders/gizmo", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE), final_render_pass);
-    skybox_material = new Material(new Shader("res://engine/shaders/skybox", false), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
+    gizmo_material = new Material(new Shader("res://engine/shaders/gizmo", false), PipelineBuilder().cullMode(CULL_NONE), final_render_pass);
+    skybox_material = new Material(new Shader("res://engine/shaders/skybox", false), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
     
     initImGui();
 

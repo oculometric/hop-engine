@@ -16,11 +16,11 @@ static Ref<Scene> initAshaScene()
 {
     Ref<Scene> scene = new Scene();
     Ref<Shader> shader = Engine::loadShader("res://psx");
-    Ref<Sampler> sampler = new Sampler(SamplerBuilder().filter(VK_FILTER_NEAREST));
+    Ref<Sampler> sampler = new Sampler(SamplerBuilder().filter(FILTER_NEAREST));
     asha = scene->insertObject<StaticMesh>(new StaticMesh(
         Engine::loadMesh("res://samples/asha.obj"),
         Engine::keepLoaded(new Material(
-            shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE).stencilWrite(1)
+            shader, PipelineBuilder().cullMode(CULL_NONE).stencilWrite(1)
         ))));
     asha->material->setTexture("albedo", Engine::loadTexture("res://samples/asha.png"));
     asha->material->setSampler("albedo", sampler);
@@ -28,7 +28,7 @@ static Ref<Scene> initAshaScene()
 
     Ref<StaticMesh> bunny = scene->insertObject<StaticMesh>(new StaticMesh(
         Engine::loadMesh("res://samples/bunny.obj"),
-        Engine::keepLoaded(new Material(shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE).stencilWrite(2)
+        Engine::keepLoaded(new Material(shader, PipelineBuilder().cullMode(CULL_NONE).stencilWrite(2)
         ))));
     bunny->material->setTexture("albedo", Engine::loadTexture("res://samples/bunny.png"));
     bunny->material->setSampler("albedo", sampler);
@@ -38,7 +38,7 @@ static Ref<Scene> initAshaScene()
 
     Ref<StaticMesh> tux = scene->insertObject<StaticMesh>(new StaticMesh(
         Engine::loadMesh("res://tux.obj"),
-        Engine::keepLoaded(new Material(shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE)))
+        Engine::keepLoaded(new Material(shader, PipelineBuilder().cullMode(CULL_NONE)))
     ));
     tux->material->setTexture("albedo", Engine::loadTexture("res://tux.png"));
     tux->material->setSampler("albedo", sampler);

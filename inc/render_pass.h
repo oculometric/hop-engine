@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <glm/vec2.hpp>
 
 #include "common.h"
 #include "vulkan_typedefs.h"
@@ -22,7 +23,7 @@ private:
 	Ref<Texture> depth_texture;
 	std::vector<Ref<Texture>> additional_textures;
 	std::vector<VkFramebuffer> framebuffers;
-	VkExtent2D extent;
+	glm::u32vec2 extent;
 	Ref<Swapchain> swapchain;
 
 public:
@@ -33,7 +34,7 @@ public:
 	VkFramebuffer getFramebuffer(size_t index) const { return framebuffers[index % framebuffers.size()]; }
 	std::vector<VkClearValue> getClearValues() const;
 	void resize(uint32_t width = 0, uint32_t height = 0);
-	VkExtent2D getExtent() const { return extent; }
+	glm::u32vec2 getExtent() const { return extent; }
 	Ref<Texture> getImage(size_t attachment) const;
 	Ref<RenderPass> duplicate() const;
 	bool isCompatible(const Ref<RenderPass>& other) const;

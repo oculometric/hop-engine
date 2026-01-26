@@ -2,11 +2,10 @@
 
 #include <limits>
 #include <algorithm>
-#include <stdexcept>
-#include <vulkan/vulkan_to_string.hpp>
+#include <vulkan/vulkan.hpp>
 
+#include "swapchain_vulkan.h"
 #include "graphics_environment.h"
-#include "render_pass.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -16,16 +15,16 @@ void Swapchain::resize(uint32_t width, uint32_t height)
     DBG_INFO("resizing swapchain to " + to_string(width) + "x" + to_string(height));
     destroyResources();
 
-    const SwapchainSupportInfo support_info = Swapchain::getSupportInfo(RenderServer::getPhysicalDevice(), surface);
-    extent = Swapchain::getIdealExtent(support_info, width, height);
-    create_info.imageExtent = extent;
+    const SwapchainSupportInfo support_info = getSwapchainSupportInfo(RenderServer::getPhysicalDevice(), surface);
+    extent = getIdealExtent(support_info, width, height);
+    create_info[0].imageExtent = { extent.x, extent.y };
 
-    if (vkCreateSwapchainKHR(RenderServer::getDevice(), &create_info, nullptr, &swapchain) != VK_SUCCESS)
+    if (vkCreateSwapchainKHR(RenderServer::getDevice(), &create_info[0], nullptr, &swapchain) != VK_SUCCESS)
         DBG_FAULT("vkCreateSwapchainKHR failed");
     createImageViews();
 }
 
-SwapchainSupportInfo Swapchain::getSupportInfo(VkPhysicalDevice device, VkSurfaceKHR surface)
+SwapchainSupportInfo HopEngine::getSwapchainSupportInfo(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
     SwapchainSupportInfo info;
 
@@ -50,7 +49,7 @@ SwapchainSupportInfo Swapchain::getSupportInfo(VkPhysicalDevice device, VkSurfac
     return info;
 }
 
-VkSurfaceFormatKHR Swapchain::getIdealSurfaceFormat(const SwapchainSupportInfo& info)
+VkSurfaceFormatKHR HopEngine::getIdealSurfaceFormat(const SwapchainSupportInfo& info)
 {
     for (const VkSurfaceFormatKHR& format : info.surface_formats)
     {
@@ -61,15 +60,15 @@ VkSurfaceFormatKHR Swapchain::getIdealSurfaceFormat(const SwapchainSupportInfo& 
     return info.surface_formats[0];
 }
 
-VkPresentModeKHR Swapchain::getIdealPresentMode(const SwapchainSupportInfo& info)
+VkPresentModeKHR HopEngine::getIdealPresentMode(const SwapchainSupportInfo& info)
 {
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-VkExtent2D Swapchain::getIdealExtent(const SwapchainSupportInfo& info, uint32_t window_width, uint32_t window_height)
+glm::u32vec2 HopEngine::getIdealExtent(const SwapchainSupportInfo& info, uint32_t window_width, uint32_t window_height)
 {
     if (info.surface_capabilities.currentExtent.width != numeric_limits<uint32_t>::max())
-        return info.surface_capabilities.currentExtent;
+        return { info.surface_capabilities.currentExtent.width, info.surface_capabilities.currentExtent.height };
     else
     {
         VkExtent2D actual_extent =
@@ -81,31 +80,32 @@ VkExtent2D Swapchain::getIdealExtent(const SwapchainSupportInfo& info, uint32_t 
         actual_extent.width = clamp(actual_extent.width, info.surface_capabilities.minImageExtent.width, info.surface_capabilities.maxImageExtent.width);
         actual_extent.height = clamp(actual_extent.height, info.surface_capabilities.minImageExtent.height, info.surface_capabilities.maxImageExtent.height);
 
-        return actual_extent;
+        return { actual_extent.width, actual_extent.height };
     }
 }
 
 Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR _surface)
 {
     surface = _surface;
+    create_info.resize(1);
 
     // calculate actual swapchain parameters
-    const SwapchainSupportInfo support_info = Swapchain::getSupportInfo(RenderServer::getPhysicalDevice(), surface);
-    VkSurfaceFormatKHR surface_format = Swapchain::getIdealSurfaceFormat(support_info);
+    const SwapchainSupportInfo support_info = getSwapchainSupportInfo(RenderServer::getPhysicalDevice(), surface);
+    VkSurfaceFormatKHR surface_format = getIdealSurfaceFormat(support_info);
     format = surface_format.format;
-    extent = Swapchain::getIdealExtent(support_info, width, height);
+    extent = getIdealExtent(support_info, width, height);
 
-    create_info = VkSwapchainCreateInfoKHR{ };
-    create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    create_info.surface = surface;
-    create_info.minImageCount = support_info.surface_capabilities.minImageCount + 1;
+    create_info[0] = VkSwapchainCreateInfoKHR{ };
+    create_info[0].sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    create_info[0].surface = surface;
+    create_info[0].minImageCount = support_info.surface_capabilities.minImageCount + 1;
     if (support_info.surface_capabilities.maxImageCount > 0)
-        create_info.minImageCount = min(create_info.minImageCount, support_info.surface_capabilities.maxImageCount);
-    create_info.imageFormat = surface_format.format;
-    create_info.imageColorSpace = surface_format.colorSpace;
-    create_info.imageExtent = extent;
-    create_info.imageArrayLayers = 1;
-    create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        create_info[0].minImageCount = min(create_info[0].minImageCount, support_info.surface_capabilities.maxImageCount);
+    create_info[0].imageFormat = surface_format.format;
+    create_info[0].imageColorSpace = surface_format.colorSpace;
+    create_info[0].imageExtent = { extent.x, extent.y };
+    create_info[0].imageArrayLayers = 1;
+    create_info[0].imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     // get info about which present mode we're going to use
     RenderServer::QueueFamilies indices = RenderServer::getQueueFamilies(RenderServer::getPhysicalDevice());
@@ -113,29 +113,29 @@ Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR _surface)
     queue_families[1] = indices.present_family.value();
     if (indices.graphics_family != indices.present_family)
     {
-        create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-        create_info.queueFamilyIndexCount = 2;
-        create_info.pQueueFamilyIndices = queue_families;
+        create_info[0].imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+        create_info[0].queueFamilyIndexCount = 2;
+        create_info[0].pQueueFamilyIndices = queue_families;
     }
     else
     {
-        create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        create_info.queueFamilyIndexCount = 0;
-        create_info.pQueueFamilyIndices = nullptr;
+        create_info[0].imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        create_info[0].queueFamilyIndexCount = 0;
+        create_info[0].pQueueFamilyIndices = nullptr;
     }
 
-    create_info.preTransform = support_info.surface_capabilities.currentTransform;
-    create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    create_info.presentMode = getIdealPresentMode(support_info);
-    create_info.clipped = VK_TRUE;
-    create_info.oldSwapchain = VK_NULL_HANDLE;
+    create_info[0].preTransform = support_info.surface_capabilities.currentTransform;
+    create_info[0].compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    create_info[0].presentMode = getIdealPresentMode(support_info);
+    create_info[0].clipped = VK_TRUE;
+    create_info[0].oldSwapchain = VK_NULL_HANDLE;
 
     // create the swapchain
-    if (vkCreateSwapchainKHR(RenderServer::getDevice(), &create_info, nullptr, &swapchain) != VK_SUCCESS)
+    if (vkCreateSwapchainKHR(RenderServer::getDevice(), &create_info[0], nullptr, &swapchain) != VK_SUCCESS)
         DBG_FAULT("vkCreateSwapchainKHR failed");
     createImageViews();
 
-    DBG_INFO("created swapchain at " + to_string(width) + "x" + to_string(height) + " with " + to_string(images.size()) + " images in present mode " + vk::to_string((vk::PresentModeKHR)create_info.presentMode));
+    DBG_INFO("created swapchain at " + to_string(width) + "x" + to_string(height) + " with " + to_string(images.size()) + " images in present mode " + vk::to_string((vk::PresentModeKHR)create_info[0].presentMode));
 }
 
 Swapchain::~Swapchain()
@@ -146,7 +146,7 @@ Swapchain::~Swapchain()
 
 void Swapchain::createImageViews()
 {
-    // retreive images
+    // retrieve images
     uint32_t image_count = 0;
     vkGetSwapchainImagesKHR(RenderServer::getDevice(), swapchain, &image_count, nullptr);
     images.resize(image_count);

@@ -120,6 +120,12 @@
     <ClInclude Include="src\main.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="inc\vulkan_typedefs.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\swapchain_vulkan.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lib\src\imgui.cpp">

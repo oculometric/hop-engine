@@ -1,9 +1,8 @@
 #include "texture.h"
 
-#include <stdexcept>
+#include <vulkan/vulkan.hpp>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-#include <vulkan/vulkan_to_string.hpp>
 
 #include "buffer.h"
 #include "graphics_environment.h"
@@ -75,7 +74,7 @@ void Texture::copyBufferToImage(Ref<Buffer> buffer)
     image_copy.imageSubresource.layerCount = 1;
 
     image_copy.imageOffset = { 0, 0, 0 };
-    image_copy.imageExtent = extent;
+    image_copy.imageExtent = { extent.x, extent.y, extent.z };
 
     Ref<CommandBuffer> cmd_buf = new CommandBuffer();
 
@@ -96,7 +95,7 @@ VkImageView Texture::getView(bool stencil)
     VkImageViewCreateInfo view_create_info{ };
     view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     view_create_info.image = image;
-    view_create_info.viewType = extent.depth == 1 ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_3D;
+    view_create_info.viewType = extent.z == 1 ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_3D;
     view_create_info.format = format;
     if (format == VK_FORMAT_D16_UNORM
         || format == VK_FORMAT_D16_UNORM_S8_UINT
@@ -126,34 +125,34 @@ Texture::Texture(size_t _width, size_t _height, VkFormat _format, TextureBuilder
     format = _format;
     usage = builder.usage_flags;
     extent = { 
-        static_cast<uint32_t>(_width) / builder.layer_arrangement.width, 
-        static_cast<uint32_t>(_height) / builder.layer_arrangement.height, 
-        builder.layer_arrangement.width * builder.layer_arrangement.height 
+        static_cast<uint32_t>(_width) / builder.layer_arrangement.x, 
+        static_cast<uint32_t>(_height) / builder.layer_arrangement.y, 
+        builder.layer_arrangement.x * builder.layer_arrangement.y 
     };
 
-    if (builder.data_ptr != nullptr || extent.width == 0 || extent.height == 0)
+    if (builder.data_ptr != nullptr || extent.x == 0 || extent.y == 0)
     {
         loadFromMemory(builder.data_ptr, builder.layer_arrangement);
-        DBG_INFO("created image from memory with size " + to_string(extent.width) + "x" + to_string(extent.height) + " and format " + vk::to_string((vk::Format)format));
+        DBG_INFO("created image from memory with size " + to_string(extent.x) + "x" + to_string(extent.y) + " and format " + vk::to_string((vk::Format)format));
     }
     else
     {
-        if (extent.width == 0)
+        if (extent.x == 0)
         {
-            extent.width = 1;
+            extent.x = 1;
             DBG_WARNING("image width is not allowed to be zero");
         }
-        if (extent.height == 0)
+        if (extent.y == 0)
         {
             DBG_WARNING("image height is not allowed to be zero");
-            extent.height = 1;
+            extent.y = 1;
         }
         createImage();
-        DBG_INFO("created blank image with size " + to_string(extent.width) + "x" + to_string(extent.height) + " and format " + vk::to_string((vk::Format)format));
+        DBG_INFO("created blank image with size " + to_string(extent.x) + "x" + to_string(extent.y) + " and format " + vk::to_string((vk::Format)format));
     }
 }
 
-Texture::Texture(string file, TextureBuilder builder)
+Texture::Texture(const string& file, TextureBuilder builder)
 {
     origin = file;
     auto file_data = Package::tryLoadFile(file);
@@ -162,9 +161,9 @@ Texture::Texture(string file, TextureBuilder builder)
     format = VK_FORMAT_R8G8B8A8_SRGB;
     usage = builder.usage_flags;
     extent = {
-        static_cast<uint32_t>(img_width) / builder.layer_arrangement.width, 
-        static_cast<uint32_t>(img_height) / builder.layer_arrangement.height, 
-        builder.layer_arrangement.width * builder.layer_arrangement.height
+        static_cast<uint32_t>(img_width) / builder.layer_arrangement.x, 
+        static_cast<uint32_t>(img_height) / builder.layer_arrangement.y, 
+        builder.layer_arrangement.x * builder.layer_arrangement.y
     };
 
     if (pixels == nullptr)
@@ -175,19 +174,19 @@ Texture::Texture(string file, TextureBuilder builder)
     }
     else
     {
-        size_t row_size = extent.width * 4;
+        size_t row_size = extent.x * 4;
         void* tmp = new uint8_t[row_size];
-        for (size_t i = 0; i < extent.height / 2; ++i)
+        for (size_t i = 0; i < extent.y / 2; ++i)
         {
             memcpy(tmp, pixels + (i * row_size), row_size);
-            memcpy(pixels + (i * row_size), pixels + ((extent.height - i - 1) * row_size), row_size);
-            memcpy(pixels + ((extent.height - i - 1) * row_size), tmp, row_size);
+            memcpy(pixels + (i * row_size), pixels + ((extent.y - i - 1) * row_size), row_size);
+            memcpy(pixels + ((extent.y - i - 1) * row_size), tmp, row_size);
         }
 
         loadFromMemory(pixels, builder.layer_arrangement);
         stbi_image_free(pixels);
 
-        DBG_INFO("created image from " + file + " with size " + to_string(extent.width) + "x" + to_string(extent.height) + " and format " + vk::to_string((vk::Format)format));
+        DBG_INFO("created image from " + file + " with size " + to_string(extent.x) + "x" + to_string(extent.y) + " and format " + vk::to_string((vk::Format)format));
     }
 }
 
@@ -202,27 +201,46 @@ Texture::~Texture()
     vkFreeMemory(RenderServer::getDevice(), memory, nullptr);
 }
 
+VkFormat Texture::getDepthFormat()
+{
+    return VK_FORMAT_D32_SFLOAT_S8_UINT;
+}
+
+VkFormat Texture::getDataFormat()
+{
+    return VK_FORMAT_R16G16B16A16_SFLOAT;
+}
+
+static constexpr VkImageUsageFlagBits vulkan_image_usage[5] = 
+{
+    VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+    VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+    VK_IMAGE_USAGE_SAMPLED_BIT,
+    VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+};
+
 void Texture::createImage()
 {
     VkImageCreateInfo image_create_info{ };
     image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    image_create_info.imageType = extent.depth == 1 ? VK_IMAGE_TYPE_2D : VK_IMAGE_TYPE_3D;
-    image_create_info.extent = extent;
+    image_create_info.imageType = extent.z == 1 ? VK_IMAGE_TYPE_2D : VK_IMAGE_TYPE_3D;
+    image_create_info.extent = { extent.x, extent.y, extent.z };
     image_create_info.mipLevels = 1;
     image_create_info.arrayLayers = 1;
     image_create_info.format = format;
     image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    if ((usage & VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM) == VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM)
+    if (usage == IMAGE_USAGE_DEFAULT)
     {
-        if (format == Texture::depth_format)
-            usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-        else if (format == Texture::data_format)
-            usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        if (format == Texture::getDepthFormat())
+            usage = IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT;
+        else if (format == Texture::getDataFormat())
+            usage = IMAGE_USAGE_COLOR_ATTACHMENT;
         else
-            usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            usage = IMAGE_USAGE_TRANSFER_DST | IMAGE_USAGE_SAMPLED;
     }
-    image_create_info.usage = usage;
+    image_create_info.usage = convertFlags<VkImageUsageFlagBits, ImageUsage, 5>(usage, vulkan_image_usage);
     image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
     if (vkCreateImage(RenderServer::getDevice(), &image_create_info, nullptr, &image) != VK_SUCCESS)
@@ -235,27 +253,27 @@ void Texture::createImage()
     VkMemoryAllocateInfo allocate_info{ };
     allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocate_info.allocationSize = memory_requirements.size;
-    allocate_info.memoryTypeIndex = Buffer::findMemoryType(memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    allocate_info.memoryTypeIndex = Buffer::findMemoryType(memory_requirements.memoryTypeBits, MEMORY_PROPERTY_DEVICE_LOCAL);
     if (vkAllocateMemory(RenderServer::getDevice(), &allocate_info, nullptr, &memory) != VK_SUCCESS)
         DBG_FAULT("vkAllocateMemory failed");
     vkBindImageMemory(RenderServer::getDevice(), image, memory, 0);
 }
 
-void Texture::loadFromMemory(void* data, VkExtent2D layers)
+void Texture::loadFromMemory(void* data, glm::u32vec2 layers)
 {
-    VkDeviceSize image_length = extent.width * extent.height * extent.depth * 4;
-    Ref<Buffer> staging_buffer = new Buffer(image_length, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    VkDeviceSize image_length = extent.x * extent.y * extent.z * 4;
+    Ref<Buffer> staging_buffer = new Buffer(image_length, BUFFER_USAGE_TRANSFER_SRC, MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
     
-    if (layers.width != 1 || layers.height != 1)
+    if (layers.x != 1 || layers.y != 1)
     {
-        size_t input_width = extent.width * layers.width * 4;
-        size_t layer_width = extent.width * 4;
-        size_t layer_height = extent.height;
+        size_t input_width = extent.x * layers.x * 4;
+        size_t layer_width = extent.x * 4;
+        size_t layer_height = extent.y;
         vector<uint8_t> rearranged(image_length);
         
-        for (size_t slice = 0; slice < extent.depth; ++slice)
+        for (size_t slice = 0; slice < extent.z; ++slice)
         {
-            size_t origin_offset = (layer_width * (slice % layers.width)) + (input_width * (slice / layers.width) * layer_height);
+            size_t origin_offset = (layer_width * (slice % layers.x)) + (input_width * (slice / layers.x) * layer_height);
             size_t destination_offset = layer_width * layer_height * slice;
             for (size_t row = 0; row < layer_height; ++row)
             {

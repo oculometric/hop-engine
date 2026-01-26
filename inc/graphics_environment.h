@@ -2,12 +2,12 @@
 
 #include <optional>
 #include <vector>
-#include <vulkan/vulkan.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <set>
 
 #include "common.h"
+#include "vulkan_typedefs.h"
 #include "engine.h"
 
 namespace HopEngine
@@ -23,28 +23,7 @@ public:
 	};
 
 private:
-	const std::vector<const char*> required_validation_layers =
-	{
-#if !defined(NDEBUG)
-		"VK_LAYER_KHRONOS_validation"
-#endif
-	};
-
-	const std::vector<const char*> required_instance_extensions =
-	{
-#if !defined(NDEBUG)
-		VK_EXT_DEBUG_UTILS_EXTENSION_NAME
-#endif
-	};
-
-	const std::vector<const char*> required_extensions =
-	{
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME
-	};
-
 	int MAX_FRAMES_IN_FLIGHT = 2;
-
-private:
 	Ref<Window> window;
 
 	VkInstance instance = VK_NULL_HANDLE;

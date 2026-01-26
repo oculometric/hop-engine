@@ -3,11 +3,14 @@
 ## v0.51
 - better support for object transforms, including world-space transform operations and quaternion support [H]
 - improve scene tree so that objects know about their scene, and children, and can be removed [M]
+- fix crash with empty object file [H]
 ---
 ## v0.6
-- clean up all the little warnings
-- eliminate header-file vulkan/glfw dependency [H]
 - separate engine from game resources [H]
+- clean up all the little warnings
+- reorder functions in classes etc
+- make builders return references
+- actually add comments to everything
 - binary repackaging (i.e. read in OBJs and turn them into binary meshes to reduce load times)
 - implement imgui disable-enable
 - shader & other resource reloading at runtime [H]
@@ -16,7 +19,7 @@
 - improved text block rendering with wrapping, alignment, font, etc
 - deprecate getGizmoMaterial and similar family functions
 ---
-- eliminate vulkan types being exposed outside of class implementations entirely
+- eliminate vulkan types being exposed outside of class implementations entirely, replace stuff like VkFormat etc
 - more scene control using ImGui (modify the render graph, material uniforms) [M]
 - improved gizmo, better control, rotation and scale support [M]
 - tux-racer ripoff demo game [L]

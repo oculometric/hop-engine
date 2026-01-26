@@ -6,18 +6,27 @@
 namespace HopEngine
 {
 
+enum BufferUsage
+{
+	BUFFER_USAGE_TRANSFER_SRC = 1,
+	BUFFER_USAGE_TRANSFER_DST = 2,
+	BUFFER_USAGE_UNIFORM = 4,
+	BUFFER_USAGE_VERTEX = 8,
+	BUFFER_USAGE_INDEX = 16
+};
+ENUM_OPERATOR(BufferUsage)
+
+enum MemoryProperties
+{
+	MEMORY_PROPERTY_DEVICE_LOCAL = 1,
+	MEMORY_PROPERTY_HOST_VISIBLE = 2,
+	MEMORY_PROPERTY_HOST_COHERENT = 4,
+	MEMORY_PROPERTY_HOST_CACHED = 8,
+};
+ENUM_OPERATOR(MemoryProperties)
+
 class Buffer
 {
-public:
-	enum BufferUsage
-	{
-		BUFFER_USAGE_TRANSFER_SRC = 1,
-		BUFFER_USAGE_TRANSFER_DST = 2,
-		BUFFER_USAGE_UNIFORM = 4,
-		BUFFER_USAGE_VERTEX = 8,
-		BUFFER_USAGE_INDEX = 16
-	};
-	
 private:
 	VkBuffer buffer = VK_NULL_HANDLE;
 	VkDeviceMemory memory = VK_NULL_HANDLE;
@@ -31,10 +40,10 @@ public:
 	void unmapMemory();
 	VkBuffer getBuffer() const { return buffer; }
 	VkDeviceSize getSize() const { return buffer_size; }
-	static uint32_t findMemoryType(uint32_t type_bits, VkMemoryPropertyFlags properties);
+	static uint32_t findMemoryType(uint32_t type_bits, MemoryProperties properties);
 	void copyToBuffer(Ref<Buffer> other) const;
 	
-	Buffer(VkDeviceSize size, BufferUsage usage, VkMemoryPropertyFlags properties);
+	Buffer(VkDeviceSize size, BufferUsage usage, MemoryProperties properties);
 	~Buffer();
 };
 

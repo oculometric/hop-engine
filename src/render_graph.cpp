@@ -1,9 +1,9 @@
 #include "render_graph.h"
 
 #include <execution>
-#include <string>
 #include <imgui.h>
 #include <imgui_impl_vulkan.h>
+#include <vulkan/vulkan.hpp>
 
 #include "graphics_environment.h"
 #include "render_pass.h"
@@ -25,15 +25,15 @@ void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, R
     {
         if (step.is_camera)
         {
-            VkExtent2D extent = step.render_pass->getExtent();
-            scene->getCamera(step.camera_slot)->pushToCameraDescriptorSet(image_index, { extent.width, extent.height }, time_since_start, scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
+            glm::u32vec2 extent = step.render_pass->getExtent();
+            scene->getCamera(step.camera_slot)->pushToCameraDescriptorSet(image_index, { extent.x, extent.y }, time_since_start, scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
         }
         else
         {
-            VkExtent2D extent = execution_steps[0].render_pass->getExtent();
+            glm::u32vec2 extent = execution_steps[0].render_pass->getExtent();
             step.material->pushToDescriptorSet(image_index);
-            SceneUniforms uniforms = scene->getCamera(execution_steps[0].camera_slot)->getSceneUniforms({ extent.width, extent.height }, time_since_start, scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
-            uniforms.viewport_size = { step.render_pass->getExtent().width, step.render_pass->getExtent().height };
+            SceneUniforms uniforms = scene->getCamera(execution_steps[0].camera_slot)->getSceneUniforms({ extent.x, extent.y }, time_since_start, scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
+            uniforms.viewport_size = { step.render_pass->getExtent().x, step.render_pass->getExtent().y };
             memcpy(step.scene_uniforms->getBuffer(), &uniforms, sizeof(SceneUniforms));
             step.scene_uniforms->pushToDescriptorSet(image_index);
         }
@@ -51,7 +51,7 @@ void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, R
         in_stencil_mode = final_image_info.second;
         if (in_stencil_mode) passthrough->setTexture(1, new_passthrough_tex, true);
         else passthrough->setTexture(1, nullptr);
-        if (new_passthrough_tex->getFormat() == Texture::depth_format)
+        if (new_passthrough_tex->getFormat() == Texture::getDepthFormat())
             passthrough->setIntUniform("display_depth", in_stencil_mode ? 2 : 1);
         else
             passthrough->setIntUniform("display_depth", 0);
@@ -103,7 +103,8 @@ void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t i
     render_pass_begin_info.renderPass = final_render_pass->getRenderPass();
     render_pass_begin_info.framebuffer = final_render_pass->getFramebuffer(image_index);
     render_pass_begin_info.renderArea.offset = { 0, 0 };
-    render_pass_begin_info.renderArea.extent = final_render_pass->getExtent();
+    glm::u32vec2 extent = final_render_pass->getExtent();
+    render_pass_begin_info.renderArea.extent = { extent.x, extent.y };
     vector<VkClearValue> clear_values = final_render_pass->getClearValues();
     clear_values[0].color = { 0.02f, 0.02f, 0.02f };
     render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
@@ -115,7 +116,7 @@ void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t i
 
     VkRect2D scissor{ };
     scissor.offset = { 0, 0 };
-    scissor.extent = final_render_pass->getExtent();
+    scissor.extent = { extent.x, extent.y };
     VkViewport viewport{ };
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -182,7 +183,7 @@ void RenderGraph::resizeBuffers(uint32_t width, uint32_t height)
         if (step.resolution_scale > 0.0f)
             step.render_pass->resize((uint32_t)(width * step.resolution_scale), (uint32_t)(height * step.resolution_scale));
         else
-            step.render_pass->resize(step.custom_extent.width ? step.custom_extent.width : (uint32_t)width, step.custom_extent.height ? step.custom_extent.height : height);
+            step.render_pass->resize(step.custom_extent.x ? step.custom_extent.x : (uint32_t)width, step.custom_extent.y ? step.custom_extent.y : height);
 
         if (step.is_camera)
             continue;
@@ -198,7 +199,7 @@ pair<Ref<Texture>, bool> RenderGraph::getFinalImage() const
     if (execution_steps.empty())
         return { nullptr, false };
     size_t step_index = output_step % execution_steps.size();
-    if (output_step == (size_t)-1)
+    if (output_step == -1)
     {
         step_index = execution_steps.size() - 1;
         while (step_index > 0 && execution_steps[step_index].skipped)
@@ -272,7 +273,7 @@ bool RenderGraph::getSkipStep(size_t step) const
 
 RenderGraph::RenderGraph(RenderGraphBuilder config)
 {
-    passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough"), PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), RenderServer::getFinalRenderPass());
+    passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough"), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), RenderServer::getFinalRenderPass());
     execution_steps = config.execution_steps;
     if (!config.execution_steps.empty())
         expected_extent = config.execution_steps[0].render_pass->getExtent();
@@ -330,7 +331,7 @@ void RenderGraph::rebuildBindings()
     }
 }
 
-void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, std::multiset<DrawCommand, DrawCommand> commands, FrameStats& stats) const
+void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, const multiset<DrawCommand, DrawCommand>& commands, FrameStats& stats)
 {
     stats.cameras++;
 
@@ -339,7 +340,7 @@ void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t imag
     render_pass_begin_info.renderPass = pass->getRenderPass();
     render_pass_begin_info.framebuffer = pass->getFramebuffer(image_index);
     render_pass_begin_info.renderArea.offset = { 0, 0 };
-    render_pass_begin_info.renderArea.extent = pass->getExtent();
+    render_pass_begin_info.renderArea.extent = { pass->getExtent().x, pass->getExtent().y };
     vector<VkClearValue> clear_values = pass->getClearValues();
     clear_values[0].color = { camera->clear_colour.r, camera->clear_colour.g, camera->clear_colour.b };
     render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
@@ -351,7 +352,7 @@ void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t imag
 
     VkRect2D scissor{ };
     scissor.offset = { 0, 0 };
-    scissor.extent = pass->getExtent();
+    scissor.extent = { pass->getExtent().x, pass->getExtent().y };
     VkViewport viewport{ };
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -445,14 +446,15 @@ void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t imag
     vkCmdEndRenderPass(command_buffer);
 }
 
-void RenderGraph::recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Material> material, VkDescriptorSet scene_descriptor_set, FrameStats& stats) const
+void RenderGraph::recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Material> material, VkDescriptorSet scene_descriptor_set, FrameStats& stats)
 {
     VkRenderPassBeginInfo render_pass_begin_info{ };
     render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     render_pass_begin_info.renderPass = material->getRenderPass()->getRenderPass();
     render_pass_begin_info.framebuffer = material->getRenderPass()->getFramebuffer(image_index);
     render_pass_begin_info.renderArea.offset = { 0, 0 };
-    render_pass_begin_info.renderArea.extent = material->getRenderPass()->getExtent();
+    glm::u32vec2 extent = material->getRenderPass()->getExtent();
+    render_pass_begin_info.renderArea.extent = { extent.x, extent.y };
     vector<VkClearValue> clear_values = material->getRenderPass()->getClearValues();
     render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
     render_pass_begin_info.pClearValues = clear_values.data();
@@ -463,7 +465,7 @@ void RenderGraph::recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t
 
     VkRect2D scissor{ };
     scissor.offset = { 0, 0 };
-    scissor.extent = material->getRenderPass()->getExtent();
+    scissor.extent = { extent.x, extent.y };
     VkViewport viewport{ };
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -501,7 +503,7 @@ RenderGraphBuilder RenderGraphBuilder::addCamera(size_t slot)
     return addCamera(slot, RenderServer::getMainRenderPass()->getOutputConfig());
 }
 
-RenderGraphBuilder RenderGraphBuilder::addCamera(size_t slot, RenderOutput render_pass_config, float size_factor, VkExtent2D custom_extent)
+RenderGraphBuilder RenderGraphBuilder::addCamera(size_t slot, RenderOutput render_pass_config, float size_factor, glm::u32vec2 custom_extent)
 {
     RenderStep step;
     step.is_camera = true;
@@ -512,12 +514,12 @@ RenderGraphBuilder RenderGraphBuilder::addCamera(size_t slot, RenderOutput rende
     if (size_factor > 0.0f)
         step.render_pass = new RenderPass((uint32_t)(size.x * size_factor), (uint32_t)(size.y * size_factor), render_pass_config);
     else
-        step.render_pass = new RenderPass(custom_extent.width ? custom_extent.width : (uint32_t)size.x, custom_extent.height ? custom_extent.height : (uint32_t)size.y, render_pass_config);
+        step.render_pass = new RenderPass(custom_extent.x ? custom_extent.x : (uint32_t)size.x, custom_extent.y ? custom_extent.y : (uint32_t)size.y, render_pass_config);
     execution_steps.push_back(step);
     return *this;
 }
 
-RenderGraphBuilder RenderGraphBuilder::addCamera(size_t slot, float size_factor, VkExtent2D custom_extent)
+RenderGraphBuilder RenderGraphBuilder::addCamera(size_t slot, float size_factor, glm::u32vec2 custom_extent)
 {
     return addCamera(slot, RenderServer::getMainRenderPass()->getOutputConfig(), size_factor, custom_extent);
 }
@@ -527,7 +529,7 @@ RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<ui
     return addPostProcess(shader, texture_bindings, RenderOutput{ 0, false });
 }
 
-RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<uint32_t, RenderTextureBinding> texture_bindings, RenderOutput render_pass_config, float size_factor, VkExtent2D custom_extent)
+RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<uint32_t, RenderTextureBinding> texture_bindings, RenderOutput render_pass_config, float size_factor, glm::u32vec2 custom_extent)
 {
     RenderStep step;
     step.is_camera = false;
@@ -537,15 +539,15 @@ RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<ui
     if (size_factor > 0.0f)
         step.render_pass = new RenderPass((uint32_t)(size.x * size_factor), (uint32_t)(size.y * size_factor), render_pass_config);
     else
-        step.render_pass = new RenderPass(custom_extent.width ? custom_extent.width : (uint32_t)size.x, custom_extent.height ? custom_extent.height : (uint32_t)size.y, render_pass_config);
-    step.material = new Material(shader, PipelineBuilder().cullMode(VK_CULL_MODE_NONE).depthTest(VK_FALSE).depthWrite(VK_FALSE), step.render_pass);
+        step.render_pass = new RenderPass(custom_extent.x ? custom_extent.x : (uint32_t)size.x, custom_extent.y ? custom_extent.y : (uint32_t)size.y, render_pass_config);
+    step.material = new Material(shader, PipelineBuilder().cullMode(CULL_NONE).depthTest(VK_FALSE).depthWrite(VK_FALSE), step.render_pass);
     step.texture_bindings = texture_bindings;
     step.scene_uniforms = new UniformBlock(ShaderLayout{ RenderServer::getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
     execution_steps.push_back(step);
     return *this;
 }
 
-RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<uint32_t, RenderTextureBinding> texture_bindings, float size_factor, VkExtent2D custom_extent)
+RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<uint32_t, RenderTextureBinding> texture_bindings, float size_factor, glm::u32vec2 custom_extent)
 {
     return addPostProcess(shader, texture_bindings, RenderOutput{ 0, false }, size_factor, custom_extent);
 }

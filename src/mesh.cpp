@@ -1,7 +1,6 @@
 #include "mesh.h"
 
 #include <vulkan/vulkan.hpp>
-#include <stdexcept>
 #include <fstream>
 #include <sstream>
 
@@ -22,7 +21,7 @@ VkBuffer Mesh::getIndexBuffer() const
     return index_buffer->getBuffer();
 }
 
-void Mesh::updateData(vector<Vertex> vertices, vector<uint16_t> indices, size_t vertex_alloc, size_t index_alloc)
+void Mesh::updateData(const vector<Vertex>& vertices, const vector<uint16_t>& indices, size_t vertex_alloc, size_t index_alloc)
 {
     if (!accessible)
     {
@@ -35,9 +34,8 @@ void Mesh::updateData(vector<Vertex> vertices, vector<uint16_t> indices, size_t 
     vertex_alloc = max(vertex_alloc, vertices.size());
     if (vertex_alloc != vertex_space)
     {
-        vertex_buffer = new Buffer(sizeof(Vertex) * vertex_alloc,
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        vertex_buffer = new Buffer(sizeof(Vertex) * vertex_alloc, BUFFER_USAGE_VERTEX,
+            MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
     }
 
     memcpy(vertex_buffer->mapMemory(), vertices.data(), vertices.size() * sizeof(Vertex));
@@ -48,9 +46,8 @@ void Mesh::updateData(vector<Vertex> vertices, vector<uint16_t> indices, size_t 
     index_alloc = max(index_alloc, indices.size());
     if (index_alloc != index_space)
     {
-        index_buffer = new Buffer(sizeof(uint16_t) * index_alloc,
-            VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        index_buffer = new Buffer(sizeof(uint16_t) * index_alloc, BUFFER_USAGE_INDEX,
+            MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
     }
 
     memcpy(index_buffer->mapMemory(), indices.data(), indices.size() * sizeof(uint16_t));
@@ -102,7 +99,7 @@ array<VkVertexInputAttributeDescription, 5> Mesh::getAttributeDescriptions()
     return attributes;
 }
 
-Mesh::Mesh(string path)
+Mesh::Mesh(const string& path)
 {
     origin = path;
     vector<Vertex> verts;
@@ -116,22 +113,20 @@ Mesh::Mesh(string path)
     DBG_INFO("created mesh from " + path + " with " + to_string(verts.size()) + " vertices and " + to_string(inds.size()) + " indices");
 }
 
-Mesh::Mesh(vector<Vertex> vertices, vector<uint16_t> indices, bool keep_accessible)
+Mesh::Mesh(const vector<Vertex>& vertices, const vector<uint16_t>& indices, const bool keep_accessible)
 {
     accessible = keep_accessible;
     if (!keep_accessible)
         createFromArrays(vertices, indices);
     else
     {
-        vertex_buffer = new Buffer(sizeof(Vertex) * vertices.size(),
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        vertex_buffer = new Buffer(sizeof(Vertex) * vertices.size(), BUFFER_USAGE_VERTEX,
+            MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
         memcpy(vertex_buffer->mapMemory(), vertices.data(), vertex_buffer->getSize());
         vertex_buffer->unmapMemory();
 
-        index_buffer = new Buffer(sizeof(uint16_t) * indices.size(),
-            VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        index_buffer = new Buffer(sizeof(uint16_t) * indices.size(), BUFFER_USAGE_INDEX,
+            MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
         memcpy(index_buffer->mapMemory(), indices.data(), index_buffer->getSize());
         index_buffer->unmapMemory();
 
@@ -154,13 +149,13 @@ Mesh::~Mesh()
 struct FaceCorner { uint16_t co; uint16_t uv; uint16_t vn; };
 
 // splits a formatted OBJ face corner into its component indices
-static inline FaceCorner splitOBJFaceCorner(string str)
+static FaceCorner splitOBJFaceCorner(const string& str)
 {
     FaceCorner fci = { 0,0,0 };
-    size_t first_break_ind = str.find('/');
+    const size_t first_break_ind = str.find('/');
     fci.co = static_cast<uint16_t>(stoi(str.substr(0, first_break_ind)) - 1);
     if (first_break_ind == string::npos) return fci;
-    size_t second_break_ind = str.find('/', first_break_ind + 1);
+    const size_t second_break_ind = str.find('/', first_break_ind + 1);
     if (second_break_ind != first_break_ind + 1)
         fci.uv = static_cast<uint16_t>(stoi(str.substr(first_break_ind + 1, second_break_ind - first_break_ind)) - 1);
     fci.vn = static_cast<uint16_t>(stoi(str.substr(second_break_ind + 1, str.find('/', second_break_ind + 1) - second_break_ind)) - 1);
@@ -211,7 +206,7 @@ static glm::vec3 computeTangent(glm::vec3 co_a, glm::vec3 co_b, glm::vec3 co_c, 
 bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>& inds)
 {
     auto file_data = Package::tryLoadFile(path);
-    auto string_data = string((char*)(file_data.data()), file_data.size());
+    auto string_data = string(reinterpret_cast<char*>(file_data.data()), file_data.size());
     auto stream = stringstream(string_data);
 
     // vectors to load data into
@@ -322,7 +317,7 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
         }
     }
 
-    if (tmp_vn.size() == 0)
+    if (tmp_vn.empty())
     {
         for (size_t i = 0; i < inds.size() - 2; i += 3)
         {
@@ -375,24 +370,20 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
 
 void Mesh::createFromArrays(vector<Vertex> verts, vector<uint16_t> inds)
 {
-    Ref<Buffer> staging_buffer = new Buffer(sizeof(Vertex) * verts.size(),
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    Ref<Buffer> staging_buffer = new Buffer(sizeof(Vertex) * verts.size(), BUFFER_USAGE_TRANSFER_SRC,
+        MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
     memcpy(staging_buffer->mapMemory(), verts.data(), staging_buffer->getSize());
     staging_buffer->unmapMemory();
     vertex_buffer = new Buffer(staging_buffer->getSize(),
-        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        BUFFER_USAGE_VERTEX | BUFFER_USAGE_TRANSFER_DST, MEMORY_PROPERTY_DEVICE_LOCAL);
     staging_buffer->copyToBuffer(vertex_buffer);
 
-    staging_buffer = new Buffer(sizeof(uint16_t) * inds.size(),
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    staging_buffer = new Buffer(sizeof(uint16_t) * inds.size(), BUFFER_USAGE_TRANSFER_SRC,
+        MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
     memcpy(staging_buffer->mapMemory(), inds.data(), staging_buffer->getSize());
     staging_buffer->unmapMemory();
     index_buffer = new Buffer(staging_buffer->getSize(),
-        VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        BUFFER_USAGE_INDEX | BUFFER_USAGE_TRANSFER_DST, MEMORY_PROPERTY_DEVICE_LOCAL);
     staging_buffer->copyToBuffer(index_buffer);
 
     vertex_space = verts.size();
@@ -403,7 +394,7 @@ void Mesh::createFromArrays(vector<Vertex> verts, vector<uint16_t> inds)
     recomputeBoundingBox(verts);
 }
 
-void Mesh::recomputeBoundingBox(vector<Vertex> verts)
+void Mesh::recomputeBoundingBox(const vector<Vertex>& verts)
 {
     if (verts.empty())
     {

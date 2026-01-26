@@ -132,6 +132,10 @@
       <Command>
       </Command>
     </PostBuildEvent>
+    <Lib>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)lib\bin\glfw-3.4.bin.WIN64\lib-vc2019;C:\VulkanSDK\1.4.313.0\Lib;$(USERPROFILE)\Documents\1.4.335.0\Lib;C:\VulkanSDK\1.4.335.0\Lib</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Content Include="res\engine\meshes\axes_gizmo.obj" />
@@ -206,6 +210,7 @@
     <ClInclude Include="inc\vulkan_typedefs.h" />
     <ClInclude Include="inc\window.h" />
     <ClInclude Include="src\main.h" />
+    <ClInclude Include="src\swapchain_vulkan.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lib\src\imgui.cpp" />

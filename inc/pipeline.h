@@ -1,34 +1,60 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
-
 #include "common.h"
+#include "vulkan_typedefs.h"
 
 namespace HopEngine
 {
 
+enum CullMode
+{
+	CULL_NONE = 0,
+	CULL_FRONT = 1,
+	CULL_BACK = 2
+};
+ENUM_OPERATOR(CullMode)
+
+enum PolygonMode
+{
+	POLYGON_FILL,
+	POLYGON_LINE,
+	POLYGON_POINT
+};
+
+enum CompareOp
+{
+	COMPARE_NEVER = 0,
+	COMPARE_LESS = 1,
+	COMPARE_EQUAL = 2,
+	COMPARE_LESS_OR_EQUAL = 3,
+	COMPARE_GREATER = 4,
+	COMPARE_NOT_EQUAL = 5,
+	COMPARE_GREATER_OR_EQUAL = 6,
+	COMPARE_ALWAYS = 7,
+};
+
 struct PipelineBuilder
 {
-	VkCullModeFlags culling_mode = VK_CULL_MODE_BACK_BIT;
-	VkPolygonMode polygon_mode = VK_POLYGON_MODE_FILL;
-	VkBool32 depth_write_enable = VK_TRUE;
-	VkBool32 depth_test_enable = VK_TRUE;
-	VkCompareOp depth_compare_op = VK_COMPARE_OP_LESS;
-	VkBool32 stencil_enable = VK_FALSE;
-	VkCompareOp stencil_compare_op = VK_COMPARE_OP_ALWAYS;
+	CullMode culling_mode = CULL_BACK;
+	PolygonMode polygon_mode = POLYGON_FILL;
+	bool depth_write_enable = true;
+	bool depth_test_enable = true;
+	CompareOp depth_compare_op = COMPARE_LESS;
+	bool stencil_enable = false;
+	CompareOp stencil_compare_op = COMPARE_ALWAYS;
 	uint32_t stencil_compare_value = 0xFFFFFFFF;
 	uint32_t stencil_compare_mask = 0xFFFFFFFF;
 	uint32_t stencil_write = 0;
 
-	inline PipelineBuilder cullMode(VkCullModeFlags value) { culling_mode = value; return *this; }
-	inline PipelineBuilder polygonMode(VkPolygonMode value) { polygon_mode = value; return *this; }
-	inline PipelineBuilder depthWrite(VkBool32 value) { depth_write_enable = value; return *this; }
-	inline PipelineBuilder depthTest(VkBool32 value) { depth_test_enable = value; return *this; }
-	inline PipelineBuilder depthOp(VkCompareOp value) { depth_compare_op = value; return *this; }
-	inline PipelineBuilder stencil() { stencil_enable = true; return *this; }
-	inline PipelineBuilder stencilCompare(VkCompareOp value, uint32_t compare_value, uint32_t compare_mask = 0xFFFFFFFF)
+	PipelineBuilder cullMode(CullMode value) { culling_mode = value; return *this; }
+	PipelineBuilder polygonMode(PolygonMode value) { polygon_mode = value; return *this; }
+	PipelineBuilder depthWrite(bool value) { depth_write_enable = value; return *this; }
+	PipelineBuilder depthTest(bool value) { depth_test_enable = value; return *this; }
+	PipelineBuilder depthOp(CompareOp value) { depth_compare_op = value; return *this; }
+	PipelineBuilder stencil() { stencil_enable = true; return *this; }
+	PipelineBuilder stencilCompare(CompareOp value, uint32_t compare_value, uint32_t compare_mask = 0xFFFFFFFF)
 	{ stencil_enable = true; stencil_compare_op = value; stencil_compare_value = compare_value; stencil_compare_mask = compare_mask;  return *this; }
-	inline PipelineBuilder stencilWrite(uint32_t value) { stencil_enable = true; stencil_write = value; return *this; }
+	PipelineBuilder stencilWrite(uint32_t value) { stencil_enable = true; stencil_write = value; return *this; }
 };
 
 class Pipeline : public Destructible
@@ -40,8 +66,8 @@ private:
 public:
 	DELETE_CONSTRUCTORS(Pipeline);
 
-	inline VkPipeline getPipeline() const { return pipeline; }
-	inline PipelineBuilder getConfig() const { return pipeline_config; }
+	VkPipeline getPipeline() const { return pipeline; }
+	PipelineBuilder getConfig() const { return pipeline_config; }
 	
 	Pipeline(Ref<Shader> shader, PipelineBuilder config, Ref<RenderPass> render_pass);
 	~Pipeline() override;

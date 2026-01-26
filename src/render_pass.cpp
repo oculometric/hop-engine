@@ -42,7 +42,7 @@ Ref<Texture> RenderPass::getImage(size_t attachment) const
 
 Ref<RenderPass> RenderPass::duplicate() const
 {
-    return new RenderPass(extent.width, extent.height, output_config);
+    return new RenderPass(extent.x, extent.y, output_config);
 }
 
 bool RenderPass::isCompatible(const Ref<RenderPass>& other) const
@@ -98,7 +98,7 @@ void RenderPass::createRenderPass(VkFormat main_colour_format, VkImageLayout fin
     for (size_t i = 0; i < output_config.additional_attachments; ++i)
     {
         VkAttachmentDescription attachment{ };
-        attachment.format = Texture::data_format;
+        attachment.format = Texture::getDataFormat();
         attachment.samples = VK_SAMPLE_COUNT_1_BIT;
         attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -112,7 +112,7 @@ void RenderPass::createRenderPass(VkFormat main_colour_format, VkImageLayout fin
     if (output_config.has_depth_attachment)
     {
         VkAttachmentDescription depth_attachment{ };
-        depth_attachment.format = Texture::depth_format;
+        depth_attachment.format = Texture::getDepthFormat();
         depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
         depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -208,17 +208,17 @@ void RenderPass::createResources(Ref<Swapchain> swapchain)
     auto texture_extent = swapchain->getExtent();
     extent = texture_extent;
     if (output_config.has_depth_attachment)
-        depth_texture = new Texture(texture_extent.width, texture_extent.height, Texture::depth_format);
+        depth_texture = new Texture(texture_extent.x, texture_extent.y, Texture::getDepthFormat());
     for (size_t i = 0; i < output_config.additional_attachments; ++i)
-        additional_textures.push_back(new Texture(texture_extent.width, texture_extent.height, Texture::data_format));
+        additional_textures.push_back(new Texture(texture_extent.x, texture_extent.y, Texture::getDataFormat()));
 
     // create framebuffers to actually render into
     framebuffers.resize(swapchain->getImageCount());
     for (size_t i = 0; i < framebuffers.size(); ++i)
     {
         vector<VkImageView> image_attachments = { swapchain->getImage(i) };
-        for (size_t i = 0; i < output_config.additional_attachments; ++i)
-            image_attachments.push_back(additional_textures[i]->getView());
+        for (size_t j = 0; j < output_config.additional_attachments; ++j)
+            image_attachments.push_back(additional_textures[j]->getView());
         if (output_config.has_depth_attachment)
             image_attachments.push_back(depth_texture->getView());
 
@@ -227,8 +227,8 @@ void RenderPass::createResources(Ref<Swapchain> swapchain)
         framebuffer_create_info.renderPass = render_pass;
         framebuffer_create_info.attachmentCount = static_cast<uint32_t>(image_attachments.size());
         framebuffer_create_info.pAttachments = image_attachments.data();
-        framebuffer_create_info.width = swapchain->getExtent().width;
-        framebuffer_create_info.height = swapchain->getExtent().height;
+        framebuffer_create_info.width = swapchain->getExtent().x;
+        framebuffer_create_info.height = swapchain->getExtent().y;
         framebuffer_create_info.layers = 1;
 
         if (vkCreateFramebuffer(RenderServer::getDevice(), &framebuffer_create_info, nullptr, &framebuffers[i]) != VK_SUCCESS)
@@ -238,22 +238,22 @@ void RenderPass::createResources(Ref<Swapchain> swapchain)
 
 void RenderPass::createResources(VkFormat main_colour_format, uint32_t width, uint32_t height)
 {
-    extent = VkExtent2D{ width, height };
+    extent = { width, height };
     // create texture buffers to back everything
     additional_textures.push_back(new Texture(width, height, main_colour_format,
-        TextureBuilder().usage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)));
+        TextureBuilder().usage(IMAGE_USAGE_COLOR_ATTACHMENT | IMAGE_USAGE_SAMPLED)));
     if (output_config.has_depth_attachment)
-        depth_texture = new Texture(width, height, Texture::depth_format,
-            TextureBuilder().usage(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT));
+        depth_texture = new Texture(width, height, Texture::getDepthFormat(),
+            TextureBuilder().usage(IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT | IMAGE_USAGE_SAMPLED));
     for (size_t i = 0; i < output_config.additional_attachments; ++i)
-        additional_textures.push_back(new Texture(width, height, Texture::data_format,
-            TextureBuilder().usage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)));
+        additional_textures.push_back(new Texture(width, height, Texture::getDataFormat(),
+            TextureBuilder().usage(IMAGE_USAGE_COLOR_ATTACHMENT | IMAGE_USAGE_SAMPLED)));
 
     // create framebuffers to actually render into
     framebuffers.resize(1);
     vector<VkImageView> image_attachments;
-    for (size_t i = 0; i < additional_textures.size(); ++i)
-        image_attachments.push_back(additional_textures[i]->getView());
+    for (auto& additional_texture : additional_textures)
+        image_attachments.push_back(additional_texture->getView());
     if (output_config.has_depth_attachment)
         image_attachments.push_back(depth_texture->getView());
 
@@ -266,6 +266,6 @@ void RenderPass::createResources(VkFormat main_colour_format, uint32_t width, ui
     framebuffer_create_info.height = height;
     framebuffer_create_info.layers = 1;
 
-    if (vkCreateFramebuffer(RenderServer::getDevice(), &framebuffer_create_info, nullptr, &framebuffers[0]) != VK_SUCCESS)
+    if (vkCreateFramebuffer(RenderServer::getDevice(), &framebuffer_create_info, nullptr, framebuffers.data()) != VK_SUCCESS)
         DBG_FAULT("vkCreateFramebuffer failed");
 }

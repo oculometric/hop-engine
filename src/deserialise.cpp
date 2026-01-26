@@ -17,7 +17,7 @@
 using namespace HopEngine;
 using namespace std;
 
-int getArgument(string name, string& result, TokenReader::TokenType type, const vector<pair<string, TokenReader::Token>>& args)
+int getArgument(const string& name, string& result, TokenReader::TokenType type, const vector<pair<string, TokenReader::Token>>& args)
 {
 	for (const auto& arg : args)
 	{
@@ -35,7 +35,7 @@ bool getAnonArgument(size_t index, string& result, TokenReader::TokenType type, 
 {
 	if (index >= args.size())
 		return false;
-	if (args[index].first != "")
+	if (!args[index].first.empty())
 		return false;
 	if (args[index].second.type != type)
 		return false;
@@ -47,7 +47,7 @@ bool getAnonArgument(size_t index, glm::vec4& result, const vector<pair<string, 
 {
 	if (index >= args.size())
 		return false;
-	if (args[index].first != "")
+	if (!args[index].first.empty())
 		return false;
 	if (args[index].second.type != TokenReader::VECTOR)
 		return false;
@@ -59,7 +59,7 @@ bool getAnonArgument(size_t index, float& result, const vector<pair<string, Toke
 {
 	if (index >= args.size())
 		return false;
-	if (args[index].first != "")
+	if (!args[index].first.empty())
 		return false;
 	if (args[index].second.type == TokenReader::FLOAT)
 	{
@@ -74,31 +74,31 @@ bool getAnonArgument(size_t index, float& result, const vector<pair<string, Toke
 	return false;
 }
 
-static VkCompareOp getCompareOp(string str)
+static CompareOp getCompareOp(const string& str)
 {
-	static map<string, VkCompareOp> op_map =
+	static map<string, CompareOp> op_map =
 	{
-		{ "ALWAYS", VK_COMPARE_OP_ALWAYS },
-		{ "EQUAL", VK_COMPARE_OP_EQUAL },
-		{ "GREATER", VK_COMPARE_OP_GREATER },
-		{ "GREATER_EQUAL", VK_COMPARE_OP_GREATER_OR_EQUAL },
-		{ "LESS", VK_COMPARE_OP_LESS },
-		{ "LESS_EQUAL", VK_COMPARE_OP_LESS_OR_EQUAL },
-		{ "NEVER", VK_COMPARE_OP_NEVER },
-		{ "NOT_EQUAL", VK_COMPARE_OP_NOT_EQUAL }
+		{ "ALWAYS", COMPARE_ALWAYS },
+		{ "EQUAL", COMPARE_EQUAL },
+		{ "GREATER", COMPARE_GREATER },
+		{ "GREATER_EQUAL", COMPARE_GREATER_OR_EQUAL },
+		{ "LESS", COMPARE_LESS },
+		{ "LESS_EQUAL", COMPARE_LESS_OR_EQUAL },
+		{ "NEVER", COMPARE_NEVER },
+		{ "NOT_EQUAL", COMPARE_NOT_EQUAL }
 	};
 	auto it = op_map.find(str);
 	if (it == op_map.end())
-		return VK_COMPARE_OP_MAX_ENUM;
+		return (CompareOp)-1;
 	return it->second;
 }
 
-static VkBool32 getBool(string str)
+static int getBool(const string& str)
 {
-	static map<string, VkBool32> bool_map =
+	static map<string, bool> bool_map =
 	{
-		{ "TRUE", VK_TRUE },
-		{ "FALSE", VK_FALSE }
+		{ "TRUE", true },
+		{ "FALSE", false }
 	};
 	auto it = bool_map.find(str);
 	if (it == bool_map.end())
@@ -106,62 +106,62 @@ static VkBool32 getBool(string str)
 	return it->second;
 }
 
-static VkCullModeFlags getCullMode(string str)
+static CullMode getCullMode(const string& str)
 {
-	static map<string, VkCullModeFlags> cull_map =
+	static map<string, CullMode> cull_map =
 	{
-		{ "NONE", VK_CULL_MODE_NONE },
-		{ "FRONT", VK_CULL_MODE_FRONT_BIT },
-		{ "BACK", VK_CULL_MODE_BACK_BIT }
+		{ "NONE", CULL_NONE },
+		{ "FRONT", CULL_FRONT },
+		{ "BACK", CULL_BACK }
 	};
 	auto it = cull_map.find(str);
 	if (it == cull_map.end())
-		return VK_CULL_MODE_FLAG_BITS_MAX_ENUM;
+		return (CullMode)-1;
 	return it->second;
 }
 
-static VkPolygonMode getPolygonMode(string str)
+static PolygonMode getPolygonMode(const string& str)
 {
-	static map<string, VkPolygonMode> polygon_map =
+	static map<string, PolygonMode> polygon_map =
 	{
-		{ "FILL", VK_POLYGON_MODE_FILL },
-		{ "LINE", VK_POLYGON_MODE_LINE },
-		{ "POINT", VK_POLYGON_MODE_POINT }
+		{ "FILL", POLYGON_FILL },
+		{ "LINE", POLYGON_LINE },
+		{ "POINT", POLYGON_POINT }
 	};
 	auto it = polygon_map.find(str);
 	if (it == polygon_map.end())
-		return VK_POLYGON_MODE_MAX_ENUM;
+		return (PolygonMode)-1;
 	return it->second;
 }
 
-static VkFilter getFilter(string str)
+static SamplerFilter getFilter(const string& str)
 {
-	static map<string, VkFilter> filter_map =
+	static map<string, SamplerFilter> filter_map =
 	{
-		{ "LINEAR", VK_FILTER_LINEAR },
-		{ "NEAREST", VK_FILTER_NEAREST },
+		{ "LINEAR", FILTER_LINEAR },
+		{ "NEAREST", FILTER_NEAREST },
 	};
 	auto it = filter_map.find(str);
 	if (it == filter_map.end())
-		return VK_FILTER_MAX_ENUM;
+		return (SamplerFilter)-1;
 	return it->second;
 }
 
-static VkSamplerAddressMode getAddressMode(string str)
+static SamplerAddress getAddressMode(const string& str)
 {
-	static map<string, VkSamplerAddressMode> address_map =
+	static map<string, SamplerAddress> address_map =
 	{
-		{ "REPEAT", VK_SAMPLER_ADDRESS_MODE_REPEAT },
-		{ "MIRROR", VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT },
-		{ "CLAMP", VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }
+		{ "REPEAT", ADDRESS_REPEAT },
+		{ "MIRROR", ADDRESS_MIRRORED },
+		{ "CLAMP", ADDRESS_CLAMP_EDGE }
 	};
 	auto it = address_map.find(str);
 	if (it == address_map.end())
-		return VK_SAMPLER_ADDRESS_MODE_MAX_ENUM;
+		return (SamplerAddress)-1;
 	return it->second;
 }
 
-Ref<Material> Material::deserialise(string name)
+Ref<Material> Material::deserialise(const string& name)
 {
 	auto raw_data = Package::tryLoadFile(name);
 	if (raw_data.empty())
@@ -219,8 +219,8 @@ Ref<Material> Material::deserialise(string name)
 			auto it = args.find("operation");
 			if (it != args.end())
 			{
-				VkCompareOp operation = getCompareOp(it->second.s_value);
-				if (operation == VK_COMPARE_OP_MAX_ENUM)
+				CompareOp operation = getCompareOp(it->second.s_value);
+				if (operation == (CompareOp)-1)
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid depth operation value");
 					return nullptr;
@@ -230,8 +230,8 @@ Ref<Material> Material::deserialise(string name)
 			it = args.find("test");
 			if (it != args.end())
 			{
-				VkBool32 test = getBool(it->second.s_value);
-				if (test == (VkBool32)-1)
+				int test = getBool(it->second.s_value);
+				if (test == -1)
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid depth test value");
 					return nullptr;
@@ -241,8 +241,8 @@ Ref<Material> Material::deserialise(string name)
 			it = args.find("write");
 			if (it != args.end())
 			{
-				VkBool32 write = getBool(it->second.s_value);
-				if (write == (VkBool32)-1)
+				int write = getBool(it->second.s_value);
+				if (write == -1)
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid depth write value");
 					return nullptr;
@@ -261,8 +261,8 @@ Ref<Material> Material::deserialise(string name)
 			auto it = args.find("mode");
 			if (it != args.end())
 			{
-				VkCullModeFlags cull = getCullMode(it->second.s_value);
-				if (cull == VK_CULL_MODE_FLAG_BITS_MAX_ENUM)
+				CullMode cull = getCullMode(it->second.s_value);
+				if (cull == (CullMode)-1)
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid culling mode value");
 					return nullptr;
@@ -281,8 +281,8 @@ Ref<Material> Material::deserialise(string name)
 			auto it = args.find("mode");
 			if (it != args.end())
 			{
-				VkPolygonMode polygon = getPolygonMode(it->second.s_value);
-				if (polygon == VK_POLYGON_MODE_MAX_ENUM)
+				PolygonMode polygon = getPolygonMode(it->second.s_value);
+				if (polygon == (PolygonMode)-1)
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid polygon mode value");
 					return nullptr;
@@ -301,8 +301,8 @@ Ref<Material> Material::deserialise(string name)
 					{ "write_mask", { TokenReader::INT, false } },
 				}, args, "error deserialising material '" + name + "'"))
 				return nullptr;
-			VkCompareOp compare = getCompareOp(args["compare"].s_value);
-			if (compare == VK_COMPARE_OP_MAX_ENUM)
+			CompareOp compare = getCompareOp(args["compare"].s_value);
+			if (compare == (CompareOp)-1)
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid stencil compare op value");
 				return nullptr;
@@ -385,8 +385,8 @@ Ref<Material> Material::deserialise(string name)
 		it = args.find("filter");
 		if (it != args.end())
 		{
-			VkFilter filter = getFilter(it->second.s_value);
-			if (filter == VK_FILTER_MAX_ENUM)
+			SamplerFilter filter = getFilter(it->second.s_value);
+			if (filter == (SamplerFilter)-1)
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor filter value");
 				return nullptr;
@@ -396,8 +396,8 @@ Ref<Material> Material::deserialise(string name)
 		it = args.find("address");
 		if (it != args.end())
 		{
-			VkSamplerAddressMode address = getAddressMode(it->second.s_value);
-			if (address == VK_SAMPLER_ADDRESS_MODE_MAX_ENUM)
+			SamplerAddress address = getAddressMode(it->second.s_value);
+			if (address == (SamplerAddress)-1)
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor address value");
 				return nullptr;
@@ -501,8 +501,8 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 					TokenReader::INT
 				}, args, "error deserialising render graph '" + name + "'"))
 				return nullptr;
-			VkBool32 has_depth = getBool(args[0].s_value);
-			if (has_depth == (VkBool32)-1)
+			int has_depth = getBool(args[0].s_value);
+			if (has_depth == -1)
 			{
 				DBG_ERROR("error deserialising render graph '" + name + "': invalid 'depth enabled' value for render pass descriptor");
 				return nullptr;
@@ -622,8 +622,8 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 				auto filter_it = args2.find("filter");
 				if (filter_it != args2.end())
 				{
-					VkFilter filter = getFilter(filter_it->second.s_value);
-					if (filter == VK_FILTER_MAX_ENUM)
+					SamplerFilter filter = getFilter(filter_it->second.s_value);
+					if (filter == (SamplerFilter)-1)
 					{
 						DBG_ERROR("error deserialising render graph '" + name + "': invalid post-process input filter value");
 						return nullptr;
@@ -633,8 +633,8 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 				filter_it = args2.find("address");
 				if (filter_it != args2.end())
 				{
-					VkSamplerAddressMode address = getAddressMode(filter_it->second.s_value);
-					if (address == VK_SAMPLER_ADDRESS_MODE_MAX_ENUM)
+					SamplerAddress address = getAddressMode(filter_it->second.s_value);
+					if (address == (SamplerAddress)-1)
 					{
 						DBG_ERROR("error deserialising render graph '" + name + "': invalid post-process input address mode value");
 						return nullptr;

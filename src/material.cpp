@@ -1,7 +1,6 @@
 #include "material.h"
 
-#include <glm/glm.hpp>
-#include <vulkan/vulkan_to_string.hpp>
+#include <vulkan/vulkan.hpp>
 
 #include "graphics_environment.h"
 #include "render_pass.h"
@@ -113,7 +112,7 @@ Material::Material(Ref<Shader> _shader, PipelineBuilder config, Ref<RenderPass> 
 	render_pass = _render_pass.isValid() ? _render_pass : RenderServer::getMainRenderPass();
 	shader = _shader;
 	pipeline = new Pipeline(shader, config, render_pass);
-	debug_pipeline = new Pipeline(shader, PipelineBuilder().polygonMode(VK_POLYGON_MODE_LINE), render_pass);
+	debug_pipeline = new Pipeline(shader, PipelineBuilder().polygonMode(POLYGON_LINE), render_pass);
 
 	auto layout = shader->getShaderLayout();
 	uniforms = new UniformBlock(layout);

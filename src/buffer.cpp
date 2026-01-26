@@ -10,6 +10,23 @@
 using namespace HopEngine;
 using namespace std;
 
+static constexpr VkBufferUsageFlagBits vulkan_buffer_usage[5] = 
+{
+    VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+};
+
+static constexpr VkMemoryPropertyFlagBits vulkan_memory_props[4] = 
+{
+    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+    VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+    VK_MEMORY_PROPERTY_HOST_CACHED_BIT
+};
+
 void* Buffer::mapMemory()
 {
     if (mapped == nullptr)
@@ -27,8 +44,9 @@ void Buffer::unmapMemory()
     mapped = nullptr;
 }
 
-uint32_t Buffer::findMemoryType(uint32_t type_bits, VkMemoryPropertyFlags properties)
+uint32_t Buffer::findMemoryType(uint32_t type_bits, MemoryProperties _properties)
 {
+    const VkMemoryPropertyFlags properties = convertFlags<VkMemoryPropertyFlagBits, MemoryProperties, 4>(_properties, vulkan_memory_props);
     VkPhysicalDeviceMemoryProperties memory_properties;
     vkGetPhysicalDeviceMemoryProperties(RenderServer::getPhysicalDevice(), &memory_properties);
 
@@ -55,19 +73,9 @@ void Buffer::copyToBuffer(Ref<Buffer> other) const
     cmd_buf->submit();
 }
 
-static constexpr VkBufferUsageFlagBits vulkan_buffer_usage[5] = 
+Buffer::Buffer(VkDeviceSize size, BufferUsage _usage, MemoryProperties properties)
 {
-    VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-    VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-    VK_BUFFER_USAGE_INDEX_BUFFER_BIT
-};
-
-
-Buffer::Buffer(VkDeviceSize size, BufferUsage _usage, VkMemoryPropertyFlags properties)
-{
-    const VkBufferUsageFlags usage = //vulkan_buffer_usage[_usage]; // TODO: convert buffer usage BITS into vulkan buffer usage
+    const VkBufferUsageFlags usage = convertFlags<VkBufferUsageFlagBits, BufferUsage, 5>(_usage, vulkan_buffer_usage);
     
     if (size == 0)
     {

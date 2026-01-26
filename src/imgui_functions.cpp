@@ -350,40 +350,30 @@ bool Sampler::drawImGuiDebug()
 {
 #if !defined(STANDALONE)
 	ImGui::PushID(this);
-	ImGui::LabelText("filter", "%s", vk::to_string((vk::Filter)builder.filtering_mode).c_str());
-	VkFilter new_mode = builder.filtering_mode;
+	static std::string filter_names[2] = 
+	{
+		"NEAREST",
+		"LINEAR"
+	};
+	static std::string address_names[3] = 
+	{
+		"REPEAT",
+		"MIRRORED",
+		"CLAMP TO EDGE"
+	};
+	ImGui::LabelText("filter", "%s", filter_names[builder.filtering_mode].c_str());
+	SamplerFilter new_mode = builder.filtering_mode;
 	if (ImGui::Button("switch filtering"))
-		new_mode = (VkFilter)((new_mode + 1) % 2);
-	ImGui::LabelText("address", "%s", vk::to_string((vk::SamplerAddressMode)builder.address_mode).c_str());
-	VkSamplerAddressMode new_address = builder.address_mode;
+		new_mode = (SamplerFilter)((new_mode + 1) % 2);
+	ImGui::LabelText("address", "%s", address_names[builder.address_mode].c_str());
+	SamplerAddress new_address = builder.address_mode;
 	if (ImGui::Button("switch addressing"))
-		new_address = (VkSamplerAddressMode)((new_address + 1) % 5);
+		new_address = (SamplerAddress)((new_address + 1) % 3);
 	if (new_mode != builder.filtering_mode || new_address != builder.address_mode)
 	{
-		vkDestroySampler(RenderServer::getDevice(), sampler, nullptr);
 		builder.filtering_mode = new_mode;
 		builder.address_mode = new_address;
-		VkSamplerCreateInfo create_info{ };
-		create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		create_info.magFilter = builder.filtering_mode;
-		create_info.minFilter = builder.filtering_mode;
-		create_info.addressModeU = builder.address_mode;
-		create_info.addressModeV = builder.address_mode;
-		create_info.addressModeW = builder.address_mode;
-		VkPhysicalDeviceProperties properties{ };
-		vkGetPhysicalDeviceProperties(RenderServer::getPhysicalDevice(), &properties);
-		create_info.anisotropyEnable = VK_TRUE;
-		create_info.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-		create_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-		create_info.unnormalizedCoordinates = VK_FALSE;
-		create_info.compareEnable = VK_FALSE;
-		create_info.compareOp = VK_COMPARE_OP_ALWAYS;
-		create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-		create_info.mipLodBias = 0.0f;
-		create_info.minLod = 0.0f;
-		create_info.maxLod = 0.0f;
-		if (vkCreateSampler(RenderServer::getDevice(), &create_info, nullptr, &sampler) != VK_SUCCESS)
-			DBG_FAULT("vkCreateSampler failed");
+		reconfigure(builder);
 		ImGui::PopID();
 		return true;
 	}
@@ -765,7 +755,7 @@ void RenderGraph::drawImGuiDebug()
 		ImGui::TableSetColumnIndex(1);
 		ImGui::Text("%s", pass.is_camera ? "camera" : "post-process");		
 		ImGui::TableSetColumnIndex(2);
-		ImGui::Text("%i x %i", pass.render_pass->getExtent().width, pass.render_pass->getExtent().height);
+		ImGui::Text("%i x %i", pass.render_pass->getExtent().x, pass.render_pass->getExtent().y);
 		ImGui::TableSetColumnIndex(3);
 		bool b = !pass.skipped;
 		if (ImGui::Checkbox("", &b))
@@ -813,7 +803,7 @@ void RenderGraph::drawImGuiDebug()
 		if (pass.resolution_scale > 0)
 			ImGui::LabelText("resolution scale", "%.2f", pass.resolution_scale);
 		else
-			ImGui::LabelText("custom resolution", "%i x %i", pass.custom_extent.width, pass.custom_extent.height);
+			ImGui::LabelText("custom resolution", "%i x %i", pass.custom_extent.x, pass.custom_extent.y);
 		ImGui::Separator();
 		ImGui::Text("output attachments:");
 		ImGui::LabelText("colour", "always present");

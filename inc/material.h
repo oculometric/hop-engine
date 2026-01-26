@@ -1,11 +1,10 @@
 #pragma once
 
 #include <map>
-#include <vector>
-#include <vulkan/vulkan.hpp>
 #include <glm/glm.hpp>
 
 #include "common.h"
+#include "vulkan_typedefs.h"
 #include "shader.h"
 #include "render_pass.h"
 #include "pipeline.h"
@@ -36,34 +35,34 @@ public:
 	Ref<Shader> getShader() const;
 	Ref<RenderPass> getRenderPass() const;
 	Ref<Material> duplicate() const;
-	inline std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
+	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 	
 	void setTexture(uint32_t binding, Ref<Texture> texture, bool use_stencil = false);
 	void setSampler(uint32_t binding, Ref<Sampler> sampler);
 	void setTexture(std::string name, Ref<Texture> texture, bool use_stencil = false);
 	void setSampler(std::string name, Ref<Sampler> sampler);
 
-	inline void setFloatUniform(std::string name, float value) { setUniform(name, &value, sizeof(value)); }
-	inline void setVec2Uniform(std::string name, glm::vec2 value) { setUniform(name, &value, sizeof(value)); }
-	inline void setVec3Uniform(std::string name, glm::vec3 value) { setUniform(name, &value, sizeof(value)); }
-	inline void setVec4Uniform(std::string name, glm::vec4 value) { setUniform(name, &value, sizeof(value)); }
+	void setFloatUniform(const std::string& name, float value) { setUniform(name, &value, sizeof(value)); }
+	void setVec2Uniform(const std::string& name, glm::vec2 value) { setUniform(name, &value, sizeof(value)); }
+	void setVec3Uniform(const std::string& name, glm::vec3 value) { setUniform(name, &value, sizeof(value)); }
+	void setVec4Uniform(const std::string& name, glm::vec4 value) { setUniform(name, &value, sizeof(value)); }
 
-	inline void setIntUniform(std::string name, int value) { setUniform(name, &value, sizeof(value)); }
-	inline void setIvec2Uniform(std::string name, glm::ivec2 value) { setUniform(name, &value, sizeof(value)); }
-	inline void setIvec3Uniform(std::string name, glm::ivec3 value) { setUniform(name, &value, sizeof(value)); }
-	inline void setIvec4Uniform(std::string name, glm::ivec4 value) { setUniform(name, &value, sizeof(value)); }
+	void setIntUniform(const std::string& name, int value) { setUniform(name, &value, sizeof(value)); }
+	void setIvec2Uniform(const std::string& name, glm::ivec2 value) { setUniform(name, &value, sizeof(value)); }
+	void setIvec3Uniform(const std::string& name, glm::ivec3 value) { setUniform(name, &value, sizeof(value)); }
+	void setIvec4Uniform(const std::string& name, glm::ivec4 value) { setUniform(name, &value, sizeof(value)); }
 
-	inline void setUintUniform(std::string name, glm::uint value) { setUniform(name, &value, sizeof(value)); }
+	void setUintUniform(const std::string& name, glm::uint value) { setUniform(name, &value, sizeof(value)); }
+	
+	void setBoolUniform(const std::string& name, bool value) { setUniform(name, &value, sizeof(uint32_t)); }
 
-	inline void setBoolUniform(std::string name, bool value) { VkBool32 expanded = value; setUniform(name, &expanded, sizeof(VkBool32)); }
-
-	inline void setMat2Uniform(std::string name, glm::mat2 value) { setUniform(name, &value, sizeof(value)); }
-	inline void setMat3Uniform(std::string name, glm::mat3 value) { setUniform(name, &value, sizeof(value)); }
-	inline void setMat4Uniform(std::string name, glm::mat4 value) { setUniform(name, &value, sizeof(value)); }
+	void setMat2Uniform(const std::string& name, glm::mat2 value) { setUniform(name, &value, sizeof(value)); }
+	void setMat3Uniform(const std::string& name, glm::mat3 value) { setUniform(name, &value, sizeof(value)); }
+	void setMat4Uniform(const std::string& name, glm::mat4 value) { setUniform(name, &value, sizeof(value)); }
 
 	void setUniform(std::string name, void* data, size_t size);
 
-	static Ref<Material> deserialise(std::string name);
+	static Ref<Material> deserialise(const std::string& name);
 
 	void drawImGuiDebug();
 

@@ -106,7 +106,7 @@ Ref<Scene> initMuseumScene()
     cc_material->setFloatUniform("exposure", 1.0f);
     cc_material->setFloatUniform("offset", 0.0f);
     cc_material->setTexture("lut", Engine::loadTexture3D("res://museum/lut.png", 8, 8));
-    cc_material->setSampler("lut", new Sampler(SamplerBuilder().address(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE)));
+    cc_material->setSampler("lut", new Sampler(SamplerBuilder().address(ADDRESS_CLAMP_EDGE)));
     cc_material->setFloatUniform("use_lut", 1);
     Engine::debugClearSelection(WeakRef<Object>(), WeakRef<Material>(), scene->getCamera(0));
 
