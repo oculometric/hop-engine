@@ -206,6 +206,11 @@ static glm::vec3 computeTangent(glm::vec3 co_a, glm::vec3 co_b, glm::vec3 co_c, 
 bool Mesh::readFileToArrays(const string& path, vector<Vertex>& verts, vector<uint16_t>& inds)
 {
     const auto file_data = Package::tryLoadFile(path);
+    if (file_data.size() < 4)
+    {
+        DBG_WARNING("mesh file " + path + " is empty or does not exist");
+        return false;
+    }
     const auto string_data = string(reinterpret_cast<const char*>(file_data.data()), file_data.size());
     auto stream = stringstream(string_data);
 

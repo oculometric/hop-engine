@@ -2,7 +2,6 @@
 
 ## v0.51
 - actually add comments to everything
-- fix crash with empty object file [H]
 - better support for object transforms, including world-space transform operations and quaternion support [H]
 - improve scene tree so that objects know about their scene, and children, and can be removed [M]
 ---
