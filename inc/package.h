@@ -21,25 +21,25 @@ public:
 	static void init();
 	static void destroy();
 
-	static bool loadPackage(std::string load_path);
-	static bool storePackage(std::string store_path);
-	static std::vector<std::string> listLoadedEntries();
-	static bool storeCompressedPackage(std::string store_path);
-	static std::vector<uint8_t> loadData(std::string identifier);
-	static void storeData(std::string identifier, std::vector<uint8_t> data);
-	static std::vector<uint8_t> tryLoadFile(std::string path_or_identifier);
-	static void tryWriteFile(std::string path, std::vector<uint8_t> data);
 #if defined(_WIN32)
 	static inline std::string getTempPath() { return "C:/tmp/"; }
 #else
 	static inline std::string getTempPath() { return "/tmp/"; }
 #endif
+	static bool loadPackage(const std::string& load_path);
+	static std::vector<std::string> listLoadedEntries();
+	static std::vector<uint8_t> loadData(const std::string& identifier);
+	static std::vector<uint8_t> tryLoadFile(const std::string& path_or_identifier);
+	static bool storePackage(const std::string& store_path);
+	static bool storeCompressedPackage(const std::string& store_path);
+	static void storeData(const std::string& identifier, const std::vector<uint8_t>& data);
+	static void tryWriteFile(const std::string& path, const std::vector<uint8_t>& data);
 
 private:
-	static std::vector<uint8_t> loadCompressedPackage(std::vector<uint8_t> data);
-	
 	Package() = default;
 	~Package();
+	
+	static std::vector<uint8_t> loadCompressedPackage(const std::vector<uint8_t>& data);
 };
 
 }

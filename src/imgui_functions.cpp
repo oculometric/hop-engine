@@ -29,12 +29,12 @@ static WeakRef<Material> selected_material;
 static Camera* selected_camera;
 
 #if !defined(STANDALONE)
-Ref<Texture> texturePicker(Ref<Texture> current, const char* str)
+static Ref<Texture> texturePicker(const Ref<Texture>& current, const char* str)
 {
 	auto options = Engine::getAllRefs<Texture>();
-	options.push_back(WeakRef<Texture>(nullptr));
+	options.emplace_back(nullptr);
 	int selected = 0;
-	while (selected < (options.size() - 1) && options[selected] != current)
+	while (static_cast<size_t>(selected) < (options.size() - 1) && options[selected] != current)
 		++selected;
 	string options_str;
 	for (auto opt : options)
@@ -46,12 +46,12 @@ Ref<Texture> texturePicker(Ref<Texture> current, const char* str)
 	return options[selected];
 }
 
-Ref<Mesh> meshPicker(Ref<Mesh> current, const char* str)
+static Ref<Mesh> meshPicker(const Ref<Mesh>& current, const char* str)
 {
 	auto options = Engine::getAllRefs<Mesh>();
-	options.push_back(WeakRef<Mesh>(nullptr));
+	options.emplace_back(nullptr);
 	int selected = 0;
-	while (selected < (options.size() - 1) && options[selected] != current)
+	while (static_cast<size_t>(selected) < (options.size() - 1) && options[selected] != current)
 		++selected;
 	string options_str;
 	for (auto opt : options)
@@ -63,12 +63,12 @@ Ref<Mesh> meshPicker(Ref<Mesh> current, const char* str)
 	return options[selected];
 }
 
-Ref<Material> materialPicker(Ref<Material> current, const char* str)
+static Ref<Material> materialPicker(const Ref<Material>& current, const char* str)
 {
 	auto options = Engine::getAllRefs<Material>();
-	options.push_back(WeakRef<Material>(nullptr));
+	options.emplace_back(nullptr);
 	int selected = 0;
-	while (selected < (options.size() - 1) && options[selected] != current)
+	while (static_cast<size_t>(selected) < (options.size() - 1) && options[selected] != current)
 		++selected;
 	string options_str;
 	for (auto opt : options)
@@ -92,13 +92,13 @@ void Object::drawImGuiDebug()
 	if (ImGui::CollapsingHeader("local transform", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		glm::vec3 vec = transform.getLocalPosition();
-		ImGui::DragFloat3("position", (float*)&vec, 0.02f);
+		ImGui::DragFloat3("position", reinterpret_cast<float*>(&vec), 0.02f);
 		transform.setLocalPosition(vec);
 		vec = transform.getLocalEuler();
-		ImGui::DragFloat3("euler", (float*)&vec, 0.5f);
+		ImGui::DragFloat3("euler", reinterpret_cast<float*>(&vec), 0.5f);
 		transform.setLocalEuler(vec);
 		vec = transform.getLocalScale();
-		ImGui::DragFloat3("scale", (float*)&vec, 0.05f);
+		ImGui::DragFloat3("scale", reinterpret_cast<float*>(&vec), 0.05f);
 		transform.setLocalScale(vec);
 	}
 #endif
@@ -113,7 +113,7 @@ void Camera::drawImGuiDebug()
 		ImGui::DragFloat("near clip", &near_clip, 0.1f, 0.001f, far_clip, "%.3f", ImGuiSliderFlags_Logarithmic);
 		ImGui::DragFloat("far clip", &far_clip, 1.0f, near_clip, 1000.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
 		ImGui::DragFloat("fov", &fov, 1.0f, 1.0f, 179.0f);
-		ImGui::ColorEdit3("clear colour", (float*)&clear_colour);
+		ImGui::ColorEdit3("clear colour", reinterpret_cast<float*>(&clear_colour));
 		if (ImGui::Button("take control"))
 			selected_camera = this;
 	}
@@ -129,10 +129,10 @@ void StaticMesh::drawImGuiDebug()
 		mesh = meshPicker(mesh, "mesh data");
 		if (mesh)
 		{
-			ImGui::LabelText("vertices", "%i", mesh->getVertexCount());
-			ImGui::LabelText("triangles", "%i", mesh->getIndexCount() / 3);
-			ImGui::LabelText("vertex size", "%i", sizeof(Vertex));
-			ImGui::LabelText("vertex attributes", "%i", mesh->getAttributeDescriptions().size());
+			ImGui::LabelText("vertices", "%zu", mesh->getVertexCount());
+			ImGui::LabelText("triangles", "%zu", mesh->getIndexCount() / 3);
+			ImGui::LabelText("vertex size", "%llu", sizeof(Vertex));
+			ImGui::LabelText("vertex attributes", "%zu", Mesh::getAttributeDescriptions().size());
 		}
 		material = materialPicker(material, "material");
 		if (material)
@@ -171,12 +171,12 @@ void TextBlock::drawImGuiDebug()
 	Object::drawImGuiDebug();
 	if (ImGui::CollapsingHeader("text block params", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		static char tmp[513] = { '\0' };
-		memcpy(tmp, text.data(), std::min((size_t)512, (size_t)text.size()));
-		tmp[std::min((size_t)512, (size_t)text.size())] = '\0';
+		static char tmp[513] = { };
+		memcpy(tmp, text.data(), std::min(512ull, text.size()));
+		tmp[std::min(512ull, text.size())] = '\0';
 		ImGui::InputText("text", tmp, 513);
 		text = tmp;
-		ImGui::ColorEdit3("tint", (float*)&tint);
+		ImGui::ColorEdit3("tint", reinterpret_cast<float*>(&tint));
 		
 		updateGeometry();
 	}
@@ -190,8 +190,8 @@ void Light::drawImGuiDebug()
 	if (ImGui::CollapsingHeader("light params", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		const char* types = "POINT\0SPOT\0DIRECTIONAL";
-		ImGui::Combo("type", (int*)&type, types);
-		ImGui::ColorEdit3("colour", (float*)&colour);
+		ImGui::Combo("type", reinterpret_cast<int*>(&type), types);
+		ImGui::ColorEdit3("colour", reinterpret_cast<float*>(&colour));
 		if (type == SPOT)
 		{
 			spot_angle *= glm::pi<float>() / 180.0f;
@@ -203,12 +203,12 @@ void Light::drawImGuiDebug()
 }
 
 #if !defined(STANDALONE)
-void drawImGuiSceneTreeItem(multimap<Object*, WeakRef<Object>>& parent_map, WeakRef<Object> parent)
+static void drawImGuiSceneTreeItem(multimap<Object*, WeakRef<Object>>& parent_map, WeakRef<Object> parent)
 {
-	auto range = parent_map.equal_range(parent.get());
-	while (range.first != range.second)
+	auto [range_start, range_end] = parent_map.equal_range(parent.get());
+	while (range_start != range_end)
 	{
-		WeakRef<Object> child = range.first->second;
+		WeakRef<Object> child = range_start->second;
 		
 		if (ImGui::TreeNode((child->name + " - " + PTR(child.get())).c_str()))
 		{
@@ -217,18 +217,18 @@ void drawImGuiSceneTreeItem(multimap<Object*, WeakRef<Object>>& parent_map, Weak
 			drawImGuiSceneTreeItem(parent_map, child);
 			ImGui::TreePop();
 		}
-		++range.first;
+		++range_start;
 	}
 }
 
-void collectDescendents(multimap<Object*, WeakRef<Object>>& parent_map, Object* parent, vector<Object*>& descendents)
+static void collectDescendents(multimap<Object*, WeakRef<Object>>& parent_map, Object* parent, vector<Object*>& descendents)
 {
-	auto range = parent_map.equal_range(parent);
-	while (range.first != range.second)
+	auto [range_start, range_end] = parent_map.equal_range(parent);
+	while (range_start != range_end)
 	{
-		descendents.push_back(range.first->second.get());
-		collectDescendents(parent_map, range.first->second.get(), descendents);
-		range.first++;
+		descendents.push_back(range_start->second.get());
+		collectDescendents(parent_map, range_start->second.get(), descendents);
+		++range_start;
 	}
 }
 #endif
@@ -237,11 +237,9 @@ void Scene::drawImGuiDebug()
 {
 #if !defined(STANDALONE)
 	ImGui::LabelText("scene", "%s", getOrigin().c_str());
-	ImGui::ColorEdit3("ambient light", (float*)&(ambient_colour));
-	int current_skybox_index = 0;
-	const char* skybox_items = "tex 1\0tex 2\0tex 3";
+	ImGui::ColorEdit3("ambient light", reinterpret_cast<float*>(&(ambient_colour)));
 	skybox = texturePicker(skybox, "skybox");
-	ImGui::LabelText("total objects", "%d", objects.size());
+	ImGui::LabelText("total objects", "%zu", objects.size());
 	multimap<Object*, WeakRef<Object>> parent_map;
 	for (auto object : objects)
 		parent_map.insert({ object->getParent().get(), object});
@@ -250,7 +248,7 @@ void Scene::drawImGuiDebug()
 	if (ImGui::CollapsingHeader("object heirarchy", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
 		drawImGuiSceneTreeItem(parent_map, WeakRef<Object>(nullptr));
 	ImGui::Text("selected: %s", selected_object ? (selected_object->name + " - " + PTR(selected_object.get())).c_str() : "none");
-	bool disabled = !selected_object;
+	const bool disabled = !selected_object;
 	if (disabled)
 		ImGui::BeginDisabled();
 	if (selected_object != root && ImGui::Button("remove from tree"))
@@ -258,7 +256,7 @@ void Scene::drawImGuiDebug()
 		vector<Object*> objects_to_remove;
 		objects_to_remove.push_back(selected_object.get());
 		collectDescendents(parent_map, selected_object.get(), objects_to_remove);
-		for (Object* obj : objects_to_remove)
+		for (const Object* obj : objects_to_remove)
 		{ // TODO: improve scene tree so that objects know about their children, can be removed
 			auto it = objects.begin();
 			while (it != objects.end())
@@ -285,9 +283,8 @@ void Scene::drawImGuiDebug()
 			selected_object->setParent(root);
 			ImGui::CloseCurrentPopup();
 		}
-		for (size_t i = 0; i < objects.size(); ++i)
+		for (const auto& object : objects)
 		{
-			const auto& object = objects[i];
 			if (object == selected_object)
 				continue;
 			if (ImGui::SmallButton((object->name + " - " + PTR(object.get())).c_str()))
@@ -363,11 +360,11 @@ bool Sampler::drawImGuiDebug()
 	ImGui::LabelText("filter", "%s", filter_names[builder.filtering_mode].c_str());
 	SamplerFilter new_mode = builder.filtering_mode;
 	if (ImGui::Button("switch filtering"))
-		new_mode = (SamplerFilter)((new_mode + 1) % 2);
+		new_mode = static_cast<SamplerFilter>((new_mode + 1) % 2);
 	ImGui::LabelText("address", "%s", address_names[builder.address_mode].c_str());
 	SamplerAddress new_address = builder.address_mode;
 	if (ImGui::Button("switch addressing"))
-		new_address = (SamplerAddress)((new_address + 1) % 3);
+		new_address = static_cast<SamplerAddress>((new_address + 1) % 3);
 	if (new_mode != builder.filtering_mode || new_address != builder.address_mode)
 	{
 		builder.filtering_mode = new_mode;
@@ -390,18 +387,18 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 
 	if (ImGui::CollapsingHeader("texture bindings", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		for (const auto& pair : textures_in_use)
+		for (const auto& [tex_id, tex_bind] : textures_in_use)
 		{
-			ImGui::PushID(pair.first);
-			ImGui::LabelText("binding", "%i", pair.first);
-			ImGui::LabelText("name", "%s", binding_to_texture_name[pair.first].c_str());
-			auto result = texturePicker(pair.second.texture, "texture");
-			if (result != pair.second.texture)
-				setTexture(pair.first, result);
-			if (pair.second.sampler->drawImGuiDebug())
+			ImGui::PushID(static_cast<int>(tex_id));
+			ImGui::LabelText("binding", "%u", tex_id);
+			ImGui::LabelText("name", "%s", binding_to_texture_name[tex_id].c_str());
+			auto result = texturePicker(tex_bind.texture, "texture");
+			if (result != tex_bind.texture)
+				setTexture(tex_id, result);
+			if (tex_bind.sampler->drawImGuiDebug())
 			{
-				setSampler(pair.first, nullptr);
-				setSampler(pair.first, pair.second.sampler);
+				setSampler(tex_id, nullptr);
+				setSampler(tex_id, tex_bind.sampler);
 			}
 			ImGui::PopID();
 		}
@@ -412,23 +409,23 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 		{
 			if (block.type != UNIFORM)
 				continue;
-			ImGui::LabelText("binding", "%i", block.binding);
+			ImGui::LabelText("binding", "%u", block.binding);
 			ImGui::LabelText("block name", "%s", block.name.c_str());
-			ImGui::LabelText("block size", "%i", block.buffer_size);
+			ImGui::LabelText("block size", "%llu", block.buffer_size);
 			ImGui::BeginTable("uniforms", 3, ImGuiTableFlags_Borders);
 			ImGui::TableSetupColumn("name");
 			ImGui::TableSetupColumn("size");
 			ImGui::TableSetupColumn("offset");
 			ImGui::TableHeadersRow();
-			for (const auto& var : block.variables)
+			for (const auto& [va_name, var_size, var_off] : block.variables)
 			{
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
-				ImGui::Text("%s", var.name.c_str());
+				ImGui::Text("%s", va_name.c_str());
 				ImGui::TableSetColumnIndex(1);
-				ImGui::Text("%i", var.size);
+				ImGui::Text("%zu", var_size);
 				ImGui::TableSetColumnIndex(2);
-				ImGui::Text("%i", var.offset);
+				ImGui::Text("%zu", var_off);
 			}
 			ImGui::EndTable();
 		}
@@ -437,7 +434,66 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 #endif
 }
 
-void Engine::drawImGuiDebug(float delta_time)
+void Engine::debugCamera(float delta_time)
+{
+	if (!selected_camera)
+		return;
+
+	glm::vec2 mouse_delta = { 0, 0 };
+	mouse_delta += glm::vec2{ Input::getGamepadAxis(Input::GAMEPAD_RX), Input::getGamepadAxis(Input::GAMEPAD_RY) } * delta_time * 160.0f;
+	static bool mouse_down = false;
+	if (Input::isMouseDown(Input::MOUSE_RIGHT))
+	{
+		mouse_delta += Input::getMouseDelta() * 0.25f;
+		if (!mouse_down)
+			Input::setCursorVisible(false);
+		mouse_down = true;
+	}
+	else if (mouse_down)
+	{
+		Input::setCursorVisible(true);
+		mouse_down = false;		
+	}
+	
+	selected_camera->transform.rotateLocal({ -mouse_delta.y, 0, -mouse_delta.x });
+
+	const glm::mat4 camera_matrix = selected_camera->transform.getMatrix();
+	glm::vec3 local_move_vector = glm::vec3{
+		                              Input::getAxis('A', 'D') + Input::getGamepadAxis(Input::GAMEPAD_LX),
+		                              Input::getAxis('Q', 'E') + Input::getGamepadAxis(Input::GAMEPAD_BUTTONS),
+		                              Input::getAxis('W', 'S') + Input::getGamepadAxis(Input::GAMEPAD_LY)
+	                              } * delta_time * 1.5f;
+	if (Input::isKeyDown(Input::KEY_LEFT_SHIFT) || Input::isGamepadButtonDown(Input::GAMEPAD_B))
+		local_move_vector *= 3.0f;
+	selected_camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
+}
+
+void Engine::debugSelect(const WeakRef<Object>& object)
+{
+#if !defined(STANDALONE)
+	selected_object = object;
+#endif
+}
+
+void Engine::debugClearSelection(const WeakRef<Object>& object, const WeakRef<Material>& material, WeakRef<Camera> camera)
+{
+#if !defined(STANDALONE)
+	selected_object = object;
+	selected_material = material;
+	selected_camera = camera.get();
+#endif
+}
+
+WeakRef<Object> Engine::getDebugSelection()
+{
+#if !defined(STANDALONE)
+	return selected_object;
+#else
+	return WeakRef<Object>();
+#endif
+}
+
+void Engine::drawImGuiDebug(float delta_time) const
 {
 #if !defined(STANDALONE)
 	static bool show_imgui = true;
@@ -450,13 +506,13 @@ void Engine::drawImGuiDebug(float delta_time)
 		{
 			if (ImGui::MenuItem("bunnygirl")) // TODO: remove this once the module is over
 			{
-				auto scn = getAshaScene();
+				const auto scn = getAshaScene();
 				debugClearSelection();
 				Engine::setup(scn.init_func, scn.update_func, scn.imgui_func);
 			}
 			if (ImGui::MenuItem("museum"))
 			{
-				auto scn = getMuseumScene();
+				const auto scn = getMuseumScene();
 				debugClearSelection();
 				Engine::setup(scn.init_func, scn.update_func, scn.imgui_func);
 			}
@@ -505,7 +561,6 @@ void Engine::drawImGuiDebug(float delta_time)
 	}
 	
 	float rightmost_window_width = 0;
-	last_window_height = 0;
 	{
 		ImGui::Begin("performance", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 		ImGui::LabelText("delta time", "%fms", last_frame_stats.delta_time * 1000.0f);
@@ -520,24 +575,23 @@ void Engine::drawImGuiDebug(float delta_time)
 		}
 		if (ImGui::CollapsingHeader("scene stats", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			ImGui::LabelText("draw calls", "%i", last_frame_stats.draw_calls);
-			ImGui::LabelText("pipeline rebinds", "%i", last_frame_stats.pipeline_rebinds);
-			ImGui::LabelText("triangles", "%i", last_frame_stats.triangles);
-			ImGui::LabelText("vertices", "%i", last_frame_stats.vertices);
-			ImGui::LabelText("render passes", "%i", last_frame_stats.passes);
+			ImGui::LabelText("draw calls", "%zu", last_frame_stats.draw_calls);
+			ImGui::LabelText("pipeline rebinds", "%zu", last_frame_stats.pipeline_rebinds);
+			ImGui::LabelText("triangles", "%zu", last_frame_stats.triangles);
+			ImGui::LabelText("vertices", "%zu", last_frame_stats.vertices);
+			ImGui::LabelText("render passes", "%zu", last_frame_stats.passes);
 			if (ImGui::CollapsingHeader("pass durations"))
 			{
 				int i = 1;
-				for (float dur : last_frame_stats.pass_times)
+				for (const float dur : last_frame_stats.pass_times)
 					ImGui::LabelText(("pass " + ::to_string(i++)).c_str(), "%fms", dur * 1000.0f);
 			}
-			ImGui::LabelText("camera rendering", "%i", last_frame_stats.cameras);
-			ImGui::LabelText("lights rendering", "%i", last_frame_stats.lights);
+			ImGui::LabelText("camera rendering", "%zu", last_frame_stats.cameras);
+			ImGui::LabelText("lights rendering", "%zu", last_frame_stats.lights);
 		}
 		ImGui::Spacing();
 		ImGui::PlotLines("##xx", delta_time_history, 512, history_offset, "delta time", 0.0001f, 0.2f, ImVec2{0, 160}, 4);
-		//ImGui::PlotLines("##xxx", fps_history, 512, history_offset, "FPS", 10.0f, 200.0f, ImVec2{ 0, 160 }, 4);
-		auto size = ImGui::GetWindowSize();
+		const auto size = ImGui::GetWindowSize();
 		if (align_windows)
 			ImGui::SetWindowPos({ ImGui::GetIO().DisplaySize.x - size.x - 10.0f, 30 });
 		last_window_height = size.y;
@@ -547,38 +601,38 @@ void Engine::drawImGuiDebug(float delta_time)
 	
 	{
 		ImGui::Begin("resources", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-		ImGui::LabelText("total references", "%u", allocated_refs.size());
+		ImGui::LabelText("total references", "%zu", allocated_refs.size());
 		ImGui::Text("the categories below only show\nresources loaded with Engine::loadXXX(),\nnot internal resources");
 		if (ImGui::CollapsingHeader(("materials (" + ::to_string(loaded_materials.size()) + " loaded)").c_str()))
 		{
-			for (const auto& item : loaded_materials)
+			for (const auto& [res_name, res] : loaded_materials)
 			{
-				ImGui::LabelText(("(" + ::to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
-				if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
+				ImGui::LabelText(("(" + ::to_string(res.getCount()) + " users)").c_str(), "%s", res_name.c_str());
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", res_name.c_str());
 			}
 		}
 		if (ImGui::CollapsingHeader(("meshes (" + ::to_string(loaded_meshes.size()) + " loaded)").c_str()))
 		{
-			for (const auto& item : loaded_meshes)
+			for (const auto& [res_name, ref] : loaded_meshes)
 			{
-				ImGui::LabelText(("(" + ::to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
-				if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
+				ImGui::LabelText(("(" + ::to_string(ref.getCount()) + " users)").c_str(), "%s", res_name.c_str());
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", res_name.c_str());
 			}
 		}
 		if (ImGui::CollapsingHeader(("textures (" + ::to_string(loaded_textures.size()) + " loaded)").c_str()))
 		{
-			for (const auto& item : loaded_textures)
+			for (const auto& [res_name, ref] : loaded_textures)
 			{
-				ImGui::LabelText(("(" + ::to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
-				if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
+				ImGui::LabelText(("(" + ::to_string(ref.getCount()) + " users)").c_str(), "%s", res_name.c_str());
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", res_name.c_str());
 			}
 		}
 		if (ImGui::CollapsingHeader(("shaders (" + ::to_string(getEngine()->loaded_shaders.size()) + " loaded)").c_str()))
 		{
-			for (const auto& item : getEngine()->loaded_shaders)
+			for (const auto& [res_name, ref] : getEngine()->loaded_shaders)
 			{
-				ImGui::LabelText(("(" + ::to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
-				if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
+				ImGui::LabelText(("(" + ::to_string(ref.getCount()) + " users)").c_str(), "%s", res_name.c_str());
+				if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", res_name.c_str());
 			}
 		}
 		if (ImGui::Button("prune loaded resources"))
@@ -599,7 +653,7 @@ void Engine::drawImGuiDebug(float delta_time)
 		}
 		if (ImGui::BeginPopup("pruned_done"))
 		{
-			ImGui::Text("pruned %i resources", pruned_count);
+			ImGui::Text("pruned %zu resources", pruned_count);
 			ImGui::EndPopup();
 		}
 	
@@ -612,7 +666,7 @@ void Engine::drawImGuiDebug(float delta_time)
 			for (const auto& entry : entries)
 			{
 				string extension;
-				size_t extension_start = entry.find_last_of('.');
+				const size_t extension_start = entry.find_last_of('.');
 				if (extension_start != string::npos)
 					extension = entry.substr(extension_start + 1);
 				int type = -1;
@@ -623,9 +677,7 @@ void Engine::drawImGuiDebug(float delta_time)
 				{ type = 1; type_string = "texture"; }
 				else if (extension == "hmat")
 				{ type = 2; type_string = "material"; }
-				else if (extension == "vert")
-				{ type = 3; type_string = "shader"; }
-				else if (extension == "frag")
+				else if (extension == "vert" || extension == "frag")
 				{ type = 3; type_string = "shader"; }
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
@@ -648,7 +700,7 @@ void Engine::drawImGuiDebug(float delta_time)
 			ImGui::EndTable();
 			ImGui::EndPopup();
 		}
-		auto size = ImGui::GetWindowSize();
+		const auto size = ImGui::GetWindowSize();
 		if (align_windows)
 			ImGui::SetWindowPos({ ImGui::GetIO().DisplaySize.x - size.x - 10.0f, last_window_height + 40 });
 		rightmost_window_width = max(rightmost_window_width, size.x);
@@ -661,7 +713,7 @@ void Engine::drawImGuiDebug(float delta_time)
 		selected_material->drawImGuiDebug();
 		if (ImGui::Button("close"))
 			selected_material = nullptr;
-		auto size = ImGui::GetWindowSize();
+		const auto size = ImGui::GetWindowSize();
 		if (align_windows)
 			ImGui::SetWindowPos({ ImGui::GetIO().DisplaySize.x - size.x - rightmost_window_width - 20.0f, 30 });
 		ImGui::End();
@@ -669,65 +721,6 @@ void Engine::drawImGuiDebug(float delta_time)
 	
 	if (align_windows)
 		--align_windows;
-#endif
-}
-
-void Engine::debugCamera(float delta_time)
-{
-	if (!selected_camera)
-		return;
-
-	glm::vec2 mouse_delta = { 0, 0 };
-	mouse_delta += glm::vec2{ Input::getGamepadAxis(Input::GAMEPAD_RX), Input::getGamepadAxis(Input::GAMEPAD_RY) } * delta_time * 160.0f;
-	static bool mouse_down = false;
-	if (Input::isMouseDown(Input::MOUSE_RIGHT))
-	{
-		mouse_delta += Input::getMouseDelta() * 0.25f;
-		if (!mouse_down)
-			Input::setCursorVisible(false);
-		mouse_down = true;
-	}
-	else if (mouse_down)
-	{
-		Input::setCursorVisible(true);
-		mouse_down = false;		
-	}
-	
-	selected_camera->transform.rotateLocal({ -mouse_delta.y, 0, -mouse_delta.x });
-
-	glm::mat4 camera_matrix = selected_camera->transform.getMatrix();
-	glm::vec3 local_move_vector = glm::vec3{
-		Input::getAxis('A', 'D') + Input::getGamepadAxis(Input::GAMEPAD_LX),
-		Input::getAxis('Q', 'E') + Input::getGamepadAxis(Input::GAMEPAD_BUTTONS),
-		Input::getAxis('W', 'S') + Input::getGamepadAxis(Input::GAMEPAD_LY)
-	} * delta_time * 1.5f;
-	if (Input::isKeyDown(Input::KEY_LEFT_SHIFT) || Input::isGamepadButtonDown(Input::GAMEPAD_B))
-		local_move_vector *= 3.0f;
-	selected_camera->transform.translateLocal(camera_matrix * glm::vec4(local_move_vector, 0));
-}
-
-void Engine::debugSelect(WeakRef<Object> object)
-{
-#if !defined(STANDALONE)
-	selected_object = object;
-#endif
-}
-
-void Engine::debugClearSelection(WeakRef<Object> object, WeakRef<Material> material, WeakRef<Camera> camera)
-{
-#if !defined(STANDALONE)
-	selected_object = object;
-	selected_material = material;
-	selected_camera = camera.get();
-#endif
-}
-
-WeakRef<Object> Engine::getDebugSelection()
-{
-#if !defined(STANDALONE)
-	return selected_object;
-#else
-	return WeakRef<Object>();
 #endif
 }
 
@@ -754,7 +747,7 @@ void RenderGraph::drawImGuiDebug()
 		ImGui::TableSetColumnIndex(1);
 		ImGui::Text("%s", pass.is_camera ? "camera" : "post-process");		
 		ImGui::TableSetColumnIndex(2);
-		ImGui::Text("%i x %i", pass.render_pass->getExtent().x, pass.render_pass->getExtent().y);
+		ImGui::Text("%u x %u", pass.render_pass->getExtent().x, pass.render_pass->getExtent().y);
 		ImGui::TableSetColumnIndex(3);
 		bool b = !pass.skipped;
 		if (ImGui::Checkbox("", &b))
@@ -762,12 +755,12 @@ void RenderGraph::drawImGuiDebug()
 		++current_pass;
 		ImGui::PopID();
 	}
-	int hovered = ImGui::TableGetHoveredRow();
+	const int hovered = ImGui::TableGetHoveredRow();
 	ImGui::EndTable();
 	if (ImGui::IsItemHovered() && hovered > 0)
 	{
 		ImGui::BeginTooltip();
-		int pass_details_index = hovered - 1;
+		const int pass_details_index = hovered - 1;
 		const auto& pass = execution_steps[pass_details_index];
 		if (!pass.is_camera)
 		{
@@ -780,33 +773,33 @@ void RenderGraph::drawImGuiDebug()
 			ImGui::TableSetupColumn("filtering");
 			ImGui::TableSetupColumn("addressing");
 			ImGui::TableHeadersRow();
-			for (const auto& pair : pass.texture_bindings)
+			for (const auto& [tex_id, bind] : pass.texture_bindings)
 			{
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
-				ImGui::Text("%i", pair.first);
+				ImGui::Text("%u", tex_id);
 				ImGui::TableSetColumnIndex(1);
-				ImGui::Text("%i", pair.second.step_index);
+				ImGui::Text("%zu", bind.step_index);
 				ImGui::TableSetColumnIndex(2);
-				ImGui::Text("%i", pair.second.output_index);
+				ImGui::Text("%zu", bind.output_index);
 				ImGui::TableSetColumnIndex(3);
-				ImGui::Text("%s", to_string(pair.second.filter_mode).c_str());
+				ImGui::Text("%s", to_string(bind.filter_mode).c_str());
 				ImGui::TableSetColumnIndex(4);
-				ImGui::Text("%s", to_string(pair.second.address_mode).c_str());
+				ImGui::Text("%s", to_string(bind.address_mode).c_str());
 			}
 			ImGui::EndTable();
 			ImGui::Separator();
 		}
 		else
-			ImGui::LabelText("camera slot", "%i", pass.camera_slot);
+			ImGui::LabelText("camera slot", "%zu", pass.camera_slot);
 		if (pass.resolution_scale > 0)
 			ImGui::LabelText("resolution scale", "%.2f", pass.resolution_scale);
 		else
-			ImGui::LabelText("custom resolution", "%i x %i", pass.custom_extent.x, pass.custom_extent.y);
+			ImGui::LabelText("custom resolution", "%u x %u", pass.custom_extent.x, pass.custom_extent.y);
 		ImGui::Separator();
 		ImGui::Text("output attachments:");
 		ImGui::LabelText("colour", "always present");
-		ImGui::LabelText("extras", "%i", pass.render_pass->getOutputConfig().additional_attachments);
+		ImGui::LabelText("extras", "%zu", pass.render_pass->getOutputConfig().additional_attachments);
 		ImGui::LabelText("depth", pass.render_pass->getOutputConfig().has_depth_attachment ? "present" : "disabled");
 		ImGui::EndTooltip();
 	}

@@ -93,7 +93,7 @@ public:
 	                         final_render_pass) const;
 
 	void drawImGuiDebug();
-	static Ref<RenderGraph> deserialise(std::string name);
+	static Ref<RenderGraph> deserialise(const std::string& name);
 	
 private:
 	size_t findStep(const std::string& name) const;

@@ -14,26 +14,39 @@ static Debug* application_debug = nullptr;
 static ofstream file_output;
 #endif
 
-void Debug::init(DebugLevel crash_level)
+void Debug::init(const DebugLevel crash_level)
 {
 	if (application_debug == nullptr)
 		application_debug = new Debug();
-	application_debug->log_level = (DebugLevel)DEBUG_LEVEL;
+	application_debug->log_level = static_cast<DebugLevel>(DEBUG_LEVEL);
 	application_debug->crash_level = crash_level;
 	DBG_INFO("initialised debug");
 }
 
-void Debug::setLogLevel(DebugLevel severity)
+void Debug::setLogLevel(const DebugLevel severity)
 {
 	application_debug->log_level = severity;
 }
 
-string makeANSIColour(int fgcol, int bgcol)
+static string makeANSIColour(const int fgcol, const int bgcol)
 {
 	return "\033[" + to_string(fgcol + 30) + ';' + to_string(bgcol + 40) + 'm';
 }
 
-void Debug::write(string description, DebugLevel severity)
+void Debug::close()
+{
+	Debug::flush();
+#if defined(DEBUG_LOGFILE)
+	file_output.close();
+#endif
+}
+
+string Debug::pointerToString(const void* ptr)
+{
+	return format("0x{:x}", reinterpret_cast<size_t>(ptr));
+}
+
+void Debug::write(const string& description, DebugLevel severity)
 {
 	if (application_debug == nullptr)
 		Debug::init(Debug::DEBUG_FAULT);
@@ -75,18 +88,18 @@ void Debug::write(string description, DebugLevel severity)
 		break;
 	}
 
-	auto time_now = std::time(0);
+	auto time_now = std::time(nullptr);
 	tm time;
 #if defined(_WIN32)
-	localtime_s(&time, &time_now);
+	(void)localtime_s(&time, &time_now);
 #else
 	auto tmp = localtime(&time_now);
 	time = *tmp;
 #endif
 	string log_line = format("[{: >8} ]: {:0>2}:{:0>2}:{:0>2} - {}", log_type, time.tm_hour, time.tm_min, time.tm_sec, description);
 	string term_line = format("{}[{}{: >8} {}]{}: {}{:0>2}:{:0>2}:{:0>2}{} - {}", 
-		bracket_col, type_col, log_type, bracket_col, standard_col,
-		time_col, time.tm_hour, time.tm_min, time.tm_sec, standard_col, description);
+	                          bracket_col, type_col, log_type, bracket_col, standard_col,
+	                          time_col, time.tm_hour, time.tm_min, time.tm_sec, standard_col, description);
 
 #if defined(DEBUG_LOGFILE)
 	file_output << log_line << endl;
@@ -114,31 +127,18 @@ void Debug::flush()
 #endif
 }
 
-void Debug::close()
-{
-	Debug::flush();
-#if defined(DEBUG_LOGFILE)
-	file_output.close();
-#endif
-}
-
-string Debug::pointerToString(const void* ptr)
-{
-	return format("0x{:x}", (size_t)ptr);
-}
-
 Debug::Debug()
 {
 #if defined(DEBUG_LOGFILE)
-	auto time_now = std::time(0);
+	const auto time_now = std::time(nullptr);
 	tm time;
 #if defined(_WIN32)
-	localtime_s(&time, &time_now);
+	(void)localtime_s(&time, &time_now);
 #else
 	auto tmp = localtime(&time_now);
 	time = *tmp;
 #endif
-	string file_name = format("{}engine_{:0>2}_{:0>2}_{:0>2}.log", DEBUG_LOGFILE, time.tm_hour, time.tm_min, time.tm_sec);
+	const string file_name = format("{}engine_{:0>2}_{:0>2}_{:0>2}.log", DEBUG_LOGFILE, time.tm_hour, time.tm_min, time.tm_sec);
 	filesystem::create_directory(DEBUG_LOGFILE);
 	file_output.open(file_name);
 #endif

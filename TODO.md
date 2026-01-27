@@ -1,8 +1,6 @@
 # TODO
 
 ## v0.51
-- clean up all the little warnings
-- reorder functions in classes etc
 - make builders return references
 - actually add comments to everything
 - fix crash with empty object file [H]

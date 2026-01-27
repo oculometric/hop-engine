@@ -57,7 +57,7 @@ struct PackageDataHeader
 // data
 // ...
 
-bool Package::loadPackage(string load_path)
+bool Package::loadPackage(const string& load_path)
 {
 	if (!application_package)
 		Package::init();
@@ -70,10 +70,10 @@ bool Package::loadPackage(string load_path)
 		return false;
 	}
 
-	size_t size = (size_t)file.tellg();
+	const size_t size = file.tellg();
 	vector<uint8_t> content(size);
-	file.seekg(0);
-	file.read((char*)(content.data()), size);
+	file.seekg(ios::beg);
+	file.read(reinterpret_cast<char*>(content.data()), static_cast<streamsize>(size));
 	file.close();
 
 	if (size < sizeof(PackageHeader))
@@ -82,7 +82,7 @@ bool Package::loadPackage(string load_path)
 		return false;
 	}
 
-	PackageHeader header = *((PackageHeader*)content.data());
+	PackageHeader header = *reinterpret_cast<PackageHeader*>(content.data());
 	if (header.signature != SIGNATURE)
 	{
 		DBG_ERROR("failed to load package: " + load_path + "; invalid signature");
@@ -108,23 +108,23 @@ bool Package::loadPackage(string load_path)
 		return false;
 	}
 
-	header = *((PackageHeader*)content.data());
+	header = *reinterpret_cast<PackageHeader*>(content.data());
 
 	vector<PackageEntry> entries(header.package_entries);
 	memcpy(entries.data(), content.data() + sizeof(PackageHeader), sizeof(PackageEntry) * entries.size());
 
-	for (PackageEntry& entry : entries)
+	for (const auto& [data_header_offset, data_total_size] : entries)
 	{
-		PackageDataHeader data_header = *((PackageDataHeader*)(content.data() + entry.data_header_offset));
-		if (data_header.data_size + data_header.name_size + sizeof(PackageDataHeader) != entry.data_total_size)
+		PackageDataHeader data_header = *reinterpret_cast<PackageDataHeader*>(content.data() + data_header_offset);
+		if (data_header.data_size + data_header.name_size + sizeof(PackageDataHeader) != data_total_size)
 		{
 			DBG_ERROR("error loading package: " + load_path + "; invalid data entry size");
 			return false;
 		}
 		string name(data_header.name_size, ' ');
-		memcpy((char*)(name.data()), (content.data() + entry.data_header_offset + sizeof(PackageDataHeader)), name.size());
+		memcpy((char*)(name.data()), (content.data() + data_header_offset + sizeof(PackageDataHeader)), name.size());
 		vector<uint8_t> data(data_header.data_size);
-		memcpy(data.data(), (content.data() + entry.data_header_offset + sizeof(PackageDataHeader) + name.size()), data.size());
+		memcpy(data.data(), (content.data() + data_header_offset + sizeof(PackageDataHeader) + name.size()), data.size());
 		application_package->database[name] = data;
 	}
 
@@ -132,7 +132,61 @@ bool Package::loadPackage(string load_path)
 	return true;
 }
 
-bool Package::storePackage(string store_path)
+vector<string> Package::listLoadedEntries()
+{
+	vector<string> names;
+	names.reserve(application_package->database.size());
+	for (const auto& [identifier, _] : application_package->database)
+		names.push_back(identifier);
+	return names;
+}
+
+vector<uint8_t> Package::loadData(const string& identifier)
+{
+	if (!application_package)
+		Package::init();
+
+	DBG_VERBOSE("loading '" + identifier + "'");
+	const auto it = application_package->database.find(identifier);
+	if (it != application_package->database.end())
+		return it->second;
+	DBG_WARNING("found no data associated with '" + identifier + "'");
+	return { };
+}
+
+vector<uint8_t> Package::tryLoadFile(const string& path_or_identifier)
+{
+	if (!application_package)
+		Package::init();
+
+	static string res_prefix = "res://";
+	if (path_or_identifier.substr(0, res_prefix.size()) == res_prefix)
+	{
+		// load package resource
+		return Package::loadData(path_or_identifier.substr(res_prefix.size()));
+	}
+	else
+	{
+		DBG_VERBOSE("loading '" + path_or_identifier + "' from file");
+		// load file data
+		ifstream file(path_or_identifier, ios::ate | ios::binary);
+		if (!file.is_open())
+		{
+			DBG_WARNING("failed to load '" + path_or_identifier + "'; file not accessible");
+			return { };
+		}
+
+		const size_t size = file.tellg();
+		vector<uint8_t> content(size);
+		file.seekg(0);
+		file.read(reinterpret_cast<char*>(content.data()), static_cast<streamsize>(size));
+		file.close();
+
+		return content;
+	}
+}
+
+bool Package::storePackage(const string& store_path)
 {
 	if (!application_package)
 		Package::init();
@@ -153,15 +207,15 @@ bool Package::storePackage(string store_path)
 	vector<PackageEntry> entries;
 	vector<vector<uint8_t>> data_blocks;
 	size_t offset = sizeof(PackageHeader) + (application_package->database.size() * sizeof(PackageEntry));
-	for (auto pair : application_package->database)
+	for (auto [identifier, object_data] : application_package->database)
 	{
 		PackageDataHeader data_header;
-		data_header.name_size = pair.first.size();
-		data_header.data_size = pair.second.size();
+		data_header.name_size = identifier.size();
+		data_header.data_size = object_data.size();
 		vector<uint8_t> data_block(sizeof(PackageDataHeader) + data_header.name_size + data_header.data_size);
 		memcpy(data_block.data(), &data_header, sizeof(PackageDataHeader));
-		memcpy(data_block.data() + sizeof(PackageDataHeader), pair.first.data(), data_header.name_size);
-		memcpy(data_block.data() + sizeof(PackageDataHeader) + data_header.name_size, pair.second.data(), data_header.data_size);
+		memcpy(data_block.data() + sizeof(PackageDataHeader), identifier.data(), data_header.name_size);
+		memcpy(data_block.data() + sizeof(PackageDataHeader) + data_header.name_size, object_data.data(), data_header.data_size);
 		data_blocks.push_back(data_block);
 
 		PackageEntry entry;
@@ -173,26 +227,17 @@ bool Package::storePackage(string store_path)
 	}
 
 	header.file_size = offset;
-	file.write((char*)(&header), sizeof(PackageHeader));
-	file.write((char*)entries.data(), entries.size() * sizeof(PackageEntry));
+	file.write(reinterpret_cast<char*>(&header), sizeof(PackageHeader));
+	file.write(reinterpret_cast<char*>(entries.data()), static_cast<streamsize>(entries.size() * sizeof(PackageEntry)));
 	for (const vector<uint8_t>& data_block : data_blocks)
-		file.write((char*)(data_block.data()), data_block.size());
+		file.write(reinterpret_cast<const char*>(data_block.data()), static_cast<streamsize>(data_block.size()));
 	file.close();
 
 	DBG_INFO("stored " + to_string(header.package_entries) + " items to package: " + store_path);
 	return true;
 }
 
-vector<string> Package::listLoadedEntries()
-{
-	vector<string> names;
-	names.reserve(application_package->database.size());
-	for (const auto& item : application_package->database)
-		names.push_back(item.first);
-	return names;
-}
-
-bool Package::storeCompressedPackage(string store_path)
+bool Package::storeCompressedPackage(const string& store_path)
 {
 	if (!application_package)
 		Package::init();
@@ -232,7 +277,7 @@ bool Package::storeCompressedPackage(string store_path)
 	size_t size = (size_t)file.tellg();
 	vector<uint8_t> content(size);
 	file.seekg(0);
-	file.read((char*)(content.data()), size);
+	file.read(reinterpret_cast<char*>(content.data()), static_cast<streamsize>(size));
 	file.close();
 	filesystem::remove(temp_address);
 
@@ -248,28 +293,15 @@ bool Package::storeCompressedPackage(string store_path)
 		DBG_ERROR("failed to generate compressed package: " + store_path + "; file not accessible");
 		return false;
 	}
-	outfile.write((char*)(&header), sizeof(PackageHeader));
-	outfile.write((char*)(content.data()), content.size());
+	outfile.write(reinterpret_cast<char*>(&header), sizeof(PackageHeader));
+	outfile.write(reinterpret_cast<char*>(content.data()), static_cast<streamsize>(content.size()));
 	outfile.close();
 
 	DBG_INFO("stored compressed package: " + store_path);
 	return true;
 }
 
-vector<uint8_t> Package::loadData(string identifier)
-{
-	if (!application_package)
-		Package::init();
-
-	DBG_VERBOSE("loading '" + identifier + "'");
-	auto it = application_package->database.find(identifier);
-	if (it != application_package->database.end())
-		return it->second;
-	DBG_WARNING("found no data associated with '" + identifier + "'");
-	return { };
-}
-
-void Package::storeData(string identifier, vector<uint8_t> data)
+void Package::storeData(const string& identifier, const vector<uint8_t>& data)
 {
 	if (!application_package)
 		Package::init();
@@ -278,39 +310,7 @@ void Package::storeData(string identifier, vector<uint8_t> data)
 	application_package->database[identifier] = data;
 }
 
-vector<uint8_t> Package::tryLoadFile(string path_or_identifier)
-{
-	if (!application_package)
-		Package::init();
-
-	static string res_prefix = "res://";
-	if (path_or_identifier.substr(0, res_prefix.size()) == res_prefix)
-	{
-		// load package resource
-		return Package::loadData(path_or_identifier.substr(res_prefix.size()));
-	}
-	else
-	{
-		DBG_VERBOSE("loading '" + path_or_identifier + "' from file");
-		// load file data
-		ifstream file(path_or_identifier, ios::ate | ios::binary);
-		if (!file.is_open())
-		{
-			DBG_WARNING("failed to load '" + path_or_identifier + "'; file not accessible");
-			return { };
-		}
-
-		size_t size = (size_t)file.tellg();
-		vector<uint8_t> content(size);
-		file.seekg(0);
-		file.read((char*)(content.data()), size);
-		file.close();
-
-		return content;
-	}
-}
-
-void Package::tryWriteFile(string path, vector<uint8_t> data)
+void Package::tryWriteFile(const string& path, const vector<uint8_t>& data)
 {
 	if (!application_package)
 		Package::init();
@@ -322,16 +322,21 @@ void Package::tryWriteFile(string path, vector<uint8_t> data)
 		DBG_ERROR("failed to store '" + path + "'; file not accessible");
 		return;
 	}
-	file.write((char*)(data.data()), data.size());
+	file.write(reinterpret_cast<const char*>(data.data()), static_cast<streamsize>(data.size()));
 	file.close();
 }
 
-vector<uint8_t> Package::loadCompressedPackage(vector<uint8_t> data)
+Package::~Package()
+{
+	database.clear();
+}
+
+vector<uint8_t> Package::loadCompressedPackage(const vector<uint8_t>& data)
 {
 	if (!application_package)
 		Package::init();
 
-	PackageHeader header = *((PackageHeader*)data.data());
+	PackageHeader header = *reinterpret_cast<const PackageHeader*>(data.data());
 	DBG_INFO("loading compressed package");
 
 	if (header.signature != SIGNATURE)
@@ -358,7 +363,7 @@ vector<uint8_t> Package::loadCompressedPackage(vector<uint8_t> data)
 		DBG_ERROR("error decompressing package; file not accessible");
 		return { };
 	}
-	file.write((char*)(data.data()) + sizeof(PackageHeader), header.file_size - sizeof(PackageHeader));
+	file.write(reinterpret_cast<const char*>(data.data()) + sizeof(PackageHeader), static_cast<streamsize>(header.file_size - sizeof(PackageHeader)));
 	file.close();
 
 	string command = "unzip ";
@@ -370,11 +375,11 @@ vector<uint8_t> Package::loadCompressedPackage(vector<uint8_t> data)
 	filesystem::create_directory(unpack_dir);
 	command = command + temp_address + 
 #if defined(_WIN32)
-" -C "
+	          " -C "
 #else
-" -d "
+	          " -d "
 #endif
-	 + unpack_dir;
+	          + unpack_dir;
 	string output;
 
 	int result = exec(command, output);
@@ -400,14 +405,14 @@ vector<uint8_t> Package::loadCompressedPackage(vector<uint8_t> data)
 		filesystem::remove(unpack_dir);
 		return { };
 	}
-	size_t size = (size_t)infile.tellg();
+	size_t size = infile.tellg();
 	vector<uint8_t> content(size);
 	infile.seekg(0);
-	infile.read((char*)(content.data()), size);
+	infile.read(reinterpret_cast<char*>(content.data()), static_cast<streamsize>(size));
 	infile.close();
 	filesystem::remove_all(unpack_dir);
 
-	header = *((PackageHeader*)content.data());
+	header = *reinterpret_cast<PackageHeader*>(content.data());
 	if (header.signature != SIGNATURE)
 	{
 		DBG_ERROR("failed to load package; invalid signature");
@@ -426,9 +431,4 @@ vector<uint8_t> Package::loadCompressedPackage(vector<uint8_t> data)
 
 	DBG_INFO("unpacked compressed package");
 	return content;
-}
-
-Package::~Package()
-{
-	database.clear();
 }

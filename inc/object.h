@@ -1,7 +1,5 @@
 #pragma once
 
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
 #include <vector>
 
 #include "common.h"
@@ -28,22 +26,20 @@ private:
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Object);
-
-	template <class T> void setParent(Ref<T> new_parent);
-	template <class T> void setParent(WeakRef<T> new_parent);
-	Ref<Object> getParent();
-
-	virtual void pushToDescriptorSet(size_t index);
-	virtual std::vector<DrawCommand> getDrawCommands() const;
-	virtual void drawImGuiDebug();
-	
-	virtual BoundingBox getLocalBounds() const;
-	
 	Object();
 	~Object() override;
+	
+	virtual std::vector<DrawCommand> getDrawCommands() const;
+	Ref<Object> getParent();
+	virtual BoundingBox getLocalBounds() const;
+	template <class T> void setParent(Ref<T> new_parent);
+	template <class T> void setParent(WeakRef<T> new_parent);
+	virtual void pushToDescriptorSet(size_t index);
 
+	virtual void drawImGuiDebug();
+	
 private:
-	void _setParent(Ref<Object> new_parent);
+	void _setParent(const Ref<Object>& new_parent);
 };
 
 class Camera : public Object
@@ -56,15 +52,15 @@ public:
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Camera);
-
-	void pushToDescriptorSet(size_t index) override;
-	void pushToCameraDescriptorSet(size_t index, glm::ivec2 viewport_size, float time, std::vector<LightParams> lights, glm::vec4 ambient);
-	SceneUniforms getSceneUniforms(glm::ivec2 viewport_size, float time, std::vector<LightParams> lights, glm::vec4 ambient);
-	glm::mat4 getWorldToScreenMatrix();
-	VkDescriptorSet getDescriptorSet(size_t index) const;
-	void drawImGuiDebug() override;
-	
 	Camera();
+
+	VkDescriptorSet getDescriptorSet(size_t index) const;
+	SceneUniforms getSceneUniforms(glm::ivec2 viewport_size, float time, const std::vector<LightParams>& lights, glm::vec4 ambient);
+	glm::mat4 getWorldToScreenMatrix();
+	void pushToDescriptorSet(size_t index) override;
+	void pushToCameraDescriptorSet(size_t index, glm::ivec2 viewport_size, float time, const std::vector<LightParams>& lights, glm::vec4 ambient);
+	
+	void drawImGuiDebug() override;
 };
 
 class StaticMesh : public Object
@@ -76,13 +72,13 @@ public:
 
 public:
 	DELETE_CONSTRUCTORS(StaticMesh);
+	StaticMesh(const Ref<Mesh>& _mesh, const Ref<Material>& _material);
 
-	void pushToDescriptorSet(size_t index) override;
 	std::vector<DrawCommand> getDrawCommands() const override;
-	void drawImGuiDebug() override;
 	BoundingBox getLocalBounds() const override;
+	void pushToDescriptorSet(size_t index) override;
 	
-	StaticMesh(Ref<Mesh> mesh, Ref<Material> material);
+	void drawImGuiDebug() override;
 };
 
 class Light : public Object
@@ -103,11 +99,11 @@ public:
 
 public:
 	DELETE_CONSTRUCTORS(Light);
+	Light(LightType _type);
 
 	LightParams getParamsStructure();
-	void drawImGuiDebug() override;
 	
-	Light(LightType type);
+	void drawImGuiDebug() override;
 };
 
 template<class T>

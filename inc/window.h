@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <glm/vec2.hpp>
 
 #include "common.h"
 
@@ -25,7 +26,7 @@ public:
 	static void pollEvents();
 
 	GLFWwindow* getWindow() const { return window; }
-	std::pair<uint32_t, uint32_t> getSize();
+	glm::u32vec2 getSize();
 	bool getShouldClose() const;
 	bool isMinified() const;
 	bool isResized();

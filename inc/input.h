@@ -147,29 +147,28 @@ private:
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Input);
 
-	static void init(Ref<Window> window);
+	static void init(const Ref<Window>& window);
 	static void destroy();
 
 	static bool isKeyDown(int key);
 	static bool wasKeyPressed(int key);
 	static float getAxis(int key_negative, int key_positive);
-	static glm::vec2 getMouseDelta();
-	static void resetMouseDelta();
-	static glm::vec2 getMousePosition();
 	static bool isMouseDown(MouseButton button);
 	static bool wasMousePressed(MouseButton button);
-	static void setCursorVisible(bool visible);
-	
+	static glm::vec2 getMouseDelta();
+	static glm::vec2 getMousePosition();
 	static void pollGamepads();
 	static bool isGamepadButtonDown(GamepadButton button, int controller = 0);
 	static float getGamepadAxis(GamepadAxis axis, int controller = 0);
+	static void resetMouseDelta();
+	static void setCursorVisible(bool visible);
 
 private:
+	Input(const Ref<Window>& _window);
+	~Input();
+	
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
-	
-	Input(Ref<Window> window);
-	~Input();
 };
 
 }

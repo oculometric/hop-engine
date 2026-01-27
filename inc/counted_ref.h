@@ -12,8 +12,8 @@ namespace HopEngine
 template <typename T>
 class WeakRef;
 
-void registerCountedRef(const char* type_name, WeakRef<void> reference);
-void unregisterCountedRef(void* ptr);
+void registerCountedRef(const char* type_name, const WeakRef<void>& reference);
+void unregisterCountedRef(const void* ptr);
 
 template<typename T>
 class Ref

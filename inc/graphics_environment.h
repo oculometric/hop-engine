@@ -65,36 +65,40 @@ private:
 	Ref<Mesh> quad;
 
 public:
-	static void init(Ref<Window> main_window);
+	DELETE_CONSTRUCTORS(RenderServer);
+	
+	static void init(const Ref<Window>& main_window);
 	static void destroy();
 
-	static void waitIdle();
+	static size_t getFramesInFlight();
 	static VkDevice getDevice();
 	static VkPhysicalDevice getPhysicalDevice();
-	static Ref<RenderPass> getMainRenderPass();
-	static Ref<RenderPass> getFinalRenderPass();
-	static glm::vec2 getFramebufferSize();
-	static size_t getFramesInFlight();
 	static QueueFamilies getQueueFamilies(VkPhysicalDevice device);
 	static VkQueue getGraphicsQueue();
 	static VkCommandPool getCommandPool();
-	static VkDescriptorPool getDescriptorPool();
+	static Ref<RenderPass> getMainRenderPass();
+	static Ref<RenderPass> getFinalRenderPass();
+	static glm::vec2 getFramebufferSize();
 	static VkQueryPool getQueryPool();
-	static void writeTimestamp(uint32_t image_index, VkPipelineStageFlagBits stage);
+	static VkDescriptorPool getDescriptorPool();
 	static VkDescriptorSetLayout getSceneDescriptorSetLayout();
 	static VkDescriptorSetLayout getObjectDescriptorSetLayout();
 	static std::pair<Ref<Texture>, Ref<Sampler>> getDefaultTextureSampler();
+	static Ref<Material> getDefaultMaterial();
 	static Ref<Material> getGizmoMaterial(); // TODO: this (and more) can be deprecated, loaded and kept loaded by the engine
 	static Ref<Mesh> getGizmoMesh(int type);
-	static Ref<Material> getDefaultMaterial();
-	static Ref<Mesh> getQuad();
 	static Ref<Mesh> getSkyboxCube();
 	static Ref<Material> getSkyboxMaterial();
-
+	static Ref<Mesh> getQuad();
+	static void waitIdle();
+	static void writeTimestamp(uint32_t image_index, VkPipelineStageFlagBits stage);
 	static FrameStats draw();
 	static void resize();
 
 private:
+	RenderServer(const Ref<Window>& main_window);
+	~RenderServer();
+	
 	void createInstance();
 	void createDevice();
 	void createDescriptorPoolAndSets();
@@ -106,9 +110,6 @@ private:
 	void resizeSwapchain();
 
 	void recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index, FrameStats& stats);
-	
-	RenderServer(Ref<Window> main_window);
-	~RenderServer();
 };
 
 }

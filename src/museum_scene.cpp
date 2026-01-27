@@ -50,7 +50,7 @@ static Spline flythrough_spline
 };
 
 
-Ref<Scene> initMuseumScene()
+static Ref<Scene> initMuseumScene()
 {
     Debug::setLogLevel(Debug::DEBUG_WARNING);
     Ref<Scene> scene = Scene::deserialise("res://museum/Museum.hscn");
@@ -113,8 +113,7 @@ Ref<Scene> initMuseumScene()
     return scene;
 }
 
-
-static void updateMuseumScene(Ref<Scene> scene, float delta_time)
+static void updateMuseumScene(Ref<Scene> scene, const float delta_time)
 {
     static float total_time = 0;
     total_time += delta_time;
@@ -150,8 +149,7 @@ static void updateMuseumScene(Ref<Scene> scene, float delta_time)
     Input::resetMouseDelta();
 }
 
-
-static void imGuiMuseumScene(Ref<Scene> scene, float delta_time)
+static void imGuiMuseumScene(Ref<Scene> scene, const float delta_time)
 {
     ImGui::Begin("colour correction", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::Text("this controls the final post processing step");

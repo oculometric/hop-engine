@@ -24,6 +24,7 @@ struct Vertex
 class Mesh : public Destructible
 {
 private:
+	std::string origin;
 	Ref<Buffer> vertex_buffer;
 	Ref<Buffer> index_buffer;
 	size_t vertex_space = 0;
@@ -31,30 +32,28 @@ private:
 	size_t vertex_count = 0;
 	size_t index_count = 0;
 	bool accessible = false;
-	std::string origin;
 	BoundingBox bounding_box;
 
 public:
 	DELETE_CONSTRUCTORS(Mesh);
-
-	VkBuffer getVertexBuffer() const;
-	VkBuffer getIndexBuffer() const;
-	size_t getVertexCount() const { return vertex_count; }
-	size_t getIndexCount() const { return index_count; }
-	void updateData(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices, size_t vertex_alloc = 0, size_t index_alloc = 0);
-	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
-	BoundingBox getBoundingBox() const { return bounding_box; }
+	Mesh(const std::string& path);
+	Mesh(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices, bool keep_accessible = false);
+	~Mesh() override;
 	
 	static VkVertexInputBindingDescription getBindingDescription();
 	static std::array<VkVertexInputAttributeDescription, 5> getAttributeDescriptions();
 	
-	Mesh(const std::string& path);
-	Mesh(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices, bool keep_accessible = false);
-	~Mesh() override;
+	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
+	VkBuffer getVertexBuffer() const;
+	VkBuffer getIndexBuffer() const;
+	size_t getVertexCount() const { return vertex_count; }
+	size_t getIndexCount() const { return index_count; }
+	BoundingBox getBoundingBox() const { return bounding_box; }
+	void updateData(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices, size_t vertex_alloc = 0, size_t index_alloc = 0);
 
 private:
-	static bool readFileToArrays(std::string path, std::vector<Vertex>& verts, std::vector<uint16_t>& inds);
-	void createFromArrays(std::vector<Vertex> verts, std::vector<uint16_t> inds);
+	static bool readFileToArrays(const std::string& path, std::vector<Vertex>& verts, std::vector<uint16_t>& inds);
+	void createFromArrays(const std::vector<Vertex>& verts, const std::vector<uint16_t>& inds);
 	void recomputeBoundingBox(const std::vector<Vertex>& verts);
 };
 

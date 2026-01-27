@@ -12,26 +12,25 @@
 #include "mesh.h"
 #include "object.h"
 #include "text_block.h"
-#include "token_file.h"
 
 using namespace HopEngine;
 using namespace std;
 
-int getArgument(const string& name, string& result, TokenReader::TokenType type, const vector<pair<string, TokenReader::Token>>& args)
+static int getArgument(const string& name, string& result, const TokenReader::TokenType type, const vector<pair<string, TokenReader::Token>>& args)
 {
-	for (const auto& arg : args)
+	for (const auto& [arg_name, token] : args)
 	{
-		if (arg.first != name)
+		if (arg_name != name)
 			continue;
-		if (arg.second.type != type)
+		if (token.type != type)
 			return 2;
-		result = arg.second.s_value;
+		result = token.s_value;
 		return 0;
 	}
 	return 1;
 }
 
-bool getAnonArgument(size_t index, string& result, TokenReader::TokenType type, const vector<pair<string, TokenReader::Token>>& args)
+static bool getAnonArgument(const size_t index, string& result, const TokenReader::TokenType type, const vector<pair<string, TokenReader::Token>>& args)
 {
 	if (index >= args.size())
 		return false;
@@ -43,7 +42,7 @@ bool getAnonArgument(size_t index, string& result, TokenReader::TokenType type, 
 	return true;
 }
 
-bool getAnonArgument(size_t index, glm::vec4& result, const vector<pair<string, TokenReader::Token>>& args)
+static bool getAnonArgument(const size_t index, glm::vec4& result, const vector<pair<string, TokenReader::Token>>& args)
 {
 	if (index >= args.size())
 		return false;
@@ -55,7 +54,7 @@ bool getAnonArgument(size_t index, glm::vec4& result, const vector<pair<string, 
 	return true;
 }
 
-bool getAnonArgument(size_t index, float& result, const vector<pair<string, TokenReader::Token>>& args)
+static bool getAnonArgument(const size_t index, float& result, const vector<pair<string, TokenReader::Token>>& args)
 {
 	if (index >= args.size())
 		return false;
@@ -66,9 +65,9 @@ bool getAnonArgument(size_t index, float& result, const vector<pair<string, Toke
 		result = args[index].second.f_value;
 		return true;
 	}
-	else if (args[index].second.type == TokenReader::INT)
+	if (args[index].second.type == TokenReader::INT)
 	{
-		result = (float)args[index].second.i_value;
+		result = static_cast<float>(args[index].second.i_value);
 		return true;
 	}
 	return false;
@@ -87,9 +86,9 @@ static CompareOp getCompareOp(const string& str)
 		{ "NEVER", COMPARE_NEVER },
 		{ "NOT_EQUAL", COMPARE_NOT_EQUAL }
 	};
-	auto it = op_map.find(str);
+	const auto it = op_map.find(str);
 	if (it == op_map.end())
-		return (CompareOp)-1;
+		return static_cast<CompareOp>(-1);
 	return it->second;
 }
 
@@ -100,7 +99,7 @@ static int getBool(const string& str)
 		{ "TRUE", true },
 		{ "FALSE", false }
 	};
-	auto it = bool_map.find(str);
+	const auto it = bool_map.find(str);
 	if (it == bool_map.end())
 		return -1;
 	return it->second;
@@ -114,9 +113,9 @@ static CullMode getCullMode(const string& str)
 		{ "FRONT", CULL_FRONT },
 		{ "BACK", CULL_BACK }
 	};
-	auto it = cull_map.find(str);
+	const auto it = cull_map.find(str);
 	if (it == cull_map.end())
-		return (CullMode)-1;
+		return static_cast<CullMode>(-1);
 	return it->second;
 }
 
@@ -128,9 +127,9 @@ static PolygonMode getPolygonMode(const string& str)
 		{ "LINE", POLYGON_LINE },
 		{ "POINT", POLYGON_POINT }
 	};
-	auto it = polygon_map.find(str);
+	const auto it = polygon_map.find(str);
 	if (it == polygon_map.end())
-		return (PolygonMode)-1;
+		return static_cast<PolygonMode>(-1);
 	return it->second;
 }
 
@@ -141,9 +140,9 @@ static SamplerFilter getFilter(const string& str)
 		{ "LINEAR", FILTER_LINEAR },
 		{ "NEAREST", FILTER_NEAREST },
 	};
-	auto it = filter_map.find(str);
+	const auto it = filter_map.find(str);
 	if (it == filter_map.end())
-		return (SamplerFilter)-1;
+		return static_cast<SamplerFilter>(-1);
 	return it->second;
 }
 
@@ -155,9 +154,9 @@ static SamplerAddress getAddressMode(const string& str)
 		{ "MIRROR", ADDRESS_MIRRORED },
 		{ "CLAMP", ADDRESS_CLAMP_EDGE }
 	};
-	auto it = address_map.find(str);
+	const auto it = address_map.find(str);
 	if (it == address_map.end())
-		return (SamplerAddress)-1;
+		return static_cast<SamplerAddress>(-1);
 	return it->second;
 }
 
@@ -167,7 +166,7 @@ Ref<Material> Material::deserialise(const string& name)
 	if (raw_data.empty())
 		return nullptr;
 
-	std::string token_str((char*)raw_data.data(), raw_data.size());
+	std::string token_str(reinterpret_cast<char*>(raw_data.data()), raw_data.size());
 	auto tokens = TokenReader::tokenise(token_str);
 	if (tokens.empty())
 		return nullptr;
@@ -220,7 +219,7 @@ Ref<Material> Material::deserialise(const string& name)
 			if (it != args.end())
 			{
 				CompareOp operation = getCompareOp(it->second.s_value);
-				if (operation == (CompareOp)-1)
+				if (operation == static_cast<CompareOp>(-1))
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid depth operation value");
 					return nullptr;
@@ -262,7 +261,7 @@ Ref<Material> Material::deserialise(const string& name)
 			if (it != args.end())
 			{
 				CullMode cull = getCullMode(it->second.s_value);
-				if (cull == (CullMode)-1)
+				if (cull == static_cast<CullMode>(-1))
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid culling mode value");
 					return nullptr;
@@ -282,7 +281,7 @@ Ref<Material> Material::deserialise(const string& name)
 			if (it != args.end())
 			{
 				PolygonMode polygon = getPolygonMode(it->second.s_value);
-				if (polygon == (PolygonMode)-1)
+				if (polygon == static_cast<PolygonMode>(-1))
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid polygon mode value");
 					return nullptr;
@@ -302,7 +301,7 @@ Ref<Material> Material::deserialise(const string& name)
 				}, args, "error deserialising material '" + name + "'"))
 				return nullptr;
 			CompareOp compare = getCompareOp(args["compare"].s_value);
-			if (compare == (CompareOp)-1)
+			if (compare == static_cast<CompareOp>(-1))
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid stencil compare op value");
 				return nullptr;
@@ -334,15 +333,13 @@ Ref<Material> Material::deserialise(const string& name)
 		}
 		else if (statement.keyword == "Uniform")
 		{
-			if (statement.arguments.size() > 0)
+			if (!statement.arguments.empty())
 			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid uniform descritor, too many arguments");
+				DBG_ERROR("error deserialising material '" + name + "': invalid uniform descritor, arguments are not allowed");
 				return nullptr;
 			}
 			for (const TokenReader::Statement& uniform : statement.children)
-			{
 				uniforms.push_back(uniform);
-			}
 		}
 		else if (statement.keyword == "Texture")
 		{
@@ -359,7 +356,7 @@ Ref<Material> Material::deserialise(const string& name)
 		}
 		else
 		{
-			DBG_ERROR("error deserialising material '" + name + "': invalid keyword '" + statement.keyword + "'");;
+			DBG_ERROR("error deserialising material '" + name + "': invalid keyword '" + statement.keyword + "'");
 			return nullptr;
 		}
 	}
@@ -386,7 +383,7 @@ Ref<Material> Material::deserialise(const string& name)
 		if (it != args.end())
 		{
 			SamplerFilter filter = getFilter(it->second.s_value);
-			if (filter == (SamplerFilter)-1)
+			if (filter == static_cast<SamplerFilter>(-1))
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor filter value");
 				return nullptr;
@@ -397,7 +394,7 @@ Ref<Material> Material::deserialise(const string& name)
 		if (it != args.end())
 		{
 			SamplerAddress address = getAddressMode(it->second.s_value);
-			if (address == (SamplerAddress)-1)
+			if (address == static_cast<SamplerAddress>(-1))
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor address value");
 				return nullptr;
@@ -453,13 +450,13 @@ Ref<Material> Material::deserialise(const string& name)
 	return material;
 }
 
-Ref<RenderGraph> RenderGraph::deserialise(string name)
+Ref<RenderGraph> RenderGraph::deserialise(const string& name)
 {
 	auto raw_data = Package::tryLoadFile(name);
 	if (raw_data.empty())
 		return nullptr;
 
-	std::string token_str((char*)raw_data.data(), raw_data.size());
+	std::string token_str(reinterpret_cast<char*>(raw_data.data()), raw_data.size());
 	auto tokens = TokenReader::tokenise(token_str);
 	if (tokens.empty())
 		return nullptr;
@@ -508,7 +505,7 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 				return nullptr;
 			}
 			size_t extra_buffers = glm::clamp(args[1].i_value, 0, 6);
-			render_passes[statement.identifier] = RenderOutput{ extra_buffers, (bool)has_depth };
+			render_passes[statement.identifier] = RenderOutput{ extra_buffers, static_cast<bool>(has_depth) };
 		}
 		else if (statement.keyword == "Camera")
 		{
@@ -547,12 +544,12 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 					DBG_ERROR("error deserialising render graph '" + name + "': unknown render pass identifier '" + it->second.s_value + "'");
 					return nullptr;
 				}
-				builder.addCamera(slot, render_pass_it->second, scale, { (uint32_t)custom_size.x, (uint32_t)custom_size.y });
+				builder.addCamera(slot, render_pass_it->second, scale, { static_cast<uint32_t>(custom_size.x), static_cast<uint32_t>(custom_size.y) });
 			}
 			else
-				builder.addCamera(slot, scale, { (uint32_t)custom_size.x, (uint32_t)custom_size.y });
+				builder.addCamera(slot, scale, { static_cast<uint32_t>(custom_size.x), static_cast<uint32_t>(custom_size.y) });
 			builder.execution_steps[builder.execution_steps.size() - 1].name = statement.identifier;
-			step_identifiers[statement.identifier] = (int)builder.execution_steps.size() - 1;
+			step_identifiers[statement.identifier] = static_cast<int>(builder.execution_steps.size()) - 1;
 		}
 		else if (statement.keyword == "PostProcess")
 		{
@@ -623,7 +620,7 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 				if (filter_it != args2.end())
 				{
 					SamplerFilter filter = getFilter(filter_it->second.s_value);
-					if (filter == (SamplerFilter)-1)
+					if (filter == static_cast<SamplerFilter>(-1))
 					{
 						DBG_ERROR("error deserialising render graph '" + name + "': invalid post-process input filter value");
 						return nullptr;
@@ -634,14 +631,14 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 				if (filter_it != args2.end())
 				{
 					SamplerAddress address = getAddressMode(filter_it->second.s_value);
-					if (address == (SamplerAddress)-1)
+					if (address == static_cast<SamplerAddress>(-1))
 					{
 						DBG_ERROR("error deserialising render graph '" + name + "': invalid post-process input address mode value");
 						return nullptr;
 					}
 					texture_binding.address(address);
 				}
-				bindings[(uint32_t)binding] = texture_binding;
+				bindings[static_cast<uint32_t>(binding)] = texture_binding;
 			}
 			it = args.find("render_pass");
 			if (it != args.end())
@@ -652,16 +649,16 @@ Ref<RenderGraph> RenderGraph::deserialise(string name)
 					DBG_ERROR("error deserialising render graph '" + name + "': unknown render pass identifier '" + it->second.s_value + "'");
 					return nullptr;
 				}
-				builder.addPostProcess(shader_it->second, bindings, render_pass_it->second, scale, { (uint32_t)custom_size.x, (uint32_t)custom_size.y });
+				builder.addPostProcess(shader_it->second, bindings, render_pass_it->second, scale, { static_cast<uint32_t>(custom_size.x), static_cast<uint32_t>(custom_size.y) });
 			}
 			else
-				builder.addPostProcess(shader_it->second, bindings, scale, { (uint32_t)custom_size.x, (uint32_t)custom_size.y });
+				builder.addPostProcess(shader_it->second, bindings, scale, { static_cast<uint32_t>(custom_size.x), static_cast<uint32_t>(custom_size.y) });
 			builder.execution_steps[builder.execution_steps.size() - 1].name = statement.identifier;
 			step_identifiers[statement.identifier] = static_cast<int>(builder.execution_steps.size()) - 1;
 		}
 		else
 		{
-			DBG_ERROR("error deserialising render graph '" + name + "': invalid keyword '" + statement.keyword + "'");;
+			DBG_ERROR("error deserialising render graph '" + name + "': invalid keyword '" + statement.keyword + "'");
 			return nullptr;
 		}
 	}
@@ -678,13 +675,13 @@ struct SceneResources
 	map<string, Ref<Texture>> textures;
 };
 
-Ref<Object> deserialiseStaticMesh(const map<string, TokenReader::Token>& args, Ref<Scene> scene, const SceneResources& resources)
+static Ref<Object> deserialiseStaticMesh(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
 	Ref<StaticMesh> obj = new StaticMesh(nullptr, nullptr);
 	auto it = args.find("mesh");
 	if (it != args.end())
 	{
-		auto mesh_it = resources.meshes.find(it->second.s_value);
+		const auto mesh_it = resources.meshes.find(it->second.s_value);
 		if (mesh_it == resources.meshes.end())
 		{
 			DBG_ERROR("error deserialising static mesh, invalid mesh identifier '" + it->second.s_value + "'");
@@ -695,7 +692,7 @@ Ref<Object> deserialiseStaticMesh(const map<string, TokenReader::Token>& args, R
 	it = args.find("material");
 	if (it != args.end())
 	{
-		auto material_it = resources.materials.find(it->second.s_value);
+		const auto material_it = resources.materials.find(it->second.s_value);
 		if (material_it == resources.materials.end())
 		{
 			DBG_ERROR("error deserialising static mesh, invalid material identifier '" + it->second.s_value + "'");
@@ -712,7 +709,7 @@ Ref<Object> deserialiseStaticMesh(const map<string, TokenReader::Token>& args, R
 	return obj.cast<Object>();
 }
 
-Ref<Object> deserialiseLight(const map<string, TokenReader::Token>& args, Ref<Scene> scene, const SceneResources& resources)
+static Ref<Object> deserialiseLight(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
 	Ref<Light> obj = new Light(Light::DIRECTIONAL);
 	auto it = args.find("type");
@@ -744,7 +741,7 @@ Ref<Object> deserialiseLight(const map<string, TokenReader::Token>& args, Ref<Sc
 	return obj.cast<Object>();
 }
 
-Ref<Object> deserialiseCamera(const map<string, TokenReader::Token>& args, Ref<Scene> scene, const SceneResources& resources)
+static Ref<Object> deserialiseCamera(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
 	Ref<Camera> obj = new Camera();
 	auto it = args.find("slot");
@@ -768,7 +765,7 @@ Ref<Object> deserialiseCamera(const map<string, TokenReader::Token>& args, Ref<S
 	return obj.cast<Object>();
 }
 
-Ref<Object> deserialiseTextBlock(const map<string, TokenReader::Token>& args, Ref<Scene> scene, const SceneResources& resources)
+static Ref<Object> deserialiseTextBlock(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
 	Ref<TextBlock> obj = new TextBlock("Text");
 	auto it = args.find("text");
@@ -782,7 +779,7 @@ Ref<Object> deserialiseTextBlock(const map<string, TokenReader::Token>& args, Re
 }
 struct ObjectDeserialiseConfig
 {
-	Ref<Object> (* builder_function)(const map<string, TokenReader::Token>&, Ref<Scene>, const SceneResources& resources);
+	Ref<Object> (* builder_function)(const map<string, TokenReader::Token>&, const Ref<Scene>&, const SceneResources& resources);
 	map<string, TokenReader::TokenType> arguments;
 };
 
@@ -810,7 +807,7 @@ static map<string, ObjectDeserialiseConfig> object_deserialisers = {
 	} } }
 };
 
-bool deserialiseObject(TokenReader::Statement statement, Ref<Scene> scene, const SceneResources& resources, Ref<Object> parent, string name)
+static bool deserialiseObject(const TokenReader::Statement& statement, const Ref<Scene>& scene, const SceneResources& resources, const Ref<Object>& parent, const string& name)
 {
 	Ref<Object> obj;
 	map<string, pair<TokenReader::TokenType, bool>> expected = {
@@ -859,7 +856,7 @@ bool deserialiseObject(TokenReader::Statement statement, Ref<Scene> scene, const
 	if (!statement.identifier.empty())
 		obj->name = statement.identifier;
 	
-	for (TokenReader::Statement child : statement.children)
+	for (const TokenReader::Statement& child : statement.children)
 	{
 		if (object_deserialisers.contains(child.keyword) || child.keyword == "Object")
 		{
@@ -881,12 +878,12 @@ Ref<Scene> Scene::deserialise(const string& name)
 	if (raw_data.empty())
 		return nullptr;
 
-	std::string token_str(reinterpret_cast<char*>(raw_data.data()), raw_data.size());
-	auto tokens = TokenReader::tokenise(token_str);
+	const string token_str(reinterpret_cast<char*>(raw_data.data()), raw_data.size());
+	const auto tokens = TokenReader::tokenise(token_str);
 	if (tokens.empty())
 		return nullptr;
 
-	auto syntax_tree = TokenReader::extractSyntaxTree(tokens, token_str);
+	const auto syntax_tree = TokenReader::extractSyntaxTree(tokens, token_str);
 	if (syntax_tree.empty())
 		return nullptr;
 
@@ -943,7 +940,7 @@ Ref<Scene> Scene::deserialise(const string& name)
 			auto it = textures.find(args["resource"].s_value);
 			if (it == textures.end())
 			{
-				DBG_ERROR("error deserialising scene '" + name + "': no such texture loaded '" + args["resource"].s_value + "'");;
+				DBG_ERROR("error deserialising scene '" + name + "': no such texture loaded '" + args["resource"].s_value + "'");
 				return nullptr;
 			}
 			scene->skybox = it->second;
@@ -959,7 +956,7 @@ Ref<Scene> Scene::deserialise(const string& name)
 			auto it = render_graphs.find(args["resource"].s_value);
 			if (it == render_graphs.end())
 			{
-				DBG_ERROR("error deserialising scene '" + name + "': no such render graph loaded '" + args["resource"].s_value + "'");;
+				DBG_ERROR("error deserialising scene '" + name + "': no such render graph loaded '" + args["resource"].s_value + "'");
 				return nullptr;
 			}
 			scene->render_graph = it->second;

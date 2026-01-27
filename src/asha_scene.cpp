@@ -15,8 +15,8 @@ static WeakRef<Gizmo> gizmo;
 static Ref<Scene> initAshaScene()
 {
     Ref<Scene> scene = new Scene();
-    Ref<Shader> shader = Engine::loadShader("res://psx");
-    Ref<Sampler> sampler = new Sampler(SamplerBuilder().filter(FILTER_NEAREST));
+    const Ref<Shader> shader = Engine::loadShader("res://psx");
+    const Ref<Sampler> sampler = new Sampler(SamplerBuilder().filter(FILTER_NEAREST));
     asha = scene->insertObject<StaticMesh>(new StaticMesh(
         Engine::loadMesh("res://samples/asha.obj"),
         Engine::keepLoaded(new Material(

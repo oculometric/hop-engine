@@ -11,51 +11,51 @@
 using namespace HopEngine;
 using namespace std;
 
-VkBuffer Mesh::getVertexBuffer() const
+Mesh::Mesh(const string& path)
 {
-    return vertex_buffer->getBuffer();
+    origin = path;
+    vector<Vertex> verts;
+    vector<uint16_t> inds;
+
+    if (readFileToArrays(path, verts, inds))
+        createFromArrays(verts, inds);
+    else
+        DBG_ERROR("failed to load mesh " + path);
+
+    DBG_INFO("created mesh from " + path + " with " + ::to_string(verts.size()) + " vertices and " + ::to_string(inds.size()) + " indices");
 }
 
-VkBuffer Mesh::getIndexBuffer() const
+Mesh::Mesh(const vector<Vertex>& vertices, const vector<uint16_t>& indices, const bool keep_accessible)
 {
-    return index_buffer->getBuffer();
+    accessible = keep_accessible;
+    if (!keep_accessible)
+        createFromArrays(vertices, indices);
+    else
+    {
+        vertex_buffer = new Buffer(sizeof(Vertex) * vertices.size(), BUFFER_USAGE_VERTEX,
+                                   MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
+        memcpy(vertex_buffer->mapMemory(), vertices.data(), vertex_buffer->getSize());
+        vertex_buffer->unmapMemory();
+
+        index_buffer = new Buffer(sizeof(uint16_t) * indices.size(), BUFFER_USAGE_INDEX,
+                                  MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
+        memcpy(index_buffer->mapMemory(), indices.data(), index_buffer->getSize());
+        index_buffer->unmapMemory();
+
+        vertex_space = vertices.size();
+        index_space = indices.size();
+        index_count = index_space;
+        recomputeBoundingBox(vertices);
+    }
+
+    DBG_INFO("created mesh from arrays with " + ::to_string(vertices.size()) + " vertices and " + ::to_string(indices.size()) + " indices");
 }
 
-void Mesh::updateData(const vector<Vertex>& vertices, const vector<uint16_t>& indices, size_t vertex_alloc, size_t index_alloc)
+Mesh::~Mesh()
 {
-    if (!accessible)
-    {
-        DBG_WARNING("attempted to update mesh '" + getOrigin() + "' which is not accessible to CPU memory");
-        return;
-    }
-
-    RenderServer::waitIdle();
-
-    vertex_alloc = max(vertex_alloc, vertices.size());
-    if (vertex_alloc != vertex_space)
-    {
-        vertex_buffer = new Buffer(sizeof(Vertex) * vertex_alloc, BUFFER_USAGE_VERTEX,
-            MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
-    }
-
-    memcpy(vertex_buffer->mapMemory(), vertices.data(), vertices.size() * sizeof(Vertex));
-    vertex_buffer->unmapMemory();
-    vertex_space = vertex_alloc;
-    vertex_count = vertices.size();
-
-    index_alloc = max(index_alloc, indices.size());
-    if (index_alloc != index_space)
-    {
-        index_buffer = new Buffer(sizeof(uint16_t) * index_alloc, BUFFER_USAGE_INDEX,
-            MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
-    }
-
-    memcpy(index_buffer->mapMemory(), indices.data(), indices.size() * sizeof(uint16_t));
-    index_buffer->unmapMemory();
-    index_space = index_alloc;
-    index_count = indices.size();
-    
-    recomputeBoundingBox(vertices);
+    DBG_INFO("destroying mesh '" + getOrigin() + '\'');
+    vertex_buffer = nullptr;
+    index_buffer = nullptr;
 }
 
 VkVertexInputBindingDescription Mesh::getBindingDescription()
@@ -99,51 +99,51 @@ array<VkVertexInputAttributeDescription, 5> Mesh::getAttributeDescriptions()
     return attributes;
 }
 
-Mesh::Mesh(const string& path)
+VkBuffer Mesh::getVertexBuffer() const
 {
-    origin = path;
-    vector<Vertex> verts;
-    vector<uint16_t> inds;
-
-    if (readFileToArrays(path, verts, inds))
-        createFromArrays(verts, inds);
-    else
-        DBG_ERROR("failed to load mesh " + path);
-
-    DBG_INFO("created mesh from " + path + " with " + to_string(verts.size()) + " vertices and " + to_string(inds.size()) + " indices");
+    return vertex_buffer->getBuffer();
 }
 
-Mesh::Mesh(const vector<Vertex>& vertices, const vector<uint16_t>& indices, const bool keep_accessible)
+VkBuffer Mesh::getIndexBuffer() const
 {
-    accessible = keep_accessible;
-    if (!keep_accessible)
-        createFromArrays(vertices, indices);
-    else
+    return index_buffer->getBuffer();
+}
+
+void Mesh::updateData(const vector<Vertex>& vertices, const vector<uint16_t>& indices, size_t vertex_alloc, size_t index_alloc)
+{
+    if (!accessible)
     {
-        vertex_buffer = new Buffer(sizeof(Vertex) * vertices.size(), BUFFER_USAGE_VERTEX,
-            MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
-        memcpy(vertex_buffer->mapMemory(), vertices.data(), vertex_buffer->getSize());
-        vertex_buffer->unmapMemory();
-
-        index_buffer = new Buffer(sizeof(uint16_t) * indices.size(), BUFFER_USAGE_INDEX,
-            MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
-        memcpy(index_buffer->mapMemory(), indices.data(), index_buffer->getSize());
-        index_buffer->unmapMemory();
-
-        vertex_space = vertices.size();
-        index_space = indices.size();
-        index_count = index_space;
-        recomputeBoundingBox(vertices);
+        DBG_WARNING("attempted to update mesh '" + getOrigin() + "' which is not accessible to CPU memory");
+        return;
     }
 
-    DBG_INFO("created mesh from arrays with " + to_string(vertices.size()) + " vertices and " + to_string(indices.size()) + " indices");
-}
+    RenderServer::waitIdle();
 
-Mesh::~Mesh()
-{
-    DBG_INFO("destroying mesh '" + getOrigin() + '\'');
-    vertex_buffer = nullptr;
-    index_buffer = nullptr;
+    vertex_alloc = max(vertex_alloc, vertices.size());
+    if (vertex_alloc != vertex_space)
+    {
+        vertex_buffer = new Buffer(sizeof(Vertex) * vertex_alloc, BUFFER_USAGE_VERTEX,
+                                   MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
+    }
+
+    memcpy(vertex_buffer->mapMemory(), vertices.data(), vertices.size() * sizeof(Vertex));
+    vertex_buffer->unmapMemory();
+    vertex_space = vertex_alloc;
+    vertex_count = vertices.size();
+
+    index_alloc = max(index_alloc, indices.size());
+    if (index_alloc != index_space)
+    {
+        index_buffer = new Buffer(sizeof(uint16_t) * index_alloc, BUFFER_USAGE_INDEX,
+                                  MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
+    }
+
+    memcpy(index_buffer->mapMemory(), indices.data(), indices.size() * sizeof(uint16_t));
+    index_buffer->unmapMemory();
+    index_space = index_alloc;
+    index_count = indices.size();
+    
+    recomputeBoundingBox(vertices);
 }
 
 struct FaceCorner { uint16_t co; uint16_t uv; uint16_t vn; };
@@ -203,10 +203,10 @@ static glm::vec3 computeTangent(glm::vec3 co_a, glm::vec3 co_b, glm::vec3 co_c, 
     return glm::normalize(glm::vec3{ vec_mat[0] }); // extract tangent
 }
 
-bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>& inds)
+bool Mesh::readFileToArrays(const string& path, vector<Vertex>& verts, vector<uint16_t>& inds)
 {
-    auto file_data = Package::tryLoadFile(path);
-    auto string_data = string(reinterpret_cast<char*>(file_data.data()), file_data.size());
+    const auto file_data = Package::tryLoadFile(path);
+    const auto string_data = string(reinterpret_cast<const char*>(file_data.data()), file_data.size());
     auto stream = stringstream(string_data);
 
     // vectors to load data into
@@ -244,7 +244,7 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
             }
             else
             {
-                tmp_cl.push_back({ 1, 1, 1 });
+                tmp_cl.emplace_back(1, 1, 1);
             }
         }
         else if (tmps == "vn")
@@ -260,7 +260,7 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
             // read a face corner uv (texture coordinate)
             file >> tmp2.x;
             file >> tmp2.y;
-            tmp_uv.push_back(tmp2);
+            tmp_uv.emplace_back(tmp2);
         }
         else if (tmps == "f")
         {
@@ -281,36 +281,34 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
     verts.clear();
     inds.clear();
 
-    for (FaceCorner fc : tmp_fc)
+    for (auto [co, uv, vn] : tmp_fc)
     {
         bool found_matching_vertex = false;
         uint16_t match = 0;
-        for (FaceCornerReference existing : fc_normal_uses[fc.co])
+        for (auto [normal_index, uv_index, transferred_vert_index] : fc_normal_uses[co])
         {
-            if (existing.normal_index == fc.vn && existing.uv_index == fc.uv)
+            if (normal_index == vn && uv_index == uv)
             {
                 found_matching_vertex = true;
-                match = existing.transferred_vert_index;
+                match = transferred_vert_index;
                 break;
             }
         }
 
         if (found_matching_vertex)
-        {
             inds.push_back(match);
-        }
         else
         {
             Vertex new_vert;
-            new_vert.position = glm::vec4(tmp_co[fc.co], 1);
-            new_vert.colour = glm::vec4(tmp_cl[fc.co], 0);
-            if (fc.vn < tmp_vn.size())
-                new_vert.normal = glm::vec4(tmp_vn[fc.vn], 0);
-            if (fc.uv < tmp_uv.size())
-                new_vert.uv = tmp_uv[fc.uv];
+            new_vert.position = glm::vec4(tmp_co[co], 1);
+            new_vert.colour = glm::vec4(tmp_cl[co], 0);
+            if (vn < tmp_vn.size())
+                new_vert.normal = glm::vec4(tmp_vn[vn], 0);
+            if (uv < tmp_uv.size())
+                new_vert.uv = tmp_uv[uv];
 
             uint16_t new_index = static_cast<uint16_t>(verts.size());
-            fc_normal_uses[fc.co].push_back(FaceCornerReference{ fc.vn, fc.uv, new_index });
+            fc_normal_uses[co].push_back(FaceCornerReference{ vn, uv, new_index });
 
             inds.push_back(new_index);
             verts.push_back(new_vert);
@@ -368,7 +366,7 @@ bool Mesh::readFileToArrays(string path, vector<Vertex>& verts, vector<uint16_t>
     return true;
 }
 
-void Mesh::createFromArrays(vector<Vertex> verts, vector<uint16_t> inds)
+void Mesh::createFromArrays(const vector<Vertex>& verts, const vector<uint16_t>& inds)
 {
     Ref<Buffer> staging_buffer = new Buffer(sizeof(Vertex) * verts.size(), BUFFER_USAGE_TRANSFER_SRC,
         MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);

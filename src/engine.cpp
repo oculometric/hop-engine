@@ -20,15 +20,10 @@ void Engine::init()
 }
 
 void Engine::destroy()
-{
-    if (engine != nullptr)
-        delete engine;
-}
+{ delete engine; }
 
 void Engine::stop()
-{
-    engine->stop_requested = true;
-}
+{ engine->stop_requested = true; }
 
 void Engine::setup(Ref<Scene>(* init_func)(), void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>, float))
 {
@@ -49,7 +44,7 @@ void Engine::mainLoop()
         auto this_frame = chrono::steady_clock::now();
         chrono::duration<float> delta = this_frame - last_frame;
         last_frame = this_frame;
-        engine->window->pollEvents();
+        Window::pollEvents();
         Input::pollGamepads();
         if (engine->window->isMinified())
             continue;
@@ -91,17 +86,15 @@ Ref<Scene> Engine::getScene()
 
 void Engine::summariseTrackedObjects()
 {
-    DBG_INFO("enumerating allocated objects (" + to_string(engine->allocated_refs.size()) + "):");
-    for (auto& pair : engine->allocated_refs)
-        DBG_INFO("object " + PTR(pair.second.get()) + ", with type '" + pair.first + '\'');
+    DBG_INFO("enumerating allocated objects (" + ::to_string(engine->allocated_refs.size()) + "):");
+    for (auto& [type_name, ptr] : engine->allocated_refs)
+        DBG_INFO("object " + PTR(ptr.get()) + ", with type '" + type_name + '\'');
 }
 
-void Engine::registerCountedRef(const char* type_name, WeakRef<void> reference)
-{
-    engine->allocated_refs.insert({ type_name, reference });
-}
+void Engine::registerCountedRef(const char* type_name, const WeakRef<void>& reference)
+{ engine->allocated_refs.insert({ type_name, reference }); }
 
-void Engine::unregisterCountedRef(void* ptr)
+void Engine::unregisterCountedRef(const void* ptr)
 {
     for (auto pair = engine->allocated_refs.begin(); pair != engine->allocated_refs.end(); ++pair)
     {
@@ -111,33 +104,29 @@ void Engine::unregisterCountedRef(void* ptr)
             return;
         }
     }
-    DBG_ERROR("a reference counted object was deallocated, but it's raw pointer is not allocated! you probably used a raw pointer twice. we are about to double-free that pointer. i am praying for you.");
+    DBG_ERROR("a reference counted object was deallocated, but its raw pointer is not allocated! you probably used a raw pointer twice. we are about to double-free that pointer. fuck you.");
 }
 
-void HopEngine::registerCountedRef(const char* type_name, WeakRef<void> reference)
-{
-    Engine::registerCountedRef(type_name, reference);
-}
+void HopEngine::registerCountedRef(const char* type_name, const WeakRef<void>& reference)
+{ Engine::registerCountedRef(type_name, reference); }
 
-void HopEngine::unregisterCountedRef(void* ptr)
-{
-    Engine::unregisterCountedRef(ptr);
-}
+void HopEngine::unregisterCountedRef(const void* ptr)
+{ Engine::unregisterCountedRef(ptr); }
 
 FrameStats Engine::getFrameStats()
-{
-    return engine->last_frame_stats;
-}
+{ return engine->last_frame_stats; }
 
 float Engine::getSmoothedDeltaTime()
-{
-    return engine->smoothed_delta_time;
-}
+{ return engine->smoothed_delta_time; }
 
 float Engine::getSmoothedFPS()
-{
-    return engine->smoothed_fps;
-}
+{ return engine->smoothed_fps; }
+
+bool Engine::isWireframeMode()
+{ return engine->wireframe_view; }
+
+void Engine::setForceWireframe(const bool value)
+{ engine->wireframe_view = value; }
 
 Ref<Shader> Engine::loadShader(const string& path)
 {
@@ -178,7 +167,7 @@ Ref<Texture> Engine::loadTexture(const string& path)
     return it->second;
 }
 
-Ref<Texture> Engine::loadTexture3D(const string& path, int layers_wide, int layers_high)
+Ref<Texture> Engine::loadTexture3D(const string& path, const int layers_wide, const int layers_high)
 {
     const auto it = engine->loaded_textures.find(path);
     if (it == engine->loaded_textures.end())
@@ -264,55 +253,8 @@ size_t Engine::pruneUnusedResources()
         else
             ++tex_it;
     }
-    DBG_INFO("pruned " + to_string(pruned_refs) + " total reference counted objects");
+    DBG_INFO("pruned " + ::to_string(pruned_refs) + " total reference counted objects");
     return pruned_refs;
-}
-
-bool Engine::isWireframeMode()
-{
-    return engine->wireframe_view;
-}
-
-void Engine::setForceWireframe(bool value)
-{
-    engine->wireframe_view = value;
-}
-
-Engine* Engine::getEngine()
-{
-    return engine;
-}
-
-void Engine::_keepLoaded(Ref<Destructible> ref)
-{
-    engine->keep_loaded_refs.push_back(ref);
-}
-
-vector<WeakRef<void>> Engine::getRefsWithType(const char* type_name)
-{
-    vector<WeakRef<void>> refs;
-    auto range = engine->allocated_refs.equal_range(type_name);
-    while (range.first != range.second)
-    {
-        refs.push_back(range.first->second);
-        ++range.first;
-    }
-    return refs;
-}
-
-void Engine::updateStats(FrameStats stats)
-{
-    last_frame_stats = stats;
-
-    smoothed_delta_time = (smoothed_delta_time * 0.5f) + (stats.delta_time * 0.5f);
-    float fps = 1.0f / stats.delta_time;
-    smoothed_fps = (smoothed_fps * 0.5f) + (fps * 0.5f);
-
-    delta_time_history[history_offset] = stats.delta_time;
-    fps_history[history_offset] = 1.0f / stats.delta_time;
-    history_offset = (history_offset + 1) % 512;
-
-    engine->window->setTitle(format("hop-engine   -   {:>4.2f}ms   -   {:>6.2f} fps", smoothed_delta_time * 1000.0f, smoothed_fps));
 }
 
 Engine::Engine()
@@ -321,7 +263,6 @@ Engine::Engine()
     Debug::init(Debug::DEBUG_FAULT);
     Package::init();
     Package::loadPackage("resources.hop");
-    Window::initEnvironment();
     window = new Window(1024, 1024, "hop!");
     window->setIcon("res://icon.png");
     Input::init(window);
@@ -346,7 +287,7 @@ Engine::~Engine()
     Package::destroy();
     Input::destroy();
     window = nullptr;
-    if (allocated_refs.size() > 0)
+    if (!allocated_refs.empty())
     {
         DBG_ERROR("uh oh! there are objects still allocated! prepare for vulkan errors and possibly crashes! see below:");
         Engine::summariseTrackedObjects();
@@ -357,4 +298,37 @@ Engine::~Engine()
     Debug::close();
 
     engine = nullptr;
+}
+
+Engine* Engine::getEngine()
+{ return engine; }
+
+vector<WeakRef<void>> Engine::getRefsWithType(const char* type_name)
+{
+    vector<WeakRef<void>> refs;
+    auto [range_start, range_end] = engine->allocated_refs.equal_range(type_name);
+    while (range_start != range_end)
+    {
+        refs.push_back(range_start->second);
+        ++range_start;
+    }
+    return refs;
+}
+
+void Engine::_keepLoaded(const Ref<Destructible>& ref)
+{ engine->keep_loaded_refs.push_back(ref); }
+
+void Engine::updateStats(const FrameStats& stats)
+{
+    last_frame_stats = stats;
+
+    smoothed_delta_time = (smoothed_delta_time * 0.5f) + (stats.delta_time * 0.5f);
+    const float fps = 1.0f / stats.delta_time;
+    smoothed_fps = (smoothed_fps * 0.5f) + (fps * 0.5f);
+
+    delta_time_history[history_offset] = stats.delta_time;
+    fps_history[history_offset] = 1.0f / stats.delta_time;
+    history_offset = (history_offset + 1) % 512;
+
+    engine->window->setTitle(format("hop-engine   -   {:>4.2f}ms   -   {:>6.2f} fps", smoothed_delta_time * 1000.0f, smoothed_fps));
 }

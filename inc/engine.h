@@ -59,27 +59,24 @@ public:
 	static void destroy();
 	static void stop();
 
-	static void setup(Ref<Scene>(* init_func)(), void(* update_func)(Ref<Scene>, float), void(* imgui_func)(Ref<Scene>, float));
+	static void setup(Ref<Scene>(* init_func)(), void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>, float));
 	static void mainLoop();
 	static Ref<Scene> getScene();
 	static void summariseTrackedObjects();
-
-	static void registerCountedRef(const char* type_name, WeakRef<void> reference);
-	static void unregisterCountedRef(void* ptr);
-	template <class T>
-	static std::vector<WeakRef<T>> getAllRefs();
-	template <class T>
-	static Ref<T> keepLoaded(Ref<T> ref);
-	template <class T>
-	static inline Ref<T> keepLoaded(T* ref) { return keepLoaded(Ref<T>(ref)); }
-
 	static FrameStats getFrameStats();
 	static float getSmoothedDeltaTime();
 	static float getSmoothedFPS();
-	
+	static bool isWireframeMode();
+	template <class T> static std::vector<WeakRef<T>> getAllRefs();
+	static void setForceWireframe(bool value);
+	static void registerCountedRef(const char* type_name, const WeakRef<void>& reference);
+	static void unregisterCountedRef(const void* ptr);
+	template <class T> static Ref<T> keepLoaded(Ref<T> ref);
+	template <class T> static Ref<T> keepLoaded(T* ref) { return keepLoaded(Ref<T>(ref)); }
+
 	static void debugCamera(float delta_time);
-	static void debugSelect(WeakRef<Object> object);
-	static void debugClearSelection(WeakRef<Object> object = WeakRef<Object>(), WeakRef<Material> material = WeakRef<Material>(), WeakRef<Camera> camera = WeakRef<Camera>());
+	static void debugSelect(const WeakRef<Object>& object);
+	static void debugClearSelection(const WeakRef<Object>& object = WeakRef<Object>(), const WeakRef<Material>& material = WeakRef<Material>(), WeakRef<Camera> camera = WeakRef<Camera>());
 	static WeakRef<Object> getDebugSelection();
 	
 	static Ref<Shader> loadShader(const std::string& path);
@@ -89,22 +86,20 @@ public:
 	static Ref<Mesh> loadMesh(const std::string& path);
 	static size_t pruneUnusedResources();
 	
-	static bool isWireframeMode();
-	static void setForceWireframe(bool value);
-	
 private:
-	static Engine* getEngine();
-	static void _keepLoaded(Ref<Destructible> ref);
-	static std::vector<WeakRef<void>> getRefsWithType(const char* type_name);
-	void updateStats(FrameStats stats);
-	void drawImGuiDebug(float delta_time);
-	
 	Engine();
 	~Engine();
+	
+	static Engine* getEngine();
+	static std::vector<WeakRef<void>> getRefsWithType(const char* type_name);
+	static void _keepLoaded(const Ref<Destructible>& ref);
+	void updateStats(const FrameStats& stats);
+	
+	void drawImGuiDebug(float delta_time) const;
 };
 
 template<class T>
-inline std::vector<WeakRef<T>> Engine::getAllRefs()
+std::vector<WeakRef<T>> Engine::getAllRefs()
 {
 	auto refs = getRefsWithType(typeid(T).name());
 	std::vector<WeakRef<T>> cast_refs;
@@ -114,7 +109,7 @@ inline std::vector<WeakRef<T>> Engine::getAllRefs()
 }
 
 template<class T>
-inline Ref<T> Engine::keepLoaded(Ref<T> ref)
+Ref<T> Engine::keepLoaded(Ref<T> ref)
 {
 	static_assert(std::is_convertible_v<T*, Destructible*>, "reference must be a HopEngine::Destructible subclass");
 	_keepLoaded(ref.template cast<Destructible>());

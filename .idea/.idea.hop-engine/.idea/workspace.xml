@@ -12,36 +12,38 @@
     <list default="true" id="836e5fd3-1918-497f-b7c7-e36a55aacb04" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/buffer.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/buffer.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/common.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/common.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hop-engine.sln.DotSettings.user" beforeDir="false" afterPath="$PROJECT_DIR$/hop-engine.sln.DotSettings.user" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inc/counted_ref.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/counted_ref.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/pipeline.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/pipeline.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/debug.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/debug.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/engine.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/engine.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/font.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/font.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/gizmo.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/gizmo.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/graphics_environment.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/graphics_environment.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/input.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/input.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/material.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/material.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/math_helpers.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/math_helpers.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/mesh.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/mesh.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/object.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/object.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/package.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/package.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inc/render_graph.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/render_graph.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/render_pass.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/render_pass.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/sampler.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/sampler.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/scene.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/scene.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/shader.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/shader.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/swapchain.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/swapchain.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/text_block.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/text_block.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/texture.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/texture.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/token_file.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/token_file.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/uniform_block.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/uniform_block.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/vulkan_typedefs.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/vulkan_typedefs.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inc/window.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/window.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/buffer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/buffer.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/asha_scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/asha_scene.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/debug.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/debug.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/deserialise.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/deserialise.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/exec.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/exec.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/font.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/font.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gizmo.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gizmo.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/graphics_environment.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/graphics_environment.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/imgui_functions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/imgui_functions.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pipeline.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/pipeline.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/render_graph.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/render_graph.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/render_pass.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/render_pass.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/sampler.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/sampler.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/scene.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/shader.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/shader.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/swapchain.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/swapchain.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/texture.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/texture.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/token_file.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/token_file.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/uniform_block.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/uniform_block.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/input.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/input.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/material.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/material.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/mesh.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/mesh.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/museum_scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/museum_scene.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/node_scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/node_scene.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/node_view.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/node_view.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/object.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/object.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/package.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/package.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/text_block.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/text_block.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/window.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/window.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -56,8 +58,9 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://10" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://0" root0="FORCE_HIGHLIGHTING" />
   </component>
+  <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="SWEA" />
   </component>
@@ -70,25 +73,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;C/C++ Project.hop-engine.executor&quot;: &quot;Debug&quot;,
-    &quot;C/C++ Project.spaceflight-test.executor&quot;: &quot;Debug&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.smartKeys_rider&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "C/C++ Project.hop-engine.executor": "Run",
+    "C/C++ Project.spaceflight-test.executor": "Debug",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "git-widget-placeholder": "main",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "editor.preferences.smartKeys_rider",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager" selected="C/C++ Project.hop-engine">
     <configuration name="hop-engine" type="CppProject" factoryName="C++ Project">
       <configuration_1 setup="1">
@@ -176,13 +179,15 @@
       <workItem from="1769434369751" duration="2214000" />
       <workItem from="1769436811777" duration="9304000" />
       <workItem from="1769451598992" duration="11945000" />
-      <workItem from="1769474649617" duration="1574000" />
+      <workItem from="1769474649617" duration="2247000" />
+      <workItem from="1769514841654" duration="9190000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="UnityCheckinConfiguration" checkUnsavedScenes="true" />
   <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />

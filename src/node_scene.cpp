@@ -96,7 +96,7 @@ static Ref<Scene> initNodeScene()
     return scene;
 }
 
-void updateNodeScene(Ref<Scene> scene, float delta_time)
+static void updateNodeScene(Ref<Scene> scene, float delta_time)
 {
     bool node_view_dirty = false;
 

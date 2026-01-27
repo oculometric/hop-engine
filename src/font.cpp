@@ -7,30 +7,30 @@
 using namespace HopEngine;
 using namespace std;
 
-Ref<Texture> Font::getAtlas() const
-{
-    return atlas;
-}
-
-glm::vec2 Font::getCharUVOffset(char c) const
-{
-    return { 
-        glm::fract(c / static_cast<float>(chars_resolution.x)), 
-        glm::floor(c / static_cast<float>(chars_resolution.x)) / static_cast<float>(chars_resolution.y) };
-}
-
-Font::Font(string atlas_name, glm::ivec2 character_texture_size)
+Font::Font(const string& atlas_name, const glm::ivec2 glyph_size_pixels)
 {
     atlas = new Texture(atlas_name);
-    character_size = character_texture_size;
-    chars_resolution = atlas->getSize() / character_size;
+    glyph_size = glyph_size_pixels;
+    chars_resolution = atlas->getSize() / glyph_size;
     char_uv_size = 1.0f / glm::vec2(chars_resolution);
 
-    DBG_INFO("created font using " + atlas_name + " atlas with character size " + to_string(character_size.x) + "x" + to_string(character_size.y));
+    DBG_INFO("created font using " + atlas_name + " atlas with character size " + ::to_string(glyph_size.x) + "x" + ::to_string(glyph_size.y));
 }
 
 Font::~Font()
 {
     DBG_INFO("destroying font " + PTR(this));
     atlas = nullptr;
+}
+
+Ref<Texture> Font::getAtlas() const
+{
+    return atlas;
+}
+
+glm::vec2 Font::getGlyphUVOffset(const char c) const
+{
+    return { 
+        glm::fract(static_cast<float>(c) / static_cast<float>(chars_resolution.x)), 
+        glm::floor(static_cast<float>(c) / static_cast<float>(chars_resolution.x)) / static_cast<float>(chars_resolution.y) };
 }

@@ -1,6 +1,5 @@
 #include "object.h"
 
-#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "mesh.h"
@@ -11,43 +10,6 @@
 
 using namespace HopEngine;
 using namespace std;
-
-Ref<Object> Object::getParent()
-{
-	return parent;
-}
-
-void Object::_setParent(Ref<Object> new_parent)
-{
-	glm::mat4 world_transform = transform.getMatrix();
-	parent = new_parent;
-	if (parent)
-		transform.parent_transform = &parent->transform;
-	else
-		transform.parent_transform = nullptr;
-	transform.setMatrix(world_transform);
-}
-
-void Object::pushToDescriptorSet(size_t index)
-{
-	ObjectUniforms* object_uniforms = (ObjectUniforms*)(uniforms->getBuffer());
-
-	object_uniforms->id = (int)(size_t)this;
-	object_uniforms->model_to_world = transform.getMatrix();
-
-	uniforms->pushToDescriptorSet(index);
-}
-
-vector<DrawCommand> Object::getDrawCommands() const
-{
-	return { };
-	//return { { RenderServer::getGizmoMaterial(), RenderServer::getGizmoMesh(0), uniforms } };
-}
-
-BoundingBox Object::getLocalBounds() const
-{
-	return BoundingBox{ { 0, 0, 0 }, { 0.25f, 0.25f, 0.25f } };
-}
 
 Object::Object()
 {
@@ -63,24 +25,61 @@ Object::~Object()
 	DBG_VERBOSE("destroying object '" + name + "' (" + PTR(this) + ')');
 }
 
-void Camera::pushToDescriptorSet(size_t index) { }
-
-void Camera::pushToCameraDescriptorSet(size_t index, glm::ivec2 viewport_size, float time, vector<LightParams> lights, glm::vec4 ambient)
+vector<DrawCommand> Object::getDrawCommands() const
 {
-	SceneUniforms scene_uniforms = getSceneUniforms(viewport_size, time, lights, ambient);
+	return { };
+}
 
-	memcpy(uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
+Ref<Object> Object::getParent()
+{
+	return parent;
+}
+
+BoundingBox Object::getLocalBounds() const
+{
+	return BoundingBox{ { 0, 0, 0 }, { 0.25f, 0.25f, 0.25f } };
+}
+
+void Object::pushToDescriptorSet(const size_t index)
+{
+	ObjectUniforms* object_uniforms = static_cast<ObjectUniforms*>(uniforms->getBuffer());
+
+	object_uniforms->id = static_cast<int>(reinterpret_cast<size_t>(this));
+	object_uniforms->model_to_world = transform.getMatrix();
+
 	uniforms->pushToDescriptorSet(index);
 }
 
-SceneUniforms Camera::getSceneUniforms(glm::ivec2 viewport_size, float time, std::vector<LightParams> lights, glm::vec4 ambient)
+void Object::_setParent(const Ref<Object>& new_parent)
+{
+	const glm::mat4 world_transform = transform.getMatrix();
+	parent = new_parent;
+	if (parent)
+		transform.parent_transform = &parent->transform;
+	else
+		transform.parent_transform = nullptr;
+	transform.setMatrix(world_transform);
+}
+
+Camera::Camera() : Object()
+{
+	uniforms = new UniformBlock(ShaderLayout{ RenderServer::getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
+	name = "camera";
+}
+
+VkDescriptorSet Camera::getDescriptorSet(const size_t index) const
+{
+	return uniforms->getDescriptorSet(index);
+}
+
+SceneUniforms Camera::getSceneUniforms(const glm::ivec2 viewport_size, const float time, const vector<LightParams>& lights, const glm::vec4 ambient)
 {
 	SceneUniforms scene_uniforms;
 	scene_uniforms.time = time;
 	scene_uniforms.eye_position = transform.getPosition();
 	scene_uniforms.viewport_size = viewport_size;
 	scene_uniforms.world_to_view = glm::inverse(transform.getMatrix());
-	scene_uniforms.view_to_clip = glm::perspective(glm::radians(fov), viewport_size.x / (float)(viewport_size.y), near_clip, far_clip);
+	scene_uniforms.view_to_clip = glm::perspective(glm::radians(fov), static_cast<float>(viewport_size.x) / static_cast<float>(viewport_size.y), near_clip, far_clip);
 	scene_uniforms.view_to_clip[1][1] *= -1;
 	scene_uniforms.clip_to_view = glm::inverse(scene_uniforms.view_to_clip);
 	scene_uniforms.view_to_world = transform.getMatrix();
@@ -93,32 +92,31 @@ SceneUniforms Camera::getSceneUniforms(glm::ivec2 viewport_size, float time, std
 
 glm::mat4 Camera::getWorldToScreenMatrix()
 {
-	glm::vec2 viewport_size = RenderServer::getFramebufferSize();
-	glm::mat4 view_to_clip = glm::perspective(glm::radians(fov), viewport_size.x / (float)(viewport_size.y), near_clip, far_clip);
+	const glm::vec2 viewport_size = RenderServer::getFramebufferSize();
+	glm::mat4 view_to_clip = glm::perspective(glm::radians(fov), viewport_size.x / static_cast<float>(viewport_size.y), near_clip, far_clip);
 	view_to_clip[1][1] *= -1;
 	glm::mat4 world_to_view = glm::inverse(transform.getMatrix());
 	world_to_view[0] = glm::normalize(world_to_view[0]);
 	world_to_view[1] = glm::normalize(world_to_view[1]);
 	world_to_view[2] = glm::normalize(world_to_view[2]);
-    return view_to_clip * world_to_view;
+	return view_to_clip * world_to_view;
 }
 
-VkDescriptorSet Camera::getDescriptorSet(size_t index) const
+void Camera::pushToDescriptorSet(size_t index) { }
+
+void Camera::pushToCameraDescriptorSet(const size_t index, const glm::ivec2 viewport_size, const float time, const vector<LightParams>& lights, const glm::vec4 ambient)
 {
-	return uniforms->getDescriptorSet(index);
+	SceneUniforms scene_uniforms = getSceneUniforms(viewport_size, time, lights, ambient);
+
+	memcpy(uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
+	uniforms->pushToDescriptorSet(index);
 }
 
-Camera::Camera() : Object()
+StaticMesh::StaticMesh(const Ref<Mesh>& _mesh, const Ref<Material>& _material) : Object()
 {
-	uniforms = new UniformBlock(ShaderLayout{ RenderServer::getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
-	name = "camera";
-}
-
-void StaticMesh::pushToDescriptorSet(size_t index)
-{
-	Object::pushToDescriptorSet(index);
-	if (material)
-		material->pushToDescriptorSet(index);
+	mesh = _mesh;
+	material = _material;
+	name = "static mesh";
 }
 
 vector<DrawCommand> StaticMesh::getDrawCommands() const
@@ -134,11 +132,17 @@ BoundingBox StaticMesh::getLocalBounds() const
 	return mesh->getBoundingBox();
 }
 
-StaticMesh::StaticMesh(Ref<Mesh> _mesh, Ref<Material> _material) : Object()
+void StaticMesh::pushToDescriptorSet(const size_t index)
 {
-	mesh = _mesh;
-	material = _material;
-	name = "static mesh";
+	Object::pushToDescriptorSet(index);
+	if (material)
+		material->pushToDescriptorSet(index);
+}
+
+Light::Light(const LightType _type)
+{
+	type = _type;
+	name = "light";
 }
 
 LightParams Light::getParamsStructure()
@@ -151,10 +155,4 @@ LightParams Light::getParamsStructure()
 	params.position = glm::vec4(transform.getPosition(), 0);
 	params.direction = glm::normalize(transform.getMatrix() * glm::vec4{ 0, 0, -1, 0 });
 	return params;
-}
-
-Light::Light(LightType _type)
-{
-	type = _type;
-	name = "light";
 }

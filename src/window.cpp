@@ -39,7 +39,7 @@ void Window::pollEvents()
     glfwPollEvents();
 }
 
-pair<uint32_t, uint32_t> Window::getSize()
+glm::u32vec2 Window::getSize()
 {
     glfwGetFramebufferSize(window, &width, &height);
     return { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };

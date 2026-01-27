@@ -54,7 +54,7 @@ void NodeView::updateMesh()
     {
         size_t box_width = 3;
         size_t text_width = 0;
-        text_width = (size_t)(style.font->getCharacterSize().x) * node->title.size();
+        text_width = (size_t)(style.font->getGlyphSize().x) * node->title.size();
         box_width = glm::max(box_width, ((size_t)(text_width / style.grid_size) + 4));
         for (const NodeElement& element : node->elements)
         {
@@ -64,7 +64,7 @@ void NodeView::updateMesh()
             case ELEMENT_BLOCK:
             case ELEMENT_OUTPUT:
             case ELEMENT_INPUT:
-                text_width = (size_t)(style.font->getCharacterSize().x) * element.text.size();
+                text_width = (size_t)(style.font->getGlyphSize().x) * element.text.size();
                 box_width = glm::max(box_width, ((size_t)(text_width / style.grid_size) + 4));
                 break;
             case ELEMENT_SPACE: break;
@@ -126,7 +126,7 @@ void NodeView::updateMesh()
 
         size_t box_height_lines = 0;
         size_t text_width = 0;
-        text_width = (size_t)(style.font->getCharacterSize().x) * node->title.size();
+        text_width = (size_t)(style.font->getGlyphSize().x) * node->title.size();
         addBlock(box_base + glm::vec2{ style.grid_size - 4.0f, 0 }, glm::vec2{ ((size_t)(text_width / style.grid_size) + 2), 1 } *style.grid_size, foreground_colour, !node->highlighted);
         addText(node->title, box_base + (style.title_offset * style.grid_size), node->highlighted ? background_colour : foreground_colour);
         box_height_lines++;
@@ -142,7 +142,7 @@ void NodeView::updateMesh()
                 break;
             case ELEMENT_OUTPUT:
                 addPin(line_pos_base + glm::vec2{ box_width - 1, 0 } * style.grid_size, foreground_colour, element.pin_type, element.pin_solid);
-                text_width = (size_t)(style.font->getCharacterSize().x) * element.text.size();
+                text_width = (size_t)(style.font->getGlyphSize().x) * element.text.size();
                 addText(element.text, line_pos_base + glm::vec2{ (box_width * style.grid_size) - (style.text_left_inset + style.grid_size + text_width), 0.0f }, foreground_colour);
                 break;
             case ELEMENT_BLOCK:
@@ -282,15 +282,15 @@ static glm::vec2 flipUV(glm::vec2 v)
 
 void NodeView::addCharacter(char c, glm::vec2 position, glm::vec3 tint)
 {
-    glm::vec2 uv_base = style.font->getCharUVOffset(c);
-    glm::vec2 uv_size = style.font->getCharUVSize();
+    glm::vec2 uv_base = style.font->getGlyphUVOffset(c);
+    glm::vec2 uv_size = style.font->getGlyphUVSize();
 
     glm::vec2 uv_bl = flipUV(uv_base + glm::vec2{ 0, uv_size.y });
     glm::vec2 uv_br = flipUV(uv_base + uv_size);
     glm::vec2 uv_tl = flipUV(uv_base);
     glm::vec2 uv_tr = flipUV(uv_base + glm::vec2{ uv_size.x, 0 });
 
-    glm::vec2 char_size = style.font->getCharacterSize();
+    glm::vec2 char_size = style.font->getGlyphSize();
     float top_inset = style.text_top_inset - character_padding;
     glm::vec4 pos_bl = { position.x, (-position.y - char_size.y) - top_inset, 0, 1 };
     glm::vec4 pos_br = { position.x + char_size.x, (-position.y - char_size.y) - top_inset, 0, 1 };
@@ -317,7 +317,7 @@ void NodeView::addText(std::string text, glm::vec2 start, glm::vec3 tint)
     for (char c : text)
     {
         addCharacter(c, position, tint);
-        position.x += style.font->getCharacterSize().x;
+        position.x += style.font->getGlyphSize().x;
     }
 }
 

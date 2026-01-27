@@ -1,7 +1,5 @@
 #pragma once
 
-#include <algorithm>
-#include <glm/glm.hpp>
 #include "transform.h"
 
 namespace HopEngine

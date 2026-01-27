@@ -38,19 +38,19 @@ void TextBlock::updateGeometry()
     {
         if (c == '\n')
         {
-            position.y += font->getCharacterSize().y * 0.02f;
+            position.y += font->getGlyphSize().y * 0.02f;
             position.x = 0.0f;
             continue;
         }
-        glm::vec2 uv_base = font->getCharUVOffset(c);
-        glm::vec2 uv_size = font->getCharUVSize();
+        glm::vec2 uv_base = font->getGlyphUVOffset(c);
+        glm::vec2 uv_size = font->getGlyphUVSize();
 
         glm::vec2 uv_bl = flipUV(uv_base + glm::vec2{ 0, uv_size.y });
         glm::vec2 uv_br = flipUV(uv_base + uv_size);
         glm::vec2 uv_tl = flipUV(uv_base);
         glm::vec2 uv_tr = flipUV(uv_base + glm::vec2{ uv_size.x, 0 });
 
-        glm::vec2 char_size = font->getCharacterSize() * 0.02f;
+        glm::vec2 char_size = font->getGlyphSize() * 0.02f;
         float top_inset = 0;
         glm::vec4 pos_bl = { position.x, (-position.y - char_size.y) - top_inset, 0, 1 };
         glm::vec4 pos_br = { position.x + char_size.x, (-position.y - char_size.y) - top_inset, 0, 1 };
@@ -70,7 +70,7 @@ void TextBlock::updateGeometry()
         indices.push_back(v_off + 2);
         indices.push_back(v_off + 0);
         
-        position.x += font->getCharacterSize().x * 0.02f;
+        position.x += font->getGlyphSize().x * 0.02f;
     }
     mesh->updateData(vertices, indices);
     

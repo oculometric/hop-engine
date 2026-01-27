@@ -21,16 +21,16 @@
 using namespace HopEngine;
 using namespace std;
 
-static RenderServer* environment = nullptr;
+static RenderServer* server = nullptr;
 
-static const vector<const char*> required_validation_layers =
+static constexpr vector<const char*> required_validation_layers =
 {
 #if !defined(NDEBUG)
     "VK_LAYER_KHRONOS_validation"
 #endif
 };
 
-static const vector<const char*> required_instance_extensions =
+static constexpr vector<const char*> required_instance_extensions =
 {
 #if !defined(NDEBUG)
     VK_EXT_DEBUG_UTILS_EXTENSION_NAME
@@ -70,60 +70,33 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
 }
 #endif
 
-void RenderServer::init(Ref<Window> main_window)
+void RenderServer::init(const Ref<Window>& main_window)
 {
-    DBG_INFO("initialising graphics environment");
-    if (environment == nullptr)
-        environment = new RenderServer(main_window);
+    DBG_INFO("initialising graphics server");
+    if (server == nullptr)
+        server = new RenderServer(main_window);
 }
 
 void RenderServer::destroy()
 {
-    DBG_INFO("destroying graphics environment");
-    if (environment != nullptr)
+    DBG_INFO("destroying graphics server");
+    if (server != nullptr)
     {
-        delete environment;
-        environment = nullptr;
+        delete server;
+        server = nullptr;
     }
 }
 
-void RenderServer::waitIdle()
-{
-    vkDeviceWaitIdle(environment->device);
-}
+size_t RenderServer::getFramesInFlight()
+{ return server->MAX_FRAMES_IN_FLIGHT; }
 
 VkDevice RenderServer::getDevice()
-{
-    return environment->device;
-}
+{ return server->device; }
 
 VkPhysicalDevice RenderServer::getPhysicalDevice()
-{
-    return environment->physical_device;
-}
+{ return server->physical_device; }
 
-Ref<RenderPass> RenderServer::getMainRenderPass()
-{
-    return environment->offscreen_pass;
-}
-
-Ref<RenderPass> RenderServer::getFinalRenderPass()
-{
-    return environment->final_render_pass;
-}
-
-glm::vec2 RenderServer::getFramebufferSize()
-{
-    auto ext = environment->swapchain->getExtent();
-    return glm::vec2{ (float)ext.x, (float)ext.y };
-}
-
-size_t RenderServer::getFramesInFlight()
-{
-    return environment->MAX_FRAMES_IN_FLIGHT;
-}
-
-RenderServer::QueueFamilies RenderServer::getQueueFamilies(VkPhysicalDevice device)
+RenderServer::QueueFamilies RenderServer::getQueueFamilies(const VkPhysicalDevice device)
 {
     QueueFamilies families;
 
@@ -137,7 +110,7 @@ RenderServer::QueueFamilies RenderServer::getQueueFamilies(VkPhysicalDevice devi
         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
             families.graphics_family = i;
         VkBool32 queue_has_present_support = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, environment->surface, &queue_has_present_support);
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, server->surface, &queue_has_present_support);
         if (queue_has_present_support)
             families.present_family = i;
 
@@ -148,89 +121,183 @@ RenderServer::QueueFamilies RenderServer::getQueueFamilies(VkPhysicalDevice devi
 }
 
 VkQueue RenderServer::getGraphicsQueue()
-{
-    return environment->graphics_queue;
-}
+{ return server->graphics_queue; }
 
 VkCommandPool RenderServer::getCommandPool()
-{
-    return environment->command_pool;
-}
+{ return server->command_pool; }
 
-VkDescriptorPool RenderServer::getDescriptorPool()
+Ref<RenderPass> RenderServer::getMainRenderPass()
+{ return server->offscreen_pass; }
+
+Ref<RenderPass> RenderServer::getFinalRenderPass()
+{ return server->final_render_pass; }
+
+glm::vec2 RenderServer::getFramebufferSize()
 {
-    return environment->descriptor_pool;
+    const auto ext = server->swapchain->getExtent();
+    return glm::vec2{ static_cast<float>(ext.x), static_cast<float>(ext.y) };
 }
 
 VkQueryPool RenderServer::getQueryPool()
-{
-    return environment->query_pool;
-}
+{ return server->query_pool; }
 
-void RenderServer::writeTimestamp(uint32_t image_index, VkPipelineStageFlagBits stage)
-{
-    vkCmdWriteTimestamp(environment->command_buffers[image_index], stage, environment->query_pool, (image_index * 512) + environment->query_offset++);
-}
+VkDescriptorPool RenderServer::getDescriptorPool()
+{ return server->descriptor_pool; }
 
 VkDescriptorSetLayout RenderServer::getSceneDescriptorSetLayout()
-{
-    return environment->scene_descriptor_set_layout;
-}
+{ return server->scene_descriptor_set_layout; }
 
 VkDescriptorSetLayout RenderServer::getObjectDescriptorSetLayout()
-{
-    return environment->object_descriptor_set_layout;
-}
+{ return server->object_descriptor_set_layout; }
 
 pair<Ref<Texture>, Ref<Sampler>> RenderServer::getDefaultTextureSampler()
-{
-    return { environment->default_image, environment->default_sampler };
-}
+{ return { server->default_image, server->default_sampler }; }
+
+Ref<Material> RenderServer::getDefaultMaterial()
+{ return server->default_material; }
 
 Ref<Material> RenderServer::getGizmoMaterial()
-{
-    return environment->gizmo_material;
-}
+{ return server->gizmo_material; }
 
-Ref<Mesh> RenderServer::getGizmoMesh(int type)
+Ref<Mesh> RenderServer::getGizmoMesh(const int type)
 {
     switch (type)
     {
-    case 0: return environment->axes_gizmo;
-    case 1: return environment->rotations_gizmo;
-    case 2: return environment->scale_gizmo;
+    case 0: return server->axes_gizmo;
+    case 1: return server->rotations_gizmo;
+    case 2: return server->scale_gizmo;
     default: return nullptr;
     }
 }
 
-Ref<Material> RenderServer::getDefaultMaterial()
-{
-    return environment->default_material;
-}
-
-Ref<Mesh> RenderServer::getQuad()
-{
-    return environment->quad;
-}
-
 Ref<Mesh> RenderServer::getSkyboxCube()
-{
-    return environment->skybox_cube;
-}
+{ return server->skybox_cube; }
 
 Ref<Material> RenderServer::getSkyboxMaterial()
-{
-    return environment->skybox_material;
-}
+{ return server->skybox_material; }
+
+Ref<Mesh> RenderServer::getQuad()
+{ return server->quad; }
+
+void RenderServer::waitIdle()
+{ vkDeviceWaitIdle(server->device); }
+
+void RenderServer::writeTimestamp(const uint32_t image_index, const VkPipelineStageFlagBits stage)
+{ vkCmdWriteTimestamp(server->command_buffers[image_index], stage, server->query_pool, (image_index * 512) + server->query_offset++); }
 
 FrameStats RenderServer::draw()
-{
-    return environment->drawFrame();
-}
+{ return server->drawFrame(); }
 
 void RenderServer::resize()
+{ server->resizeSwapchain(); }
+
+RenderServer::RenderServer(const Ref<Window>& main_window)
 {
-    environment->resizeSwapchain();
+    server = this;
+
+    window = main_window;
+
+#if defined(_WIN32)
+    const auto data = Package::tryLoadFile("res://engine/glslc.exe");
+    Package::tryWriteFile(Shader::compiler_path, data);
+#endif
+
+    createInstance();
+    if (glfwCreateWindowSurface(instance, window->getWindow(), nullptr, &surface) != VK_SUCCESS)
+        DBG_FAULT("glfwCreateWindowSurface failed");
+    createDevice();
+
+    const auto framebuffer_size = window->getSize();
+    swapchain = new Swapchain(framebuffer_size.x, framebuffer_size.y, surface);
+    MAX_FRAMES_IN_FLIGHT = static_cast<int>(swapchain->getImageCount());
+    DBG_VERBOSE("adjusted frames in flight to " + to_string(MAX_FRAMES_IN_FLIGHT));
+
+    createDescriptorPoolAndSets();
+    createCommandPool();
+    createSyncObjects();
+
+    final_render_pass = new RenderPass(swapchain, { 0, true });
+    offscreen_pass = new RenderPass(1, 1, { 3, true });
+
+    uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
+    default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, TextureBuilder().data(default_image_data));
+    default_sampler = new Sampler(SamplerBuilder());
+
+    axes_gizmo = new Mesh("res://engine/meshes/axes_gizmo.obj");
+    rotations_gizmo = new Mesh("res://engine/meshes/rotate_gizmo.obj");
+    quad = new Mesh({
+                        { { -1, -1, 0, 1 }, {}, {}, {}, { 0, 0 } },
+                        { { 1, -1, 0, 1 }, {}, {}, {}, { 1, 0 } },
+                        { { -1, 1, 0, 1 }, {}, {}, {}, { 0, 1 } },
+                        { { 1, 1, 0, 1 }, {}, {}, {}, { 1, 1 } }
+                    }, { 0, 3, 1, 0, 2, 3 });
+    skybox_cube = new Mesh("res://engine/meshes/skybox.obj");
+
+    default_material = new Material(new Shader("res://engine/shaders/default_shader", false));
+    gizmo_material = new Material(new Shader("res://engine/shaders/gizmo", false), PipelineBuilder().cullMode(CULL_NONE), final_render_pass);
+    skybox_material = new Material(new Shader("res://engine/shaders/skybox", false), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
+    
+    initImGui();
+
+    DBG_INFO("graphics server initialised");
+}
+
+RenderServer::~RenderServer()
+{
+#if defined(_WIN32)
+    filesystem::remove(Shader::compiler_path);
+#endif
+    vkDeviceWaitIdle(device);
+
+    DBG_VERBOSE("\033[31mkilling imgui with a gun\033[0m");
+    ImGui_ImplVulkan_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    DBG_VERBOSE("destroying sync resources");
+    for (size_t i = 0; i < image_available_semaphores.size(); ++i)
+    {
+        vkDestroySemaphore(device, image_available_semaphores[i], nullptr);
+        vkDestroySemaphore(device, render_finished_semaphores[i], nullptr);
+        vkDestroyFence(device, in_flight_fences[i], nullptr);
+    }
+
+    DBG_VERBOSE("destroying command pool");
+    vkDestroyCommandPool(device, command_pool, nullptr);
+    
+    skybox_material = nullptr;
+    skybox_cube = nullptr;
+    default_material = nullptr;
+    gizmo_material = nullptr;
+    axes_gizmo = nullptr;
+    rotations_gizmo = nullptr;
+    scale_gizmo = nullptr;
+    quad = nullptr;
+    default_image = nullptr;
+    default_sampler = nullptr;
+
+    DBG_VERBOSE("destroying descriptors");
+    vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
+    vkDestroyDescriptorSetLayout(device, scene_descriptor_set_layout, nullptr);
+    vkDestroyDescriptorSetLayout(device, object_descriptor_set_layout, nullptr);
+    vkDestroyQueryPool(device, query_pool, nullptr);
+
+    offscreen_pass = nullptr;
+    final_render_pass = nullptr;
+    swapchain = nullptr;
+
+#if !defined(NDEBUG)
+    DBG_VERBOSE("\033[31mkilling the (debug) messenger\033[0m");
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+    func(instance, debug_messenger, nullptr);
+#endif
+
+    DBG_VERBOSE("destroying device");
+    vkDestroyDevice(device, nullptr);
+    vkDestroySurfaceKHR(instance, surface, nullptr);
+    vkDestroyInstance(instance, nullptr);
+
+    server = nullptr;
 }
 
 void RenderServer::createInstance()
@@ -319,26 +386,26 @@ void RenderServer::createDevice()
     // score each device. a score of zero indicates the device
     // is not usable for some reason
     multimap<int, VkPhysicalDevice> device_scores;
-    for (const VkPhysicalDevice& device : physical_devices)
+    for (const VkPhysicalDevice& test_device : physical_devices)
     {
         VkPhysicalDeviceProperties properties;
-        vkGetPhysicalDeviceProperties(device, &properties);
+        vkGetPhysicalDeviceProperties(test_device, &properties);
         VkPhysicalDeviceFeatures features;
-        vkGetPhysicalDeviceFeatures(device, &features);
+        vkGetPhysicalDeviceFeatures(test_device, &features);
         
         // discrete GPUs are preferred, etc
         int score = 0;
         switch (properties.deviceType)
         {
         case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU: score += 1000; break;
-        case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU: score += 200; break;
+        case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
         case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU: score += 200; break;
         case VK_PHYSICAL_DEVICE_TYPE_CPU: score += 100; break;
         default:
             break;
         }
 
-        score += properties.limits.maxImageDimension2D;
+        score += static_cast<int>(properties.limits.maxImageDimension2D);
 
         if (features.fillModeNonSolid == VK_FALSE
             || features.samplerAnisotropy == VK_FALSE
@@ -346,30 +413,30 @@ void RenderServer::createDevice()
             score = 0;
 
         // check that the necessary queues are present
-        auto queue_families = getQueueFamilies(device);
-        if (!queue_families.graphics_family.has_value()
-            || !queue_families.present_family.has_value())
+        auto [graphics_family, present_family] = getQueueFamilies(test_device);
+        if (!graphics_family.has_value()
+            || !present_family.has_value())
             score = 0;
 
         uint32_t extension_count;
-        vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
+        vkEnumerateDeviceExtensionProperties(test_device, nullptr, &extension_count, nullptr);
         vector<VkExtensionProperties> available_extensions(extension_count);
-        vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, available_extensions.data());
+        vkEnumerateDeviceExtensionProperties(test_device, nullptr, &extension_count, available_extensions.data());
         set<string> required_extensions_unmet(required_extensions.begin(), required_extensions.end());
-        for (const VkExtensionProperties& extension : available_extensions)
-            required_extensions_unmet.erase(extension.extensionName);
+        for (const auto& [extension_name, spec_version] : available_extensions)
+            required_extensions_unmet.erase(extension_name);
         if (!required_extensions_unmet.empty())
             score = 0;
 
         if (score != 0)
         {
-            auto swapchain_info = getSwapchainSupportInfo(device, surface);
+            auto swapchain_info = getSwapchainSupportInfo(test_device, surface);
             if (swapchain_info.surface_formats.empty() || swapchain_info.present_modes.empty())
                 score = 0;
         }
 
         DBG_BABBLE("found device " + string(properties.deviceName) + ", scored " + to_string(score));
-        device_scores.insert({ score, device});
+        device_scores.insert({ score, test_device });
     }
     // check if any of the devices were suitable, and if so,
     // use the highest scoring
@@ -435,7 +502,7 @@ void RenderServer::createDescriptorPoolAndSets()
     descriptor_pool_create_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
     descriptor_pool_create_info.maxSets = static_cast<uint32_t>(512 * 8 * MAX_FRAMES_IN_FLIGHT);
 
-    DBG_INFO("creating descriptor pool with " + to_string(descriptor_pool_create_info.maxSets) + " max sets");
+    DBG_INFO("creating descriptor pool with " + ::to_string(descriptor_pool_create_info.maxSets) + " max sets");
     if (vkCreateDescriptorPool(device, &descriptor_pool_create_info, nullptr, &descriptor_pool) != VK_SUCCESS)
         DBG_FAULT("vkCreateDescriptorPool failed");
 
@@ -469,12 +536,12 @@ void RenderServer::createCommandPool()
 {
     DBG_INFO("creating command pool and buffers");
 
-    QueueFamilies queue_families = getQueueFamilies(physical_device);
+    auto [graphics_family, present_family] = getQueueFamilies(physical_device);
 
     VkCommandPoolCreateInfo pool_create_info{ };
     pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    pool_create_info.queueFamilyIndex = queue_families.graphics_family.value();
+    pool_create_info.queueFamilyIndex = graphics_family.value();
 
     if (vkCreateCommandPool(device, &pool_create_info, nullptr, &command_pool) != VK_SUCCESS)
         DBG_FAULT("vkCreateCommandPool failed");
@@ -545,8 +612,8 @@ FrameStats RenderServer::drawFrame()
 
     static auto start_time = chrono::steady_clock::now();
     FrameStats stats;
-    auto now_time = chrono::steady_clock::now();
-    chrono::duration<float> since_start = now_time - start_time;
+    const auto now_time = chrono::steady_clock::now();
+    const chrono::duration<float> since_start = now_time - start_time;
 
     vkWaitForFences(device, 1, &in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT], VK_TRUE, UINT64_MAX);
     vkResetFences(device, 1, &in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT]);
@@ -555,16 +622,16 @@ FrameStats RenderServer::drawFrame()
     vkAcquireNextImageKHR(device, swapchain->getSwapchain(), UINT64_MAX, image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT], VK_NULL_HANDLE, &image_index);
     DBG_BABBLE("acquired image " + to_string(image_index));
 
-    auto build_start = chrono::steady_clock::now();
+    const auto build_start = chrono::steady_clock::now();
     Ref<Scene> scene = Engine::getScene();
-    if (scene && scene->getRenderGraph())
+    if (scene && scene->render_graph)
     {
         stats.lights = scene->getLightParams().size();
-        glm::u32vec2 extent = swapchain->getExtent();
-        glm::u32vec2 graph_extent = scene->getRenderGraph()->getExpectedExtent();
-        if (graph_extent.x != extent.x || graph_extent.y != extent.y)
-            scene->getRenderGraph()->resizeBuffers(extent.x, extent.y);
-        scene->getRenderGraph()->updateUniforms(image_index, since_start.count(), scene);
+        const glm::u32vec2 final_extent = swapchain->getExtent();
+        const glm::u32vec2 graph_extent = scene->render_graph->getExpectedExtent();
+        if (graph_extent.x != final_extent.x || graph_extent.y != final_extent.y)
+            scene->render_graph->resizeBuffers(final_extent.x, final_extent.y);
+        scene->render_graph->updateUniforms(image_index, since_start.count(), scene);
         if (scene->skybox && current_skybox != scene->skybox)
         {
             skybox_material->setTexture("tex", scene->skybox);
@@ -572,32 +639,30 @@ FrameStats RenderServer::drawFrame()
         }
 
         for (Ref<Object>& object : scene->getAllObjects())
-        {
             object->pushToDescriptorSet(image_index);
-        }
     }
     else
-        DBG_WARNING("no scene attached to environment");
-    chrono::duration<float> build_duration = chrono::steady_clock::now() - build_start;
+        DBG_WARNING("no scene attached to server");
+    const chrono::duration<float> build_duration = chrono::steady_clock::now() - build_start;
     stats.build_time = build_duration.count();
 
-    auto record_start = chrono::steady_clock::now();
+    const auto record_start = chrono::steady_clock::now();
     query_offset = 0;
     vkResetCommandBuffer(command_buffers[image_index], 0);
     recordRenderCommands(command_buffers[image_index], image_index, stats);
-    chrono::duration<float> record_duration = chrono::steady_clock::now() - record_start;
+    const chrono::duration<float> record_duration = chrono::steady_clock::now() - record_start;
     stats.record_time = record_duration.count();
 
     VkSubmitInfo submit_info{ };
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    VkSemaphore wait_semaphores[] = { image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT] };
-    VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    const VkSemaphore wait_semaphores[] = { image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT] };
+    constexpr VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
     submit_info.waitSemaphoreCount = 1;
     submit_info.pWaitSemaphores = wait_semaphores;
     submit_info.pWaitDstStageMask = wait_stages;
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &(command_buffers[image_index]);
-    VkSemaphore signal_semaphores[] = { render_finished_semaphores[image_index] };
+    const VkSemaphore signal_semaphores[] = { render_finished_semaphores[image_index] };
     submit_info.signalSemaphoreCount = 1;
     submit_info.pSignalSemaphores = signal_semaphores;
     DBG_BABBLE("submitting command buffer");
@@ -608,7 +673,7 @@ FrameStats RenderServer::drawFrame()
     present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     present_info.waitSemaphoreCount = 1;
     present_info.pWaitSemaphores = signal_semaphores;
-    VkSwapchainKHR swapchains[] = { swapchain->getSwapchain() };
+    const VkSwapchainKHR swapchains[] = { swapchain->getSwapchain() };
     present_info.swapchainCount = 1;
     present_info.pSwapchains = swapchains;
     present_info.pImageIndices = &image_index;
@@ -619,11 +684,11 @@ FrameStats RenderServer::drawFrame()
     results_buf.resize(query_offset, 0);
     vkGetQueryPoolResults(device, query_pool, image_index * 512, query_offset, results_buf.size() * sizeof(uint32_t), results_buf.data(), 4, VK_QUERY_RESULT_WAIT_BIT);
 
-    float render_time = (float)(results_buf[results_buf.size() - 1] - results_buf[0]) / (1000.0f * 1000.0f * 100.0f);
+    const float render_time = static_cast<float>(results_buf[results_buf.size() - 1] - results_buf[0]) / (1000.0f * 1000.0f * 100.0f);
     stats.render_time = render_time;
     for (size_t offset = 1; offset < results_buf.size() - 1; offset += 2)
     {   
-        float pass_time = (float)(results_buf[offset + 1] - results_buf[offset]) / (1000.0f * 1000.0f * 100.0f);
+        float pass_time = static_cast<float>(results_buf[offset + 1] - results_buf[offset]) / (1000.0f * 1000.0f * 100.0f);
         stats.pass_times.push_back(pass_time);
     }
     return stats;
@@ -633,9 +698,8 @@ void RenderServer::resizeSwapchain()
 {
     vkDeviceWaitIdle(device);
 
-    auto new_size = window->getSize();
-
-    swapchain->resize(new_size.first, new_size.second);
+    const auto new_size = window->getSize();
+    swapchain->resize(new_size.x, new_size.y);
     
     final_render_pass->resize();
 }
@@ -653,8 +717,8 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
 
     Ref<Scene> scene = Engine::getScene();
 
-    if (scene && scene->getRenderGraph())
-        scene->getRenderGraph()->recordCommandBuffer(command_buffer, image_index, scene, stats, final_render_pass);
+    if (scene && scene->render_graph)
+        scene->render_graph->recordCommandBuffer(command_buffer, image_index, scene, stats, final_render_pass);
     else
     {
         VkRenderPassBeginInfo render_pass_begin_info{ };
@@ -662,10 +726,10 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
         render_pass_begin_info.renderPass = final_render_pass->getRenderPass();
         render_pass_begin_info.framebuffer = final_render_pass->getFramebuffer(image_index);
         render_pass_begin_info.renderArea.offset = { 0, 0 };
-        auto extent = final_render_pass->getExtent();
+        const auto extent = final_render_pass->getExtent();
         render_pass_begin_info.renderArea.extent = { extent.x, extent.y };
         vector<VkClearValue> clear_values = final_render_pass->getClearValues();
-        clear_values[0].color = { 0.02f, 0.02f, 0.02f };
+        clear_values[0].color = { { 0.02f, 0.02f, 0.02f } };
         render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
         render_pass_begin_info.pClearValues = clear_values.data();
 
@@ -677,115 +741,6 @@ void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t
     writeTimestamp(image_index, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
     if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS)
         DBG_FAULT("vkEndCommandBuffer failed");
-}
-
-RenderServer::RenderServer(Ref<Window> main_window)
-{
-    environment = this;
-
-    window = main_window;
-
-#if defined(_WIN32)
-    auto data = Package::tryLoadFile("res://engine/glslc.exe");
-    Package::tryWriteFile(Shader::compiler_path, data);
-#endif
-
-    createInstance();
-    if (glfwCreateWindowSurface(instance, window->getWindow(), nullptr, &surface) != VK_SUCCESS)
-        DBG_FAULT("glfwCreateWindowSurface failed");
-    createDevice();
-
-    auto framebuffer_size = window->getSize();
-    swapchain = new Swapchain(framebuffer_size.first, framebuffer_size.second, surface);
-    MAX_FRAMES_IN_FLIGHT = swapchain->getImageCount();
-    DBG_VERBOSE("adjusted frames in flight to " + to_string(MAX_FRAMES_IN_FLIGHT));
-
-    createDescriptorPoolAndSets();
-    createCommandPool();
-    createSyncObjects();
-
-    final_render_pass = new RenderPass(swapchain, { 0, true });
-    offscreen_pass = new RenderPass(1, 1, { 3, true });
-
-    uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
-    default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, TextureBuilder().data(default_image_data));
-    default_sampler = new Sampler(SamplerBuilder());
-
-    axes_gizmo = new Mesh("res://engine/meshes/axes_gizmo.obj");
-    rotations_gizmo = new Mesh("res://engine/meshes/rotate_gizmo.obj");
-    quad = new Mesh({
-        { { -1, -1, 0, 1 }, {}, {}, {}, { 0, 0 } },
-        { { 1, -1, 0, 1 }, {}, {}, {}, { 1, 0 } },
-        { { -1, 1, 0, 1 }, {}, {}, {}, { 0, 1 } },
-        { { 1, 1, 0, 1 }, {}, {}, {}, { 1, 1 } }
-        }, { 0, 3, 1, 0, 2, 3 });
-    skybox_cube = new Mesh("res://engine/meshes/skybox.obj");
-
-    default_material = new Material(new Shader("res://engine/shaders/default_shader", false));
-    gizmo_material = new Material(new Shader("res://engine/shaders/gizmo", false), PipelineBuilder().cullMode(CULL_NONE), final_render_pass);
-    skybox_material = new Material(new Shader("res://engine/shaders/skybox", false), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
-    
-    initImGui();
-
-    DBG_INFO("graphics environment initialised");
-}
-
-RenderServer::~RenderServer()
-{
-#if defined(_WIN32)
-    filesystem::remove(Shader::compiler_path);
-#endif
-    vkDeviceWaitIdle(device);
-
-    DBG_VERBOSE("\033[31mkilling imgui with a gun\033[0m");
-    ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
-    DBG_VERBOSE("destroying sync resources");
-    for (size_t i = 0; i < image_available_semaphores.size(); ++i)
-    {
-        vkDestroySemaphore(device, image_available_semaphores[i], nullptr);
-        vkDestroySemaphore(device, render_finished_semaphores[i], nullptr);
-        vkDestroyFence(device, in_flight_fences[i], nullptr);
-    }
-
-    DBG_VERBOSE("destroying command pool");
-    vkDestroyCommandPool(device, command_pool, nullptr);
-    
-    skybox_material = nullptr;
-    skybox_cube = nullptr;
-    default_material = nullptr;
-    gizmo_material = nullptr;
-    axes_gizmo = nullptr;
-    rotations_gizmo = nullptr;
-    scale_gizmo = nullptr;
-    quad = nullptr;
-    default_image = nullptr;
-    default_sampler = nullptr;
-
-    DBG_VERBOSE("destroying descriptors");
-    vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
-    vkDestroyDescriptorSetLayout(device, scene_descriptor_set_layout, nullptr);
-    vkDestroyDescriptorSetLayout(device, object_descriptor_set_layout, nullptr);
-    vkDestroyQueryPool(device, query_pool, nullptr);
-
-    offscreen_pass = nullptr;
-    final_render_pass = nullptr;
-    swapchain = nullptr;
-
-#if !defined(NDEBUG)
-    DBG_VERBOSE("\033[31mkilling the (debug) messenger\033[0m");
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-    func(instance, debug_messenger, nullptr);
-#endif
-
-    DBG_VERBOSE("destroying device");
-    vkDestroyDevice(device, nullptr);
-    vkDestroySurfaceKHR(instance, surface, nullptr);
-    vkDestroyInstance(instance, nullptr);
-
-    environment = nullptr;
 }
 
 bool DrawCommand::operator()(const DrawCommand& a, const DrawCommand& b) const

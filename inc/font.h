@@ -11,20 +11,19 @@ class Font : public Destructible
 {
 private:
 	Ref<Texture> atlas = nullptr;
-	glm::ivec2 character_size;
+	glm::ivec2 glyph_size;
 	glm::ivec2 chars_resolution;
 	glm::vec2 char_uv_size;
 
 public:
 	DELETE_CONSTRUCTORS(Font);
-
-	inline glm::vec2 getCharacterSize() const { return character_size; }
-	Ref<Texture> getAtlas() const;
-	glm::vec2 getCharUVOffset(char c) const;
-	inline glm::vec2 getCharUVSize() const { return char_uv_size; }
-	
-	Font(std::string atlas, glm::ivec2 character_bitmap_size);
+	Font(const std::string& atlas_name, glm::ivec2 glyph_size_pixels);
 	~Font() override;
+	
+	Ref<Texture> getAtlas() const;
+	glm::vec2 getGlyphSize() const { return glyph_size; }
+	glm::vec2 getGlyphUVOffset(char c) const;
+	glm::vec2 getGlyphUVSize() const { return char_uv_size; }
 };
 
 }
