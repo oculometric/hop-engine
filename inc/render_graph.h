@@ -26,8 +26,8 @@ struct RenderTextureBinding
 	
 	RenderTextureBinding() = default;
 	RenderTextureBinding(const size_t step, const size_t output) : step_index(step), output_index(output) { }
-	RenderTextureBinding filter(const SamplerFilter value) { filter_mode = value; return *this; }
-	RenderTextureBinding address(const SamplerAddress value) { address_mode = value; return *this; }
+	RenderTextureBinding& filter(const SamplerFilter value) { filter_mode = value; return *this; }
+	RenderTextureBinding& address(const SamplerAddress value) { address_mode = value; return *this; }
 };
 
 struct RenderStep
@@ -52,12 +52,12 @@ struct RenderGraphBuilder
 {
 	std::vector<RenderStep> execution_steps;
 
-	RenderGraphBuilder addCamera(size_t slot);
-	RenderGraphBuilder addCamera(size_t slot, const RenderOutput& render_pass_config, float size_factor = 1.0f, glm::u32vec2 custom_extent = { 128, 128 });
-	RenderGraphBuilder addCamera(size_t slot, float size_factor, glm::u32vec2 custom_extent = { 128, 128 });
-	RenderGraphBuilder addPostProcess(const Ref<Shader>& shader, const std::map<uint32_t, RenderTextureBinding>& texture_bindings);
-	RenderGraphBuilder addPostProcess(const Ref<Shader>& shader, const std::map<uint32_t, RenderTextureBinding>& texture_bindings, const RenderOutput& render_pass_config, float size_factor = 1.0f, glm::u32vec2 custom_extent = { 128, 128 });
-	RenderGraphBuilder addPostProcess(const Ref<Shader>& shader, const std::map<uint32_t, RenderTextureBinding>& texture_bindings, float size_factor, glm::u32vec2 custom_extent = { 128, 128 });
+	RenderGraphBuilder& addCamera(size_t slot);
+	RenderGraphBuilder& addCamera(size_t slot, const RenderOutput& render_pass_config, float size_factor = 1.0f, glm::u32vec2 custom_extent = { 128, 128 });
+	RenderGraphBuilder& addCamera(size_t slot, float size_factor, glm::u32vec2 custom_extent = { 128, 128 });
+	RenderGraphBuilder& addPostProcess(const Ref<Shader>& shader, const std::map<uint32_t, RenderTextureBinding>& texture_bindings);
+	RenderGraphBuilder& addPostProcess(const Ref<Shader>& shader, const std::map<uint32_t, RenderTextureBinding>& texture_bindings, const RenderOutput& render_pass_config, float size_factor = 1.0f, glm::u32vec2 custom_extent = { 128, 128 });
+	RenderGraphBuilder& addPostProcess(const Ref<Shader>& shader, const std::map<uint32_t, RenderTextureBinding>& texture_bindings, float size_factor, glm::u32vec2 custom_extent = { 128, 128 });
 };
 
 class RenderGraph : public Destructible

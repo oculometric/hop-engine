@@ -1,7 +1,6 @@
 # TODO
 
 ## v0.51
-- make builders return references
 - actually add comments to everything
 - fix crash with empty object file [H]
 - better support for object transforms, including world-space transform operations and quaternion support [H]

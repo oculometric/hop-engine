@@ -28,9 +28,9 @@ struct TextureBuilder
 	ImageUsage usage_flags = IMAGE_USAGE_DEFAULT;
 	glm::u32vec2 layer_arrangement = { 1, 1 };
 	
-	TextureBuilder data(void* value) { data_ptr = value; return *this; }
-	TextureBuilder usage(const ImageUsage value) { usage_flags = value; return *this; }
-	TextureBuilder layers(const glm::u32vec2 arrangement) { layer_arrangement = arrangement; return *this; }
+	TextureBuilder& data(void* value) { data_ptr = value; return *this; }
+	TextureBuilder& usage(const ImageUsage value) { usage_flags = value; return *this; }
+	TextureBuilder& layers(const glm::u32vec2 arrangement) { layer_arrangement = arrangement; return *this; }
 };
 
 class Texture : public Destructible

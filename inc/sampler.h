@@ -26,8 +26,8 @@ struct SamplerBuilder
 	SamplerFilter filtering_mode = FILTER_LINEAR;
 	SamplerAddress address_mode = ADDRESS_REPEAT;
 
-	SamplerBuilder filter(const SamplerFilter value) { filtering_mode = value; return *this; }
-	SamplerBuilder address(const SamplerAddress value) { address_mode = value; return *this; }
+	SamplerBuilder& filter(const SamplerFilter value) { filtering_mode = value; return *this; }
+	SamplerBuilder& address(const SamplerAddress value) { address_mode = value; return *this; }
 };
 
 class Sampler : public Destructible

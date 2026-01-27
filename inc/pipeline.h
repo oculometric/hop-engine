@@ -49,15 +49,15 @@ struct PipelineBuilder
 	uint32_t stencil_compare_mask = 0xFFFFFFFF;
 	uint32_t stencil_write = 0;
 
-	PipelineBuilder cullMode(const CullMode value) { culling_mode = value; return *this; }
-	PipelineBuilder polygonMode(const PolygonMode value) { polygon_mode = value; return *this; }
-	PipelineBuilder depthWrite(const bool value) { depth_write_enable = value; return *this; }
-	PipelineBuilder depthTest(const bool value) { depth_test_enable = value; return *this; }
-	PipelineBuilder depthOp(const CompareOp value) { depth_compare_op = value; return *this; }
-	PipelineBuilder stencil() { stencil_enable = true; return *this; }
-	PipelineBuilder stencilCompare(const CompareOp value, const uint32_t compare_value, const uint32_t compare_mask = 0xFFFFFFFF)
+	PipelineBuilder& cullMode(const CullMode value) { culling_mode = value; return *this; }
+	PipelineBuilder& polygonMode(const PolygonMode value) { polygon_mode = value; return *this; }
+	PipelineBuilder& depthWrite(const bool value) { depth_write_enable = value; return *this; }
+	PipelineBuilder& depthTest(const bool value) { depth_test_enable = value; return *this; }
+	PipelineBuilder& depthOp(const CompareOp value) { depth_compare_op = value; return *this; }
+	PipelineBuilder& stencil() { stencil_enable = true; return *this; }
+	PipelineBuilder& stencilCompare(const CompareOp value, const uint32_t compare_value, const uint32_t compare_mask = 0xFFFFFFFF)
 	{ stencil_enable = true; stencil_compare_op = value; stencil_compare_value = compare_value; stencil_compare_mask = compare_mask;  return *this; }
-	PipelineBuilder stencilWrite(const uint32_t value) { stencil_enable = true; stencil_write = value; return *this; }
+	PipelineBuilder& stencilWrite(const uint32_t value) { stencil_enable = true; stencil_write = value; return *this; }
 };
 
 class Pipeline : public Destructible

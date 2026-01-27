@@ -494,12 +494,12 @@ void RenderGraph::recordPostProcessStep(const VkCommandBuffer command_buffer, co
     vkCmdEndRenderPass(command_buffer);
 }
 
-RenderGraphBuilder RenderGraphBuilder::addCamera(const size_t slot)
+RenderGraphBuilder& RenderGraphBuilder::addCamera(const size_t slot)
 {
     return addCamera(slot, RenderServer::getMainRenderPass()->getOutputConfig());
 }
 
-RenderGraphBuilder RenderGraphBuilder::addCamera(const size_t slot, const RenderOutput& render_pass_config, float size_factor, glm::u32vec2 custom_extent)
+RenderGraphBuilder& RenderGraphBuilder::addCamera(const size_t slot, const RenderOutput& render_pass_config, float size_factor, glm::u32vec2 custom_extent)
 {
     RenderStep step;
     step.is_camera = true;
@@ -515,17 +515,17 @@ RenderGraphBuilder RenderGraphBuilder::addCamera(const size_t slot, const Render
     return *this;
 }
 
-RenderGraphBuilder RenderGraphBuilder::addCamera(const size_t slot, const float size_factor, const glm::u32vec2 custom_extent)
+RenderGraphBuilder& RenderGraphBuilder::addCamera(const size_t slot, const float size_factor, const glm::u32vec2 custom_extent)
 {
     return addCamera(slot, RenderServer::getMainRenderPass()->getOutputConfig(), size_factor, custom_extent);
 }
 
-RenderGraphBuilder RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings)
+RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings)
 {
     return addPostProcess(shader, texture_bindings, RenderOutput{ 0, false });
 }
 
-RenderGraphBuilder RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings, const RenderOutput& render_pass_config, const float size_factor, const glm::u32vec2 custom_extent)
+RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings, const RenderOutput& render_pass_config, const float size_factor, const glm::u32vec2 custom_extent)
 {
     RenderStep step;
     step.is_camera = false;
@@ -543,7 +543,7 @@ RenderGraphBuilder RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader,
     return *this;
 }
 
-RenderGraphBuilder RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings, const float size_factor, const glm::u32vec2 custom_extent)
+RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings, const float size_factor, const glm::u32vec2 custom_extent)
 {
     return addPostProcess(shader, texture_bindings, RenderOutput{ 0, false }, size_factor, custom_extent);
 }
