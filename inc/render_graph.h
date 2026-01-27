@@ -25,9 +25,9 @@ struct RenderTextureBinding
 	SamplerAddress address_mode = ADDRESS_CLAMP_EDGE;
 	
 	RenderTextureBinding() = default;
-	RenderTextureBinding(size_t step, size_t output) : step_index(step), output_index(output) { }
-	RenderTextureBinding filter(SamplerFilter value) { filter_mode = value; return *this; }
-	RenderTextureBinding address(SamplerAddress value) { address_mode = value; return *this; }
+	RenderTextureBinding(const size_t step, const size_t output) : step_index(step), output_index(output) { }
+	RenderTextureBinding filter(const SamplerFilter value) { filter_mode = value; return *this; }
+	RenderTextureBinding address(const SamplerAddress value) { address_mode = value; return *this; }
 };
 
 struct RenderStep
@@ -53,11 +53,11 @@ struct RenderGraphBuilder
 	std::vector<RenderStep> execution_steps;
 
 	RenderGraphBuilder addCamera(size_t slot);
-	RenderGraphBuilder addCamera(size_t slot, RenderOutput render_pass_config, float size_factor = 1.0f, glm::u32vec2 custom_extent = { 128, 128 });
+	RenderGraphBuilder addCamera(size_t slot, const RenderOutput& render_pass_config, float size_factor = 1.0f, glm::u32vec2 custom_extent = { 128, 128 });
 	RenderGraphBuilder addCamera(size_t slot, float size_factor, glm::u32vec2 custom_extent = { 128, 128 });
-	RenderGraphBuilder addPostProcess(Ref<Shader> shader, std::map<uint32_t, RenderTextureBinding> texture_bindings);
-	RenderGraphBuilder addPostProcess(Ref<Shader> shader, std::map<uint32_t, RenderTextureBinding> texture_bindings, RenderOutput render_pass_config, float size_factor = 1.0f, glm::u32vec2 custom_extent = { 128, 128 });
-	RenderGraphBuilder addPostProcess(Ref<Shader> shader, std::map<uint32_t, RenderTextureBinding> texture_bindings, float size_factor, glm::u32vec2 custom_extent = { 128, 128 });
+	RenderGraphBuilder addPostProcess(const Ref<Shader>& shader, const std::map<uint32_t, RenderTextureBinding>& texture_bindings);
+	RenderGraphBuilder addPostProcess(const Ref<Shader>& shader, const std::map<uint32_t, RenderTextureBinding>& texture_bindings, const RenderOutput& render_pass_config, float size_factor = 1.0f, glm::u32vec2 custom_extent = { 128, 128 });
+	RenderGraphBuilder addPostProcess(const Ref<Shader>& shader, const std::map<uint32_t, RenderTextureBinding>& texture_bindings, float size_factor, glm::u32vec2 custom_extent = { 128, 128 });
 };
 
 class RenderGraph : public Destructible
@@ -67,41 +67,39 @@ public:
 	int output_image = 0;
 
 private:
+	std::string origin;
 	std::vector<RenderStep> execution_steps;
 	glm::u32vec2 expected_extent = { 0, 0 };
 	Ref<Material> passthrough;
 	WeakRef<Texture> passthrough_texture;
-	std::string origin;
 
 public:
 	DELETE_CONSTRUCTORS(RenderGraph);
-
+	RenderGraph(const RenderGraphBuilder& config);
+	~RenderGraph() override;
+	
+	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
+	Ref<Material> getMaterialForStep(size_t step);
+	Ref<Material> getMaterialForStep(const std::string& name);
+	std::pair<Ref<Texture>, bool> getFinalImage() const;
+	bool getSkipStep(size_t step) const;
+	bool getSkipStep(const std::string& name) const;
+	glm::u32vec2 getExpectedExtent() const { return expected_extent; }
+	void setSkipStep(size_t step, bool skip);
+	void setSkipStep(const std::string& name, bool skip);
+	void resizeBuffers(uint32_t width, uint32_t height);
 	void updateUniforms(uint32_t image_index, float time_since_start, Ref<Scene> scene);
 	void recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Scene> scene, FrameStats& stats, Ref<RenderPass>
 	                         final_render_pass) const;
-	void resizeBuffers(uint32_t width, uint32_t height);
-	glm::u32vec2 getExpectedExtent() const { return expected_extent; }
-	std::pair<Ref<Texture>, bool> getFinalImage() const;
-	Ref<Material> getMaterialForStep(size_t step);
-	Ref<Material> getMaterialForStep(const std::string& name);
-	void setSkipStep(size_t step, bool skip);
-	void setSkipStep(const std::string& name, bool skip);
-	bool getSkipStep(size_t step) const;
-	bool getSkipStep(const std::string& name) const;
-	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 
 	void drawImGuiDebug();
-	
 	static Ref<RenderGraph> deserialise(std::string name);
-
-	RenderGraph(RenderGraphBuilder config);
-	~RenderGraph() override;
 	
 private:
 	size_t findStep(const std::string& name) const;
 	void rebuildBindings();
-	static void recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, const std::multiset<DrawCommand, DrawCommand>& commands, FrameStats& stats);
-	static void recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Material> material, VkDescriptorSet scene_descriptor_set, FrameStats& stats);
+	static void recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, const Ref<Camera>& camera, const Ref<RenderPass>& pass, const std::multiset<DrawCommand, DrawCommand>& commands, FrameStats& stats);
+	static void recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t image_index, const Ref<Material>& material, VkDescriptorSet scene_descriptor_set, FrameStats& stats);
 };
 
 }

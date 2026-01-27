@@ -20,6 +20,7 @@ enum ImageUsage
 	IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT = 16,
 };
 ENUM_OPERATOR(ImageUsage)
+TO_STRING_DEC(ImageUsage);
 
 struct TextureBuilder
 {
@@ -28,13 +29,14 @@ struct TextureBuilder
 	glm::u32vec2 layer_arrangement = { 1, 1 };
 	
 	TextureBuilder data(void* value) { data_ptr = value; return *this; }
-	TextureBuilder usage(ImageUsage value) { usage_flags = value; return *this; }
-	TextureBuilder layers(glm::u32vec2 arrangement) { layer_arrangement = arrangement; return *this; }
+	TextureBuilder usage(const ImageUsage value) { usage_flags = value; return *this; }
+	TextureBuilder layers(const glm::u32vec2 arrangement) { layer_arrangement = arrangement; return *this; }
 };
 
 class Texture : public Destructible
 {
 private:
+	std::string origin;
 	glm::u32vec3 extent;
 	VkImageLayout current_layout;
 	VkFormat format;
@@ -43,24 +45,22 @@ private:
 	VkDeviceMemory memory = VK_NULL_HANDLE;
 	VkImageView view = VK_NULL_HANDLE;
 	VkImageView stencil_view = VK_NULL_HANDLE;
-	std::string origin;
 
 public:
 	DELETE_CONSTRUCTORS(Texture);
-
-	void transitionLayout(VkImageLayout new_layout);
-	void copyBufferToImage(Ref<Buffer> buffer);
-	VkImageView getView(bool stencil = false);
-	glm::ivec2 getSize() const { return { extent.x, extent.y }; }
-	VkFormat getFormat() const { return format; }
-	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
-
-	Texture(size_t width, size_t height, VkFormat format, TextureBuilder builder = TextureBuilder());
-	Texture(const std::string& file, TextureBuilder builder = TextureBuilder());
+	Texture(size_t _width, size_t _height, VkFormat _format, const TextureBuilder& builder = TextureBuilder());
+	Texture(const std::string& file, const TextureBuilder& builder = TextureBuilder());
 	~Texture() override;
 	
 	static VkFormat getDepthFormat();
 	static VkFormat getDataFormat();
+	
+	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
+	glm::ivec2 getSize() const { return { extent.x, extent.y }; }
+	VkFormat getFormat() const { return format; }
+	VkImageView getView(bool stencil = false);
+	void transitionLayout(VkImageLayout new_layout);
+	void copyBufferToImage(Ref<Buffer> buffer) const;
 
 private:
 	void createImage();

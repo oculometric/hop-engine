@@ -18,22 +18,20 @@ private:
 	
 public:
 	DELETE_CONSTRUCTORS(Window);
+	Window(uint32_t _width, uint32_t _height, const std::string& title);
+	~Window() override;
 
-	static void initEnvironment();
 	static void terminateEnvironment();
+	static void pollEvents();
 
-	void pollEvents() const;
+	GLFWwindow* getWindow() const { return window; }
+	std::pair<uint32_t, uint32_t> getSize();
 	bool getShouldClose() const;
-	inline GLFWwindow* getWindow() const { return window; }
 	bool isMinified() const;
 	bool isResized();
-	std::pair<uint32_t, uint32_t> getSize();
-	void setTitle(std::string title);
-	void setVisible(bool visible);
-	void setIcon(std::string path);
-
-	Window(uint32_t width, uint32_t height, std::string title);
-	~Window() override;
+	void setTitle(const std::string& title) const;
+	void setVisible(bool visible) const;
+	void setIcon(const std::string& path) const;
 };
 
 }

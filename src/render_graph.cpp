@@ -19,6 +19,97 @@
 using namespace HopEngine;
 using namespace std;
 
+Ref<Material> RenderGraph::getMaterialForStep(const size_t step)
+{
+    if (step >= execution_steps.size())
+    {
+        DBG_ERROR("attempt to read material from step " + ::to_string(step) + " of render graph " + PTR(this) + ", but there is no such step");
+        return nullptr;
+    }
+
+    if (execution_steps[step].is_camera)
+    {
+        DBG_ERROR("attempt to read material from step " + ::to_string(step) + " of render graph " + PTR(this) + ", but it is not a post-process (material) step");
+        return nullptr;
+    }
+
+    return execution_steps[step].material;
+}
+
+Ref<Material> RenderGraph::getMaterialForStep(const string& name)
+{ return getMaterialForStep(findStep(name)); }
+
+pair<Ref<Texture>, bool> RenderGraph::getFinalImage() const
+{
+    if (execution_steps.empty())
+        return { nullptr, false };
+    size_t step_index = output_step % execution_steps.size();
+    if (output_step == -1)
+    {
+        step_index = execution_steps.size() - 1;
+        while (step_index > 0 && execution_steps[step_index].skipped)
+            --step_index;
+    }
+    
+    auto& step = execution_steps[step_index];
+    const size_t attachment = output_image;
+    const auto [additional_attachments, has_depth_attachment] = step.render_pass->getOutputConfig();
+    const size_t max_attachments = additional_attachments + (has_depth_attachment ? 2 : 1);
+    bool is_stencil = false;
+    if (attachment == max_attachments)
+        is_stencil = true;
+    return { step.render_pass->getImage(is_stencil ? attachment - 1 : attachment), is_stencil };
+}
+
+bool RenderGraph::getSkipStep(const size_t step) const
+{
+    if (step >= execution_steps.size())
+    {
+        DBG_ERROR("attempt to get skipped for step " + ::to_string(step) + " of render graph " + PTR(this) + ", but there is no such step");
+        return false;
+    }
+    
+    return execution_steps[step].skipped;
+}
+
+bool RenderGraph::getSkipStep(const string& name) const
+{ return getSkipStep(findStep(name)); }
+
+void RenderGraph::setSkipStep(const size_t step, const bool skip)
+{
+    if (step >= execution_steps.size())
+    {
+        DBG_ERROR("attempt to skip step " + ::to_string(step) + " of render graph " + PTR(this) + ", but there is no such step");
+        return;
+    }
+    
+    execution_steps[step].skipped = skip;
+    rebuildBindings();
+}
+
+void RenderGraph::setSkipStep(const string& name, const bool skip)
+{
+    setSkipStep(findStep(name), skip);
+}
+
+void RenderGraph::resizeBuffers(const uint32_t width, const uint32_t height)
+{
+    for (RenderStep& step : execution_steps)
+    {
+        if (step.resolution_scale > 0.0f)
+            step.render_pass->resize(static_cast<uint32_t>(static_cast<float>(width) * step.resolution_scale), static_cast<uint32_t>(static_cast<float>(height) * step.resolution_scale));
+        else
+            step.render_pass->resize(step.custom_extent.x ? step.custom_extent.x : width, step.custom_extent.y ? step.custom_extent.y : height);
+
+        if (step.is_camera)
+            continue;
+
+        for (const auto& [texture_index, binding] : step.texture_bindings)
+            step.material->setTexture(texture_index, execution_steps[binding.step_index].render_pass->getImage(binding.output_index));
+    }
+    expected_extent = { width, height };
+}
+
 void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, Ref<Scene> scene)
 {
     for (const RenderStep& step : execution_steps)
@@ -106,7 +197,7 @@ void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t i
     glm::u32vec2 extent = final_render_pass->getExtent();
     render_pass_begin_info.renderArea.extent = { extent.x, extent.y };
     vector<VkClearValue> clear_values = final_render_pass->getClearValues();
-    clear_values[0].color = { 0.02f, 0.02f, 0.02f };
+    clear_values[0].color = { { 0.02f, 0.02f, 0.02f } };
     render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
     render_pass_begin_info.pClearValues = clear_values.data();
 
@@ -142,8 +233,8 @@ void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t i
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, passthrough->getPipelineLayout(), 2, 1, descriptor_sets + 2, 0, nullptr);
     
     WeakRef<Mesh> quad = RenderServer::getQuad();
-    VkBuffer vertex_buffers[] = { quad->getVertexBuffer() };
-    VkDeviceSize offsets[] = { 0 };
+    const VkBuffer vertex_buffers[] = { quad->getVertexBuffer() };
+    constexpr VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
     vkCmdBindIndexBuffer(command_buffer, quad->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
 
@@ -152,16 +243,16 @@ void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t i
     stats.triangles += 2;
     stats.vertices += 4;
     
-    auto final_step = step_commands[execution_steps.size()];
+    const auto final_step = step_commands[execution_steps.size()];
     for (DrawCommand command : final_step)
     {
         descriptor_sets[1] = command.uniforms->getDescriptorSet(image_index);
         descriptor_sets[2] = command.material->getDescriptorSet(image_index);
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, command.material->getPipeline());
         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, command.material->getPipelineLayout(), 0, 3, descriptor_sets, 0, nullptr);
-        VkBuffer vertex_buffers[] = { command.mesh->getVertexBuffer() };
-        VkDeviceSize offsets[] = { 0 };
-        vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
+        const VkBuffer mesh_vertex_buffers[] = { command.mesh->getVertexBuffer() };
+        constexpr VkDeviceSize mesh_offsets[] = { 0 };
+        vkCmdBindVertexBuffers(command_buffer, 0, 1, mesh_vertex_buffers, mesh_offsets);
         vkCmdBindIndexBuffer(command_buffer, command.mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
         vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(command.mesh->getIndexCount()), 1, 0, 0, 0);
         stats.draw_calls++;
@@ -176,102 +267,7 @@ void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t i
     vkCmdEndRenderPass(command_buffer);
 }
 
-void RenderGraph::resizeBuffers(uint32_t width, uint32_t height)
-{
-    for (RenderStep& step : execution_steps)
-    {
-        if (step.resolution_scale > 0.0f)
-            step.render_pass->resize((uint32_t)(width * step.resolution_scale), (uint32_t)(height * step.resolution_scale));
-        else
-            step.render_pass->resize(step.custom_extent.x ? step.custom_extent.x : (uint32_t)width, step.custom_extent.y ? step.custom_extent.y : height);
-
-        if (step.is_camera)
-            continue;
-
-        for (const auto& pair : step.texture_bindings)
-            step.material->setTexture(pair.first, execution_steps[pair.second.step_index].render_pass->getImage(pair.second.output_index));
-    }
-    expected_extent = { width, height };
-}
-
-pair<Ref<Texture>, bool> RenderGraph::getFinalImage() const
-{
-    if (execution_steps.empty())
-        return { nullptr, false };
-    size_t step_index = output_step % execution_steps.size();
-    if (output_step == -1)
-    {
-        step_index = execution_steps.size() - 1;
-        while (step_index > 0 && execution_steps[step_index].skipped)
-            --step_index;
-    }
-    
-    auto& step = execution_steps[step_index];
-    size_t attachment = output_image;
-    auto config = step.render_pass->getOutputConfig();
-    size_t max_attachments = config.additional_attachments + (config.has_depth_attachment ? 2 : 1);
-    bool is_stencil = false;
-    if (output_image == max_attachments)
-        is_stencil = true;
-    return { step.render_pass->getImage(is_stencil ? output_image - 1 : output_image), is_stencil };
-}
-
-Ref<Material> RenderGraph::getMaterialForStep(size_t step)
-{
-    if (step >= execution_steps.size())
-    {
-        DBG_ERROR("attempt to read material from step " + to_string(step) + " of render graph " + PTR(this) + ", but there is no such step");
-        return nullptr;
-    }
-
-    if (execution_steps[step].is_camera)
-    {
-        DBG_ERROR("attempt to read material from step " + to_string(step) + " of render graph " + PTR(this) + ", but it is not a post-process (material) step");
-        return nullptr;
-    }
-
-    return execution_steps[step].material;
-}
-
-Ref<Material> RenderGraph::getMaterialForStep(const string& name)
-{
-    return getMaterialForStep(findStep(name));
-}
-
-void RenderGraph::setSkipStep(size_t step, bool skip)
-{
-    if (step >= execution_steps.size())
-    {
-        DBG_ERROR("attempt to skip step " + to_string(step) + " of render graph " + PTR(this) + ", but there is no such step");
-        return;
-    }
-    
-    execution_steps[step].skipped = skip;
-    rebuildBindings();
-}
-
-void RenderGraph::setSkipStep(const string& name, bool skip)
-{
-    setSkipStep(findStep(name), skip);
-}
-
-bool RenderGraph::getSkipStep(const std::string& name) const
-{
-    return getSkipStep(findStep(name));
-}
-
-bool RenderGraph::getSkipStep(size_t step) const
-{
-    if (step >= execution_steps.size())
-    {
-        DBG_ERROR("attempt to get skipped for step " + to_string(step) + " of render graph " + PTR(this) + ", but there is no such step");
-        return false;
-    }
-    
-    return execution_steps[step].skipped;
-}
-
-RenderGraph::RenderGraph(RenderGraphBuilder config)
+RenderGraph::RenderGraph(const RenderGraphBuilder& config)
 {
     passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough"), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), RenderServer::getFinalRenderPass());
     execution_steps = config.execution_steps;
@@ -288,7 +284,7 @@ RenderGraph::~RenderGraph()
     passthrough = nullptr;
 }
 
-size_t RenderGraph::findStep(const std::string& name) const
+size_t RenderGraph::findStep(const string& name) const
 {
     size_t index = 0;
     for (auto& step : execution_steps)
@@ -311,10 +307,10 @@ void RenderGraph::rebuildBindings()
         if (step.is_camera)
             continue;
 
-        for (const auto& pair : step.texture_bindings)
+        for (const auto& [texture_index, binding] : step.texture_bindings)
         {
-            RenderStep binding_step = execution_steps[pair.second.step_index];
-            Ref<Texture> texture = binding_step.render_pass->getImage(pair.second.output_index);
+            RenderStep binding_step = execution_steps[binding.step_index];
+            Ref<Texture> texture = binding_step.render_pass->getImage(binding.output_index);
             while (binding_step.skipped)
             {
                 if (binding_step.is_camera || binding_step.texture_bindings.empty())
@@ -325,15 +321,15 @@ void RenderGraph::rebuildBindings()
                 binding_step = execution_steps[binding_step.texture_bindings[0].step_index];
                 texture = binding_step.render_pass->getImage(0);
             }
-            step.material->setTexture(pair.first, texture);
-            step.material->setSampler(pair.first, new Sampler(SamplerBuilder().filter(pair.second.filter_mode).address(pair.second.address_mode)));
+            step.material->setTexture(texture_index, texture);
+            step.material->setSampler(texture_index, new Sampler(SamplerBuilder().filter(binding.filter_mode).address(binding.address_mode)));
         }
     }
 }
 
-void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Camera> camera, Ref<RenderPass> pass, const multiset<DrawCommand, DrawCommand>& commands, FrameStats& stats)
+void RenderGraph::recordCameraStep(const VkCommandBuffer command_buffer, const uint32_t image_index, const Ref<Camera>& camera, const Ref<RenderPass>& pass, const multiset<DrawCommand, DrawCommand>& commands, FrameStats& stats)
 {
-    stats.cameras++;
+    ++stats.cameras;
 
     VkRenderPassBeginInfo render_pass_begin_info{ };
     render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -342,7 +338,7 @@ void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t imag
     render_pass_begin_info.renderArea.offset = { 0, 0 };
     render_pass_begin_info.renderArea.extent = { pass->getExtent().x, pass->getExtent().y };
     vector<VkClearValue> clear_values = pass->getClearValues();
-    clear_values[0].color = { camera->clear_colour.r, camera->clear_colour.g, camera->clear_colour.b };
+    clear_values[0].color = { { camera->clear_colour.r, camera->clear_colour.g, camera->clear_colour.b } };
     render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
     render_pass_begin_info.pClearValues = clear_values.data();
 
@@ -412,7 +408,7 @@ void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t imag
         {
             vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                 Engine::isWireframeMode() ? last_used_material->getDebugPipeline() : last_used_material->getPipeline());
-            stats.pipeline_rebinds++;
+            ++stats.pipeline_rebinds;
         }
         if (rebind_layout || rebind_material)
             descriptor_sets[2] = last_used_material->getDescriptorSet(image_index);
@@ -431,13 +427,13 @@ void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t imag
 
         if (rebind_mesh)
         {
-            VkBuffer vertex_buffers[] = { last_used_mesh->getVertexBuffer() };
-            VkDeviceSize offsets[] = { 0 };
+            const VkBuffer vertex_buffers[] = { last_used_mesh->getVertexBuffer() };
+            constexpr VkDeviceSize offsets[] = { 0 };
             vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
             vkCmdBindIndexBuffer(command_buffer, last_used_mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
         }
         vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(last_used_mesh->getIndexCount()), 1, 0, 0, 0);
-        stats.draw_calls++;
+        ++stats.draw_calls;
         stats.triangles += last_used_mesh->getIndexCount() / 3;
         stats.vertices += last_used_mesh->getVertexCount();
     }
@@ -446,22 +442,22 @@ void RenderGraph::recordCameraStep(VkCommandBuffer command_buffer, uint32_t imag
     vkCmdEndRenderPass(command_buffer);
 }
 
-void RenderGraph::recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Material> material, VkDescriptorSet scene_descriptor_set, FrameStats& stats)
+void RenderGraph::recordPostProcessStep(const VkCommandBuffer command_buffer, const uint32_t image_index, const Ref<Material>& material, const VkDescriptorSet scene_descriptor_set, FrameStats& stats)
 {
     VkRenderPassBeginInfo render_pass_begin_info{ };
     render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     render_pass_begin_info.renderPass = material->getRenderPass()->getRenderPass();
     render_pass_begin_info.framebuffer = material->getRenderPass()->getFramebuffer(image_index);
     render_pass_begin_info.renderArea.offset = { 0, 0 };
-    glm::u32vec2 extent = material->getRenderPass()->getExtent();
+    const glm::u32vec2 extent = material->getRenderPass()->getExtent();
     render_pass_begin_info.renderArea.extent = { extent.x, extent.y };
-    vector<VkClearValue> clear_values = material->getRenderPass()->getClearValues();
+    const vector<VkClearValue> clear_values = material->getRenderPass()->getClearValues();
     render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
     render_pass_begin_info.pClearValues = clear_values.data();
 
     vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
     RenderServer::writeTimestamp(image_index, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
-    stats.passes++;
+    ++stats.passes;
 
     VkRect2D scissor{ };
     scissor.offset = { 0, 0 };
@@ -477,20 +473,20 @@ void RenderGraph::recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
     vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->getPipeline());
-    stats.pipeline_rebinds++;
+    ++stats.pipeline_rebinds;
 
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->getPipelineLayout(), 0, 1, &scene_descriptor_set, 0, nullptr);
-    VkDescriptorSet material_descriptor_set = material->getDescriptorSet(image_index);
+    const VkDescriptorSet material_descriptor_set = material->getDescriptorSet(image_index);
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->getPipelineLayout(), 2, 1, &material_descriptor_set, 0, nullptr);
 
     WeakRef<Mesh> quad = RenderServer::getQuad();
-    VkBuffer vertex_buffers[] = { quad->getVertexBuffer()};
-    VkDeviceSize offsets[] = { 0 };
+    const VkBuffer vertex_buffers[] = { quad->getVertexBuffer()};
+    constexpr VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
     vkCmdBindIndexBuffer(command_buffer, quad->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
 
     vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(quad->getIndexCount()), 1, 0, 0, 0);
-    stats.draw_calls++;
+    ++stats.draw_calls;
     stats.triangles += 2;
     stats.vertices += 4;
 
@@ -498,48 +494,48 @@ void RenderGraph::recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t
     vkCmdEndRenderPass(command_buffer);
 }
 
-RenderGraphBuilder RenderGraphBuilder::addCamera(size_t slot)
+RenderGraphBuilder RenderGraphBuilder::addCamera(const size_t slot)
 {
     return addCamera(slot, RenderServer::getMainRenderPass()->getOutputConfig());
 }
 
-RenderGraphBuilder RenderGraphBuilder::addCamera(size_t slot, RenderOutput render_pass_config, float size_factor, glm::u32vec2 custom_extent)
+RenderGraphBuilder RenderGraphBuilder::addCamera(const size_t slot, const RenderOutput& render_pass_config, float size_factor, glm::u32vec2 custom_extent)
 {
     RenderStep step;
     step.is_camera = true;
     step.camera_slot = slot;
     step.resolution_scale = size_factor;
     step.custom_extent = custom_extent;
-    glm::vec2 size = RenderServer::getFramebufferSize();
+    const glm::vec2 size = RenderServer::getFramebufferSize();
     if (size_factor > 0.0f)
-        step.render_pass = new RenderPass((uint32_t)(size.x * size_factor), (uint32_t)(size.y * size_factor), render_pass_config);
+        step.render_pass = new RenderPass(static_cast<uint32_t>(size.x * size_factor), static_cast<uint32_t>(size.y * size_factor), render_pass_config);
     else
-        step.render_pass = new RenderPass(custom_extent.x ? custom_extent.x : (uint32_t)size.x, custom_extent.y ? custom_extent.y : (uint32_t)size.y, render_pass_config);
+        step.render_pass = new RenderPass(custom_extent.x ? custom_extent.x : static_cast<uint32_t>(size.x), custom_extent.y ? custom_extent.y : static_cast<uint32_t>(size.y), render_pass_config);
     execution_steps.push_back(step);
     return *this;
 }
 
-RenderGraphBuilder RenderGraphBuilder::addCamera(size_t slot, float size_factor, glm::u32vec2 custom_extent)
+RenderGraphBuilder RenderGraphBuilder::addCamera(const size_t slot, const float size_factor, const glm::u32vec2 custom_extent)
 {
     return addCamera(slot, RenderServer::getMainRenderPass()->getOutputConfig(), size_factor, custom_extent);
 }
 
-RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<uint32_t, RenderTextureBinding> texture_bindings)
+RenderGraphBuilder RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings)
 {
     return addPostProcess(shader, texture_bindings, RenderOutput{ 0, false });
 }
 
-RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<uint32_t, RenderTextureBinding> texture_bindings, RenderOutput render_pass_config, float size_factor, glm::u32vec2 custom_extent)
+RenderGraphBuilder RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings, const RenderOutput& render_pass_config, const float size_factor, const glm::u32vec2 custom_extent)
 {
     RenderStep step;
     step.is_camera = false;
     step.resolution_scale = size_factor;
     step.custom_extent = custom_extent;
-    glm::vec2 size = RenderServer::getFramebufferSize();
+    const glm::vec2 size = RenderServer::getFramebufferSize();
     if (size_factor > 0.0f)
-        step.render_pass = new RenderPass((uint32_t)(size.x * size_factor), (uint32_t)(size.y * size_factor), render_pass_config);
+        step.render_pass = new RenderPass(static_cast<uint32_t>(size.x * size_factor), static_cast<uint32_t>(size.y * size_factor), render_pass_config);
     else
-        step.render_pass = new RenderPass(custom_extent.x ? custom_extent.x : (uint32_t)size.x, custom_extent.y ? custom_extent.y : (uint32_t)size.y, render_pass_config);
+        step.render_pass = new RenderPass(custom_extent.x ? custom_extent.x : static_cast<uint32_t>(size.x), custom_extent.y ? custom_extent.y : static_cast<uint32_t>(size.y), render_pass_config);
     step.material = new Material(shader, PipelineBuilder().cullMode(CULL_NONE).depthTest(VK_FALSE).depthWrite(VK_FALSE), step.render_pass);
     step.texture_bindings = texture_bindings;
     step.scene_uniforms = new UniformBlock(ShaderLayout{ RenderServer::getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
@@ -547,7 +543,7 @@ RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<ui
     return *this;
 }
 
-RenderGraphBuilder RenderGraphBuilder::addPostProcess(Ref<Shader> shader, map<uint32_t, RenderTextureBinding> texture_bindings, float size_factor, glm::u32vec2 custom_extent)
+RenderGraphBuilder RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings, const float size_factor, const glm::u32vec2 custom_extent)
 {
     return addPostProcess(shader, texture_bindings, RenderOutput{ 0, false }, size_factor, custom_extent);
 }

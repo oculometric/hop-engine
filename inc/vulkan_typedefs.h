@@ -48,13 +48,40 @@ typedef uint64_t VkDeviceSize;
 
 template <typename T, typename S, int L> T convertFlags(S usage, const T* mapping)
 {
-    T flags = (T)0;
+    uint32_t flags = 0;
     for (size_t i = 0; i < L; ++i)
     {
         if (usage & (1 << i))
-            flags = static_cast<T>(static_cast<uint32_t>(mapping[i]) | static_cast<uint32_t>(flags));
+            flags = mapping[i] | flags;
     }
-    return flags;
+    return static_cast<T>(flags);
+}
+
+#define TO_STRING_DEC(t) std::string to_string(t value)
+#define VARGS(...) __VA_ARGS__
+#define TO_STRING_DEF_BITFLAGS(t, s, n) string HopEngine::to_string(const t value) \
+{ \
+    constexpr const char* names[s] = \
+    { n }; \
+    string result; \
+    for (size_t i = 0; i < s; ++i) \
+    { \
+        if (value & (1 << i)) \
+        { \
+            result += names[i]; \
+            result += " | "; \
+        } \
+    } \
+    result.pop_back(); \
+    result.pop_back(); \
+    result.pop_back(); \
+    return result; \
+}
+#define TO_STRING_DEF(t, s, n) string HopEngine::to_string(const t value) \
+{ \
+    constexpr const char* names[s] = \
+    { n }; \
+    return names[value]; \
 }
 
 #define ENUM_OPERATOR(t) inline t operator|(t a, t b) { return (t)((uint32_t)a | (uint32_t)b); }

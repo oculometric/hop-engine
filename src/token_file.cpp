@@ -11,16 +11,13 @@ vector<TokenReader::Token> TokenReader::tokenise(const string& content, bool tri
     trimmed_content.reserve(content.size());
 
     for (char c : content)
-    {
-        if (c != '\r')
-            trimmed_content.push_back(c);
-    }
+        if (c != '\r') trimmed_content.push_back(c);
 
-    if (trimmed_content.length() == 0) return { };
+    if (trimmed_content.empty()) return { };
 
     size_t offset = 0;
     vector<Token> tokens;
-    string current_token = "";
+    string current_token;
     TokenType current_type = getType(trimmed_content[0]);
     size_t start_offset = 0;
     if (current_type != TEXT && current_type != COMMENT && current_type != WHITESPACE && current_type != NEWLINE)
@@ -58,17 +55,14 @@ vector<TokenReader::Token> TokenReader::tokenise(const string& content, bool tri
         case TEXT:
             if (char_type == TEXT || char_type == INT)
                 break;
-            else if (isSeparator(char_type))
+            if (isSeparator(char_type))
             {
                 finished_token.s_value = current_token;
                 reset_token = true;
                 break;
             }
-            else
-            {
-                reportError("invalid conjoined tokens", offset, trimmed_content);
-                return { };
-            }
+            reportError("invalid conjoined tokens", offset, trimmed_content);
+            return { };
         case STRING:
             if (char_type == STRING)
             {
@@ -78,74 +72,64 @@ vector<TokenReader::Token> TokenReader::tokenise(const string& content, bool tri
                 char_type = INVALID;
                 break;
             }
-            else
-                break;
+            break;
         case INT:
             if (char_type == INT)
                 break;
-            else if (char_type == FLOAT)
+            if (char_type == FLOAT)
             {
                 new_type = FLOAT;
                 break;
             }
-            else if (char_type == TEXT)
+            if (char_type == TEXT)
             {
                 new_type = TEXT;
                 break;
             }
-            else if (isSeparator(char_type))
+            if (isSeparator(char_type))
             {
                 finished_token.i_value = stoi(current_token);
                 reset_token = true;
                 break;
             }
-            else
-            {
-                reportError("invalid conjoined tokens", offset, trimmed_content);
-                return { };
-            }
+            reportError("invalid conjoined tokens", offset, trimmed_content);
+            return { };
         case FLOAT:
             if (char_type == INT)
                 break;
-            else if (char_type == FLOAT)
+            if (char_type == FLOAT)
             {
                 reportError("invalid float literal", offset, trimmed_content);
                 return { };
             }
-            else if (isSeparator(char_type))
+            if (isSeparator(char_type))
             {
                 finished_token.f_value = stof(current_token);
                 reset_token = true;
                 break;
             }
-            else
-            {
-                reportError("invalid conjoined tokens", offset, trimmed_content);
-                return { };
-            }
+            reportError("invalid conjoined tokens", offset, trimmed_content);
+            return { };
         case IDENTIFIER:
             if (char_type == TEXT || char_type == INT)
                 break;
-            else if (isSeparator(char_type))
+            if (isSeparator(char_type))
             {
                 finished_token.s_value = current_token.substr(1);
                 reset_token = true;
                 break;
             }
-            else
-            {
-                reportError("invalid conjoined tokens", offset, trimmed_content);
-                return { };
-            }
+            reportError("invalid conjoined tokens", offset, trimmed_content);
+            return { };
         case VECTOR:
             if (char_type == WHITESPACE)
             {
                 append_chr = false;
                 break;
             }
-            else if (char_type == INT || char_type == FLOAT || char_type == COMMA)
+            if (char_type == INT || char_type == FLOAT || char_type == COMMA)
                 break;
-            else if (char_type == END_VECTOR)
+            if (char_type == END_VECTOR)
             {
                 finished_token.c_value = deserialiseVectorToken(current_token.substr(1), offset, trimmed_content);
                 append_chr = false;
@@ -153,23 +137,20 @@ vector<TokenReader::Token> TokenReader::tokenise(const string& content, bool tri
                 char_type = INVALID;
                 break;
             }
-            else if (char_type == VECTOR)
+            if (char_type == VECTOR)
             {
                 reportError("invalid nested vector token", offset, trimmed_content);
                 return { };
             }
-            else
-            {
-                reportError("invalid token inside vector", offset, trimmed_content);
-                return { };
-            }
+            reportError("invalid token inside vector", offset, trimmed_content);
+            return { };
         case COMMENT:
             if (char_type != COMMENT && current_token.length() < 2)
             {
                 reportError("incomplete comment initiator", offset, trimmed_content);
                 return { };
             }
-            else if (char_type == NEWLINE)
+            if (char_type == NEWLINE)
             {
                 finished_token.s_value = current_token;
                 append_chr = false;
@@ -181,22 +162,16 @@ vector<TokenReader::Token> TokenReader::tokenise(const string& content, bool tri
         case WHITESPACE:
             if (char_type == WHITESPACE)
                 break;
-            else
-            {
-                reset_token = true;
-                break;
-            }
+            reset_token = true;
+            break;
         case INVALID:
             if (!isSeparator(char_type))
             {
                 reportError("invalid conjoined tokens", offset, trimmed_content);
                 return { };
             }
-            else
-            {
-                reset_token = true;
-                break;
-            }
+            reset_token = true;
+            break;
         default:
             reset_token = true;
             break;
@@ -212,7 +187,7 @@ vector<TokenReader::Token> TokenReader::tokenise(const string& content, bool tri
             }
             else
                 tokens.push_back(finished_token);
-            current_token = "";
+            current_token.clear();
             start_offset = offset;
             new_type = char_type;
         }
@@ -221,7 +196,7 @@ vector<TokenReader::Token> TokenReader::tokenise(const string& content, bool tri
         if (append_chr)
             current_token.push_back(chr);
 
-        offset++;
+        ++offset;
     }
     
     if (current_type == VECTOR || current_type == STRING)
@@ -401,16 +376,11 @@ vector<TokenReader::Statement> TokenReader::extractSyntaxTree(const vector<Token
                     statement_end_it = current_it;
                     break;
                 }
-                else
-                {
-                    reportError("unexpected token", current_it->start_offset, original_content);
-                    return { };
-                }
-                break;
+                reportError("unexpected token", current_it->start_offset, original_content);
+                return { };
             default:
                 reportError("unexpected token", current_it->start_offset, original_content);
                 return { };
-                break;
             }
 
             ++current_it;
@@ -443,7 +413,7 @@ vector<TokenReader::Statement> TokenReader::extractSyntaxTree(const vector<Token
     return statements;
 }
 
-bool TokenReader::readStatementAnonymous(const Statement& statement, bool children_allowed, bool requires_identifier, const vector<TokenType> expected_args, vector<Token>& extracted_args, string error_base)
+bool TokenReader::readStatementAnonymous(const Statement& statement, const bool children_allowed, const bool requires_identifier, const vector<TokenType>& expected_args, vector<Token>& extracted_args, const string& error_base)
 {
     // check if there are children
     if (!statement.children.empty() && !children_allowed)
@@ -477,22 +447,22 @@ bool TokenReader::readStatementAnonymous(const Statement& statement, bool childr
     // check if all the args have the expected types
     vector<Token> extracted;
     size_t index = 0;
-    for (const auto& arg : statement.arguments)
+    for (const auto& [name, token] : statement.arguments)
     {
-        if (expected_args[index] == FLOAT && arg.second.type == INT)
+        if (expected_args[index] == FLOAT && token.type == INT)
         {
-            Token t = arg.second;
+            Token t = token;
             t.type = FLOAT;
-            t.f_value = arg.second.i_value;
+            t.f_value = static_cast<float>(token.i_value);
             extracted.push_back(t);
         }
-        else if (arg.second.type != expected_args[index])
+        else if (token.type != expected_args[index])
         {
             DBG_ERROR(error_base + ": argument " + to_string(index) + " in a '" + statement.keyword + "' statement must be a " + typeToString(expected_args[index]));
             return false;
         }
         else
-            extracted.push_back(arg.second);
+            extracted.push_back(token);
         ++index;
     }
 
@@ -501,7 +471,7 @@ bool TokenReader::readStatementAnonymous(const Statement& statement, bool childr
     return true;
 }
 
-bool TokenReader::readStatementNamed(const Statement& statement, bool children_allowed, bool requires_identifier, const std::map<std::string, std::pair<TokenType, bool>> expected_args, std::map<std::string, Token>& extracted_args, std::string error_base)
+bool TokenReader::readStatementNamed(const Statement& statement, const bool children_allowed, const bool requires_identifier, const std::map<std::string, std::pair<TokenType, bool>>& expected_args, std::map<std::string, Token>& extracted_args, const std::string& error_base)
 {
     // check if there are children
     if (!statement.children.empty() && !children_allowed)
@@ -523,44 +493,44 @@ bool TokenReader::readStatementNamed(const Statement& statement, bool children_a
     }
     // for each arg, check if it is present, throw error if it is not present and required, or if it is the wrong type
     // check for duplicate args, and unrecognised args
-    for (const auto& arg : statement.arguments)
+    for (const auto& [name, token] : statement.arguments)
     {
-        auto it = expected_args.find(arg.first);
+        auto it = expected_args.find(name);
         if (it == expected_args.end())
         {
-            DBG_ERROR(error_base + ": invalid argument '" + arg.first + "' in '" + statement.keyword + "' statement");
+            DBG_ERROR(error_base + ": invalid argument '" + name + "' in '" + statement.keyword + "' statement");
             return false;
         }
-        auto is_found = extracted_args.find(arg.first);
+        auto is_found = extracted_args.find(name);
         if (is_found != extracted_args.end())
         {
-            DBG_ERROR(error_base + ": duplicate argument '" + arg.first + "' in '" + statement.keyword + "' statement");
+            DBG_ERROR(error_base + ": duplicate argument '" + name + "' in '" + statement.keyword + "' statement");
             return false;
         }
-        if (it->second.first == FLOAT && arg.second.type == INT)
+        if (it->second.first == FLOAT && token.type == INT)
         {
-            Token t = arg.second;
+            Token t = token;
             t.type = FLOAT;
-            t.f_value = arg.second.i_value;
-            extracted_args[arg.first] = t;
+            t.f_value = static_cast<float>(token.i_value);
+            extracted_args[name] = t;
         }
-        else if (arg.second.type != it->second.first)
+        else if (token.type != it->second.first)
         {
-            DBG_ERROR(error_base + ": argument '" + arg.first + "' has wrong type for '" + statement.keyword + "' statement, must be a " + typeToString(it->second.first));
+            DBG_ERROR(error_base + ": argument '" + name + "' has wrong type for '" + statement.keyword + "' statement, must be a " + typeToString(it->second.first));
             return false;
         }
         else
-            extracted_args[arg.first] = arg.second;
+            extracted_args[name] = token;
     }
     // check if all args are present
-    for (const auto& expected : expected_args)
+    for (const auto& [name, spec] : expected_args)
     {
-        if (expected.second.second)
+        if (spec.second)
         {
-            auto is_found = extracted_args.find(expected.first);
+            auto is_found = extracted_args.find(name);
             if (is_found == extracted_args.end())
             {
-                DBG_ERROR(error_base + ": argument '" + expected.first + "' is required for '" + statement.keyword + "' statement, must be a " + typeToString(expected.second.first));
+                DBG_ERROR(error_base + ": argument '" + name + "' is required for '" + statement.keyword + "' statement, must be a " + typeToString(spec.first));
                 return false;
             }
         }
@@ -571,15 +541,15 @@ bool TokenReader::readStatementNamed(const Statement& statement, bool children_a
 
 bool TokenReader::checkNamedArgs(const Statement& statement, bool named)
 {
-    for (const auto& arg : statement.arguments)
+    for (const auto& [name, token] : statement.arguments)
     {
-        if (arg.first.empty() == named)
+        if (name.empty() == named)
             return false;
     }
     return true;
 }
 
-glm::vec4 TokenReader::deserialiseVectorToken(string str, size_t offset, const string& original_content)
+glm::vec4 TokenReader::deserialiseVectorToken(const string& str, const size_t offset, const string& original_content)
 {
     vector<float> values;
     
@@ -588,12 +558,12 @@ glm::vec4 TokenReader::deserialiseVectorToken(string str, size_t offset, const s
         size_t next_comma = -1;
         do
         {
-            size_t last_comma = next_comma + 1;
+            const size_t last_comma = next_comma + 1;
             next_comma = str.find(',', last_comma);
             values.push_back(stof(str.substr(last_comma, next_comma - last_comma)));
         } while (next_comma != string::npos);
     }
-    catch (invalid_argument e)
+    catch (invalid_argument& e)
     {
         reportError("invalid vector literal", offset, original_content);
         return { 0, 0, 0, 0 };
@@ -607,14 +577,12 @@ glm::vec4 TokenReader::deserialiseVectorToken(string str, size_t offset, const s
 
     glm::vec4 value = { 0, 0, 0, 0 };
     for (size_t i = 0; i < values.size(); ++i)
-    {
-        value[(glm::length_t)i] = values[i];
-    }
+        value[static_cast<glm::length_t>(i)] = values[i];
 
     return value;
 }
 
-vector<pair<string, TokenReader::Token>> TokenReader::parseArguments(vector<Token>::const_iterator start, vector<Token>::const_iterator end, string original_content)
+vector<pair<string, TokenReader::Token>> TokenReader::parseArguments(vector<Token>::const_iterator start, vector<Token>::const_iterator end, const string& original_content)
 {
     auto current = start + 1;
 
@@ -645,7 +613,7 @@ vector<pair<string, TokenReader::Token>> TokenReader::parseArguments(vector<Toke
             case FLOAT:
             case IDENTIFIER:
                 keyword_token = Token(TEXT);
-                arguments.push_back({ "", *current });
+                arguments.emplace_back("", *current);
                 stage = 3;
                 break;
             default:
@@ -656,11 +624,12 @@ vector<pair<string, TokenReader::Token>> TokenReader::parseArguments(vector<Toke
         case 1: // looking for the equals sign
             if (current->type == COMMA)
             {
-                arguments.push_back({ "", keyword_token });
+                arguments.emplace_back("", keyword_token);
                 keyword_token = Token(TEXT);
                 stage = 0;
+                break;
             }
-            else if (current->type == EQUALS)
+            if (current->type == EQUALS)
                 stage = 2;
             else
             {
@@ -677,7 +646,7 @@ vector<pair<string, TokenReader::Token>> TokenReader::parseArguments(vector<Toke
             case INT:
             case FLOAT:
             case IDENTIFIER:
-                arguments.push_back({ keyword_token.s_value, *current });
+                arguments.emplace_back(keyword_token.s_value, *current);
                 keyword_token = Token(TEXT);
                 stage = 3;
                 break;

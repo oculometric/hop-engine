@@ -14,13 +14,13 @@ private:
     
 public:
     DELETE_CONSTRUCTORS(TextBlock);
+    TextBlock(const std::string& _text);
     
-	void drawImGuiDebug() override;
-    void setText(const std::string& value) { text = value; updateGeometry(); }
     std::string getText() const { return text; }
+    void setText(const std::string& value) { text = value; updateGeometry(); }
     void setTint(const glm::vec3& value) { tint = value; updateGeometry(); }
     
-    TextBlock(const std::string& _text);
+	void drawImGuiDebug() override;
     
 private:
     void updateGeometry();

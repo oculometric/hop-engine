@@ -11,6 +11,7 @@ enum SamplerFilter
 	FILTER_NEAREST,
 	FILTER_LINEAR
 };
+TO_STRING_DEC(SamplerFilter);
 
 enum SamplerAddress
 {
@@ -18,14 +19,15 @@ enum SamplerAddress
 	ADDRESS_MIRRORED,
 	ADDRESS_CLAMP_EDGE
 };
+TO_STRING_DEC(SamplerAddress);
 
 struct SamplerBuilder
 {
 	SamplerFilter filtering_mode = FILTER_LINEAR;
 	SamplerAddress address_mode = ADDRESS_REPEAT;
 
-	SamplerBuilder filter(SamplerFilter value) { filtering_mode = value; return *this; }
-	SamplerBuilder address(SamplerAddress value) { address_mode = value; return *this; }
+	SamplerBuilder filter(const SamplerFilter value) { filtering_mode = value; return *this; }
+	SamplerBuilder address(const SamplerAddress value) { address_mode = value; return *this; }
 };
 
 class Sampler : public Destructible
@@ -36,13 +38,14 @@ private:
 
 public:
 	DELETE_CONSTRUCTORS(Sampler);
-	Sampler(SamplerBuilder config = SamplerBuilder());
+	Sampler(const SamplerBuilder& config = SamplerBuilder());
 	~Sampler() override;
 	
 	VkSampler getSampler() const { return sampler; }
 	SamplerBuilder getBuilder() const { return builder; }
+	void reconfigure(const SamplerBuilder& config);
+	
 	bool drawImGuiDebug();
-	void reconfigure(SamplerBuilder config);
 };
 
 }

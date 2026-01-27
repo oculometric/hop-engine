@@ -38,7 +38,7 @@ public:
 
     struct Token
     {
-        TokenType type = VECTOR;
+        TokenType type = INT;
         union
         {
             glm::vec4 c_value = { 0, 0, 0, 0 };
@@ -48,18 +48,11 @@ public:
         std::string s_value = "";
         size_t start_offset = 0;
 
-        inline Token()
-        {
-            i_value = 0;
-            type = INT;
-        }
+        Token() { }
 
-        inline Token(TokenType ttype)
-        {
-            type = ttype;
-        }
+        Token(const TokenType _type) { type = _type; }
 
-        inline Token(const Token& other)
+        Token(const Token& other)
         {
             type = other.type;
             start_offset = other.start_offset;
@@ -86,7 +79,7 @@ public:
             }
         }
 
-        inline Token operator=(const Token& other)
+        Token operator=(const Token& other)
         {
             type = other.type;
             start_offset = other.start_offset;
@@ -115,7 +108,7 @@ public:
             return *this;
         }
 
-        inline Token operator=(Token&& other) noexcept
+        Token operator=(Token&& other) noexcept
         {
             type = other.type;
             start_offset = other.start_offset;
@@ -160,21 +153,20 @@ public:
     static std::vector<Token>::const_iterator findClosingBrace(const std::vector<Token>& tokens, const std::vector<Token>::const_iterator open_index, const std::string& original_content);
     static std::vector<Statement> extractSyntaxTree(const std::vector<Token>& tokens, const std::string& original_content);
 
-    static bool readStatementAnonymous(const Statement& statement, bool children_allowed, bool requires_identifier, const std::vector<TokenType> expected_args, std::vector<Token>& extracted_args, std::string error_base);
-    static bool readStatementNamed(const Statement& statement, bool children_allowed, bool requires_identifier, const std::map<std::string, std::pair<TokenType, bool>> expected_args, std::map<std::string, Token>& extracted_args, std::string error_base);
+    static bool readStatementAnonymous(const Statement& statement, bool children_allowed, bool requires_identifier, const std::vector<TokenType>& expected_args, std::vector<Token>& extracted_args, const std::string& error_base);
+    static bool readStatementNamed(const Statement& statement, bool children_allowed, bool requires_identifier, const std::map<std::string, std::pair<TokenType, bool>>& expected_args, std::map<std::string, Token>& extracted_args, const std::string& error_base);
     static bool checkNamedArgs(const Statement& statement, bool named);
 
 private:
-    static inline bool isAlphabetic(const char c)
+    static bool isAlphabetic(const char c)
     {
         if (c >= 'a' && c <= 'z') return true;
         if (c >= 'A' && c <= 'Z') return true;
         if (c == '_') return true;
-
         return false;
     }
 
-    static inline bool isSeparator(TokenType t)
+    static constexpr bool isSeparator(const TokenType t)
     {
         switch (t)
         {
@@ -182,14 +174,12 @@ private:
         case STRING:
         case INT:
         case IDENTIFIER:
-        case END_VECTOR:
-            return false;
-        default:
-            return true;
+        case END_VECTOR: return false;
+        default: return true;
         }
     }
 
-    static inline TokenType getType(const char c)
+    static TokenType getType(const char c)
     {
         if (isAlphabetic(c)) return TEXT;
         if (c == '-' || (c >= '0' && c <= '9')) return INT;
@@ -202,8 +192,7 @@ private:
         case '}': return CLOSE_CURLY;
         case '\"': return STRING;
         case '\r':
-        case '\n':
-            return NEWLINE;
+        case '\n': return NEWLINE;
         case ':': return COLON;
         case '=': return EQUALS;
         case ',': return COMMA;
@@ -213,35 +202,27 @@ private:
         case '/': return COMMENT;
         case ';': return SEMICOLON;
         case ' ':
-        case '\t':
-            return WHITESPACE;
+        case '\t': return WHITESPACE;
+        default: return INVALID;
         }
-        return INVALID;
     }
 
-    static inline std::string typeToString(TokenType t)
+    static constexpr std::string typeToString(const TokenType t)
     {
         switch (t)
         {
-        case TEXT:
-            return "keyword";
-        case STRING:
-            return "string";
-        case INT:
-            return "int";
-        case IDENTIFIER:
-            return "identifier";
-        case VECTOR:
-            return "vector";
-        case FLOAT:
-            return "float";
-        default:
-            return "";
+        case TEXT: return "keyword";
+        case STRING: return "string";
+        case INT: return "int";
+        case IDENTIFIER: return "identifier";
+        case VECTOR: return "vector";
+        case FLOAT: return "float";
+        default: return "";
         }
     }
 
-    static glm::vec4 deserialiseVectorToken(std::string str, size_t offset, const std::string& original_content);
-    static std::vector<std::pair<std::string, HopEngine::TokenReader::Token>> parseArguments(std::vector<Token>::const_iterator start, std::vector<Token>::const_iterator end, std::string original_content);
+    static glm::vec4 deserialiseVectorToken(const std::string& str, size_t offset, const std::string& original_content);
+    static std::vector<std::pair<std::string, Token>> parseArguments(std::vector<Token>::const_iterator start, std::vector<Token>::const_iterator end, const std::string& original_content);
 
     static size_t reportError(const std::string err, size_t off, const std::string& str);
 };

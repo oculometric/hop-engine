@@ -3,7 +3,6 @@
 #include <map>
 #include <string>
 #include <vulkan/vulkan.hpp>
-#include <vulkan/vulkan_to_string.hpp>
 
 #include "engine.h"
 #include "object.h"
@@ -153,7 +152,7 @@ void StaticMesh::drawImGuiDebug()
 				{
 					ImGui::TableSetColumnIndex(x);
 					bool v = camera_mask & (1 << i);
-					ImGui::Checkbox(("##xx" + to_string(i)).c_str(), &v);
+					ImGui::Checkbox(("##xx" + ::to_string(i)).c_str(), &v);
 					camera_mask &= ~(1 << i);
 					if (v)
 						camera_mask |= (1 << i);
@@ -334,11 +333,11 @@ void Material::drawImGuiDebug()
 	if (ImGui::CollapsingHeader("pipeline config", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		auto config = pipeline->getConfig();
-		ImGui::LabelText("culling", "%s", vk::to_string((vk::CullModeFlags)config.culling_mode).c_str());
-		ImGui::LabelText("polygon", "%s", vk::to_string((vk::PolygonMode)config.polygon_mode).c_str());
+		ImGui::LabelText("culling", "%s", to_string(config.culling_mode).c_str());
+		ImGui::LabelText("polygon", "%s", to_string(config.polygon_mode).c_str());
 		ImGui::LabelText("depth write", "%s", config.depth_write_enable ? "true" : "false");
 		ImGui::LabelText("depth test", "%s", config.depth_test_enable ? "true" : "false");
-		ImGui::LabelText("depth operation", "%s", vk::to_string((vk::CompareOp)config.depth_compare_op).c_str());
+		ImGui::LabelText("depth operation", "%s", to_string(config.depth_compare_op).c_str());
 	}
 	uniforms->drawImGuiDebug(texture_name_to_binding);
 	// TODO: reload shader button
@@ -530,7 +529,7 @@ void Engine::drawImGuiDebug(float delta_time)
 			{
 				int i = 1;
 				for (float dur : last_frame_stats.pass_times)
-					ImGui::LabelText(("pass " + to_string(i++)).c_str(), "%fms", dur * 1000.0f);
+					ImGui::LabelText(("pass " + ::to_string(i++)).c_str(), "%fms", dur * 1000.0f);
 			}
 			ImGui::LabelText("camera rendering", "%i", last_frame_stats.cameras);
 			ImGui::LabelText("lights rendering", "%i", last_frame_stats.lights);
@@ -550,35 +549,35 @@ void Engine::drawImGuiDebug(float delta_time)
 		ImGui::Begin("resources", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 		ImGui::LabelText("total references", "%u", allocated_refs.size());
 		ImGui::Text("the categories below only show\nresources loaded with Engine::loadXXX(),\nnot internal resources");
-		if (ImGui::CollapsingHeader(("materials (" + to_string(loaded_materials.size()) + " loaded)").c_str()))
+		if (ImGui::CollapsingHeader(("materials (" + ::to_string(loaded_materials.size()) + " loaded)").c_str()))
 		{
 			for (const auto& item : loaded_materials)
 			{
-				ImGui::LabelText(("(" + to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
+				ImGui::LabelText(("(" + ::to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
 				if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
 			}
 		}
-		if (ImGui::CollapsingHeader(("meshes (" + to_string(loaded_meshes.size()) + " loaded)").c_str()))
+		if (ImGui::CollapsingHeader(("meshes (" + ::to_string(loaded_meshes.size()) + " loaded)").c_str()))
 		{
 			for (const auto& item : loaded_meshes)
 			{
-				ImGui::LabelText(("(" + to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
+				ImGui::LabelText(("(" + ::to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
 				if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
 			}
 		}
-		if (ImGui::CollapsingHeader(("textures (" + to_string(loaded_textures.size()) + " loaded)").c_str()))
+		if (ImGui::CollapsingHeader(("textures (" + ::to_string(loaded_textures.size()) + " loaded)").c_str()))
 		{
 			for (const auto& item : loaded_textures)
 			{
-				ImGui::LabelText(("(" + to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
+				ImGui::LabelText(("(" + ::to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
 				if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
 			}
 		}
-		if (ImGui::CollapsingHeader(("shaders (" + to_string(getEngine()->loaded_shaders.size()) + " loaded)").c_str()))
+		if (ImGui::CollapsingHeader(("shaders (" + ::to_string(getEngine()->loaded_shaders.size()) + " loaded)").c_str()))
 		{
 			for (const auto& item : getEngine()->loaded_shaders)
 			{
-				ImGui::LabelText(("(" + to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
+				ImGui::LabelText(("(" + ::to_string(item.second.getCount()) + " users)").c_str(), "%s", item.first.c_str());
 				if (ImGui::IsItemHovered()) ImGui::SetTooltip(item.first.c_str());
 			}
 		}
@@ -791,9 +790,9 @@ void RenderGraph::drawImGuiDebug()
 				ImGui::TableSetColumnIndex(2);
 				ImGui::Text("%i", pair.second.output_index);
 				ImGui::TableSetColumnIndex(3);
-				ImGui::Text("%s", vk::to_string((vk::Filter)(pair.second.filter_mode)).c_str());
+				ImGui::Text("%s", to_string(pair.second.filter_mode).c_str());
 				ImGui::TableSetColumnIndex(4);
-				ImGui::Text("%s", vk::to_string((vk::SamplerAddressMode)(pair.second.address_mode)).c_str());
+				ImGui::Text("%s", to_string(pair.second.address_mode).c_str());
 			}
 			ImGui::EndTable();
 			ImGui::Separator();

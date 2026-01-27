@@ -11,9 +11,9 @@
 
 using namespace std;
 
-int exec(string command, string& output)
+int exec(const string& command, string& output)
 {
-	const size_t buffer_size = 512;
+	constexpr size_t buffer_size = 512;
 	array<char, buffer_size> buffer;
 
 	auto pipe = popen((command + " 2>&1").c_str(), "r");

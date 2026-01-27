@@ -20,34 +20,33 @@ class RenderPass : public Destructible
 private:
 	VkRenderPass render_pass = VK_NULL_HANDLE;
 	RenderOutput output_config;
+	std::vector<VkFramebuffer> framebuffers;
 	Ref<Texture> depth_texture;
 	std::vector<Ref<Texture>> additional_textures;
-	std::vector<VkFramebuffer> framebuffers;
 	glm::u32vec2 extent;
 	Ref<Swapchain> swapchain;
 
 public:
 	DELETE_CONSTRUCTORS(RenderPass);
-
-	RenderOutput getOutputConfig() const { return output_config; }
-	VkRenderPass getRenderPass() const { return render_pass; }
-	VkFramebuffer getFramebuffer(size_t index) const { return framebuffers[index % framebuffers.size()]; }
-	std::vector<VkClearValue> getClearValues() const;
-	void resize(uint32_t width = 0, uint32_t height = 0);
-	glm::u32vec2 getExtent() const { return extent; }
-	Ref<Texture> getImage(size_t attachment) const;
-	Ref<RenderPass> duplicate() const;
-	bool isCompatible(const Ref<RenderPass>& other) const;
-
-	RenderPass(Ref<Swapchain> swapchain, RenderOutput config);
-	RenderPass(uint32_t width, uint32_t height, RenderOutput config);
+	RenderPass(const Ref<Swapchain>& _swapchain, const RenderOutput& config);
+	RenderPass(uint32_t width, uint32_t height, const RenderOutput& config);
 	~RenderPass() override;
+	
+	VkRenderPass getRenderPass() const { return render_pass; }
+	RenderOutput getOutputConfig() const { return output_config; }
+	VkFramebuffer getFramebuffer(size_t index) const { return framebuffers[index % framebuffers.size()]; }
+	Ref<Texture> getImage(size_t attachment) const;
+	std::vector<VkClearValue> getClearValues() const;
+	glm::u32vec2 getExtent() const { return extent; }
+	bool isCompatible(const Ref<RenderPass>& other) const;
+	Ref<RenderPass> duplicate() const;
+	void resize(uint32_t width = 0, uint32_t height = 0);
 	
 private:
 	void createRenderPass(VkFormat main_colour_format, VkImageLayout final_main_colour_layout, bool make_readable);
-	void destroyResources();
-	void createResources(Ref<Swapchain> swapchain);
+	void createResources();
 	void createResources(VkFormat main_colour_format, uint32_t width, uint32_t height);
+	void destroyResources();
 };
 
 }

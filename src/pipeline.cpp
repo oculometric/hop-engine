@@ -11,7 +11,13 @@
 using namespace HopEngine;
 using namespace std;
 
-Pipeline::Pipeline(Ref<Shader> shader, PipelineBuilder config, Ref<RenderPass> render_pass)
+TO_STRING_DEF(CullMode, 4, VARGS("NONE", "FRONT", "BACK", "BOTH"));
+
+TO_STRING_DEF(PolygonMode, 3, VARGS("FILL", "LINE", "BACK"));
+
+TO_STRING_DEF(CompareOp, 8, VARGS("NEVER", "LESS", "EQUAL", "LESS_EQUAL", "GREATER", "NOT_EQUAL", "GREATER_EQUAL", "ALWAYS"));
+
+Pipeline::Pipeline(const Ref<Shader>& shader, const PipelineBuilder& config, const Ref<RenderPass>& render_pass)
 {
     pipeline_config = config;
     array<VkDynamicState, 2> dynamic_states =
@@ -48,7 +54,7 @@ Pipeline::Pipeline(Ref<Shader> shader, PipelineBuilder config, Ref<RenderPass> r
     rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizer.depthClampEnable = VK_FALSE;
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    rasterizer.polygonMode = (VkPolygonMode)config.polygon_mode;
+    rasterizer.polygonMode = static_cast<VkPolygonMode>(config.polygon_mode);
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = config.culling_mode;
     rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
@@ -61,7 +67,7 @@ Pipeline::Pipeline(Ref<Shader> shader, PipelineBuilder config, Ref<RenderPass> r
 
     VkPipelineDepthStencilStateCreateInfo depth{ };
     depth.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depth.depthCompareOp = (VkCompareOp)config.depth_compare_op;
+    depth.depthCompareOp = static_cast<VkCompareOp>(config.depth_compare_op);
     depth.depthWriteEnable = config.depth_write_enable;
     depth.depthTestEnable = config.depth_test_enable;
     depth.depthBoundsTestEnable = VK_FALSE;
@@ -72,13 +78,13 @@ Pipeline::Pipeline(Ref<Shader> shader, PipelineBuilder config, Ref<RenderPass> r
         front_and_back.failOp = VK_STENCIL_OP_KEEP;
         front_and_back.passOp = VK_STENCIL_OP_REPLACE;
         front_and_back.depthFailOp = VK_STENCIL_OP_KEEP;
-        front_and_back.compareOp = (VkCompareOp)config.stencil_compare_op;
+        front_and_back.compareOp = static_cast<VkCompareOp>(config.stencil_compare_op);
         front_and_back.reference = config.stencil_compare_value;
         front_and_back.compareMask = config.stencil_compare_mask;
         front_and_back.writeMask = config.stencil_write;
-        if (!(config.culling_mode & VK_CULL_MODE_FRONT_BIT))
+        if (!(config.culling_mode & CULL_FRONT))
             depth.front = front_and_back;
-        if (!(config.culling_mode & VK_CULL_MODE_BACK_BIT))
+        if (!(config.culling_mode & CULL_BACK))
             depth.back = front_and_back;
     }
 
@@ -94,8 +100,8 @@ Pipeline::Pipeline(Ref<Shader> shader, PipelineBuilder config, Ref<RenderPass> r
     colour_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
     colour_attachment_blends.push_back(colour_blend_attachment);
 
-    RenderOutput output_config = render_pass->getOutputConfig();
-    for (size_t i = 0; i < output_config.additional_attachments; ++i)
+    auto [additional_attachments, has_depth_attachment] = render_pass->getOutputConfig();
+    for (size_t i = 0; i < additional_attachments; ++i)
     {
         VkPipelineColorBlendAttachmentState blend_attachment{ };
         blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;

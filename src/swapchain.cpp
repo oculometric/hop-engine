@@ -10,21 +10,7 @@
 using namespace HopEngine;
 using namespace std;
 
-void Swapchain::resize(uint32_t width, uint32_t height)
-{
-    DBG_INFO("resizing swapchain to " + to_string(width) + "x" + to_string(height));
-    destroyResources();
-
-    const SwapchainSupportInfo support_info = getSwapchainSupportInfo(RenderServer::getPhysicalDevice(), surface);
-    extent = getIdealExtent(support_info, width, height);
-    create_info[0].imageExtent = { extent.x, extent.y };
-
-    if (vkCreateSwapchainKHR(RenderServer::getDevice(), &create_info[0], nullptr, &swapchain) != VK_SUCCESS)
-        DBG_FAULT("vkCreateSwapchainKHR failed");
-    createImageViews();
-}
-
-SwapchainSupportInfo HopEngine::getSwapchainSupportInfo(VkPhysicalDevice device, VkSurfaceKHR surface)
+SwapchainSupportInfo HopEngine::getSwapchainSupportInfo(const VkPhysicalDevice device, const VkSurfaceKHR surface)
 {
     SwapchainSupportInfo info;
 
@@ -61,11 +47,9 @@ VkSurfaceFormatKHR HopEngine::getIdealSurfaceFormat(const SwapchainSupportInfo& 
 }
 
 VkPresentModeKHR HopEngine::getIdealPresentMode(const SwapchainSupportInfo& info)
-{
-    return VK_PRESENT_MODE_FIFO_KHR;
-}
+{ return VK_PRESENT_MODE_FIFO_KHR; }
 
-glm::u32vec2 HopEngine::getIdealExtent(const SwapchainSupportInfo& info, uint32_t window_width, uint32_t window_height)
+glm::u32vec2 HopEngine::getIdealExtent(const SwapchainSupportInfo& info, const uint32_t window_width, const uint32_t window_height)
 {
     if (info.surface_capabilities.currentExtent.width != numeric_limits<uint32_t>::max())
         return { info.surface_capabilities.currentExtent.width, info.surface_capabilities.currentExtent.height };
@@ -84,7 +68,7 @@ glm::u32vec2 HopEngine::getIdealExtent(const SwapchainSupportInfo& info, uint32_
     }
 }
 
-Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR _surface)
+Swapchain::Swapchain(const uint32_t width, const uint32_t height, const VkSurfaceKHR _surface)
 {
     surface = _surface;
     create_info.resize(1);
@@ -131,17 +115,31 @@ Swapchain::Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR _surface)
     create_info[0].oldSwapchain = VK_NULL_HANDLE;
 
     // create the swapchain
-    if (vkCreateSwapchainKHR(RenderServer::getDevice(), &create_info[0], nullptr, &swapchain) != VK_SUCCESS)
+    if (vkCreateSwapchainKHR(RenderServer::getDevice(), create_info.data(), nullptr, &swapchain) != VK_SUCCESS)
         DBG_FAULT("vkCreateSwapchainKHR failed");
     createImageViews();
 
-    DBG_INFO("created swapchain at " + to_string(width) + "x" + to_string(height) + " with " + to_string(images.size()) + " images in present mode " + vk::to_string((vk::PresentModeKHR)create_info[0].presentMode));
+    DBG_INFO("created swapchain at " + to_string(width) + "x" + to_string(height) + " with " + to_string(images.size()) + " images in present mode " + vk::to_string(static_cast<vk::PresentModeKHR>(create_info[0].presentMode)));
 }
 
 Swapchain::~Swapchain()
 {
     DBG_INFO("destroying swapchain " + PTR(this));
     destroyResources();
+}
+
+void Swapchain::resize(const uint32_t width, const uint32_t height)
+{
+    DBG_INFO("resizing swapchain to " + to_string(width) + "x" + to_string(height));
+    destroyResources();
+
+    const SwapchainSupportInfo support_info = getSwapchainSupportInfo(RenderServer::getPhysicalDevice(), surface);
+    extent = getIdealExtent(support_info, width, height);
+    create_info[0].imageExtent = { extent.x, extent.y };
+
+    if (vkCreateSwapchainKHR(RenderServer::getDevice(), create_info.data(), nullptr, &swapchain) != VK_SUCCESS)
+        DBG_FAULT("vkCreateSwapchainKHR failed");
+    createImageViews();
 }
 
 void Swapchain::createImageViews()
@@ -176,10 +174,9 @@ void Swapchain::createImageViews()
     }
 }
 
-void Swapchain::destroyResources()
+void Swapchain::destroyResources() const
 {
-    for (auto image_view : image_views)
+    for (const auto image_view : image_views)
         vkDestroyImageView(RenderServer::getDevice(), image_view, nullptr);
-
     vkDestroySwapchainKHR(RenderServer::getDevice(), swapchain, nullptr);
 }

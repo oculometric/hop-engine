@@ -9,10 +9,22 @@
 using namespace HopEngine;
 using namespace std;
 
-void Window::initEnvironment()
+Window::Window(const uint32_t _width, const uint32_t _height, const string& title)
 {
-    DBG_INFO("initialising GLFW");
     glfwInit();
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    width = static_cast<int>(_width);
+    height = static_cast<int>(_height);
+    window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+    DBG_INFO("created window at " + to_string(width) + "x" + to_string(height) + ", titled '" + title + "'");
+}
+
+Window::~Window()
+{
+    DBG_INFO("destroying window " + PTR(this));
+    glfwDestroyWindow(window);
 }
 
 void Window::terminateEnvironment()
@@ -21,21 +33,23 @@ void Window::terminateEnvironment()
     glfwTerminate();
 }
 
-void Window::pollEvents() const
+void Window::pollEvents()
 {
     DBG_BABBLE("polling window events");
     glfwPollEvents();
 }
 
-bool Window::getShouldClose() const
+pair<uint32_t, uint32_t> Window::getSize()
 {
-    return glfwWindowShouldClose(window);
+    glfwGetFramebufferSize(window, &width, &height);
+    return { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
 }
 
-bool HopEngine::Window::isMinified() const
-{
-    return glfwGetWindowAttrib(window, GLFW_ICONIFIED);
-}
+bool Window::getShouldClose() const
+{ return glfwWindowShouldClose(window); }
+
+bool Window::isMinified() const
+{ return glfwGetWindowAttrib(window, GLFW_ICONIFIED); }
 
 bool Window::isResized()
 {
@@ -52,18 +66,12 @@ bool Window::isResized()
     return false;
 }
 
-pair<uint32_t, uint32_t> Window::getSize()
-{
-    glfwGetFramebufferSize(window, &width, &height);
-    return { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
-}
-
-void Window::setTitle(string title)
+void Window::setTitle(const string& title) const
 {
     glfwSetWindowTitle(window, title.c_str());
 }
 
-void Window::setVisible(bool visible)
+void Window::setVisible(const bool visible) const
 {
     if (visible)
         glfwShowWindow(window);
@@ -71,31 +79,14 @@ void Window::setVisible(bool visible)
         glfwHideWindow(window);
 }
 
-void Window::setIcon(string path)
+void Window::setIcon(const string& path) const
 {
     GLFWimage image;
 
-    auto image_data = Package::tryLoadFile(path);
+    const auto image_data = Package::tryLoadFile(path);
     int img_channels;
     image.pixels = stbi_load_from_memory(image_data.data(), static_cast<int>(image_data.size()), &image.width, &image.height, &img_channels, STBI_rgb_alpha);
 
     glfwSetWindowIcon(window, 1, &image);
     stbi_image_free(image.pixels);
-}
-
-Window::Window(uint32_t _width, uint32_t _height, string title)
-{
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-    width = _width;
-    height = _height;
-    window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
-    DBG_INFO("created window at " + to_string(width) + "x" + to_string(height) + ", titled '" + title + "'");
-}
-
-Window::~Window()
-{
-    DBG_INFO("destroying window " + PTR(this));
-    glfwDestroyWindow(window);
 }

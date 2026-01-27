@@ -15,6 +15,7 @@ enum BufferUsage
 	BUFFER_USAGE_INDEX = 16
 };
 ENUM_OPERATOR(BufferUsage)
+TO_STRING_DEC(BufferUsage);
 
 enum MemoryProperties
 {
@@ -24,6 +25,7 @@ enum MemoryProperties
 	MEMORY_PROPERTY_HOST_CACHED = 8,
 };
 ENUM_OPERATOR(MemoryProperties)
+TO_STRING_DEC(MemoryProperties);
 
 class Buffer
 {
@@ -35,16 +37,15 @@ private:
 
 public:
 	DELETE_CONSTRUCTORS(Buffer);
-
-	void* mapMemory();
-	void unmapMemory();
-	VkBuffer getBuffer() const { return buffer; }
-	VkDeviceSize getSize() const { return buffer_size; }
-	static uint32_t findMemoryType(uint32_t type_bits, MemoryProperties properties);
-	void copyToBuffer(Ref<Buffer> other) const;
-	
 	Buffer(VkDeviceSize size, BufferUsage usage, MemoryProperties properties);
 	~Buffer();
+	
+	VkBuffer getBuffer() const { return buffer; }
+	VkDeviceSize getSize() const { return buffer_size; }
+	void* mapMemory();
+	void unmapMemory();
+	static uint32_t findMemoryType(uint32_t type_bits, MemoryProperties properties);
+	void copyToBuffer(Ref<Buffer> other) const;
 };
 
 }

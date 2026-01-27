@@ -9,37 +9,33 @@
 using namespace HopEngine;
 using namespace std;
 
-Ref<Camera> Scene::getCamera(size_t slot) const
+Scene::Scene()
 {
-	auto it = cameras.find(slot);
-	if (it != cameras.end())
-		return it->second;
-	else
-		return backup_camera;
+	render_graph = new RenderGraph(RenderGraphBuilder().addCamera(0));
+	root = new Object();
+	root->name = "scene root";
+	backup_camera = new Camera();
+	backup_camera->setParent(root);
+	cameras[0] = new Camera();
+	insertObject(cameras[0]);
+
+	DBG_INFO("created new scene");
 }
 
-void Scene::setCameraSlot(Ref<Camera> camera, size_t slot)
+Scene::~Scene()
 {
-	cameras[slot] = camera;
-}
-
-void Scene::removeObject(Ref<Object> obj)
-{
-	auto it = objects.begin();
-	for (it = objects.begin(); it != objects.end(); ++it)
-	{
-		if ((*it).get() == obj.get())
-		{
-			objects.erase(it);
-			break;
-		}
-	}
-	DBG_ERROR("attempt to remove object '" + obj->name + "' (" + PTR(obj.get()) + ") from scene " + PTR(this) + " but it is not present in the tree!");
+	DBG_INFO("destroying scene " + PTR(this));
 }
 
 vector<Ref<Object>> Scene::getAllObjects() const
+{ return objects; }
+
+Ref<Camera> Scene::getCamera(const size_t slot) const
 {
-	return objects;
+	const auto it = cameras.find(slot);
+	if (it != cameras.end())
+		return it->second;
+	return backup_camera;
 }
 
 vector<LightParams> Scene::getLightParams() const
@@ -58,11 +54,6 @@ vector<LightParams> Scene::getLightParams() const
 	return lights_params;
 }
 
-Ref<RenderGraph> Scene::getRenderGraph() const
-{
-	return render_graph;
-}
-
 vector<DrawCommand> Scene::getDrawCommands() const
 {
 	vector<DrawCommand> commands;
@@ -74,13 +65,13 @@ vector<DrawCommand> Scene::getDrawCommands() const
 	return commands;
 }
 
-WeakRef<Object> Scene::raycast(glm::vec3 origin, glm::vec3 direction)
+WeakRef<Object> Scene::raycast(const glm::vec3 position, const glm::vec3 direction)
 {
 	float min_dist = INFINITY;
 	WeakRef<Object> closest_obj;
 	for (auto& object : objects)
 	{
-		float result = intersect(origin, direction, object->getLocalBounds(), object->transform);
+		const float result = intersect(position, direction, object->getLocalBounds(), object->transform);
 		if (result < 0.01f)
 			continue;
 		if (result < min_dist)
@@ -92,20 +83,19 @@ WeakRef<Object> Scene::raycast(glm::vec3 origin, glm::vec3 direction)
 	return closest_obj;
 }
 
-Scene::Scene()
+void Scene::removeObject(Ref<Object> obj)
 {
-	render_graph = new RenderGraph(RenderGraphBuilder().addCamera(0));
-	root = new Object();
-	root->name = "scene root";
-	backup_camera = new Camera();
-	backup_camera->setParent(root);
-	cameras[0] = new Camera();
-	insertObject(cameras[0]);
-
-	DBG_INFO("created new scene");
+	auto it = objects.begin();
+	for (it = objects.begin(); it != objects.end(); ++it)
+	{
+		if (it->get() == obj.get())
+		{
+			objects.erase(it);
+			break;
+		}
+	}
+	DBG_ERROR("attempt to remove object '" + obj->name + "' (" + PTR(obj.get()) + ") from scene " + PTR(this) + " but it is not present in the tree!");
 }
 
-Scene::~Scene()
-{
-	DBG_INFO("destroying scene " + PTR(this));
-}
+void Scene::setCameraSlot(const Ref<Camera>& camera, const size_t slot)
+{ cameras[slot] = camera; }

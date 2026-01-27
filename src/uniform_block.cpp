@@ -10,36 +10,7 @@
 using namespace HopEngine;
 using namespace std;
 
-void UniformBlock::setTexture(uint32_t binding, Ref<Texture> image, bool use_stencil)
-{
-    if (textures_in_use[binding].texture == image && textures_in_use[binding].use_stencil == use_stencil)
-        return;
-    textures_in_use[binding].texture = image;
-    textures_in_use[binding].use_stencil = use_stencil;
-    if (!image)
-    {
-        textures_in_use[binding].texture = RenderServer::getDefaultTextureSampler().first;
-        textures_in_use[binding].use_stencil = false;
-    }
-    applyDescriptorBindings();
-}
-
-void UniformBlock::setSampler(uint32_t binding, Ref<Sampler> sampler)
-{
-    if (textures_in_use[binding].sampler == sampler)
-        return;
-    textures_in_use[binding].sampler = sampler;
-    if (!sampler)
-        textures_in_use[binding].sampler = RenderServer::getDefaultTextureSampler().second;
-    applyDescriptorBindings();
-}
-
-void UniformBlock::pushToDescriptorSet(size_t index)
-{
-    memcpy(uniform_buffers[index]->mapMemory(), live_uniform_buffer.data(), live_uniform_buffer.size());
-}
-
-UniformBlock::UniformBlock(ShaderLayout layout_info)
+UniformBlock::UniformBlock(const ShaderLayout& layout_info)
 {
     layout = layout_info;
     size = 0;
@@ -49,16 +20,16 @@ UniformBlock::UniformBlock(ShaderLayout layout_info)
             size += binding.buffer_size;
         else if (binding.type == TEXTURE)
         {
-            auto default_pair = RenderServer::getDefaultTextureSampler();
-            textures_in_use[binding.binding] = { default_pair.first, default_pair.second, false };
+            const auto [texture, sampler] = RenderServer::getDefaultTextureSampler();
+            textures_in_use[binding.binding] = { texture, sampler, false };
         }
     }
 
     uniform_buffers.resize(RenderServer::getFramesInFlight());
-    for (size_t i = 0; i < uniform_buffers.size(); ++i)
-        uniform_buffers[i] = new Buffer(size + 4, BUFFER_USAGE_UNIFORM, MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
+    for (auto& uniform_buffer : uniform_buffers)
+        uniform_buffer = new Buffer(size + 4, BUFFER_USAGE_UNIFORM, MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
 
-    vector<VkDescriptorSetLayout> set_layouts(uniform_buffers.size(), layout_info.layout);
+    const vector<VkDescriptorSetLayout> set_layouts(uniform_buffers.size(), layout_info.layout);
     VkDescriptorSetAllocateInfo descriptor_set_alloc_info{ };
     descriptor_set_alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     descriptor_set_alloc_info.descriptorPool = RenderServer::getDescriptorPool();
@@ -84,6 +55,35 @@ UniformBlock::~UniformBlock()
     descriptor_sets.clear();
     uniform_buffers.clear();
     live_uniform_buffer.clear();
+}
+
+void UniformBlock::setTexture(const uint32_t binding, const Ref<Texture>& image, const bool use_stencil)
+{
+    if (textures_in_use[binding].texture == image && textures_in_use[binding].use_stencil == use_stencil)
+        return;
+    textures_in_use[binding].texture = image;
+    textures_in_use[binding].use_stencil = use_stencil;
+    if (!image)
+    {
+        textures_in_use[binding].texture = RenderServer::getDefaultTextureSampler().first;
+        textures_in_use[binding].use_stencil = false;
+    }
+    applyDescriptorBindings();
+}
+
+void UniformBlock::setSampler(const uint32_t binding, const Ref<Sampler>& sampler)
+{
+    if (textures_in_use[binding].sampler == sampler)
+        return;
+    textures_in_use[binding].sampler = sampler;
+    if (!sampler)
+        textures_in_use[binding].sampler = RenderServer::getDefaultTextureSampler().second;
+    applyDescriptorBindings();
+}
+
+void UniformBlock::pushToDescriptorSet(const size_t index)
+{
+    memcpy(uniform_buffers[index]->mapMemory(), live_uniform_buffer.data(), live_uniform_buffer.size());
 }
 
 void UniformBlock::applyDescriptorBindings()

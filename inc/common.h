@@ -23,4 +23,4 @@ public:
     virtual ~Destructible() { }
 };
 
-int exec(std::string command, std::string& output);
+int exec(const std::string& command, std::string& output);

@@ -24,10 +24,9 @@ private:
 	size_t* ref_counter = nullptr;
 
 public:
-	inline Ref()
-	{ }
+	Ref() { }
 	
-	inline Ref(const Ref& other)
+	Ref(const Ref& other)
 	{
 		if (other.payload == payload)
 			return;
@@ -38,7 +37,7 @@ public:
 			++(*ref_counter);
 	}
 
-	inline void operator=(const Ref& other)
+	void operator=(const Ref& other)
 	{
 		if (other.payload == payload)
 			return;
@@ -51,7 +50,7 @@ public:
 			++(*ref_counter);
 	}
 
-	inline Ref(Ref&& other) noexcept
+	Ref(Ref&& other) noexcept
 	{
 		if (other.payload == payload)
 			return;
@@ -63,7 +62,7 @@ public:
 		other.ref_counter = nullptr;
 	}
 
-	inline void operator=(Ref&& other) noexcept
+	void operator=(Ref&& other) noexcept
 	{
 		if (other.payload == payload)
 			return;
@@ -77,9 +76,9 @@ public:
 		other.ref_counter = nullptr;
 	}
 
-	inline Ref(WeakRef<T>& other);
+	Ref(WeakRef<T>& other);
 
-	inline Ref(T* new_payload)
+	Ref(T* new_payload)
 	{
 		if (new_payload == payload)
 			return;
@@ -93,7 +92,7 @@ public:
 		}
 	}
 
-	inline void operator=(T* new_payload)
+	void operator=(T* new_payload)
 	{
 		if (new_payload == payload)
 			return;
@@ -109,31 +108,30 @@ public:
 		}
 	}
 	
-	inline ~Ref()
-	{
-		invalidateSelf();
-	}
+	~Ref()
+	{ invalidateSelf(); }
 
-	inline WeakRef<T> weak() const;
-	inline size_t getCount() const { return *ref_counter; }
-	inline bool isValid() const { return payload != nullptr; }
-	inline operator bool() const { return isValid(); }
-	inline bool operator==(const Ref<T>& other) const { return other.payload == payload; }
-	inline bool operator==(const WeakRef<T>& other) const { return other.payload == payload; }
-	inline T* operator->() { return payload; }
-	inline T* operator->() const { return payload; }
-	inline T* get() const { return payload; }
+	WeakRef<T> weak() const;
+	size_t getCount() const { return *ref_counter; }
+	bool isValid() const { return payload != nullptr; }
+	operator bool() const { return isValid(); }
+	bool operator==(const Ref<T>& other) const { return other.payload == payload; }
+	bool operator==(const WeakRef<T>& other) const { return other.payload == payload; }
+	T* operator->() { return payload; }
+	T* operator->() const { return payload; }
+	T* get() const { return payload; }
+
 	template<typename S>
-	inline Ref<S> cast()
+	Ref<S> cast()
 	{
 		Ref<S> ref;
-		memcpy((void*)&ref, (void*)this, sizeof(*this));
+		memcpy(static_cast<void*>(&ref), static_cast<void*>(this), sizeof(*this));
 		(*ref_counter)++;
 		return ref;
 	}
 
 private:
-	inline void invalidateSelf()
+	void invalidateSelf()
 	{
 		if (ref_counter != nullptr && payload != nullptr)
 		{
@@ -158,10 +156,9 @@ private:
 	size_t* ref_counter = nullptr;
 
 public:
-	inline WeakRef()
-	{ }
+	WeakRef() { }
 
-	inline WeakRef(const WeakRef& other)
+	WeakRef(const WeakRef& other)
 	{
 		if (other.payload == payload)
 			return;
@@ -170,7 +167,7 @@ public:
 		ref_counter = other.ref_counter;
 	}
 
-	inline void operator=(const WeakRef& other)
+	void operator=(const WeakRef& other)
 	{
 		if (other.payload == payload)
 			return;
@@ -179,7 +176,7 @@ public:
 		ref_counter = other.ref_counter;
 	}
 
-	inline WeakRef(WeakRef&& other) noexcept
+	WeakRef(WeakRef&& other) noexcept
 	{
 		if (other.payload == payload)
 			return;
@@ -188,7 +185,7 @@ public:
 		ref_counter = other.ref_counter;
 	}
 
-	inline void operator=(WeakRef&& other) noexcept
+	void operator=(WeakRef&& other) noexcept
 	{
 		if (other.payload == payload)
 			return;
@@ -197,7 +194,7 @@ public:
 		ref_counter = other.ref_counter;
 	}
 
-	inline WeakRef(const Ref<T>& other)
+	WeakRef(const Ref<T>& other)
 	{
 		if (other.payload == payload)
 			return;
@@ -206,7 +203,7 @@ public:
 		ref_counter = other.ref_counter;
 	}
 
-	inline void operator=(const Ref<T>& other)
+	void operator=(const Ref<T>& other)
 	{
 		if (other.payload == payload)
 			return;
@@ -215,28 +212,27 @@ public:
 		ref_counter = other.ref_counter;
 	}
 
-	inline ~WeakRef()
-	{ }
+	~WeakRef() { }
 
-	inline size_t getCount() const { return *ref_counter; }
-	inline bool isValid() const { return payload != nullptr; }
-	inline operator bool() const { return isValid(); }
-	inline bool operator==(const WeakRef<T>& other) const { return other.payload == payload; }
-	inline bool operator==(const Ref<T>& other) const { return other.payload == payload; }
-	inline T* operator->() { return payload; }
-	inline T* operator->() const { return payload; }
-	inline T* get() { return payload; }
+	size_t getCount() const { return *ref_counter; }
+	bool isValid() const { return payload != nullptr; }
+	operator bool() const { return isValid(); }
+	bool operator==(const WeakRef<T>& other) const { return other.payload == payload; }
+	bool operator==(const Ref<T>& other) const { return other.payload == payload; }
+	T* operator->() { return payload; }
+	T* operator->() const { return payload; }
+	T* get() { return payload; }
 	template<typename S>
-	inline WeakRef<S> cast()
+	WeakRef<S> cast()
 	{
 		WeakRef<S> ref;
-		memcpy((void*)&ref, (void*)this, sizeof(*this));
+		memcpy(static_cast<void*>(&ref), static_cast<void*>(this), sizeof(*this));
 		return ref;
 	}
 };
 
 template<typename T>
-inline Ref<T>::Ref(WeakRef<T>& other)
+Ref<T>::Ref(WeakRef<T>& other)
 {
 	if (other.payload == payload)
 		return;
@@ -248,7 +244,7 @@ inline Ref<T>::Ref(WeakRef<T>& other)
 }
 
 template<typename T>
-inline WeakRef<T> Ref<T>::weak() const
+WeakRef<T> Ref<T>::weak() const
 {
     return WeakRef<T>(*this);
 }

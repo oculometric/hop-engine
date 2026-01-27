@@ -23,20 +23,19 @@ private:
 
 public:
 	DELETE_CONSTRUCTORS(Swapchain);
-
-	VkFormat getFormat() const { return format; }
-	glm::u32vec2 getExtent() const { return extent; }
+	Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR _surface);
+	~Swapchain() override;
+	
+	VkSwapchainKHR getSwapchain() const { return swapchain; }
 	uint32_t getImageCount() const { return static_cast<uint32_t>(image_views.size()); }
 	VkImageView getImage(size_t i) const { return image_views[i]; }
-	VkSwapchainKHR getSwapchain() const { return swapchain; }
+	VkFormat getFormat() const { return format; }
+	glm::u32vec2 getExtent() const { return extent; }
 	void resize(uint32_t width, uint32_t height);
-
-	Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR surface);
-	~Swapchain() override;
 
 private:
 	void createImageViews();
-	void destroyResources();
+	void destroyResources() const;
 };
 
 }

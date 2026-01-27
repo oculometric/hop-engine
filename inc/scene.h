@@ -18,42 +18,48 @@ public:
 	Ref<RenderGraph> render_graph;
 
 private:
+	std::string origin;
 	std::vector<Ref<Object>> objects;
 	std::map<size_t, Ref<Camera>> cameras;
 	Ref<Camera> backup_camera;
 	Ref<Object> root;
 	std::vector<Ref<Light>> lights;
-	std::string origin;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Scene);
-
-	Ref<Camera> getCamera(size_t slot) const;
-	void setCameraSlot(Ref<Camera> camera, size_t slot);
-	template <class T>
-	inline Ref<T> insertObject(Ref<T> obj);
-	void removeObject(Ref<Object> obj);
-	template <class T>
-	inline Ref<T> findObject(std::string name) const;
-	std::vector<Ref<Object>> getAllObjects() const;
-	std::vector<LightParams> getLightParams() const;
-	Ref<RenderGraph> getRenderGraph() const;
-	std::vector<DrawCommand> getDrawCommands() const;
-	WeakRef<Object> raycast(glm::vec3 origin, glm::vec3 direction);
-	inline std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
-	
-	void drawImGuiDebug();
-	
-	static Ref<Scene> deserialise(std::string name);
-
 	Scene();
 	~Scene() override;
+	
+	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
+	std::vector<Ref<Object>> getAllObjects() const;
+	template <class T> Ref<T> findObject(std::string name) const;
+	Ref<Camera> getCamera(size_t slot) const;
+	std::vector<LightParams> getLightParams() const;
+	std::vector<DrawCommand> getDrawCommands() const;
+	WeakRef<Object> raycast(glm::vec3 position, glm::vec3 direction);
+	template <class T> Ref<T> insertObject(Ref<T> obj);
+	void removeObject(Ref<Object> obj);
+	void setCameraSlot(const Ref<Camera>& camera, size_t slot);
+	
+	static Ref<Scene> deserialise(const std::string& name);
+	
+	void drawImGuiDebug();
 };
 
-template<class T>
-inline Ref<T> Scene::insertObject(Ref<T> obj)
+template<class T> Ref<T> Scene::findObject(const std::string name) const
 {
-	static_assert(std::is_convertible<T*, Object*>::value, "object must be a HopEngine::Object subclass");
+	static_assert(std::is_convertible_v<T*, Object*>, "expected type must be a HopEngine::Object subclass");
+	for (auto test_obj : objects)
+	{
+		if (test_obj->name == name)
+			return test_obj.cast<T>();
+	}
+	return nullptr;
+}
+
+template<class T> Ref<T> Scene::insertObject(Ref<T> obj)
+{
+	static_assert(std::is_convertible_v<T*, Object*>, "object must be a HopEngine::Object subclass");
 	if (obj.get() == root.get())
 	{
 		DBG_ERROR("attempt to insert object '" + obj->name + "' (" + PTR(obj.get()) + ") into scene " + PTR(this) + " but it is already present in the tree!");
@@ -78,20 +84,6 @@ inline Ref<T> Scene::insertObject(Ref<T> obj)
 		lights.push_back(ref2);
 	}
 	return obj;
-}
-
-template<class T>
-inline Ref<T> Scene::findObject(std::string name) const
-{
-	static_assert(std::is_convertible<T*, Object*>::value, "expected type must be a HopEngine::Object subclass");
-	for (auto test_obj : objects)
-	{
-		if (test_obj->name == name)
-		{
-			return test_obj.cast<T>();
-		}
-	}
-	return nullptr;
 }
 
 }

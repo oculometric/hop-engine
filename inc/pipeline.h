@@ -10,9 +10,10 @@ enum CullMode
 {
 	CULL_NONE = 0,
 	CULL_FRONT = 1,
-	CULL_BACK = 2
+	CULL_BACK = 2,
+	CULL_BOTH = 3
 };
-ENUM_OPERATOR(CullMode)
+TO_STRING_DEC(CullMode);
 
 enum PolygonMode
 {
@@ -20,6 +21,7 @@ enum PolygonMode
 	POLYGON_LINE,
 	POLYGON_POINT
 };
+TO_STRING_DEC(PolygonMode);
 
 enum CompareOp
 {
@@ -32,6 +34,7 @@ enum CompareOp
 	COMPARE_GREATER_OR_EQUAL = 6,
 	COMPARE_ALWAYS = 7,
 };
+TO_STRING_DEC(CompareOp);
 
 struct PipelineBuilder
 {
@@ -46,15 +49,15 @@ struct PipelineBuilder
 	uint32_t stencil_compare_mask = 0xFFFFFFFF;
 	uint32_t stencil_write = 0;
 
-	PipelineBuilder cullMode(CullMode value) { culling_mode = value; return *this; }
-	PipelineBuilder polygonMode(PolygonMode value) { polygon_mode = value; return *this; }
-	PipelineBuilder depthWrite(bool value) { depth_write_enable = value; return *this; }
-	PipelineBuilder depthTest(bool value) { depth_test_enable = value; return *this; }
-	PipelineBuilder depthOp(CompareOp value) { depth_compare_op = value; return *this; }
+	PipelineBuilder cullMode(const CullMode value) { culling_mode = value; return *this; }
+	PipelineBuilder polygonMode(const PolygonMode value) { polygon_mode = value; return *this; }
+	PipelineBuilder depthWrite(const bool value) { depth_write_enable = value; return *this; }
+	PipelineBuilder depthTest(const bool value) { depth_test_enable = value; return *this; }
+	PipelineBuilder depthOp(const CompareOp value) { depth_compare_op = value; return *this; }
 	PipelineBuilder stencil() { stencil_enable = true; return *this; }
-	PipelineBuilder stencilCompare(CompareOp value, uint32_t compare_value, uint32_t compare_mask = 0xFFFFFFFF)
+	PipelineBuilder stencilCompare(const CompareOp value, const uint32_t compare_value, const uint32_t compare_mask = 0xFFFFFFFF)
 	{ stencil_enable = true; stencil_compare_op = value; stencil_compare_value = compare_value; stencil_compare_mask = compare_mask;  return *this; }
-	PipelineBuilder stencilWrite(uint32_t value) { stencil_enable = true; stencil_write = value; return *this; }
+	PipelineBuilder stencilWrite(const uint32_t value) { stencil_enable = true; stencil_write = value; return *this; }
 };
 
 class Pipeline : public Destructible
@@ -65,12 +68,11 @@ private:
 
 public:
 	DELETE_CONSTRUCTORS(Pipeline);
-
+	Pipeline(const Ref<Shader>& shader, const PipelineBuilder& config, const Ref<RenderPass>& render_pass);
+	~Pipeline() override;
+	
 	VkPipeline getPipeline() const { return pipeline; }
 	PipelineBuilder getConfig() const { return pipeline_config; }
-	
-	Pipeline(Ref<Shader> shader, PipelineBuilder config, Ref<RenderPass> render_pass);
-	~Pipeline() override;
 };
 
 }

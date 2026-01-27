@@ -29,17 +29,17 @@ private:
 
 public:
 	DELETE_CONSTRUCTORS(UniformBlock);
-
-	void* getBuffer() { return live_uniform_buffer.data(); }
-	void setTexture(uint32_t binding, Ref<Texture> image, bool use_stencil = false);
-	void setSampler(uint32_t binding, Ref<Sampler> sampler);
-	VkDeviceSize getSize() const { return size; }
-	void pushToDescriptorSet(size_t index);
-	VkDescriptorSet getDescriptorSet(size_t index) const { return descriptor_sets[index]; }
-	void drawImGuiDebug(const std::map<std::string, uint32_t>& texture_name_to_binding);
-
-	UniformBlock(ShaderLayout layout_info);
+	UniformBlock(const ShaderLayout& layout_info);
 	~UniformBlock() override;
+	
+	VkDescriptorSet getDescriptorSet(const size_t index) const { return descriptor_sets[index]; }
+	void* getBuffer() { return live_uniform_buffer.data(); }
+	VkDeviceSize getSize() const { return size; }
+	void setTexture(uint32_t binding, const Ref<Texture>& image, bool use_stencil = false);
+	void setSampler(uint32_t binding, const Ref<Sampler>& sampler);
+	void pushToDescriptorSet(size_t index);
+	
+	void drawImGuiDebug(const std::map<std::string, uint32_t>& texture_name_to_binding);
 
 private:
 	void applyDescriptorBindings();

@@ -875,7 +875,7 @@ bool deserialiseObject(TokenReader::Statement statement, Ref<Scene> scene, const
 	return true;
 }
 
-Ref<Scene> Scene::deserialise(string name)
+Ref<Scene> Scene::deserialise(const string& name)
 {
 	auto raw_data = Package::tryLoadFile(name);
 	if (raw_data.empty())

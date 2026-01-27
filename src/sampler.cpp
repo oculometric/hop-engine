@@ -13,6 +13,8 @@ static constexpr VkFilter vulkan_filter[2] =
 	VK_FILTER_LINEAR
 };
 
+TO_STRING_DEF(SamplerFilter, 2, VARGS("NEAREST", "LINEAR"));
+
 static constexpr VkSamplerAddressMode vulkan_address[3] = 
 {
 	VK_SAMPLER_ADDRESS_MODE_REPEAT,
@@ -20,13 +22,21 @@ static constexpr VkSamplerAddressMode vulkan_address[3] =
 	VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE
 };
 
-Sampler::Sampler(SamplerBuilder config)
+TO_STRING_DEF(SamplerAddress, 3, VARGS("REPEAT", "MIRRORED", "CLAMP_EDGE"));
+
+Sampler::Sampler(const SamplerBuilder& config)
 {
 	reconfigure(config);
-	DBG_VERBOSE("created sampler for " + vk::to_string((vk::Filter)config.filtering_mode) + ", " + vk::to_string((vk::SamplerAddressMode)config.address_mode));
+	DBG_VERBOSE("created sampler for " + to_string(config.filtering_mode) + ", " + to_string(config.address_mode));
 }
 
-void Sampler::reconfigure(SamplerBuilder config)
+Sampler::~Sampler()
+{
+	DBG_VERBOSE("destroying sampler " + PTR(this));
+	vkDestroySampler(RenderServer::getDevice(), sampler, nullptr);
+}
+
+void Sampler::reconfigure(const SamplerBuilder& config)
 {
 	if (sampler)
 		vkDestroySampler(RenderServer::getDevice(), sampler, nullptr);
@@ -53,10 +63,4 @@ void Sampler::reconfigure(SamplerBuilder config)
 	create_info.maxLod = 0.0f;
 	if (vkCreateSampler(RenderServer::getDevice(), &create_info, nullptr, &sampler) != VK_SUCCESS)
 		DBG_FAULT("vkCreateSampler failed");
-}
-
-Sampler::~Sampler()
-{
-	DBG_VERBOSE("destroying sampler " + PTR(this));
-	vkDestroySampler(RenderServer::getDevice(), sampler, nullptr);
 }
