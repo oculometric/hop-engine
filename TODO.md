@@ -2,7 +2,6 @@
 
 ## v0.51
 - actually add comments to everything
-- move spaceflight test into its own repository
 - improve scene tree so that objects know about their scene, and children, and can be removed [M]
 ---
 ## v0.6
