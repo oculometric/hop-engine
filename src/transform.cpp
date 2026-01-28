@@ -2,19 +2,119 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
+#include <glm/common.hpp>
+#include <glm/common.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include "object.h"
 
 using namespace HopEngine;
 
+void Transform::setLocalPosition(const glm::vec3 position)
+{
+	local_position = position;
+	localFromVars();
+}
+
+void Transform::setLocalEuler(const glm::vec3 euler)
+{
+	local_euler = euler;
+	localFromVars();
+}
+
+void Transform::setLocalScale(const glm::vec3 scale)
+{
+	local_scale = scale;
+	localFromVars();
+}
+
+void Transform::setPosition(const glm::vec3 position)
+{
+	world_matrix[3] = glm::vec4(position, 1);
+	localFromWorld();
+}
+
+void Transform::setMatrix(const glm::mat4& matrix)
+{
+	world_matrix = matrix;
+	localFromWorld();
+}
+
+void Transform::translateLocal(const glm::vec3 offset)
+{
+	local_position += local_matrix * glm::vec4(offset, 0);
+	localFromVars();
+}
+
+void Transform::rotateLocal(const glm::vec3 degrees)
+{
+	local_matrix = glm::mat4(1);
+	local_matrix = glm::rotate(local_matrix, glm::radians(local_euler.z), glm::vec3(0, 0, 1));
+	local_matrix = glm::rotate(local_matrix, glm::radians(local_euler.y), glm::vec3(0, 1, 0));
+	local_matrix = glm::rotate(local_matrix, glm::radians(local_euler.x), glm::vec3(1, 0, 0));
+
+	local_matrix = glm::rotate(local_matrix, glm::radians(degrees.z), glm::vec3(0, 0, 1));
+	local_matrix = glm::rotate(local_matrix, glm::radians(degrees.y), glm::vec3(0, 1, 0));
+	local_matrix = glm::rotate(local_matrix, glm::radians(degrees.x), glm::vec3(1, 0, 0));
+	
+	glm::vec3 skew;
+	glm::vec3 tmp;
+	glm::vec3 tmp2;
+	glm::vec4 perspective;
+	glm::quat quat;
+	glm::decompose(local_matrix, tmp, quat, tmp2, skew, perspective);
+	local_euler = glm::degrees(glm::eulerAngles(quat));
+	
+	localFromVars();
+}
+
+void Transform::scaleLocal(const glm::vec3 factor)
+{
+	local_scale *= factor;
+	localFromVars();
+}
+
+void Transform::scaleLocal(const float factor)
+{
+	local_scale *= factor;
+	localFromVars();
+}
+
+void Transform::translate(const glm::vec3 offset)
+{
+	world_matrix[3] += glm::vec4(offset, 0);
+	localFromWorld();
+}
+
+void Transform::rotate(const glm::vec3 degrees)
+{
+	glm::mat4 m = glm::mat4(1);
+	m = glm::rotate(m, glm::radians(degrees.z), glm::vec3{ 0, 0, 1 });
+	m = glm::rotate(m, glm::radians(degrees.y), glm::vec3{ 0, 1, 0 });
+	m = glm::rotate(m, glm::radians(degrees.x), glm::vec3{ 1, 0, 0 });
+	glm::vec4 translation = world_matrix[3];
+	world_matrix[3] = glm::vec4{ 0, 0, 0, 1 };
+	world_matrix = m * world_matrix;
+	world_matrix[3] = translation;
+
+	localFromWorld();
+}
+
+void Transform::scale(const float factor)
+{
+	world_matrix[0][0] *= factor;
+	world_matrix[1][1] *= factor;
+	world_matrix[2][2] *= factor;
+	localFromWorld();
+}
+
 void Transform::lookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up)
 {
 	world_matrix = glm::inverse(glm::lookAt(eye, target, up));
-	correctLocalMatrix();
+	localFromWorld();
 }
 
-void Transform::correctLocalMatrix()
+void Transform::localFromWorld()
 {
 	glm::mat4 parent = glm::identity<glm::mat4>();
 	if (parent_transform)
@@ -28,7 +128,7 @@ void Transform::correctLocalMatrix()
 	local_euler = glm::degrees(glm::eulerAngles(quat));
 }
 
-void Transform::updateWorldMatrix()
+void Transform::worldFromLocal()
 {
 	world_matrix = glm::identity<glm::mat4>();
 	if (parent_transform)
@@ -36,7 +136,7 @@ void Transform::updateWorldMatrix()
 	world_matrix = world_matrix * local_matrix;
 }
 
-void Transform::updateMatrix()
+void Transform::localFromVars()
 {
 	local_matrix = glm::mat4(1);
 	local_matrix = glm::translate(local_matrix, local_position);
@@ -45,20 +145,20 @@ void Transform::updateMatrix()
 	local_matrix = glm::rotate(local_matrix, glm::radians(local_euler.x), glm::vec3(1, 0, 0));
 	local_matrix = glm::scale(local_matrix, local_scale);
 
-	updateWorldMatrix();
+	worldFromLocal();
 }
 
-glm::vec3 getPoint(const Spline& s, int p)
+static glm::vec3 getPoint(const Spline& s, const int p)
 {
 	if (s.loop)
 		return s.points[(p + s.points.size()) % s.points.size()];
 	else
-		return s.points[p < 0 ? 0 : (p >= (int)s.points.size() ? (int)s.points.size() - 1 : p)];
+		return s.points[p < 0 ? 0 : (p >= static_cast<int>(s.points.size()) ? static_cast<int>(s.points.size()) - 1 : p)];
 }
 
-glm::vec3 Spline::operator[](float t)
+glm::vec3 Spline::operator[](float t) const
 {
-	if (points.size() <= 0) return glm::vec3{ 0, 0, 0 };
+	if (points.empty()) return glm::vec3{ 0, 0, 0 };
 	if (!loop)
 	{
 		if (t < 0.0f) return points[0];
@@ -70,7 +170,7 @@ glm::vec3 Spline::operator[](float t)
 	}
 
 	// size of each subdivision along the total curve, in time
-	float point_t_size = 1.0f / (float)(points.size());
+	float point_t_size = 1.0f / static_cast<float>(points.size());
 
 	// t is between 0-1, we want to use that to find which segment we're in
 	int segment = 0;

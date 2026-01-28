@@ -45,7 +45,7 @@ static Ref<Scene> initAshaScene()
     tux->transform.translateLocal({ 2, 0, 0 });
 
     auto sun_lamp = scene->insertObject<Light>(new Light(Light::DIRECTIONAL));
-    sun_lamp->transform.rotateLocal({ -17.0f, -34.0f, -189.0f });
+    sun_lamp->transform.setLocalEuler({ -17.0f, -34.0f, -189.0f });
     sun_lamp->colour = { 1.0f, 1.0f, 1.0f };
 
     scene->getCamera(0)->transform.lookAt(glm::vec3(0.5f, -1.5f, 0.5f),
