@@ -124,13 +124,13 @@ Swapchain::Swapchain(const uint32_t width, const uint32_t height, const VkSurfac
 
 Swapchain::~Swapchain()
 {
-    DBG_INFO("destroying swapchain " + PTR(this));
+    DBG_VERBOSE("destroying swapchain " + PTR(this));
     destroyResources();
 }
 
 void Swapchain::resize(const uint32_t width, const uint32_t height)
 {
-    DBG_INFO("resizing swapchain to " + to_string(width) + "x" + to_string(height));
+    DBG_VERBOSE("resizing swapchain to " + to_string(width) + "x" + to_string(height));
     destroyResources();
 
     const SwapchainSupportInfo support_info = getSwapchainSupportInfo(RenderServer::getPhysicalDevice(), surface);

@@ -19,6 +19,82 @@
 using namespace HopEngine;
 using namespace std;
 
+RenderStep::~RenderStep()
+{
+    DBG_BABBLE("destroying render step " + PTR(this));
+}
+
+RenderGraphBuilder& RenderGraphBuilder::addCamera(const size_t slot)
+{
+    return addCamera(slot, RenderServer::getMainRenderPass()->getOutputConfig());
+}
+
+RenderGraphBuilder& RenderGraphBuilder::addCamera(const size_t slot, const RenderOutput& render_pass_config, float size_factor, glm::u32vec2 custom_extent)
+{
+    RenderStep step;
+    step.is_camera = true;
+    step.camera_slot = slot;
+    step.resolution_scale = size_factor;
+    step.custom_extent = custom_extent;
+    const glm::vec2 size = RenderServer::getFramebufferSize();
+    if (size_factor > 0.0f)
+        step.render_pass = new RenderPass(static_cast<uint32_t>(size.x * size_factor), static_cast<uint32_t>(size.y * size_factor), render_pass_config);
+    else
+        step.render_pass = new RenderPass(custom_extent.x ? custom_extent.x : static_cast<uint32_t>(size.x), custom_extent.y ? custom_extent.y : static_cast<uint32_t>(size.y), render_pass_config);
+    execution_steps.push_back(step);
+    return *this;
+}
+
+RenderGraphBuilder& RenderGraphBuilder::addCamera(const size_t slot, const float size_factor, const glm::u32vec2 custom_extent)
+{
+    return addCamera(slot, RenderServer::getMainRenderPass()->getOutputConfig(), size_factor, custom_extent);
+}
+
+RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings)
+{
+    return addPostProcess(shader, texture_bindings, RenderOutput{ 0, false });
+}
+
+RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings, const RenderOutput& render_pass_config, const float size_factor, const glm::u32vec2 custom_extent)
+{
+    RenderStep step;
+    step.is_camera = false;
+    step.resolution_scale = size_factor;
+    step.custom_extent = custom_extent;
+    const glm::vec2 size = RenderServer::getFramebufferSize();
+    if (size_factor > 0.0f)
+        step.render_pass = new RenderPass(static_cast<uint32_t>(size.x * size_factor), static_cast<uint32_t>(size.y * size_factor), render_pass_config);
+    else
+        step.render_pass = new RenderPass(custom_extent.x ? custom_extent.x : static_cast<uint32_t>(size.x), custom_extent.y ? custom_extent.y : static_cast<uint32_t>(size.y), render_pass_config);
+    step.material = new Material(shader, PipelineBuilder().cullMode(CULL_NONE).depthTest(VK_FALSE).depthWrite(VK_FALSE), step.render_pass);
+    step.texture_bindings = texture_bindings;
+    step.scene_uniforms = new UniformBlock(ShaderLayout{ RenderServer::getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
+    execution_steps.push_back(step);
+    return *this;
+}
+
+RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings, const float size_factor, const glm::u32vec2 custom_extent)
+{
+    return addPostProcess(shader, texture_bindings, RenderOutput{ 0, false }, size_factor, custom_extent);
+}
+
+RenderGraph::RenderGraph(const RenderGraphBuilder& config)
+{
+    passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough"), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), RenderServer::getFinalRenderPass());
+    execution_steps = config.execution_steps;
+    if (!config.execution_steps.empty())
+        expected_extent = config.execution_steps[0].render_pass->getExtent();
+
+    rebuildBindings();
+}
+
+RenderGraph::~RenderGraph()
+{
+    DBG_VERBOSE("destroying render graph " + PTR(this));
+    execution_steps.clear();
+    passthrough = nullptr;
+}
+
 Ref<Material> RenderGraph::getMaterialForStep(const size_t step)
 {
     if (step >= execution_steps.size())
@@ -267,23 +343,6 @@ void RenderGraph::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t i
     vkCmdEndRenderPass(command_buffer);
 }
 
-RenderGraph::RenderGraph(const RenderGraphBuilder& config)
-{
-    passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough"), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), RenderServer::getFinalRenderPass());
-    execution_steps = config.execution_steps;
-    if (!config.execution_steps.empty())
-        expected_extent = config.execution_steps[0].render_pass->getExtent();
-
-    rebuildBindings();
-}
-
-RenderGraph::~RenderGraph()
-{
-    DBG_INFO("destroying render graph " + PTR(this));
-    execution_steps.clear();
-    passthrough = nullptr;
-}
-
 size_t RenderGraph::findStep(const string& name) const
 {
     size_t index = 0;
@@ -407,7 +466,7 @@ void RenderGraph::recordCameraStep(const VkCommandBuffer command_buffer, const u
         if (rebind_material || rebind_layout)
         {
             vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                Engine::isWireframeMode() ? last_used_material->getDebugPipeline() : last_used_material->getPipeline());
+                              Engine::isWireframeMode() ? last_used_material->getDebugPipeline() : last_used_material->getPipeline());
             ++stats.pipeline_rebinds;
         }
         if (rebind_layout || rebind_material)
@@ -492,63 +551,4 @@ void RenderGraph::recordPostProcessStep(const VkCommandBuffer command_buffer, co
 
     RenderServer::writeTimestamp(image_index, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
     vkCmdEndRenderPass(command_buffer);
-}
-
-RenderGraphBuilder& RenderGraphBuilder::addCamera(const size_t slot)
-{
-    return addCamera(slot, RenderServer::getMainRenderPass()->getOutputConfig());
-}
-
-RenderGraphBuilder& RenderGraphBuilder::addCamera(const size_t slot, const RenderOutput& render_pass_config, float size_factor, glm::u32vec2 custom_extent)
-{
-    RenderStep step;
-    step.is_camera = true;
-    step.camera_slot = slot;
-    step.resolution_scale = size_factor;
-    step.custom_extent = custom_extent;
-    const glm::vec2 size = RenderServer::getFramebufferSize();
-    if (size_factor > 0.0f)
-        step.render_pass = new RenderPass(static_cast<uint32_t>(size.x * size_factor), static_cast<uint32_t>(size.y * size_factor), render_pass_config);
-    else
-        step.render_pass = new RenderPass(custom_extent.x ? custom_extent.x : static_cast<uint32_t>(size.x), custom_extent.y ? custom_extent.y : static_cast<uint32_t>(size.y), render_pass_config);
-    execution_steps.push_back(step);
-    return *this;
-}
-
-RenderGraphBuilder& RenderGraphBuilder::addCamera(const size_t slot, const float size_factor, const glm::u32vec2 custom_extent)
-{
-    return addCamera(slot, RenderServer::getMainRenderPass()->getOutputConfig(), size_factor, custom_extent);
-}
-
-RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings)
-{
-    return addPostProcess(shader, texture_bindings, RenderOutput{ 0, false });
-}
-
-RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings, const RenderOutput& render_pass_config, const float size_factor, const glm::u32vec2 custom_extent)
-{
-    RenderStep step;
-    step.is_camera = false;
-    step.resolution_scale = size_factor;
-    step.custom_extent = custom_extent;
-    const glm::vec2 size = RenderServer::getFramebufferSize();
-    if (size_factor > 0.0f)
-        step.render_pass = new RenderPass(static_cast<uint32_t>(size.x * size_factor), static_cast<uint32_t>(size.y * size_factor), render_pass_config);
-    else
-        step.render_pass = new RenderPass(custom_extent.x ? custom_extent.x : static_cast<uint32_t>(size.x), custom_extent.y ? custom_extent.y : static_cast<uint32_t>(size.y), render_pass_config);
-    step.material = new Material(shader, PipelineBuilder().cullMode(CULL_NONE).depthTest(VK_FALSE).depthWrite(VK_FALSE), step.render_pass);
-    step.texture_bindings = texture_bindings;
-    step.scene_uniforms = new UniformBlock(ShaderLayout{ RenderServer::getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
-    execution_steps.push_back(step);
-    return *this;
-}
-
-RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings, const float size_factor, const glm::u32vec2 custom_extent)
-{
-    return addPostProcess(shader, texture_bindings, RenderOutput{ 0, false }, size_factor, custom_extent);
-}
-
-RenderStep::~RenderStep()
-{
-    DBG_INFO("destroying render step " + PTR(this));
 }

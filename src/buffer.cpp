@@ -59,14 +59,14 @@ Buffer::Buffer(VkDeviceSize size, const BufferUsage usage, const MemoryPropertie
 
     vkBindBufferMemory(RenderServer::getDevice(), buffer, memory, 0);
 
-    DBG_VERBOSE("created buffer of size " + to_string(size) + " with usage " + to_string(usage) + " and memory properties " + to_string(properties));
+    DBG_BABBLE("created buffer of size " + to_string(size) + " with usage " + to_string(usage) + " and memory properties " + to_string(properties));
 
     buffer_size = size;
 }
 
 Buffer::~Buffer()
 {
-    DBG_VERBOSE("destroying buffer " + PTR(this));
+    DBG_BABBLE("destroying buffer " + PTR(this));
     unmapMemory();
 
     RenderServer::waitIdle();
@@ -108,7 +108,7 @@ uint32_t Buffer::findMemoryType(uint32_t type_bits, MemoryProperties _properties
 
 void Buffer::copyToBuffer(Ref<Buffer> other) const
 {
-    DBG_VERBOSE("copying from " + PTR(this) + " to buffer " + PTR(other.get()));
+    DBG_BABBLE("copying from " + PTR(this) + " to buffer " + PTR(other.get()));
     Ref<CommandBuffer> cmd_buf = new CommandBuffer();
 
     VkBufferCopy buffer_copy{ };

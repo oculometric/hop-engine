@@ -1,7 +1,6 @@
 # TODO
 
 ## v0.51
-- reconfigure verbosity of lots of stuff [M]
 - actually add comments to everything
 - move spaceflight test into its own repository
 - improve scene tree so that objects know about their scene, and children, and can be removed [M]

@@ -9,8 +9,9 @@
 using namespace HopEngine;
 using namespace std;
 
-Scene::Scene()
+Scene::Scene(const string& name)
 {
+	origin = name;
 	render_graph = new RenderGraph(RenderGraphBuilder().addCamera(0));
 	root = new Object();
 	root->name = "scene root";
@@ -19,7 +20,7 @@ Scene::Scene()
 	cameras[0] = new Camera();
 	insertObject(cameras[0]);
 
-	DBG_INFO("created new scene");
+	DBG_INFO("created new scene " + getOrigin());
 }
 
 Scene::~Scene()

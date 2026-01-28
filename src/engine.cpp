@@ -267,7 +267,6 @@ Engine::Engine()
     window->setIcon("res://icon.png");
     Input::init(window);
     RenderServer::init(window);
-    Engine::summariseTrackedObjects();
     RenderServer::draw();
     window->setVisible(true);
     debugClearSelection();

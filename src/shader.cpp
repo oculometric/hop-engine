@@ -81,12 +81,12 @@ Shader::Shader(const string& base_path, const bool is_precompiled)
 	if (vkCreatePipelineLayout(RenderServer::getDevice(), &layout_create_info, nullptr, &pipeline_layout) != VK_SUCCESS)
 		DBG_FAULT("vkCreatePipelineLayout failed");
 
-	DBG_INFO("created shader from " + base_path);
+	DBG_VERBOSE("created shader from " + base_path);
 }
 
 Shader::~Shader()
 {
-	DBG_INFO("destroyed shader '" + getOrigin() + '\'');
+	DBG_VERBOSE("destroyed shader '" + getOrigin() + '\'');
 
 	vkDestroyPipelineLayout(RenderServer::getDevice(), pipeline_layout, nullptr);
 	vkDestroyDescriptorSetLayout(RenderServer::getDevice(), descriptor_set_layout, nullptr);
@@ -179,7 +179,7 @@ bool Shader::reloadShader()
 	if (vkCreatePipelineLayout(RenderServer::getDevice(), &layout_create_info, nullptr, &pipeline_layout) != VK_SUCCESS)
 		DBG_FAULT("vkCreatePipelineLayout failed");
 
-	DBG_INFO("recompiled shader from " + origin);
+	DBG_VERBOSE("recompiled shader from " + origin);
 	return true;
 }
 
@@ -235,7 +235,7 @@ vector<DescriptorBinding> Shader::getReflectedBindings(vector<uint8_t> blob)
 	const SpvReflectDescriptorSet* vert_material_set = spvReflectGetDescriptorSet(&reflected_module, 2, &result);
 	if (result != SPV_REFLECT_RESULT_SUCCESS)
 	{
-		DBG_WARNING("unable to reflect descriptor set 2");
+		DBG_VERBOSE("unable to reflect descriptor set 2");
 		spvReflectDestroyShaderModule(&reflected_module);
 		return { };
 	}
@@ -361,7 +361,6 @@ bool Shader::compileShaders(const string& path, const string& out_path)
 		return false;
 	}
 
-	
 	filesystem::path _path;
 	bool is_res_relative = false;
 	if (path.starts_with("res://"))

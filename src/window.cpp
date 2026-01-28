@@ -29,7 +29,7 @@ Window::~Window()
 
 void Window::terminateEnvironment()
 {
-    DBG_INFO("terminating GLFW");
+    DBG_VERBOSE("terminating GLFW");
     glfwTerminate();
 }
 

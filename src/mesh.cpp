@@ -25,7 +25,7 @@ Mesh::Mesh(const string& path)
     else
         DBG_ERROR("failed to load mesh " + path);
 
-    DBG_INFO("created mesh from " + path + " with " + ::to_string(verts.size()) + " vertices and " + ::to_string(inds.size()) + " indices");
+    DBG_VERBOSE("created mesh from " + path + " with " + ::to_string(verts.size()) + " vertices and " + ::to_string(inds.size()) + " indices");
 }
 
 Mesh::Mesh(const vector<Vertex>& vertices, const vector<uint16_t>& indices, const bool keep_accessible)
@@ -51,12 +51,12 @@ Mesh::Mesh(const vector<Vertex>& vertices, const vector<uint16_t>& indices, cons
         recomputeBoundingBox(vertices);
     }
     is_renderable = true;        
-    DBG_INFO("created mesh from arrays with " + ::to_string(vertices.size()) + " vertices and " + ::to_string(indices.size()) + " indices");
+    DBG_VERBOSE("created mesh from arrays with " + ::to_string(vertices.size()) + " vertices and " + ::to_string(indices.size()) + " indices");
 }
 
 Mesh::~Mesh()
 {
-    DBG_INFO("destroying mesh '" + getOrigin() + '\'');
+    DBG_VERBOSE("destroying mesh '" + getOrigin() + '\'');
     vertex_buffer = nullptr;
     index_buffer = nullptr;
 }

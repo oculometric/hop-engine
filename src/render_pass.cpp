@@ -18,7 +18,7 @@ RenderPass::RenderPass(const Ref<Swapchain>& _swapchain, const RenderOutput& con
     createRenderPass(swapchain->getFormat(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, false);
     createResources();
 
-    DBG_INFO(string("created render pass with colour buffer, ") + (config.has_depth_attachment ? "depth buffer, " : "") + "and " + ::to_string(config.additional_attachments) + " data attachments");
+    DBG_VERBOSE(string("created render pass with colour buffer, ") + (config.has_depth_attachment ? "depth buffer, " : "") + "and " + ::to_string(config.additional_attachments) + " data attachments");
 }
 
 RenderPass::RenderPass(const uint32_t width, const uint32_t height, const RenderOutput& config)
@@ -31,7 +31,7 @@ RenderPass::RenderPass(const uint32_t width, const uint32_t height, const Render
 
 RenderPass::~RenderPass()
 {
-    DBG_INFO("destroying render pass " + PTR(this));
+    DBG_VERBOSE("destroying render pass " + PTR(this));
     destroyResources();
     vkDestroyRenderPass(RenderServer::getDevice(), render_pass, nullptr);
 }

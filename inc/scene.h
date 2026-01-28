@@ -27,7 +27,7 @@ private:
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Scene);
-	Scene();
+	Scene(const std::string& name = "scene");
 	~Scene() override;
 	
 	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }

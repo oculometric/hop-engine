@@ -29,7 +29,7 @@ Texture::Texture(const size_t _width, const size_t _height, const VkFormat _form
     if (builder.data_ptr != nullptr || extent.x == 0 || extent.y == 0)
     {
         loadFromMemory(builder.data_ptr, builder.layer_arrangement);
-        DBG_INFO("created image from memory with size " + ::to_string(extent.x) + "x" + ::to_string(extent.y) + " and format " + vk::to_string(static_cast<vk::Format>(format)));
+        DBG_VERBOSE("created image from memory with size " + ::to_string(extent.x) + "x" + ::to_string(extent.y) + " and format " + vk::to_string(static_cast<vk::Format>(format)));
     }
     else
     {
@@ -44,7 +44,7 @@ Texture::Texture(const size_t _width, const size_t _height, const VkFormat _form
             extent.y = 1;
         }
         createImage();
-        DBG_INFO("created blank image with size " + ::to_string(extent.x) + "x" + ::to_string(extent.y) + " and format " + vk::to_string(static_cast<vk::Format>(format)));
+        DBG_VERBOSE("created blank image with size " + ::to_string(extent.x) + "x" + ::to_string(extent.y) + " and format " + vk::to_string(static_cast<vk::Format>(format)));
     }
 }
 
@@ -82,13 +82,13 @@ Texture::Texture(const string& file, const TextureBuilder& builder)
         loadFromMemory(pixels, builder.layer_arrangement);
         stbi_image_free(pixels);
 
-        DBG_INFO("created image from " + file + " with size " + ::to_string(extent.x) + "x" + ::to_string(extent.y) + " and format " + vk::to_string(static_cast<vk::Format>(format)));
+        DBG_VERBOSE("created image from " + file + " with size " + ::to_string(extent.x) + "x" + ::to_string(extent.y) + " and format " + vk::to_string(static_cast<vk::Format>(format)));
     }
 }
 
 Texture::~Texture()
 {
-    DBG_INFO("destroying image '" + getOrigin() + '\'');
+    DBG_VERBOSE("destroying image '" + getOrigin() + '\'');
     if (view != VK_NULL_HANDLE)
         vkDestroyImageView(RenderServer::getDevice(), view, nullptr);
     if (stencil_view != VK_NULL_HANDLE)
@@ -110,7 +110,7 @@ VkImageView Texture::getView(const bool stencil)
     if (stencil && stencil_view != VK_NULL_HANDLE)
         return stencil_view;
 
-    DBG_VERBOSE("creating image view for image '" + getOrigin() + '\'');
+    DBG_BABBLE("creating image view for image '" + getOrigin() + '\'');
 
     VkImageViewCreateInfo view_create_info{ };
     view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -142,7 +142,7 @@ VkImageView Texture::getView(const bool stencil)
 
 void Texture::transitionLayout(const VkImageLayout new_layout)
 {
-    DBG_VERBOSE("transitioning image '" + getOrigin() + "' layout from " + vk::to_string((vk::ImageLayout)current_layout) + " to " + vk::to_string((vk::ImageLayout)new_layout));
+    DBG_BABBLE("transitioning image '" + getOrigin() + "' layout from " + vk::to_string((vk::ImageLayout)current_layout) + " to " + vk::to_string((vk::ImageLayout)new_layout));
 
     VkImageMemoryBarrier memory_barrier{ };
     memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -189,7 +189,7 @@ void Texture::transitionLayout(const VkImageLayout new_layout)
 
 void Texture::copyBufferToImage(Ref<Buffer> buffer) const
 {
-    DBG_VERBOSE("copying buffer " + PTR(buffer.get()) + " to image '" + getOrigin() + '\'');
+    DBG_BABBLE("copying buffer " + PTR(buffer.get()) + " to image '" + getOrigin() + '\'');
 
     VkBufferImageCopy image_copy{ };
     image_copy.bufferOffset = 0;

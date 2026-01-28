@@ -14,12 +14,12 @@ Font::Font(const string& atlas_name, const glm::ivec2 glyph_size_pixels)
     chars_resolution = atlas->getSize() / glyph_size;
     char_uv_size = 1.0f / glm::vec2(chars_resolution);
 
-    DBG_INFO("created font using " + atlas_name + " atlas with character size " + ::to_string(glyph_size.x) + "x" + ::to_string(glyph_size.y));
+    DBG_VERBOSE("created font using " + atlas_name + " atlas with character size " + ::to_string(glyph_size.x) + "x" + ::to_string(glyph_size.y));
 }
 
 Font::~Font()
 {
-    DBG_INFO("destroying font " + PTR(this));
+    DBG_BABBLE("destroying font " + PTR(this));
     atlas = nullptr;
 }
 

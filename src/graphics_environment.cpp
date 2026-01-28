@@ -239,7 +239,7 @@ RenderServer::RenderServer(const Ref<Window>& main_window)
     
     initImGui();
 
-    DBG_INFO("graphics server initialised");
+    DBG_VERBOSE("graphics server initialised");
 }
 
 RenderServer::~RenderServer()
@@ -478,7 +478,7 @@ void RenderServer::createDevice()
     device_create_info.ppEnabledExtensionNames = required_extensions.data();
     device_create_info.enabledExtensionCount = static_cast<uint32_t>(required_extensions.size());
     
-    DBG_INFO("creating device");
+    DBG_VERBOSE("creating device");
     if (vkCreateDevice(physical_device, &device_create_info, nullptr, &device) != VK_SUCCESS)
         DBG_FAULT("vkCreateDevice failed");
 
@@ -502,7 +502,7 @@ void RenderServer::createDescriptorPoolAndSets()
     descriptor_pool_create_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
     descriptor_pool_create_info.maxSets = static_cast<uint32_t>(512 * 8 * MAX_FRAMES_IN_FLIGHT);
 
-    DBG_INFO("creating descriptor pool with " + ::to_string(descriptor_pool_create_info.maxSets) + " max sets");
+    DBG_VERBOSE("creating descriptor pool with " + ::to_string(descriptor_pool_create_info.maxSets) + " max sets");
     if (vkCreateDescriptorPool(device, &descriptor_pool_create_info, nullptr, &descriptor_pool) != VK_SUCCESS)
         DBG_FAULT("vkCreateDescriptorPool failed");
 
@@ -517,7 +517,7 @@ void RenderServer::createDescriptorPoolAndSets()
     layout_create_info.bindingCount = 1;
     layout_create_info.pBindings = &uniform_layout_binding;
 
-    DBG_INFO("creating scene and object descriptor sets");
+    DBG_VERBOSE("creating scene and object descriptor sets");
     if (vkCreateDescriptorSetLayout(device, &layout_create_info, nullptr, &scene_descriptor_set_layout) != VK_SUCCESS)
         DBG_FAULT("vkCreateDescriptorSetLayout failed");
 
@@ -534,7 +534,7 @@ void RenderServer::createDescriptorPoolAndSets()
 
 void RenderServer::createCommandPool()
 {
-    DBG_INFO("creating command pool and buffers");
+    DBG_VERBOSE("creating command pool and buffers");
 
     auto [graphics_family, present_family] = getQueueFamilies(physical_device);
 
@@ -559,7 +559,7 @@ void RenderServer::createCommandPool()
 
 void RenderServer::createSyncObjects()
 {
-    DBG_INFO("creating sync objects");
+    DBG_VERBOSE("creating sync objects");
     VkSemaphoreCreateInfo semaphore_create_info{ };
     semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     VkFenceCreateInfo fence_create_info{ };

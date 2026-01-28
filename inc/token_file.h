@@ -224,7 +224,7 @@ private:
     static glm::vec4 deserialiseVectorToken(const std::string& str, size_t offset, const std::string& original_content);
     static std::vector<std::pair<std::string, Token>> parseArguments(std::vector<Token>::const_iterator start, std::vector<Token>::const_iterator end, const std::string& original_content);
 
-    static size_t reportError(const std::string err, size_t off, const std::string& str);
+    static size_t reportError(const std::string& err, size_t off, const std::string& str);
 };
 
 }

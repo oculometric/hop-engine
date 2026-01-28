@@ -52,7 +52,6 @@ static Spline flythrough_spline
 
 static Ref<Scene> initMuseumScene()
 {
-    Debug::setLogLevel(Debug::DEBUG_WARNING);
     Ref<Scene> scene = Scene::deserialise("res://museum/Museum.hscn");
     if (!scene) return scene;
     

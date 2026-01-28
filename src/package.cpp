@@ -62,7 +62,7 @@ bool Package::loadPackage(const string& load_path)
 	if (!application_package)
 		Package::init();
 
-	DBG_INFO("loading package: " + load_path);
+	DBG_VERBOSE("loading package: " + load_path);
 	ifstream file(load_path, ios::ate | ios::binary);
 	if (!file.is_open())
 	{
@@ -191,7 +191,7 @@ bool Package::storePackage(const string& store_path)
 	if (!application_package)
 		Package::init();
 
-	DBG_INFO("storing package: " + store_path);
+	DBG_VERBOSE("storing package: " + store_path);
 	ofstream file(store_path, ios::binary);
 	if (!file.is_open())
 	{
@@ -242,7 +242,7 @@ bool Package::storeCompressedPackage(const string& store_path)
 	if (!application_package)
 		Package::init();
 
-	DBG_INFO("storing compressed package: " + store_path);
+	DBG_VERBOSE("storing compressed package: " + store_path);
 	if (!storePackage(store_path))
 	{
 		DBG_ERROR("failed to generate version 1 package: " + store_path);
@@ -337,7 +337,7 @@ vector<uint8_t> Package::loadCompressedPackage(const vector<uint8_t>& data)
 		Package::init();
 
 	PackageHeader header = *reinterpret_cast<const PackageHeader*>(data.data());
-	DBG_INFO("loading compressed package");
+	DBG_VERBOSE("loading compressed package");
 
 	if (header.signature != SIGNATURE)
 	{
@@ -429,6 +429,6 @@ vector<uint8_t> Package::loadCompressedPackage(const vector<uint8_t>& data)
 		return { };
 	}
 
-	DBG_INFO("unpacked compressed package");
+	DBG_VERBOSE("unpacked compressed package");
 	return content;
 }

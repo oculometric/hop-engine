@@ -892,7 +892,7 @@ Ref<Scene> Scene::deserialise(const string& name)
 	map<string, Ref<Texture>> textures;
 	map<string, Ref<RenderGraph>> render_graphs;
 	
-	Ref<Scene> scene = new Scene();
+	Ref<Scene> scene = new Scene(name);
 	
 	for (const TokenReader::Statement& statement : syntax_tree)
 	{
@@ -972,7 +972,5 @@ Ref<Scene> Scene::deserialise(const string& name)
 			return nullptr;
 		}
 	}
-	
-	scene->origin = name;
 	return scene;
 }

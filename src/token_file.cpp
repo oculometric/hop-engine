@@ -1,5 +1,6 @@
 #include "token_file.h"
 
+#include <algorithm>
 #include <format>
 
 using namespace HopEngine;
@@ -672,22 +673,19 @@ vector<pair<string, TokenReader::Token>> TokenReader::parseArguments(vector<Toke
     return arguments;
 }
 
-size_t TokenReader::reportError(const string err, size_t off, const string& str)
+size_t TokenReader::reportError(const string& err, const size_t off, const string& str)
 {
-    int32_t extract_start = max(0, (int32_t)off - 16);
+    int32_t extract_start = max(0, static_cast<int32_t>(off) - 16);
     int32_t extract_end = extract_start + 32;
     while (true)
     {
-        size_t find = str.find('\n', extract_start);
+        const size_t find = str.find('\n', extract_start);
         if (find >= off) break;
-        extract_start = (int32_t)find + 1;
+        extract_start = static_cast<int32_t>(find) + 1;
     }
-    size_t find = str.find('\n', off);
+    const size_t find = str.find('\n', off);
     if (find != string::npos)
-    {
-        if ((int32_t)find < extract_end)
-            extract_end = (int32_t)find;
-    }
+        extract_end = std::min(static_cast<int32_t>(find), extract_end);
     string extract = str.substr(extract_start, extract_end - extract_start);
 
     size_t ln = 0;
@@ -703,9 +701,9 @@ size_t TokenReader::reportError(const string err, size_t off, const string& str)
     if (ln > 0) col--;
     if (col > 0 && ln > 0) ln--;
 
-    string error = format("token document parsing error: {}"
+    const string error = format("token document parsing error: {}"
                         "\n\t-> '... {} ...'"
-                        "\n\t->{}      ^ here (ln {}, col {})", err, extract, string((int32_t)off - extract_start, ' '), ln + 1, col + 1);
+                        "\n\t->{}      ^ here (ln {}, col {})", err, extract, string(static_cast<int32_t>(off) - extract_start, ' '), ln + 1, col + 1);
     DBG_ERROR(error);
     return -1;
 }

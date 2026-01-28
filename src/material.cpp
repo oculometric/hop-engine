@@ -34,12 +34,12 @@ Material::Material(const Ref<Shader>& _shader, const PipelineBuilder& config, co
 			texture_name_to_binding[binding.name] = binding.binding;
 	}
 
-	DBG_INFO("created material from shader '" + shader->getOrigin() + "' with config " + to_string(config.culling_mode) + ", " + to_string(config.polygon_mode));
+	DBG_VERBOSE("created material from shader '" + shader->getOrigin() + "' with config " + to_string(config.culling_mode) + ", " + to_string(config.polygon_mode));
 }
 
 Material::~Material()
 {
-	DBG_INFO("destroying material '" + getOrigin() + '\'');
+	DBG_VERBOSE("destroying material '" + getOrigin() + '\'');
 	uniforms = nullptr;
 	pipeline = nullptr;
 	shader = nullptr;
@@ -88,13 +88,13 @@ Ref<Material> Material::duplicate() const
 
 void Material::setTexture(const uint32_t binding, const Ref<Texture>& texture, const bool use_stencil)
 {
-	DBG_VERBOSE("material '" + getOrigin() + "' assigned texture '" + texture->getOrigin() + "' to binding " + to_string(binding));
+	DBG_BABBLE("material '" + getOrigin() + "' assigned texture '" + texture->getOrigin() + "' to binding " + to_string(binding));
 	uniforms->setTexture(binding, texture, use_stencil);
 }
 
 void Material::setSampler(const uint32_t binding, const Ref<Sampler>& sampler)
 {
-	DBG_VERBOSE("material '" + getOrigin() + "' assigned sampler " + PTR(sampler.get()) + " to binding " + to_string(binding));
+	DBG_BABBLE("material '" + getOrigin() + "' assigned sampler " + PTR(sampler.get()) + " to binding " + to_string(binding));
 	uniforms->setSampler(binding, sampler);
 }
 
@@ -103,7 +103,7 @@ void Material::setTexture(const string& name, const Ref<Texture>& texture, const
 	const auto it = texture_name_to_binding.find(name);
 	if (it != texture_name_to_binding.end())
 	{
-		DBG_VERBOSE("material '" + getOrigin() + "' assigned texture '" + texture->getOrigin() + "' to binding '" + name + '\'');
+		DBG_BABBLE("material '" + getOrigin() + "' assigned texture '" + texture->getOrigin() + "' to binding '" + name + '\'');
 		uniforms->setTexture(it->second, texture, use_stencil);
 	}
 	else
@@ -115,7 +115,7 @@ void Material::setSampler(const string& name, const Ref<Sampler>& sampler)
 	const auto it = texture_name_to_binding.find(name);
 	if (it != texture_name_to_binding.end())
 	{
-		DBG_VERBOSE("material '" + getOrigin() + "' assigned sampler " + PTR(sampler.get()) + " to binding '" + name + '\'');
+		DBG_BABBLE("material '" + getOrigin() + "' assigned sampler " + PTR(sampler.get()) + " to binding '" + name + '\'');
 		uniforms->setSampler(it->second, sampler);
 	}
 	else
@@ -135,5 +135,5 @@ void Material::setUniform(const string& name, const void* data, size_t size)
 		DBG_WARNING("material '" + getOrigin() + "' uniform '" + name + "' size mismatch (given " + ::to_string(size) + ", expected " + ::to_string(var.size) + ")");
 	const size_t clamped_size = min(size, var.size);
 	memcpy(static_cast<uint8_t*>(uniforms->getBuffer()) + var.offset, data, clamped_size);
-	DBG_VERBOSE("material '" + getOrigin() + "' updated uniform '" + name + '\'');
+	DBG_BABBLE("material '" + getOrigin() + "' updated uniform '" + name + '\'');
 }
