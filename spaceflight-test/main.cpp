@@ -20,6 +20,9 @@ Ref<Scene> initScene()
 	return scene;
 }
 
+glm::vec3 spaceship_velocity = glm::vec3{ 0, 0, 0 };
+float throttle = 0.0f;
+
 void updateScene(Ref<Scene> scene, float delta_time)
 {
 	static float total_time = 0.0f;
@@ -31,8 +34,7 @@ void updateScene(Ref<Scene> scene, float delta_time)
 	
 	WeakRef<Object> ship = scene->getCamera(0).cast<Object>();
 	
-	// TODO: convert to velocity calculations (including turn velocity)
-	if (low_speed)
+	if (glm::dot(spaceship_velocity, ship->transform.forward()) < 4.0f)
 	{
 		glm::vec3 turn_vector =
 		{
@@ -51,15 +53,21 @@ void updateScene(Ref<Scene> scene, float delta_time)
 		};
 		float roll = Input::getAxis('E', 'Q');
 		ship->transform.rotateLocal({ 0, 0, roll * delta_time * 60.0f });
-		ship->transform.translateLocal(glm::vec3(nudge_vector * delta_time * 5.0f, 0));
+		spaceship_velocity += ship->transform.getMatrix() * glm::vec4{ nudge_vector * delta_time * 65.0f, 0, 0 };
 	}
 	
-	if (Input::isKeyDown(Input::KEY_UP))
-		ship->transform.translateLocal(glm::vec3{ 0, 0, -delta_time * 2.0f });
-	
+	ship->transform.translate(spaceship_velocity * delta_time);
+
 	// at low speed - WASDQE represents turning the ship (QE is roll, WS is pitch, AD is yaw)
 	// at high speed - WASD represents moving the ship (AD is push along the camera X, WS is push along the camera Y), QE represents roll
 	// UP/DOWN represents throttle, spacebar represents a fast sideways hop (according to high speed controls, but with EQ representing bumping the roll)
+	throttle += Input::getAxis(Input::KEY_DOWN, Input::KEY_UP) * delta_time * 0.8f;
+	throttle = glm::max(throttle, 0.0f);
+
+	//glm::vec3 drag_force = -spaceship_velocity * glm::pow(glm::length(spaceship_velocity), 2.0f) * 2.0f;
+	//spaceship_velocity += drag_force * delta_time;
+	// TODO: instead of a drag force, either we should move the ship directly with throttle (i.e. no velocity effectively), or we should use a custom drag function which just pushes the movement vector back towards the forward vector directly without reducing overall speed
+	spaceship_velocity += ship->transform.forward() * throttle;
 }
 
 void main()
