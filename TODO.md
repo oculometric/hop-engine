@@ -3,8 +3,7 @@
 ## v0.51
 - reconfigure verbosity of lots of stuff [M]
 - actually add comments to everything
-- fix crash on invalid mesh data during rendering
-- better support for object transforms, including world-space transform operations and quaternion support [H]
+- move spaceflight test into its own repository
 - improve scene tree so that objects know about their scene, and children, and can be removed [M]
 ---
 ## v0.6

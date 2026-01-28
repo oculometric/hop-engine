@@ -373,7 +373,7 @@ void RenderGraph::recordCameraStep(const VkCommandBuffer command_buffer, const u
 
     for (DrawCommand command : commands)
     {
-        if (!command.material || !command.mesh)
+        if (!command.material || !command.mesh || !command.mesh->isRenderable())
         {
             DBG_WARNING("skipping draw command with invalid mesh or material");
             continue;

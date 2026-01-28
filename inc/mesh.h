@@ -33,6 +33,7 @@ private:
 	size_t index_count = 0;
 	bool accessible = false;
 	BoundingBox bounding_box;
+	bool is_renderable = false;
 
 public:
 	DELETE_CONSTRUCTORS(Mesh);
@@ -49,6 +50,7 @@ public:
 	size_t getVertexCount() const { return vertex_count; }
 	size_t getIndexCount() const { return index_count; }
 	BoundingBox getBoundingBox() const { return bounding_box; }
+	bool isRenderable() const { return is_renderable; }
 	void updateData(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices, size_t vertex_alloc = 0, size_t index_alloc = 0);
 
 private:

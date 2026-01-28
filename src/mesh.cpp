@@ -18,7 +18,10 @@ Mesh::Mesh(const string& path)
     vector<uint16_t> inds;
 
     if (readFileToArrays(path, verts, inds))
+    {
         createFromArrays(verts, inds);
+        is_renderable = true;        
+    }
     else
         DBG_ERROR("failed to load mesh " + path);
 
@@ -47,7 +50,7 @@ Mesh::Mesh(const vector<Vertex>& vertices, const vector<uint16_t>& indices, cons
         index_count = index_space;
         recomputeBoundingBox(vertices);
     }
-
+    is_renderable = true;        
     DBG_INFO("created mesh from arrays with " + ::to_string(vertices.size()) + " vertices and " + ::to_string(indices.size()) + " indices");
 }
 
