@@ -73,7 +73,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_ITERATOR_DEBUG_LEVEL=0;RuntimeLibrary=MD_DynamicRelease;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir)lib\inc\GLFW\include;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\inc\glm-1.0.2;$(ProjectDir)lib\inc;$(ProjectDir)lib\inc\spirv_reflect;$(ProjectDir)lib\inc\imgui;$(ProjectDir)lib\inc\imgui\backends;$(USERPROFILE)\Documents\1.4.335.0\Include;C:\VulkanSDK\1.4.335.0\Include;%(AdditionalIncludeDirectories);$(ProjectDir)inc</AdditionalIncludeDirectories>
@@ -82,7 +82,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)lib\bin\glfw-3.4.bin.WIN64\lib-vc2019;C:\VulkanSDK\1.4.313.0\Lib;$(USERPROFILE)\Documents\1.4.335.0\Lib;C:\VulkanSDK\1.4.335.0\Lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;shaderc_combined.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -104,7 +104,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)lib\bin\glfw-3.4.bin.WIN64\lib-vc2019;C:\VulkanSDK\1.4.313.0\Lib;$(USERPROFILE)\Documents\1.4.335.0\Lib;C:\VulkanSDK\1.4.335.0\Lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;shaderc_combined.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -133,46 +133,22 @@
       </Command>
     </PostBuildEvent>
     <Lib>
-      <AdditionalDependencies>glfw3.lib;vulkan-1.lib%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;shaderc_combined.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)lib\bin\glfw-3.4.bin.WIN64\lib-vc2019;C:\VulkanSDK\1.4.313.0\Lib;$(USERPROFILE)\Documents\1.4.335.0\Lib;C:\VulkanSDK\1.4.335.0\Lib</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Content Include="res\engine\meshes\axes_gizmo.obj" />
-    <Content Include="res\engine\meshes\rotate_gizmo.obj" />
-    <Content Include="res\engine\meshes\skybox.obj" />
-    <Content Include="res\engine\shaders\blur.frag" />
-    <Content Include="res\engine\shaders\blur.vert" />
-    <Content Include="res\engine\shaders\deferred.frag" />
-    <Content Include="res\engine\shaders\deferred.vert" />
-    <Content Include="res\engine\shaders\deferred_post.frag" />
-    <Content Include="res\engine\shaders\deferred_post.vert" />
-    <Content Include="res\engine\shaders\dither.glsl" />
-    <Content Include="res\engine\shaders\effects.glsl" />
-    <Content Include="res\engine\shaders\fog.frag" />
-    <Content Include="res\engine\shaders\fog.vert" />
-    <Content Include="res\engine\shaders\gizmo.frag" />
-    <Content Include="res\engine\shaders\gizmo.vert" />
-    <Content Include="res\engine\shaders\pbr_util.glsl" />
-    <Content Include="res\engine\shaders\text.frag" />
-    <Content Include="res\engine\shaders\text.vert" />
-    <Content Include="res\engine\textures\basic_lut.png" />
     <Content Include="res\museum\blend.frag" />
     <Content Include="res\museum\blend.vert" />
     <Content Include="res\museum\IcePlanet.hmat" />
     <Content Include="res\museum\RenderGraph.hrgr" />
-    <Content Include="res\samples\asha.obj" />
-    <Content Include="res\samples\asha.png" />
-    <Content Include="res\samples\bunny.obj" />
-    <Content Include="res\samples\bunny.png" />
-    <Content Include="res\samples\cube.obj" />
-    <Content Include="res\samples\nasa_goddard_gaia_dr2_deep_star_map.png" />
     <Content Include="res\test_graph.hrgr" />
+    <Content Include="res_engine\icon.ico" />
+    <Content Include="res_engine\icon.png" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Header Files\Resource Types\" />
     <Folder Include="Header Files\Singletons\" />
-    <Folder Include="res\engine\materials\" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\buffer.h" />
@@ -209,6 +185,8 @@
     <ClInclude Include="inc\uniform_block.h" />
     <ClInclude Include="inc\vulkan_typedefs.h" />
     <ClInclude Include="inc\window.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="resource1.h" />
     <ClInclude Include="src\main.h" />
     <ClInclude Include="src\swapchain_vulkan.h" />
   </ItemGroup>
@@ -256,6 +234,15 @@
     <ClCompile Include="src\transform.cpp" />
     <ClCompile Include="src\uniform_block.cpp" />
     <ClCompile Include="src\window.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="hop-engine.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="engine.hop" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\icon.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

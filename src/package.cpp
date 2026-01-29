@@ -57,24 +57,9 @@ struct PackageDataHeader
 // data
 // ...
 
-bool Package::loadPackage(const string& load_path)
+bool Package::loadPackageFromMemory(vector<uint8_t>& content, const string& load_path)
 {
-	if (!application_package)
-		Package::init();
-
-	DBG_VERBOSE("loading package: " + load_path);
-	ifstream file(load_path, ios::ate | ios::binary);
-	if (!file.is_open())
-	{
-		DBG_ERROR("failed to load package: " + load_path + "; file not accessible");
-		return false;
-	}
-
-	const size_t size = file.tellg();
-	vector<uint8_t> content(size);
-	file.seekg(ios::beg);
-	file.read(reinterpret_cast<char*>(content.data()), static_cast<streamsize>(size));
-	file.close();
+	size_t size = content.size();
 
 	if (size < sizeof(PackageHeader))
 	{
@@ -130,6 +115,28 @@ bool Package::loadPackage(const string& load_path)
 
 	DBG_INFO("loaded " + to_string(header.package_entries) + " items from package: " + load_path);
 	return true;
+}
+
+bool Package::loadPackage(const string& load_path)
+{
+	if (!application_package)
+		Package::init();
+
+	DBG_VERBOSE("loading package: " + load_path);
+	ifstream file(load_path, ios::ate | ios::binary);
+	if (!file.is_open())
+	{
+		DBG_ERROR("failed to load package: " + load_path + "; file not accessible");
+		return false;
+	}
+
+	const size_t size = file.tellg();
+	vector<uint8_t> content(size);
+	file.seekg(ios::beg);
+	file.read(reinterpret_cast<char*>(content.data()), static_cast<streamsize>(size));
+	file.close();
+
+	return loadPackageFromMemory(content, load_path);
 }
 
 vector<string> Package::listLoadedEntries()

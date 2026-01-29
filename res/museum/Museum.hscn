@@ -43,7 +43,7 @@ Resource(mesh, "res://museum/OrreryOrbiterB.obj") : orrery_orbit_b_mesh;
 Resource(material, "res://museum/Gold.hmat") : gold_mat;
 
 Resource(render_graph, "res://museum/RenderGraph.hrgr") : render_graph;
-Resource(texture, "res://samples/nasa_goddard_gaia_dr2_deep_star_map.png") : starry_backdrop;
+Resource(texture, "res://engine/samples/nasa_goddard_gaia_dr2_deep_star_map.png") : starry_backdrop;
 
 // scene setup
 Skybox(resource = @starry_backdrop);

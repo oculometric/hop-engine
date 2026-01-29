@@ -10,6 +10,8 @@
 #include "vulkan_typedefs.h"
 #include "engine.h"
 
+//#define VK_DEBUG
+
 namespace HopEngine
 {
 
@@ -27,7 +29,7 @@ private:
 	Ref<Window> window;
 
 	VkInstance instance = VK_NULL_HANDLE;
-#if !defined(NDEBUG)
+#if defined(VK_DEBUG)
 	VkDebugUtilsMessengerEXT debug_messenger;
 #endif
 	VkPhysicalDevice physical_device = VK_NULL_HANDLE;

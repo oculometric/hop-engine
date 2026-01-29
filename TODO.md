@@ -6,8 +6,6 @@
 ---
 ## v0.52
 - object duplicate function [L]
-- separate engine from game resources [H]
-- eliminate glslc.exe dependency [H]
 - binary repackaging (i.e. read in OBJs and turn them into binary meshes to reduce load times)
 - implement imgui disable-enable
 - deprecate getGizmoMaterial and similar family functions

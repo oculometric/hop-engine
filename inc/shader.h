@@ -49,11 +49,10 @@ private:
 	VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
 	VkDescriptorSetLayout descriptor_set_layout = VK_NULL_HANDLE;
 	std::vector<DescriptorBinding> bindings;
-	bool precompiled;
 
 public:
 	DELETE_CONSTRUCTORS(Shader);
-	Shader(const std::string& base_path, bool is_precompiled);
+	Shader(const std::string& base_path);
 	~Shader() override;
 	
 	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
@@ -64,11 +63,10 @@ public:
 
 private:
 	static std::vector<DescriptorBinding> mergeBindings(const std::vector<DescriptorBinding>& list_a, const std::vector<DescriptorBinding>& list_b);
-	static std::vector<DescriptorBinding> getReflectedBindings(std::vector<uint8_t> blob);
-	static bool compileFile(std::string path, const std::string& out_path);
-	static VkShaderModule createShaderModule(const std::vector<uint8_t>& blob);
+	static std::vector<DescriptorBinding> getReflectedBindings(const std::vector<uint32_t>& blob);
+	static VkShaderModule createShaderModule(const std::vector<uint32_t>& blob);
 	static void fixIncludes(std::vector<uint8_t>& source_code, const std::string& path_prefix, bool res_relative);
-	static bool compileShaders(const std::string& path, const std::string& out_path);
+	static bool compileShaders(const std::string& path, std::vector<uint32_t>& vert_blob, std::vector<uint32_t>& frag_blob);
 };
 
 }

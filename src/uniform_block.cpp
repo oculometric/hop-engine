@@ -43,7 +43,7 @@ UniformBlock::UniformBlock(const ShaderLayout& layout_info)
 
     live_uniform_buffer.resize(size);
 
-    DBG_VERBOSE("created uniform block of buffer size " + to_string(size) + " with " + to_string(textures_in_use.size()) + " texture slots (" + to_string(layout_info.bindings.size()) + " total bindings)");
+    DBG_VERBOSE("created uniform block of buffer size " + ::to_string(size) + " with " + ::to_string(textures_in_use.size()) + " texture slots (" + ::to_string(layout_info.bindings.size()) + " total bindings)");
 }
 
 UniformBlock::~UniformBlock()

@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <vulkan/vulkan.hpp>
+#include <shaderc/shaderc.hpp>
 #include <spirv_reflect/spirv_reflect.h>
 #include <filesystem>
 
@@ -13,30 +14,17 @@
 using namespace HopEngine;
 using namespace std;
 
-#if defined(_WIN32)
-const char* Shader::compiler_path = "C:/tmp/glslc.exe";
-#else
-const char* Shader::compiler_path = "glslc";
-#endif
-
-Shader::Shader(const string& base_path, const bool is_precompiled)
+Shader::Shader(const string& base_path)
 {
-	precompiled = is_precompiled;
 	origin = base_path;
-	string proper_path = base_path;
-	if (!is_precompiled)
+	vector<uint32_t> vert_blob;
+	vector<uint32_t> frag_blob;
+	if (!compileShaders(base_path, vert_blob, frag_blob))
 	{
-		proper_path = Package::getTempPath() + "temp_shader_compiled";
-		if (!compileShaders(base_path, proper_path))
-		{
-			DBG_ERROR(base_path + " shader compilation failed");
-			if (!compileShaders("res://engine/shaders/default_shader", proper_path))
-				DBG_FAULT("failed to load default shader!");
-		}
+		DBG_ERROR(base_path + " shader compilation failed");
+		if (!compileShaders("res://engine/shaders/default_shader", vert_blob, frag_blob))
+			DBG_FAULT("failed to load default shader!");
 	}
-
-	const auto vert_blob = Package::tryLoadFile(proper_path + "_vert.spv");
-	const auto frag_blob = Package::tryLoadFile(proper_path + "_frag.spv");
 
 	vert_module = createShaderModule(vert_blob);
 	frag_module = createShaderModule(frag_blob);
@@ -69,7 +57,7 @@ Shader::Shader(const string& base_path, const bool is_precompiled)
 	VkPipelineLayoutCreateInfo layout_create_info{ };
 	layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	layout_create_info.setLayoutCount = 3;
-	VkDescriptorSetLayout layouts[3] =
+	const VkDescriptorSetLayout layouts[3] =
 	{
 		RenderServer::getSceneDescriptorSetLayout(),
 		RenderServer::getObjectDescriptorSetLayout(),
@@ -121,65 +109,65 @@ bool Shader::reloadShader()
 {
 	RenderServer::waitIdle();
 
-	string proper_path = origin;
-	if (!precompiled)
-	{
-		proper_path = Package::getTempPath() + "temp_shader_compiled";
-		if (!compileShaders(origin, proper_path))
-		{
-			DBG_ERROR(origin + " shader compilation failed");
-			return false;
-		}
-	}
-
-	auto vert_blob = Package::tryLoadFile(proper_path + "_vert.spv");
-	auto frag_blob = Package::tryLoadFile(proper_path + "_frag.spv");
-
-	vkDestroyShaderModule(RenderServer::getDevice(), vert_module, nullptr);
-	vert_module = createShaderModule(vert_blob);
-	vkDestroyShaderModule(RenderServer::getDevice(), frag_module, nullptr);
-	frag_module = createShaderModule(frag_blob);
-
-	auto vert_bindings = getReflectedBindings(vert_blob);
-	auto frag_bindings = getReflectedBindings(frag_blob);
-
-	bindings = mergeBindings(vert_bindings, frag_bindings);
-
-	vector<VkDescriptorSetLayoutBinding> layout_bindings;
-	for (const DescriptorBinding& binding : bindings)
-	{
-		VkDescriptorSetLayoutBinding layout_binding{ };
-		layout_binding.binding = binding.binding;
-		layout_binding.descriptorType = (binding.type == UNIFORM) ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		layout_binding.descriptorCount = 1;
-		layout_binding.pImmutableSamplers = nullptr;
-		layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-		layout_bindings.push_back(layout_binding);
-	}
-
-	VkDescriptorSetLayoutCreateInfo set_layout_create_info{ };
-	set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	set_layout_create_info.bindingCount = static_cast<uint32_t>(layout_bindings.size());
-	set_layout_create_info.pBindings = layout_bindings.data();
-
-	if (vkCreateDescriptorSetLayout(RenderServer::getDevice(), &set_layout_create_info, nullptr, &descriptor_set_layout) != VK_SUCCESS)
-		DBG_FAULT("vkCreateDescriptorSetLayout failed");
-
-	VkPipelineLayoutCreateInfo layout_create_info{ };
-	layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	layout_create_info.setLayoutCount = 3;
-	VkDescriptorSetLayout layouts[3] =
-	{
-		RenderServer::getSceneDescriptorSetLayout(),
-		RenderServer::getObjectDescriptorSetLayout(),
-		descriptor_set_layout
-	};
-	layout_create_info.pSetLayouts = layouts;
-
-	if (vkCreatePipelineLayout(RenderServer::getDevice(), &layout_create_info, nullptr, &pipeline_layout) != VK_SUCCESS)
-		DBG_FAULT("vkCreatePipelineLayout failed");
-
-	DBG_VERBOSE("recompiled shader from " + origin);
+	// string proper_path = origin;
+	// if (!precompiled)
+	// {
+	// 	proper_path = Package::getTempPath() + "temp_shader_compiled";
+	// 	if (!compileShaders(origin, proper_path))
+	// 	{
+	// 		DBG_ERROR(origin + " shader compilation failed");
+	// 		return false;
+	// 	}
+	// }
+	//
+	// auto vert_blob = Package::tryLoadFile(proper_path + "_vert.spv");
+	// auto frag_blob = Package::tryLoadFile(proper_path + "_frag.spv");
+	//
+	// vkDestroyShaderModule(RenderServer::getDevice(), vert_module, nullptr);
+	// vert_module = createShaderModule(vert_blob);
+	// vkDestroyShaderModule(RenderServer::getDevice(), frag_module, nullptr);
+	// frag_module = createShaderModule(frag_blob);
+	//
+	// auto vert_bindings = getReflectedBindings(vert_blob);
+	// auto frag_bindings = getReflectedBindings(frag_blob);
+	//
+	// bindings = mergeBindings(vert_bindings, frag_bindings);
+	//
+	// vector<VkDescriptorSetLayoutBinding> layout_bindings;
+	// for (const DescriptorBinding& binding : bindings)
+	// {
+	// 	VkDescriptorSetLayoutBinding layout_binding{ };
+	// 	layout_binding.binding = binding.binding;
+	// 	layout_binding.descriptorType = (binding.type == UNIFORM) ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	// 	layout_binding.descriptorCount = 1;
+	// 	layout_binding.pImmutableSamplers = nullptr;
+	// 	layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+	// 	layout_bindings.push_back(layout_binding);
+	// }
+	//
+	// VkDescriptorSetLayoutCreateInfo set_layout_create_info{ };
+	// set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	// set_layout_create_info.bindingCount = static_cast<uint32_t>(layout_bindings.size());
+	// set_layout_create_info.pBindings = layout_bindings.data();
+	//
+	// if (vkCreateDescriptorSetLayout(RenderServer::getDevice(), &set_layout_create_info, nullptr, &descriptor_set_layout) != VK_SUCCESS)
+	// 	DBG_FAULT("vkCreateDescriptorSetLayout failed");
+	//
+	// VkPipelineLayoutCreateInfo layout_create_info{ };
+	// layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	// layout_create_info.setLayoutCount = 3;
+	// VkDescriptorSetLayout layouts[3] =
+	// {
+	// 	RenderServer::getSceneDescriptorSetLayout(),
+	// 	RenderServer::getObjectDescriptorSetLayout(),
+	// 	descriptor_set_layout
+	// };
+	// layout_create_info.pSetLayouts = layouts;
+	//
+	// if (vkCreatePipelineLayout(RenderServer::getDevice(), &layout_create_info, nullptr, &pipeline_layout) != VK_SUCCESS)
+	// 	DBG_FAULT("vkCreatePipelineLayout failed");
+	//
+	// DBG_VERBOSE("recompiled shader from " + origin);
 	return true;
 }
 
@@ -223,10 +211,10 @@ vector<DescriptorBinding> Shader::mergeBindings(const vector<DescriptorBinding>&
 	return resolved_bindings;
 }
 
-vector<DescriptorBinding> Shader::getReflectedBindings(vector<uint8_t> blob)
+vector<DescriptorBinding> Shader::getReflectedBindings(const vector<uint32_t>& blob)
 {
 	SpvReflectShaderModule reflected_module;
-	SpvReflectResult result = spvReflectCreateShaderModule(blob.size(), blob.data(), &reflected_module);
+	SpvReflectResult result = spvReflectCreateShaderModule(blob.size() * 4, blob.data(), &reflected_module);
 	if (result != SPV_REFLECT_RESULT_SUCCESS)
 	{
 		DBG_WARNING("unable to construct reflection module");
@@ -272,32 +260,12 @@ vector<DescriptorBinding> Shader::getReflectedBindings(vector<uint8_t> blob)
 	return bindings;
 }
 
-bool Shader::compileFile(string path, const string& out_path)
-{
-	string compile_command = Shader::compiler_path;
-#if defined(_WIN32)
-	for (char& i : path)
-		if (i == '/') i = '\\';
-#endif
-
-	string command_out;
-	compile_command = compile_command + ' ' + path + " -o " + out_path;
-
-	if (exec(compile_command, command_out) != 0)
-	{
-		DBG_WARNING("error when compiling '" + path + "':\n" + command_out);
-		return false;
-	}
-
-	return true;
-}
-
-VkShaderModule Shader::createShaderModule(const vector<uint8_t>& blob)
+VkShaderModule Shader::createShaderModule(const vector<uint32_t>& blob)
 {
 	VkShaderModuleCreateInfo create_info{ };
 	create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	create_info.codeSize = blob.size();
-	create_info.pCode = reinterpret_cast<const uint32_t*>(blob.data());
+	create_info.codeSize = blob.size() * 4;
+	create_info.pCode = blob.data();
 
 	VkShaderModule shader_module;
 	if (vkCreateShaderModule(RenderServer::getDevice(), &create_info, nullptr, &shader_module) != VK_SUCCESS)
@@ -345,7 +313,7 @@ void Shader::fixIncludes(vector<uint8_t>& source_code, const string& path_prefix
 	memcpy(source_code.data(), source_code_text.data(), source_code_text.size());
 }
 
-bool Shader::compileShaders(const string& path, const string& out_path)
+bool Shader::compileShaders(const string& path, vector<uint32_t>& vert_blob, vector<uint32_t>& frag_blob)
 {
 	auto vert_data = Package::tryLoadFile(path + ".vert");
 	auto frag_data = Package::tryLoadFile(path + ".frag");
@@ -360,7 +328,7 @@ bool Shader::compileShaders(const string& path, const string& out_path)
 		DBG_WARNING("shader " + path + ".frag not found");
 		return false;
 	}
-
+	
 	filesystem::path _path;
 	bool is_res_relative = false;
 	if (path.starts_with("res://"))
@@ -373,13 +341,25 @@ bool Shader::compileShaders(const string& path, const string& out_path)
 	const string prefix = _path.remove_filename().string();
 	Shader::fixIncludes(vert_data, prefix, is_res_relative);
 	Shader::fixIncludes(frag_data, prefix, is_res_relative);
+	
+	const shaderc::Compiler compiler;
+	const shaderc::CompileOptions options;
+	const auto vert_prep = compiler.CompileGlslToSpv(reinterpret_cast<char*>(vert_data.data()), vert_data.size(), shaderc_glsl_vertex_shader, path.c_str(), options);
+	const auto frag_prep = compiler.CompileGlslToSpv(reinterpret_cast<char*>(frag_data.data()), frag_data.size(), shaderc_glsl_fragment_shader, path.c_str(), options);	
+	
+	if (vert_prep.GetCompilationStatus() != shaderc_compilation_status_success)
+	{
+		DBG_ERROR("error compiling " + path + ".vert: " + vert_prep.GetErrorMessage());
+		return false;
+	}
+	if (frag_prep.GetCompilationStatus() != shaderc_compilation_status_success)
+	{
+		DBG_ERROR("error compiling " + path + ".frag: " + frag_prep.GetErrorMessage());
+		return false;
+	}
+	
+	vert_blob = { vert_prep.cbegin(), vert_prep.cend() };
+	frag_blob = { frag_prep.cbegin(), frag_prep.cend() };
 
-	const string input_path = Package::getTempPath() + "temp_shader";
-	Package::tryWriteFile(input_path + ".vert", vert_data);
-	Package::tryWriteFile(input_path + ".frag", frag_data);
-
-	bool result = Shader::compileFile(input_path + ".vert", out_path + "_vert.spv");
-	result &= Shader::compileFile(input_path + ".frag", out_path + "_frag.spv");
-
-	return result;
+	return true;
 }

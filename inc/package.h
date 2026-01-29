@@ -26,6 +26,7 @@ public:
 #else
 	static inline std::string getTempPath() { return "/tmp/"; }
 #endif
+	static bool loadPackageFromMemory(std::vector<uint8_t>& content, const std::string& load_path);
 	static bool loadPackage(const std::string& load_path);
 	static std::vector<std::string> listLoadedEntries();
 	static std::vector<uint8_t> loadData(const std::string& identifier);

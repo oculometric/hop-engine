@@ -23,16 +23,16 @@ using namespace std;
 
 static RenderServer* server = nullptr;
 
-static constexpr vector<const char*> required_validation_layers =
+static const vector<const char*> required_validation_layers =
 {
-#if !defined(NDEBUG)
+#if defined(VK_DEBUG)
     "VK_LAYER_KHRONOS_validation"
 #endif
 };
 
-static constexpr vector<const char*> required_instance_extensions =
+static const vector<const char*> required_instance_extensions =
 {
-#if !defined(NDEBUG)
+#if defined(VK_DEBUG)
     VK_EXT_DEBUG_UTILS_EXTENSION_NAME
 #endif
 };
@@ -43,7 +43,7 @@ static const vector<const char*> required_extensions =
 };
 
 
-#if !defined(NDEBUG)
+#if defined(VK_DEBUG)
 static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
     VkDebugUtilsMessageTypeFlagsEXT message_type,
@@ -197,11 +197,6 @@ RenderServer::RenderServer(const Ref<Window>& main_window)
 
     window = main_window;
 
-#if defined(_WIN32)
-    const auto data = Package::tryLoadFile("res://engine/glslc.exe");
-    Package::tryWriteFile(Shader::compiler_path, data);
-#endif
-
     createInstance();
     if (glfwCreateWindowSurface(instance, window->getWindow(), nullptr, &surface) != VK_SUCCESS)
         DBG_FAULT("glfwCreateWindowSurface failed");
@@ -210,7 +205,7 @@ RenderServer::RenderServer(const Ref<Window>& main_window)
     const auto framebuffer_size = window->getSize();
     swapchain = new Swapchain(framebuffer_size.x, framebuffer_size.y, surface);
     MAX_FRAMES_IN_FLIGHT = static_cast<int>(swapchain->getImageCount());
-    DBG_VERBOSE("adjusted frames in flight to " + to_string(MAX_FRAMES_IN_FLIGHT));
+    DBG_VERBOSE("adjusted frames in flight to " + ::to_string(MAX_FRAMES_IN_FLIGHT));
 
     createDescriptorPoolAndSets();
     createCommandPool();
@@ -233,9 +228,9 @@ RenderServer::RenderServer(const Ref<Window>& main_window)
                     }, { 0, 3, 1, 0, 2, 3 });
     skybox_cube = new Mesh("res://engine/meshes/skybox.obj");
 
-    default_material = new Material(new Shader("res://engine/shaders/default_shader", false));
-    gizmo_material = new Material(new Shader("res://engine/shaders/gizmo", false), PipelineBuilder().cullMode(CULL_NONE), final_render_pass);
-    skybox_material = new Material(new Shader("res://engine/shaders/skybox", false), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
+    default_material = new Material(new Shader("res://engine/shaders/default_shader"));
+    gizmo_material = new Material(new Shader("res://engine/shaders/gizmo"), PipelineBuilder().cullMode(CULL_NONE), final_render_pass);
+    skybox_material = new Material(new Shader("res://engine/shaders/skybox"), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
     
     initImGui();
 
@@ -244,9 +239,6 @@ RenderServer::RenderServer(const Ref<Window>& main_window)
 
 RenderServer::~RenderServer()
 {
-#if defined(_WIN32)
-    filesystem::remove(Shader::compiler_path);
-#endif
     vkDeviceWaitIdle(device);
 
     DBG_VERBOSE("\033[31mkilling imgui with a gun\033[0m");
@@ -286,9 +278,10 @@ RenderServer::~RenderServer()
     final_render_pass = nullptr;
     swapchain = nullptr;
 
-#if !defined(NDEBUG)
+#if defined(VK_DEBUG)
     DBG_VERBOSE("\033[31mkilling the (debug) messenger\033[0m");
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+    const auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
+        vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
     func(instance, debug_messenger, nullptr);
 #endif
 
@@ -324,7 +317,7 @@ void RenderServer::createInstance()
     create_info.ppEnabledExtensionNames = extensions_to_enable.data();
 
     // apply validation layers for debug
-#if !defined(NDEBUG)
+#if defined(VK_DEBUG)
     uint32_t validation_layer_count;
     vkEnumerateInstanceLayerProperties(&validation_layer_count, nullptr);
     vector<VkLayerProperties> available_validation_layers(validation_layer_count);
@@ -342,10 +335,10 @@ void RenderServer::createInstance()
 #else
     create_info.enabledLayerCount = 0;
 #endif
-    DBG_VERBOSE("enabling " + to_string(create_info.enabledExtensionCount) + " extensions:");
+    DBG_VERBOSE("enabling " + ::to_string(create_info.enabledExtensionCount) + " extensions:");
     for (size_t i = 0; i < create_info.enabledExtensionCount; ++i)
         DBG_VERBOSE(create_info.ppEnabledExtensionNames[i]);
-    DBG_VERBOSE("enabling " + to_string(create_info.enabledLayerCount) + " layers:");
+    DBG_VERBOSE("enabling " + ::to_string(create_info.enabledLayerCount) + " layers:");
     for (size_t i = 0; i < create_info.enabledLayerCount; ++i)
         DBG_VERBOSE(create_info.ppEnabledLayerNames[i]);
 
@@ -354,14 +347,14 @@ void RenderServer::createInstance()
     if (vkCreateInstance(&create_info, nullptr, &instance) != VK_SUCCESS)
         DBG_FAULT("vkCreateInstance failed");
 
-#if !defined(NDEBUG)
+#if defined(VK_DEBUG)
     DBG_VERBOSE("creating debug messenger");
     VkDebugUtilsMessengerCreateInfoEXT debug_create_info{ };
     debug_create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
     debug_create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
     debug_create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
     debug_create_info.pfnUserCallback = vulkanDebugCallback;
-    auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+    const auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
     if (!func)
     {
         DBG_FAULT("debug utils not found");
@@ -381,7 +374,7 @@ void RenderServer::createDevice()
         DBG_FAULT("found no valid VkPhysicalDevice");
     vector<VkPhysicalDevice> physical_devices(physical_device_count);
     vkEnumeratePhysicalDevices(instance, &physical_device_count, physical_devices.data());
-    DBG_VERBOSE("found " + to_string(physical_device_count) + " physical devices");
+    DBG_VERBOSE("found " + ::to_string(physical_device_count) + " physical devices");
 
     // score each device. a score of zero indicates the device
     // is not usable for some reason

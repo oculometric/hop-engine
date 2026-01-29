@@ -22,6 +22,15 @@ vector<uint8_t> readFile(string path)
 	return content;
 }
 
+vector<string>::iterator findArg(string s, vector<string>& v)
+{
+	auto it = v.begin();
+	while (*it != s && it != v.end())
+		++it;
+	return it;
+}
+
+// TODO: improve this to be much more advanced, multiple files/folders to specify, set root, etc
 int main(const int nargs, const char** vargs)
 {
 	HopEngine::Debug::init(HopEngine::Debug::DEBUG_FAULT);
@@ -29,6 +38,7 @@ int main(const int nargs, const char** vargs)
 	{
 		cout << "usage: package-builder SOURCE_DIRECTORY [options] [OUTPUT_FILE]" << endl;
 		cout << "options: -c (compress output)" << endl;
+		cout << "         -p (add prefix to all identifiers)" << endl;
 		cout << "if OUTPUT_FILE is not specified, 'resources.hop'";
 		return -1;
 	}
@@ -36,26 +46,24 @@ int main(const int nargs, const char** vargs)
 	bool compressed = false;
 	string target_dir = vargs[1];
 	string output_hop = "resources.hop";
-
-	if (nargs == 3)
+	string path_prefix;
+	
+	vector<string> args;
+	for (int i = 0; i < nargs; ++i)
+		args.push_back(vargs[i]);
+	
+	auto it = findArg("-c", args);
+	if (it != args.end())
+		compressed = true;
+	it = findArg("-p", args);
+	if (it != args.end())
 	{
-		if (string(vargs[2]) == "-c")
-			compressed = true;
-		else
-			output_hop = vargs[2];
+		if (it + 1 == args.end())
+			cout << "-p option requires a string following it" << endl;
+		path_prefix = *(it + 1);
 	}
-
-	if (nargs == 4)
-	{
-		if (string(vargs[2]) == "-c")
-			compressed = true;
-		else
-		{
-			cout << "invalid option '" << vargs[2] << '\'' << endl;
-			return -1;
-		}
-		output_hop = vargs[3];
-	}
+	if (args[args.size() - 1][0] != '-')
+		output_hop = args[args.size() - 1];
 
 	HopEngine::Package::init();
 	size_t entries = 0;
@@ -68,7 +76,7 @@ int main(const int nargs, const char** vargs)
 			for (char& c : identifier)
 				if (c == '\\')
 					c = '/';
-			HopEngine::Package::storeData(identifier, readFile(path));
+			HopEngine::Package::storeData(path_prefix + identifier, readFile(path));
 			++entries;
 		}
 	}

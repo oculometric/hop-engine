@@ -8,7 +8,8 @@ using namespace HopEngine;
 int main()
 {
     Engine::init();
-    
+
+    Package::loadPackage("resources.hop");
     const auto& scene = getMuseumScene();
 
     Engine::setup(scene.init_func, scene.update_func, scene.imgui_func);

@@ -5,7 +5,11 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 #include <format>
+#if defined(_WIN32)
+#include <Windows.h>
+#endif
 
+#include "../resource.h"
 #include "hop_engine.h"
 
 using namespace HopEngine;
@@ -133,7 +137,7 @@ Ref<Shader> Engine::loadShader(const string& path)
     const auto it = engine->loaded_shaders.find(path);
     if (it == engine->loaded_shaders.end())
     {
-        Ref<Shader> thing = new Shader(path, false);
+        Ref<Shader> thing = new Shader(path);
         engine->loaded_shaders[path] = thing;
         return thing;
     }
@@ -262,9 +266,20 @@ Engine::Engine()
     engine = this;
     Debug::init(Debug::DEBUG_FAULT);
     Package::init();
-    Package::loadPackage("resources.hop");
-    window = new Window(1024, 1024, "hop!");
-    window->setIcon("res://icon.png");
+
+#if defined(_WIN32)
+    HRSRC res = FindResource(NULL, MAKEINTRESOURCE(IDR_HOP1), L"HOP");
+    DWORD size = SizeofResource(NULL, res);
+    HGLOBAL data = LoadResource(NULL, res);
+    vector<uint8_t> engine_package;
+    engine_package.resize(size);
+    memcpy(engine_package.data(), data, size);
+    Package::loadPackageFromMemory(engine_package, "engine.hop (internal)");
+#else
+    Package::loadPackage("engine.hop");
+#endif
+    window = new Window(1024, 1024, "STARTING HOP-ENGINE");
+    window->setIcon("res://engine/icon.png");
     Input::init(window);
     RenderServer::init(window);
     RenderServer::draw();
