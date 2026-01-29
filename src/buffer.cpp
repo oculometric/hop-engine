@@ -74,6 +74,21 @@ Buffer::~Buffer()
     vkFreeMemory(RenderServer::getDevice(), memory, nullptr);
 }
 
+uint32_t Buffer::findMemoryType(const uint32_t type_bits, const MemoryProperties _properties)
+{
+    const VkMemoryPropertyFlags properties = convertFlags<VkMemoryPropertyFlagBits, MemoryProperties, 4>(_properties, vulkan_memory_props);
+    VkPhysicalDeviceMemoryProperties memory_properties;
+    vkGetPhysicalDeviceMemoryProperties(RenderServer::getPhysicalDevice(), &memory_properties);
+
+    for (uint32_t i = 0; i < memory_properties.memoryTypeCount; i++)
+    {
+        if ((type_bits & (1 << i)) && (memory_properties.memoryTypes[i].propertyFlags & properties) == properties)
+            return i;
+    }
+    DBG_FAULT("failed to find suitable memory type");
+    return 0;
+}
+
 void* Buffer::mapMemory()
 {
     if (mapped == nullptr)
@@ -91,22 +106,7 @@ void Buffer::unmapMemory()
     mapped = nullptr;
 }
 
-uint32_t Buffer::findMemoryType(uint32_t type_bits, MemoryProperties _properties)
-{
-    const VkMemoryPropertyFlags properties = convertFlags<VkMemoryPropertyFlagBits, MemoryProperties, 4>(_properties, vulkan_memory_props);
-    VkPhysicalDeviceMemoryProperties memory_properties;
-    vkGetPhysicalDeviceMemoryProperties(RenderServer::getPhysicalDevice(), &memory_properties);
-
-    for (uint32_t i = 0; i < memory_properties.memoryTypeCount; i++)
-    {
-        if ((type_bits & (1 << i)) && (memory_properties.memoryTypes[i].propertyFlags & properties) == properties)
-            return i;
-    }
-    DBG_FAULT("failed to find suitable memory type");
-    return 0;
-}
-
-void Buffer::copyToBuffer(Ref<Buffer> other) const
+void Buffer::copyToBuffer(const Ref<Buffer>& other) const
 {
     DBG_BABBLE("copying from " + PTR(this) + " to buffer " + PTR(other.get()));
     Ref<CommandBuffer> cmd_buf = new CommandBuffer();

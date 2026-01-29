@@ -5,7 +5,9 @@
 
 namespace HopEngine
 {
-
+/**
+ * @brief bitflag enum which describes which tasks a buffer may be used for on the GPU.
+ */
 enum BufferUsage
 {
 	BUFFER_USAGE_TRANSFER_SRC = 1,
@@ -17,6 +19,9 @@ enum BufferUsage
 ENUM_OPERATOR(BufferUsage)
 TO_STRING_DEC(BufferUsage);
 
+/**
+ * @brief bitflag enum listing the required properties of a block of memory.
+ */
 enum MemoryProperties
 {
 	MEMORY_PROPERTY_DEVICE_LOCAL = 1,
@@ -27,25 +32,64 @@ enum MemoryProperties
 ENUM_OPERATOR(MemoryProperties)
 TO_STRING_DEC(MemoryProperties);
 
+/**
+ * @brief encapsulates a GPU buffer object and its associated memory.
+ */
 class Buffer
 {
 private:
-	VkBuffer buffer = VK_NULL_HANDLE;
+	VkBuffer buffer = VK_NULL_HANDLE;	// actual GPU buffer object
+	// GPU object for the memory allocated to the buffer
 	VkDeviceMemory memory = VK_NULL_HANDLE;
-	VkDeviceSize buffer_size = 0;
-	void* mapped = nullptr;
+	VkDeviceSize buffer_size = 0;		// size of the buffer
+	void* mapped = nullptr;				// pointer to host-accessible version of device memory
 
 public:
 	DELETE_CONSTRUCTORS(Buffer);
+	/**
+	 * @brief allocates a buffer on the GPU of the specified size, with provision
+	 * for the specified usage type and properties. these values must be set correctly
+	 * or you will receive Vulkan validation errors and other bad omens.
+	 * @param size required size of the buffer. final buffer may be bigger due to alignment.
+	 * @param usage intended usage. multiple may be specified.
+	 * @param properties required properties, such as being accessible from the CPU. multiple
+	 * may be specified.
+	 */
 	Buffer(VkDeviceSize size, BufferUsage usage, MemoryProperties properties);
 	~Buffer();
-	
+
+	/**
+	 * @brief tries to find a suitable Vulkan GPU memory type index for the given inputs.
+	 * @param type_bits should be the value of a VkMemoryRequirements::memoryTypeBits
+	 * struct field.
+	 * @param _properties memory property flags for the target memory type.
+	 * @return Vulkan GPU memory type index.
+	 */
+	static uint32_t findMemoryType(uint32_t type_bits, MemoryProperties _properties);
+
 	VkBuffer getBuffer() const { return buffer; }
 	VkDeviceSize getSize() const { return buffer_size; }
+	/**
+	 * @brief requests for the buffer to be mapped into CPU-accessible memory. will fail
+	 * if the buffer was not initialised with \code MEMORY_PROPERTY_HOST_VISIBLE\endcode.
+	 * the mapped memory will be available until \code unmapMemory()\endcode is called,
+	 * or the buffer is destroyed. repeated calls will not result in the memory being
+	 * remapped.
+	 * @return a pointer to the allocated memory.
+	 */
 	void* mapMemory();
+	/**
+	 * @brief deallocates the memory allocated by \code mapMemory()\endcode, after which
+	 * the pointer returned by that function is invalid. called automatically when the
+	 * buffer object destructs.
+	 */
 	void unmapMemory();
-	static uint32_t findMemoryType(uint32_t type_bits, MemoryProperties properties);
-	void copyToBuffer(Ref<Buffer> other) const;
+	/**
+	 * @brief copies the contents of this buffer into another, on the GPU (no memory
+	 * needs to be mapped CPU-side).
+	 * @param other the destination buffer.
+	 */
+	void copyToBuffer(const Ref<Buffer>& other) const;
 };
 
 }
