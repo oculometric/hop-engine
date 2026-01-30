@@ -2,6 +2,9 @@
 
 #include <glm/glm.hpp>
 
+/**
+ * @brief describes a 3D scene light. see the \code Light\endcode class.
+ */
 struct LightParams
 {
     glm::vec4 position = { 2, 0, 2, 0 };
@@ -13,21 +16,20 @@ struct LightParams
     float padding;
 };
 
-struct MaterialParams
-{
-    glm::vec4 diffuse = { 1, 1, 1, 0 };
-    glm::vec4 specular = { 1, 1, 1, 0 };
-    glm::vec4 emissive = { 0, 0, 0, 0 };
-    float specular_exponent = 32.0f;
-    glm::vec3 padding = { 0, 0, 0 };
-};
-
+/**
+ * @brief structure which mirrors the standard object uniform
+ * buffer (i.e. descriptor set 1).
+ */
 struct ObjectUniforms
 {
     glm::mat4 model_to_world;
     int id;
 };
 
+/**
+ * @brief structure which mirrors the standard scene uniform
+ * buffer (i.e. descriptor set 0).
+ */
 struct SceneUniforms
 {
     glm::mat4 world_to_view;

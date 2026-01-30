@@ -13,7 +13,7 @@ namespace HopEngine
 class Window : public Destructible
 {
 private:
-	GLFWwindow* window;
+	GLFWwindow* window;		// GLFW window handle
 	int width;
 	int height;
 	

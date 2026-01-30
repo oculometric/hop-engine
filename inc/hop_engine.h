@@ -1,5 +1,7 @@
 #pragma once
 
+// just gives us all the collected includes for the project
+
 #include "common.h"
 
 #include <glm/glm.hpp>

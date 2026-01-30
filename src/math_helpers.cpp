@@ -27,6 +27,7 @@ float HopEngine::intersect(glm::vec3 ray_origin, glm::vec3 ray_direction, const 
     float t_min = 0.0f;
     float t_max = INFINITY;
     
+    // intersection checks
     float t1 = t1s.x;
     float t2 = t2s.x;
     if (t1 > t2) { t1 = t2s.x; t2 = t1s.x; }

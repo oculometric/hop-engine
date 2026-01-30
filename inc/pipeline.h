@@ -6,6 +6,9 @@
 namespace HopEngine
 {
 
+/**
+ * @brief enumerates mesh face culling mode
+ */
 enum CullMode
 {
 	CULL_NONE = 0,
@@ -15,6 +18,9 @@ enum CullMode
 };
 TO_STRING_DEC(CullMode);
 
+/**
+ * @brief enumerates polygon drawing mode
+ */
 enum PolygonMode
 {
 	POLYGON_FILL,
@@ -23,6 +29,9 @@ enum PolygonMode
 };
 TO_STRING_DEC(PolygonMode);
 
+/**
+ * @brief enumerates comparison operations
+ */
 enum CompareOp
 {
 	COMPARE_NEVER = 0,

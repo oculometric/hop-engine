@@ -12,8 +12,10 @@ using namespace std;
 Window::Window(const uint32_t _width, const uint32_t _height, const string& title)
 {
     glfwInit();
+    // appropriate hints for vulkan
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    // keep window invisible until vulkan is ready to draw. prevents a flashbang
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     width = static_cast<int>(_width);
     height = static_cast<int>(_height);
@@ -53,6 +55,7 @@ bool Window::isMinified() const
 
 bool Window::isResized()
 {
+    // check if the window size is different than what we were keeping track of
     int new_width;
     int new_height;
     glfwGetFramebufferSize(window, &new_width, &new_height);
@@ -83,6 +86,7 @@ void Window::setIcon(const string& path) const
 {
     GLFWimage image;
 
+    // grab a png image from the package and read it
     const auto image_data = Package::tryLoadFile(path);
     int img_channels;
     image.pixels = stbi_load_from_memory(image_data.data(), static_cast<int>(image_data.size()), &image.width, &image.height, &img_channels, STBI_rgb_alpha);

@@ -13,6 +13,10 @@ using namespace std;
 UniformBlock::UniformBlock(const ShaderLayout& layout_info)
 {
     layout = layout_info;
+    // calculate the total size of the required buffer for the uniforms
+    // we use one big buffer regardless of if there are multiple uniform blocks,
+    // and just map sections of the buffer when we apply the descriptor set
+    // bindings/writes
     size = 0;
     for (const auto& binding : layout_info.bindings)
     {
@@ -25,10 +29,13 @@ UniformBlock::UniformBlock(const ShaderLayout& layout_info)
         }
     }
 
+    // create uniform buffers for each frame-in-flight to avoid updating
+    // a buffer currently being used by the GPU
     uniform_buffers.resize(RenderServer::getFramesInFlight());
     for (auto& uniform_buffer : uniform_buffers)
         uniform_buffer = new Buffer(size + 4, BUFFER_USAGE_UNIFORM, MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
 
+    // allocate descriptor sets from the pool
     const vector<VkDescriptorSetLayout> set_layouts(uniform_buffers.size(), layout_info.layout);
     VkDescriptorSetAllocateInfo descriptor_set_alloc_info{ };
     descriptor_set_alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -39,8 +46,10 @@ UniformBlock::UniformBlock(const ShaderLayout& layout_info)
     if (vkAllocateDescriptorSets(RenderServer::getDevice(), &descriptor_set_alloc_info, descriptor_sets.data()) != VK_SUCCESS)
         DBG_FAULT("vkAllocateDescriptorSets failed");
 
+    // apply descriptor writes/bindings
     applyDescriptorBindings();
 
+    // size the uniform buffer to match the on-GPU buffers
     live_uniform_buffer.resize(size);
 
     DBG_VERBOSE("created uniform block of buffer size " + ::to_string(size) + " with " + ::to_string(textures_in_use.size()) + " texture slots (" + ::to_string(layout_info.bindings.size()) + " total bindings)");
@@ -59,12 +68,15 @@ UniformBlock::~UniformBlock()
 
 void UniformBlock::setTexture(const uint32_t binding, const Ref<Texture>& image, const bool use_stencil)
 {
+    // if the texture is already bound, skip rebinding it
     if (textures_in_use[binding].texture == image && textures_in_use[binding].use_stencil == use_stencil)
         return;
+    // update the binding
     textures_in_use[binding].texture = image;
     textures_in_use[binding].use_stencil = use_stencil;
     if (!image)
     {
+        // if the specified image was null, use the default engine texture
         textures_in_use[binding].texture = RenderServer::getDefaultTextureSampler().first;
         textures_in_use[binding].use_stencil = false;
     }
@@ -73,8 +85,10 @@ void UniformBlock::setTexture(const uint32_t binding, const Ref<Texture>& image,
 
 void UniformBlock::setSampler(const uint32_t binding, const Ref<Sampler>& sampler)
 {
+    // if same sampler, skip rebinding
     if (textures_in_use[binding].sampler == sampler)
         return;
+    // update sampler binding; use default engine sampler if null
     textures_in_use[binding].sampler = sampler;
     if (!sampler)
         textures_in_use[binding].sampler = RenderServer::getDefaultTextureSampler().second;
@@ -88,6 +102,8 @@ void UniformBlock::pushToDescriptorSet(const size_t index)
 
 void UniformBlock::applyDescriptorBindings()
 {
+    // updating the descriptor set bindings so that they correctly connect
+    // to our specified textures, and our uniform buffers
     RenderServer::waitIdle();
     DBG_BABBLE("uniform block " + PTR(this) + " updating " + to_string(layout.bindings.size()) + " descriptor bindings");
     for (size_t i = 0; i < descriptor_sets.size(); ++i)
@@ -95,6 +111,7 @@ void UniformBlock::applyDescriptorBindings()
         VkDeviceSize offset = 0;
         for (const DescriptorBinding& binding : layout.bindings)
         {
+            // standard write command for our specified descriptor set and binding
             VkWriteDescriptorSet descriptor_write{ };
             descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptor_write.dstSet = descriptor_sets[i];
@@ -106,6 +123,10 @@ void UniformBlock::applyDescriptorBindings()
             VkDescriptorImageInfo image_info{ };
             if (binding.type == UNIFORM)
             {
+                // if the binding is a uniform buffer, point it to a section
+                // of the corresponding GPU buffer. offset is incremented
+                // according to the buffer size of this particular uniform
+                // block
                 buffer_info.buffer = uniform_buffers[i]->getBuffer();
                 buffer_info.offset = offset;
                 buffer_info.range = binding.buffer_size;
@@ -115,12 +136,17 @@ void UniformBlock::applyDescriptorBindings()
             }
             else if (binding.type == TEXTURE)
             {
+                // if the binding is a texture-sampler, give it the image view
+                // and sampler specified in the texture map
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 image_info.imageView = textures_in_use[binding.binding].texture->getView(textures_in_use[binding.binding].use_stencil);
                 image_info.sampler = textures_in_use[binding.binding].sampler->getSampler();
                 descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 descriptor_write.pImageInfo = &image_info;
             }
+            // this could potentially be more efficient, since we could group all the
+            // write commands into a sensible array and issue one big vkUpdateDescriptorSets,
+            // but it's annoying to corral all the secondary structures involved
             vkUpdateDescriptorSets(RenderServer::getDevice(), 1, &descriptor_write, 0, nullptr);
         }
     }

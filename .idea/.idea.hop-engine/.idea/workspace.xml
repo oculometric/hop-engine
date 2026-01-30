@@ -10,25 +10,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="836e5fd3-1918-497f-b7c7-e36a55aacb04" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/buffer.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/buffer.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/command_buffer.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/command_buffer.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/common.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/common.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/counted_ref.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/counted_ref.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/debug.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/debug.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/draw_command.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/draw_command.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/font.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/font.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/graphics_environment.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/graphics_environment.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/vulkan_typedefs.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/vulkan_typedefs.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/asha_scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/asha_scene.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/buffer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/buffer.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/command_buffer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/command_buffer.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/debug.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/debug.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/engine.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/font.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/font.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gizmo.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gizmo.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/graphics_environment.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/graphics_environment.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/hop_engine.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/hop_engine.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/math_helpers.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/math_helpers.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/pbr.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/pbr.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/pipeline.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/pipeline.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/uniform_block.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/uniform_block.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/window.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/window.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/math_helpers.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/math_helpers.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/uniform_block.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/uniform_block.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/window.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/window.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,26 +49,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;C/C++ Project.hop-engine.executor&quot;: &quot;Debug&quot;,
-    &quot;C/C++ Project.package-builder.executor&quot;: &quot;Debug&quot;,
-    &quot;C/C++ Project.spaceflight-test.executor&quot;: &quot;Debug&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.externalTools&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "C/C++ Project.hop-engine.executor": "Debug",
+    "C/C++ Project.package-builder.executor": "Debug",
+    "C/C++ Project.spaceflight-test.executor": "Debug",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "git-widget-placeholder": "main",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "reference.settingsdialog.IDE.editor.colors.Color Scheme Font",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager" selected="C/C++ Project.hop-engine">
     <configuration name="hop-engine" type="CppProject" factoryName="C++ Project">
       <configuration_1 setup="1">
@@ -169,7 +161,7 @@
       <workItem from="1769641391986" duration="13610000" />
       <workItem from="1769714778345" duration="133000" />
       <workItem from="1769714987965" duration="5593000" />
-      <workItem from="1769733285056" duration="406000" />
+      <workItem from="1769733285056" duration="8346000" />
     </task>
     <servers />
   </component>
