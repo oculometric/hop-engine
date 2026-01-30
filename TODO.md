@@ -6,12 +6,11 @@
 ---
 ## v0.52
 - object duplicate function [L]
+- shader & other resource reloading at runtime [H]
 - binary repackaging (i.e. read in OBJs and turn them into binary meshes to reduce load times)
 - implement imgui disable-enable
-- deprecate getGizmoMaterial and similar family functions
 ---
 ## v0.6
-- shader & other resource reloading at runtime [H]
 - eliminate vulkan types being exposed outside of class implementations entirely, replace stuff like VkFormat etc
 - frustrum culling [M]
 - audio loading and output

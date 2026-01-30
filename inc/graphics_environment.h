@@ -10,11 +10,17 @@
 #include "vulkan_typedefs.h"
 #include "engine.h"
 
+// if uncommented, specifies that the vulkan debug and validation systems should
+// be enabled. should be disabled in release builds since the target machine is 
+// unlikely to have the vulkan SDK installed
 //#define VK_DEBUG
 
 namespace HopEngine
 {
-
+/**
+ * @brief encapsulates all the behaviour of actually initialising and running the
+ * rendering environment.
+ */
 class RenderServer
 {
 public:
@@ -25,14 +31,20 @@ public:
 	};
 
 private:
+	// number of concurrently processed/queued frames. may be adjusted
+	// at runtime.
 	int MAX_FRAMES_IN_FLIGHT = 2;
+	// main window that the render server will create a surface for
 	Ref<Window> window;
 
+	// handle for the vulkan API instance itself
 	VkInstance instance = VK_NULL_HANDLE;
 #if defined(VK_DEBUG)
 	VkDebugUtilsMessengerEXT debug_messenger;
 #endif
+	// the physical device selected, which the logical device is derived from
 	VkPhysicalDevice physical_device = VK_NULL_HANDLE;
+	// logical vulkan device handle. everything goes through here
 	VkDevice device = VK_NULL_HANDLE;
 	VkQueue graphics_queue = VK_NULL_HANDLE;
 	VkQueue present_queue = VK_NULL_HANDLE;
@@ -41,30 +53,35 @@ private:
 	std::vector<VkSemaphore> image_available_semaphores;
 	std::vector<VkSemaphore> render_finished_semaphores;
 	std::vector<VkFence> in_flight_fences;
+	// surface for rendering into the attached window
 	VkSurfaceKHR surface = VK_NULL_HANDLE;
 
 	Ref<Swapchain> swapchain;
+	// standard render pass used by all scene camera render passes
     Ref<RenderPass> offscreen_pass;
+	// final render pass for actually putting stuff on the window surface
 	Ref<RenderPass> final_render_pass;
-	/* hawk tuah */
+	
+	/* hawk tuah - els */
+	// the query pool allows us to pull useful frame stats (like timings) from the GPU
 	VkQueryPool query_pool = VK_NULL_HANDLE;
 	uint32_t query_offset = 0;
+	// pool from which descriptors and descriptor sets are allocated by the rest of
+	// the engine
 	VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
+	// universally used descriptor set layout for set 0, containing scene information
 	VkDescriptorSetLayout scene_descriptor_set_layout = VK_NULL_HANDLE;
+	// universally used descriptor set layout for set 1, containing object information
 	VkDescriptorSetLayout object_descriptor_set_layout = VK_NULL_HANDLE;
 
-	Ref<Texture> default_image;
-	Ref<Sampler> default_sampler;
-	Ref<Material> default_material;
+	Ref<Texture> default_image;		// default image used when none is specified
+	Ref<Sampler> default_sampler;	// default sampler used when none is specified
+	Ref<Material> default_material;	// default material used when none is specified
 
-	Ref<Material> gizmo_material;
-	Ref<Mesh> axes_gizmo;
-	Ref<Mesh> rotations_gizmo;
-	Ref<Mesh> scale_gizmo;
-	Ref<Mesh> skybox_cube;
-	Ref<Material> skybox_material;
-	WeakRef<Texture> current_skybox;
-	Ref<Mesh> quad;
+	Ref<Mesh> skybox_cube;			// mesh used to render skyboxes
+	Ref<Material> skybox_material;	// material used to render skyboxes
+	WeakRef<Texture> current_skybox;// skybox texture in use TODO: the graphics environment probably shouldn't manage the skybox
+	Ref<Mesh> quad;					// full screen quad mesh
 
 public:
 	DELETE_CONSTRUCTORS(RenderServer);
@@ -87,8 +104,6 @@ public:
 	static VkDescriptorSetLayout getObjectDescriptorSetLayout();
 	static std::pair<Ref<Texture>, Ref<Sampler>> getDefaultTextureSampler();
 	static Ref<Material> getDefaultMaterial();
-	static Ref<Material> getGizmoMaterial(); // TODO: this (and more) can be deprecated, loaded and kept loaded by the engine
-	static Ref<Mesh> getGizmoMesh(int type);
 	static Ref<Mesh> getSkyboxCube();
 	static Ref<Material> getSkyboxMaterial();
 	static Ref<Mesh> getQuad();

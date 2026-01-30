@@ -5,6 +5,7 @@
 
 namespace HopEngine
 {
+
 /**
  * @brief bitflag enum which describes which tasks a buffer may be used for on the GPU.
  */

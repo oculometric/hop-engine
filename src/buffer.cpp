@@ -37,6 +37,7 @@ Buffer::Buffer(VkDeviceSize size, const BufferUsage usage, const MemoryPropertie
         size = 1;
     }
 
+    // vulkan buffer creation
     VkBufferCreateInfo buffer_create_info{ };
     buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     buffer_create_info.size = size;
@@ -46,9 +47,11 @@ Buffer::Buffer(VkDeviceSize size, const BufferUsage usage, const MemoryPropertie
     if (vkCreateBuffer(RenderServer::getDevice(), &buffer_create_info, nullptr, &buffer) != VK_SUCCESS)
         DBG_FAULT("vkCreateBuffer failed");
 
+    // then we need to find appropriate memory
     VkMemoryRequirements memory_requirements;
     vkGetBufferMemoryRequirements(RenderServer::getDevice(), buffer, &memory_requirements);
 
+    // and allocate it
     VkMemoryAllocateInfo allocate_info{ };
     allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocate_info.allocationSize = memory_requirements.size;
@@ -57,6 +60,7 @@ Buffer::Buffer(VkDeviceSize size, const BufferUsage usage, const MemoryPropertie
     if (vkAllocateMemory(RenderServer::getDevice(), &allocate_info, nullptr, &memory) != VK_SUCCESS)
         DBG_FAULT("vkAllocateMemory failed");
 
+    // and bind it to our buffer
     vkBindBufferMemory(RenderServer::getDevice(), buffer, memory, 0);
 
     DBG_BABBLE("created buffer of size " + to_string(size) + " with usage " + to_string(usage) + " and memory properties " + to_string(properties));
@@ -67,8 +71,10 @@ Buffer::Buffer(VkDeviceSize size, const BufferUsage usage, const MemoryPropertie
 Buffer::~Buffer()
 {
     DBG_BABBLE("destroying buffer " + PTR(this));
+    // make sure the buffer is unmapped
     unmapMemory();
 
+    // wait until the device is idle before destroying buffer to avoid errors
     RenderServer::waitIdle();
     vkDestroyBuffer(RenderServer::getDevice(), buffer, nullptr);
     vkFreeMemory(RenderServer::getDevice(), memory, nullptr);
@@ -76,6 +82,8 @@ Buffer::~Buffer()
 
 uint32_t Buffer::findMemoryType(const uint32_t type_bits, const MemoryProperties _properties)
 {
+    // check through the available vulkan memory types to find one which fits the
+    // requirements. TODO: this should probably cache its results for a given type_bits and _properties
     const VkMemoryPropertyFlags properties = convertFlags<VkMemoryPropertyFlagBits, MemoryProperties, 4>(_properties, vulkan_memory_props);
     VkPhysicalDeviceMemoryProperties memory_properties;
     vkGetPhysicalDeviceMemoryProperties(RenderServer::getPhysicalDevice(), &memory_properties);
@@ -91,6 +99,8 @@ uint32_t Buffer::findMemoryType(const uint32_t type_bits, const MemoryProperties
 
 void* Buffer::mapMemory()
 {
+    // only map the memory if it isn't already mapped (otherwise just 
+    // return the already-mapped pointer)
     if (mapped == nullptr)
         vkMapMemory(RenderServer::getDevice(), memory, 0, buffer_size, 0, &mapped);
 
@@ -111,6 +121,8 @@ void Buffer::copyToBuffer(const Ref<Buffer>& other) const
     DBG_BABBLE("copying from " + PTR(this) + " to buffer " + PTR(other.get()));
     Ref<CommandBuffer> cmd_buf = new CommandBuffer();
 
+    // perform vulkan buffer-to-buffer copy on an immediate command buffer
+    // this assumes both buffers are the same size!
     VkBufferCopy buffer_copy{ };
     buffer_copy.srcOffset = 0;
     buffer_copy.dstOffset = 0;

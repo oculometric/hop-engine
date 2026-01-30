@@ -156,20 +156,6 @@ pair<Ref<Texture>, Ref<Sampler>> RenderServer::getDefaultTextureSampler()
 Ref<Material> RenderServer::getDefaultMaterial()
 { return server->default_material; }
 
-Ref<Material> RenderServer::getGizmoMaterial()
-{ return server->gizmo_material; }
-
-Ref<Mesh> RenderServer::getGizmoMesh(const int type)
-{
-    switch (type)
-    {
-    case 0: return server->axes_gizmo;
-    case 1: return server->rotations_gizmo;
-    case 2: return server->scale_gizmo;
-    default: return nullptr;
-    }
-}
-
 Ref<Mesh> RenderServer::getSkyboxCube()
 { return server->skybox_cube; }
 
@@ -218,8 +204,6 @@ RenderServer::RenderServer(const Ref<Window>& main_window)
     default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, TextureBuilder().data(default_image_data));
     default_sampler = new Sampler(SamplerBuilder());
 
-    axes_gizmo = new Mesh("res://engine/meshes/axes_gizmo.obj");
-    rotations_gizmo = new Mesh("res://engine/meshes/rotate_gizmo.obj");
     quad = new Mesh({
                         { { -1, -1, 0, 1 }, {}, {}, {}, { 0, 0 } },
                         { { 1, -1, 0, 1 }, {}, {}, {}, { 1, 0 } },
@@ -229,7 +213,6 @@ RenderServer::RenderServer(const Ref<Window>& main_window)
     skybox_cube = new Mesh("res://engine/meshes/skybox.obj");
 
     default_material = new Material(new Shader("res://engine/shaders/default_shader"));
-    gizmo_material = new Material(new Shader("res://engine/shaders/gizmo"), PipelineBuilder().cullMode(CULL_NONE), final_render_pass);
     skybox_material = new Material(new Shader("res://engine/shaders/skybox"), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
     
     initImGui();
@@ -260,10 +243,6 @@ RenderServer::~RenderServer()
     skybox_material = nullptr;
     skybox_cube = nullptr;
     default_material = nullptr;
-    gizmo_material = nullptr;
-    axes_gizmo = nullptr;
-    rotations_gizmo = nullptr;
-    scale_gizmo = nullptr;
     quad = nullptr;
     default_image = nullptr;
     default_sampler = nullptr;
@@ -697,7 +676,7 @@ void RenderServer::resizeSwapchain()
     final_render_pass->resize();
 }
 
-void RenderServer::recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index, FrameStats& stats)
+void RenderServer::recordRenderCommands(const VkCommandBuffer command_buffer, const uint32_t image_index, FrameStats& stats)
 {
     DBG_BABBLE("recording command buffer");
     VkCommandBufferBeginInfo cmd_buffer_begin_info{ };

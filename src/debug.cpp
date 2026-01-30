@@ -28,6 +28,7 @@ void Debug::setLogLevel(const DebugLevel severity)
 	application_debug->log_level = severity;
 }
 
+// generates an ANSI colour command from the given foreground and background colours
 static string makeANSIColour(const int fgcol, const int bgcol)
 {
 	return "\033[" + to_string(fgcol + 30) + ';' + to_string(bgcol + 40) + 'm';
@@ -49,7 +50,7 @@ string Debug::pointerToString(const void* ptr)
 void Debug::write(const string& description, DebugLevel severity)
 {
 	if (application_debug == nullptr)
-		Debug::init(Debug::DEBUG_FAULT);
+		Debug::init(DEBUG_FAULT);
 
 	if (severity < application_debug->log_level)
 		return;
@@ -60,6 +61,7 @@ void Debug::write(const string& description, DebugLevel severity)
 	
 	string type_col = "";
 	string log_type = "";
+	// for the terminal output, use ANSI terminal colours to make the output more fun
 	switch (severity)
 	{
 	case DEBUG_BABBLE:
@@ -96,6 +98,7 @@ void Debug::write(const string& description, DebugLevel severity)
 	auto tmp = localtime(&time_now);
 	time = *tmp;
 #endif
+	// generating a timestamp for the output
 	string log_line = format("[{: >8} ]: {:0>2}:{:0>2}:{:0>2} - {}", log_type, time.tm_hour, time.tm_min, time.tm_sec, description);
 	string term_line = format("{}[{}{: >8} {}]{}: {}{:0>2}:{:0>2}:{:0>2}{} - {}", 
 	                          bracket_col, type_col, log_type, bracket_col, standard_col,
@@ -111,6 +114,7 @@ void Debug::write(const string& description, DebugLevel severity)
 	static string crash_string = "crash-severity issue occurred. stopping.";
 	if (severity >= application_debug->crash_level)
 	{
+		// if severity is too high, stop the program
 		file_output << crash_string << endl;
 		DEBUG_TERMINAL << makeANSIColour(1, 0) << crash_string;
 		exit(-1);
@@ -138,6 +142,7 @@ Debug::Debug()
 	auto tmp = localtime(&time_now);
 	time = *tmp;
 #endif
+	// generate a unique name for the log file based on the time
 	const string file_name = format("{}engine_{:0>2}_{:0>2}_{:0>2}.log", DEBUG_LOGFILE, time.tm_hour, time.tm_min, time.tm_sec);
 	filesystem::create_directory(DEBUG_LOGFILE);
 	file_output.open(file_name);

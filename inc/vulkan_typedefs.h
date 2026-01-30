@@ -1,5 +1,12 @@
 #pragma once
 
+// this file provides sufficient type definitions to allow header
+// files to NOT include the vulkan headers (only in the CPP files).
+// that means that the headers can be used without the vulkan SDK
+// being installed. in future this shouldn't be necessary as i'll
+// eventually eliminate the backend-implementation-related stuff
+// (like VkBuffer handles) from header files.
+
 #define HANDLE_TYPE(t) struct t##_T;\
     typedef t##_T* t
 
@@ -56,32 +63,3 @@ template <typename T, typename S, int L> T convertFlags(S usage, const T* mappin
     }
     return static_cast<T>(flags);
 }
-
-#define TO_STRING_DEC(t) std::string to_string(t value)
-#define VARGS(...) __VA_ARGS__
-#define TO_STRING_DEF_BITFLAGS(t, s, n) string HopEngine::to_string(const t value) \
-{ \
-    constexpr const char* names[s] = \
-    { n }; \
-    string result; \
-    for (size_t i = 0; i < s; ++i) \
-    { \
-        if (value & (1 << i)) \
-        { \
-            result += names[i]; \
-            result += " | "; \
-        } \
-    } \
-    result.pop_back(); \
-    result.pop_back(); \
-    result.pop_back(); \
-    return result; \
-}
-#define TO_STRING_DEF(t, s, n) string HopEngine::to_string(const t value) \
-{ \
-    constexpr const char* names[s] = \
-    { n }; \
-    return names[value]; \
-}
-
-#define ENUM_OPERATOR(t) inline t operator|(t a, t b) { return (t)((uint32_t)a | (uint32_t)b); }

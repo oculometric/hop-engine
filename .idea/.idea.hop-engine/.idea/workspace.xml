@@ -10,74 +10,25 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="836e5fd3-1918-497f-b7c7-e36a55aacb04" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/res_engine/icon.ico" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/res_engine/icon.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hop-engine.sln.DotSettings.user" beforeDir="false" afterPath="$PROJECT_DIR$/hop-engine.sln.DotSettings.user" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hop-engine.vcxproj" beforeDir="false" afterPath="$PROJECT_DIR$/hop-engine.vcxproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/buffer.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/buffer.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/command_buffer.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/command_buffer.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/common.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/common.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/counted_ref.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/counted_ref.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/debug.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/debug.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/draw_command.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/draw_command.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/font.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/font.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inc/graphics_environment.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/graphics_environment.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/shader.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/shader.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/font.bmp" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/font.bmp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/glslc.exe" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/meshes/axes_gizmo.obj" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/meshes/axes_gizmo.obj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/meshes/rotate_gizmo.obj" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/meshes/rotate_gizmo.obj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/meshes/skybox.obj" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/meshes/skybox.obj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/newnodes.png" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/newnodes.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/node_shader.frag" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/node_shader.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/node_shader.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/node_shader.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/nodelinks.png" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/nodelinks.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/blur.frag" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/blur.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/blur.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/blur.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/colour_correct.frag" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/colour_correct.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/colour_correct.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/colour_correct.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/common.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/common.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/default_shader.frag" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/default_shader.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/default_shader.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/default_shader.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/deferred.frag" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/deferred.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/deferred.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/deferred.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/deferred_post.frag" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/deferred_post.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/deferred_post.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/deferred_post.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/dither.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/dither.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/effects.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/effects.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/fog.frag" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/fog.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/fog.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/fog.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/forward.frag" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/forward.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/forward.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/forward.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/gizmo.frag" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/gizmo.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/gizmo.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/gizmo.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/passthrough.frag" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/passthrough.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/passthrough.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/passthrough.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/pbr_util.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/pbr_util.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/skybox.frag" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/skybox.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/skybox.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/skybox.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/ssao.frag" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/ssao.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/ssao.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/ssao.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/text.frag" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/text.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/shaders/text.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/text.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/engine/textures/basic_lut.png" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/textures/basic_lut.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/Museum.hscn" beforeDir="false" afterPath="$PROJECT_DIR$/res/museum/Museum.hscn" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/samples/asha.obj" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/samples/asha.obj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/samples/asha.png" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/samples/asha.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/samples/bunny.obj" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/samples/bunny.obj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/samples/bunny.png" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/samples/bunny.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/samples/cone.obj" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/samples/cone.obj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/samples/cube.obj" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/samples/cube.obj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/samples/cylinder.obj" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/samples/cylinder.obj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/samples/donut.obj" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/samples/donut.obj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/samples/ico_sphere.obj" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/samples/ico_sphere.obj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/samples/nasa_goddard_gaia_dr2_deep_star_map.png" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/samples/nasa_goddard_gaia_dr2_deep_star_map.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/samples/plane.obj" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/samples/plane.obj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/samples/torus.obj" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/samples/torus.obj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/samples/uv_sphere.obj" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/samples/uv_sphere.obj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/vulkan_typedefs.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/vulkan_typedefs.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/asha_scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/asha_scene.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/buffer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/buffer.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/command_buffer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/command_buffer.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/debug.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/debug.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/engine.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/font.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/font.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gizmo.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gizmo.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/graphics_environment.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/graphics_environment.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/node_view.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/node_view.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/package-builder/package-builder.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/package-builder/package-builder.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/shader.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/shader.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/uniform_block.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/uniform_block.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -91,7 +42,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://26" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://0" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -106,26 +57,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "C/C++ Project.hop-engine.executor": "Debug",
-    "C/C++ Project.package-builder.executor": "Debug",
-    "C/C++ Project.spaceflight-test.executor": "Debug",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "main",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.externalTools",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;C/C++ Project.hop-engine.executor&quot;: &quot;Debug&quot;,
+    &quot;C/C++ Project.package-builder.executor&quot;: &quot;Debug&quot;,
+    &quot;C/C++ Project.spaceflight-test.executor&quot;: &quot;Debug&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.externalTools&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="C/C++ Project.hop-engine">
     <configuration name="hop-engine" type="CppProject" factoryName="C++ Project">
       <configuration_1 setup="1">
@@ -216,6 +167,9 @@
       <workItem from="1769620407825" duration="617000" />
       <workItem from="1769621976058" duration="5126000" />
       <workItem from="1769641391986" duration="13610000" />
+      <workItem from="1769714778345" duration="133000" />
+      <workItem from="1769714987965" duration="5593000" />
+      <workItem from="1769733285056" duration="406000" />
     </task>
     <servers />
   </component>

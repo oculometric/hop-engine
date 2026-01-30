@@ -8,8 +8,10 @@
 using namespace HopEngine;
 using namespace std;
 
-Gizmo::Gizmo() : StaticMesh(RenderServer::getGizmoMesh(0), RenderServer::getGizmoMaterial()->duplicate())
+Gizmo::Gizmo() : StaticMesh(nullptr, nullptr)
 {
+    mesh = Engine::loadMesh("res://engine/meshes/axes_gizmo.obj");
+    material = new Material(Engine::loadShader("res://engine/shaders/gizmo"), PipelineBuilder().cullMode(CULL_NONE), RenderServer::getFinalRenderPass());
     camera_mask = 0xF0000000;
     name = "gizmo";
 }
@@ -20,11 +22,11 @@ void Gizmo::trackObject(const WeakRef<Object>& object, const WeakRef<Camera>& ca
         return;
 
     if (Input::wasKeyPressed('Z'))
-        mesh = RenderServer::getGizmoMesh(0);
+        mesh = Engine::loadMesh("res://engine/meshes/axes_gizmo.obj");
     else if (Input::wasKeyPressed('X'))
-        mesh = RenderServer::getGizmoMesh(1);
-    else if (Input::wasKeyPressed('C'))
-        mesh = RenderServer::getGizmoMesh(1);
+        mesh = Engine::loadMesh("res://engine/meshes/rotate_gizmo.obj");
+    //else if (Input::wasKeyPressed('C'))
+    //    mesh = RenderServer::getGizmoMesh(1);
 
     transform.setMatrix(object->transform.getMatrix());
     if (Input::isMouseDown(Input::MOUSE_LEFT))

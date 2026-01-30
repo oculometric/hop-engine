@@ -264,13 +264,13 @@ size_t Engine::pruneUnusedResources()
 Engine::Engine()
 {
     engine = this;
-    Debug::init(Debug::DEBUG_FAULT);
+    Debug::init(DEBUG_FAULT);
     Package::init();
 
 #if defined(_WIN32)
-    HRSRC res = FindResource(NULL, MAKEINTRESOURCE(IDR_HOP1), L"HOP");
-    DWORD size = SizeofResource(NULL, res);
-    HGLOBAL data = LoadResource(NULL, res);
+    const HRSRC res = FindResource(nullptr, MAKEINTRESOURCE(IDR_HOP1), L"HOP");
+    const DWORD size = SizeofResource(nullptr, res);
+    const HGLOBAL data = LoadResource(nullptr, res);
     vector<uint8_t> engine_package;
     engine_package.resize(size);
     memcpy(engine_package.data(), data, size);

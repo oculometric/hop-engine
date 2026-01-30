@@ -12,6 +12,8 @@ namespace HopEngine
 template <typename T>
 class WeakRef;
 
+// signatures for engine ref register/unregister functions
+
 void registerCountedRef(const char* type_name, const WeakRef<void>& reference);
 void unregisterCountedRef(const void* ptr);
 
@@ -33,6 +35,7 @@ public:
 
 		payload = other.payload;
 		ref_counter = other.ref_counter;
+		// copying increases the reference count
 		if (ref_counter != nullptr)
 			++(*ref_counter);
 	}
@@ -42,10 +45,12 @@ public:
 		if (other.payload == payload)
 			return;
 
+		// clear our own contents, possibly deleting them
 		invalidateSelf();
 
 		payload = other.payload;
 		ref_counter = other.ref_counter;
+		// copying increases the reference count
 		if (ref_counter != nullptr)
 			++(*ref_counter);
 	}
@@ -58,6 +63,7 @@ public:
 		payload = other.payload;
 		ref_counter = other.ref_counter;
 
+		// null out the other just to be sure
 		other.payload = nullptr;
 		other.ref_counter = nullptr;
 	}
@@ -67,11 +73,13 @@ public:
 		if (other.payload == payload)
 			return;
 
+		// clear our own contents, possibly deleting them
 		invalidateSelf();
 
 		payload = other.payload;
 		ref_counter = other.ref_counter;
 
+		// null out the other just to be sure
 		other.payload = nullptr;
 		other.ref_counter = nullptr;
 	}
@@ -83,6 +91,7 @@ public:
 		if (new_payload == payload)
 			return;
 
+		// initialise the payload from a new T pointer
 		payload = new_payload;
 		if (payload != nullptr)
 		{
@@ -97,8 +106,10 @@ public:
 		if (new_payload == payload)
 			return;
 
+		// clear our own contents, possibly deleting them
 		invalidateSelf();
 
+		// initialise the payload from a new T pointer
 		payload = new_payload;
 		if (payload != nullptr)
 		{
@@ -108,8 +119,7 @@ public:
 		}
 	}
 	
-	~Ref()
-	{ invalidateSelf(); }
+	~Ref() { invalidateSelf(); }
 
 	WeakRef<T> weak() const;
 	size_t getCount() const { return *ref_counter; }

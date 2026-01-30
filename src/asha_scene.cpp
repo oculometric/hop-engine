@@ -15,17 +15,19 @@ static WeakRef<Gizmo> gizmo;
 static Ref<Scene> initAshaScene()
 {
     Ref<Scene> scene = new Scene();
+    // load and configure asha's shader, mesh, and material
     const Ref<Shader> shader = Engine::loadShader("res://psx");
-    const Ref<Sampler> sampler = new Sampler(SamplerBuilder().filter(FILTER_NEAREST));
     asha = scene->insertObject<StaticMesh>(new StaticMesh(
         Engine::loadMesh("res://engine/samples/asha.obj"),
         Engine::keepLoaded(new Material(
             shader, PipelineBuilder().cullMode(CULL_NONE).stencilWrite(1)
         ))));
     asha->material->setTexture("albedo", Engine::loadTexture("res://engine/samples/asha.png"));
+    const Ref<Sampler> sampler = new Sampler(SamplerBuilder().filter(FILTER_NEAREST));
     asha->material->setSampler("albedo", sampler);
     asha->transform.setLocalPosition({ 0, 0, -0.9f });
 
+    // create the bunny
     Ref<StaticMesh> bunny = scene->insertObject<StaticMesh>(new StaticMesh(
         Engine::loadMesh("res://engine/samples/bunny.obj"),
         Engine::keepLoaded(new Material(shader, PipelineBuilder().cullMode(CULL_NONE).stencilWrite(2)
@@ -36,6 +38,7 @@ static Ref<Scene> initAshaScene()
     bunny->transform.setLocalPosition({ 0, -0.5f, 0.9f });
     bunny->transform.scaleLocal({ 2, 2, 2 });
 
+    // create tux
     Ref<StaticMesh> tux = scene->insertObject<StaticMesh>(new StaticMesh(
         Engine::loadMesh("res://tux.obj"),
         Engine::keepLoaded(new Material(shader, PipelineBuilder().cullMode(CULL_NONE)))
@@ -44,6 +47,7 @@ static Ref<Scene> initAshaScene()
     tux->material->setSampler("albedo", sampler);
     tux->transform.translateLocal({ 2, 0, 0 });
 
+    // initialise sun and main camera
     auto sun_lamp = scene->insertObject<Light>(new Light(Light::DIRECTIONAL));
     sun_lamp->transform.setLocalEuler({ -17.0f, -34.0f, -189.0f });
     sun_lamp->colour = { 1.0f, 1.0f, 1.0f };
@@ -52,9 +56,12 @@ static Ref<Scene> initAshaScene()
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 1.0f));
 
+    // demo gizmo
     gizmo = scene->insertObject<Gizmo>(new Gizmo());
+    // set skybox texture
     scene->skybox = Engine::loadTexture("res://engine/samples/nasa_goddard_gaia_dr2_deep_star_map.png");
 
+    // initialise the other two cameras. these will render into different slots in the render graph
     Ref<Camera> second_cam = new Camera();
     scene->insertObject(second_cam);
     scene->setCameraSlot(second_cam, 1);
@@ -67,8 +74,10 @@ static Ref<Scene> initAshaScene()
     third_cam->transform.lookAt({ 0, -0.2f, 0.8f }, { 0, 0, 0.7f }, { 0, 0, 1 });
     third_cam->fov = 120.0f;
 
+    // oh yeah, load the render graph
     scene->render_graph = RenderGraph::deserialise("res://test_graph.hrgr");
 
+    // configure the samples for the SSAO shader. TODO: this should probably be baked into the shader as a constant
     glm::vec4 samples[24];
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     std::default_random_engine rand;
@@ -80,6 +89,7 @@ static Ref<Scene> initAshaScene()
         samples[i] = v;
     }
     scene->render_graph->getMaterialForStep(3)->setUniform("samples", samples, sizeof(glm::vec4) * 16);
+    // configure the colour correction material to make no changes
     cc_material = scene->render_graph->getMaterialForStep(5);
     cc_material->setFloatUniform("gamma", 1.0f);
     cc_material->setFloatUniform("exposure", 1.0f);
@@ -94,8 +104,10 @@ static void updateAshaScene(Ref<Scene> scene, float delta_time)
     static float total_time = 0;
     total_time += delta_time;
 
+    // tick the debug camera
     Engine::debugCamera(delta_time);
     
+    // let the gizmo do things
     gizmo->trackObject(Engine::getDebugSelection(), scene->getCamera(0));
     
     Input::resetMouseDelta();
@@ -103,27 +115,30 @@ static void updateAshaScene(Ref<Scene> scene, float delta_time)
 
 static void imGuiAshaScene(Ref<Scene> scene, float delta_time)
 {
-    ImGui::Begin("colour correction", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::Text("this controls the final post processing step");
-    static float gamma = 0;
-    static float new_gamma = 1.0f;
-    static float exposure = 0;
-    static float new_exposure = 1.0f;
-    static float offset = 0;
-    static float new_offset = 0.0f;
-    ImGui::SliderFloat("gamma", &new_gamma, 0.001f, 4.0f);
-    ImGui::SliderFloat("exposure", &new_exposure, 0.001f, 16.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
-    ImGui::SliderFloat("offset", &new_offset, -2.0f, 2.0f);
-    if (gamma != new_gamma)
-        cc_material->setFloatUniform("gamma", new_gamma);
-    if (exposure != new_exposure)
-        cc_material->setFloatUniform("exposure", new_exposure);
-    if (offset != new_offset)
-        cc_material->setFloatUniform("offset", new_offset);
-    gamma = new_gamma;
-    exposure = new_exposure;
-    offset = new_offset;
-    ImGui::End();
+    {
+        // draw the colour correction controls
+        ImGui::Begin("colour correction", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::Text("this controls the final post processing step");
+        static float gamma = 0;
+        static float new_gamma = 1.0f;
+        static float exposure = 0;
+        static float new_exposure = 1.0f;
+        static float offset = 0;
+        static float new_offset = 0.0f;
+        ImGui::SliderFloat("gamma", &new_gamma, 0.001f, 4.0f);
+        ImGui::SliderFloat("exposure", &new_exposure, 0.001f, 16.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
+        ImGui::SliderFloat("offset", &new_offset, -2.0f, 2.0f);
+        if (gamma != new_gamma)
+            cc_material->setFloatUniform("gamma", new_gamma);
+        if (exposure != new_exposure)
+            cc_material->setFloatUniform("exposure", new_exposure);
+        if (offset != new_offset)
+            cc_material->setFloatUniform("offset", new_offset);
+        gamma = new_gamma;
+        exposure = new_exposure;
+        offset = new_offset;
+        ImGui::End();
+    }
 }
 
 SceneFuncSet getAshaScene()
