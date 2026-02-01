@@ -14,6 +14,7 @@ class Package
 {
 private:
 	std::map<std::string, std::vector<uint8_t>> database;
+	std::map<std::string, std::string> alias_table;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Package);
@@ -35,6 +36,8 @@ public:
 	static bool storeCompressedPackage(const std::string& store_path);
 	static void storeData(const std::string& identifier, const std::vector<uint8_t>& data);
 	static void tryWriteFile(const std::string& path, const std::vector<uint8_t>& data);
+	static void setAlias(const std::string& a, const std::string& b);
+	static void clearAlias(const std::string& a);
 
 private:
 	Package() = default;

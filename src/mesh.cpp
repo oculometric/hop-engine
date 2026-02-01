@@ -16,6 +16,9 @@ Mesh::Mesh(const string& path)
     origin = path;
     vector<Vertex> verts;
     vector<uint16_t> inds;
+    
+// TODO: mesh binary detection
+// TODO: mesh binary encoder/decoder
 
     if (readFileToArrays(path, verts, inds))
     {
@@ -102,15 +105,44 @@ array<VkVertexInputAttributeDescription, 5> Mesh::getAttributeDescriptions()
     return attributes;
 }
 
-VkBuffer Mesh::getVertexBuffer() const
+struct BinaryMeshHeader
 {
-    return vertex_buffer->getBuffer();
+    char signature[4];
+    uint32_t vertex_count;
+    uint32_t vertex_stride;
+    uint32_t index_count;
+};
+
+vector<uint8_t> Mesh::encodeBinaryMesh(const string& path)
+{
+    vector<Vertex> verts;
+    vector<uint16_t> inds;
+    readFileToArrays(path, verts, inds);
+    
+    BinaryMeshHeader header;
+    header.signature[0] = 'H';
+    header.signature[1] = 'B';
+    header.signature[2] = 'M';
+    header.signature[3] = 'R';
+    header.vertex_count = static_cast<uint32_t>(verts.size());
+    header.vertex_stride = sizeof(Vertex);
+    header.index_count = static_cast<uint32_t>(inds.size());
+    
+    vector<uint8_t> data(sizeof(BinaryMeshHeader)
+        + (verts.size() * header.vertex_stride)
+        + (inds.size() * sizeof(uint16_t)));
+    memcpy(data.data(), &header, sizeof(BinaryMeshHeader));
+    memcpy(data.data() + sizeof(BinaryMeshHeader), verts.data(), verts.size() * header.vertex_stride);
+    memcpy(data.data() + sizeof(BinaryMeshHeader) + (verts.size() * header.vertex_stride), inds.data(), inds.size() * sizeof(uint16_t));
+    
+    return data;
 }
 
+VkBuffer Mesh::getVertexBuffer() const
+{ return vertex_buffer->getBuffer(); }
+
 VkBuffer Mesh::getIndexBuffer() const
-{
-    return index_buffer->getBuffer();
-}
+{ return index_buffer->getBuffer(); }
 
 void Mesh::updateData(const vector<Vertex>& vertices, const vector<uint16_t>& indices, size_t vertex_alloc, size_t index_alloc)
 {
@@ -147,6 +179,28 @@ void Mesh::updateData(const vector<Vertex>& vertices, const vector<uint16_t>& in
     index_count = indices.size();
     
     recomputeBoundingBox(vertices);
+}
+
+bool Mesh::decodeBinaryMesh(const vector<uint8_t>& data, vector<Vertex>& verts, vector<uint16_t>& inds)
+{
+    BinaryMeshHeader header = *reinterpret_cast<const BinaryMeshHeader*>(data.data());
+    if (header.vertex_stride != sizeof(Vertex))
+    {
+        DBG_ERROR("error loading binary mesh: invalid vertex stride");
+        return false;
+    }
+    if (sizeof(BinaryMeshHeader) + (static_cast<size_t>(header.vertex_count) * header.vertex_stride) + (static_cast<size_t>(header.index_count) * sizeof(uint16_t)) != data.size())
+    {
+        DBG_ERROR("error loading binary mesh: invalid vertex stride");
+        return false;
+    }
+    
+    verts.resize(header.vertex_count);
+    inds.resize(header.index_count);
+    memcpy(verts.data(), data.data() + sizeof(BinaryMeshHeader), verts.size() * header.vertex_stride);
+    memcpy(inds.data(), data.data() + sizeof(BinaryMeshHeader) + (verts.size() * header.vertex_stride), inds.size() * sizeof(uint16_t));
+    
+    return true;
 }
 
 struct FaceCorner { uint16_t co; uint16_t uv; uint16_t vn; };
@@ -213,6 +267,13 @@ bool Mesh::readFileToArrays(const string& path, vector<Vertex>& verts, vector<ui
     {
         DBG_WARNING("mesh file " + path + " is empty or does not exist");
         return false;
+    }
+    if (file_data[0] == 'H'
+        && file_data[1] == 'B'
+        && file_data[2] == 'M'
+        && file_data[3] == 'R')
+    {
+        return decodeBinaryMesh(file_data, verts, inds);
     }
     const auto string_data = string(reinterpret_cast<const char*>(file_data.data()), file_data.size());
     auto stream = stringstream(string_data);

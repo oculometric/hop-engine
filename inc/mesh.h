@@ -43,6 +43,7 @@ public:
 	
 	static VkVertexInputBindingDescription getBindingDescription();
 	static std::array<VkVertexInputAttributeDescription, 5> getAttributeDescriptions();
+	static std::vector<uint8_t> encodeBinaryMesh(const std::string& path);
 	
 	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 	VkBuffer getVertexBuffer() const;
@@ -52,8 +53,9 @@ public:
 	BoundingBox getBoundingBox() const { return bounding_box; }
 	bool isRenderable() const { return is_renderable; }
 	void updateData(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices, size_t vertex_alloc = 0, size_t index_alloc = 0);
-
+	
 private:
+	static bool decodeBinaryMesh(const std::vector<uint8_t>& data, std::vector<Vertex>& verts, std::vector<uint16_t>& inds);
 	static bool readFileToArrays(const std::string& path, std::vector<Vertex>& verts, std::vector<uint16_t>& inds);
 	void createFromArrays(const std::vector<Vertex>& verts, const std::vector<uint16_t>& inds);
 	void recomputeBoundingBox(const std::vector<Vertex>& verts);

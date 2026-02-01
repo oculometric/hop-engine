@@ -76,7 +76,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_ITERATOR_DEBUG_LEVEL=0;RuntimeLibrary=MD_DynamicRelease;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)lib\inc\GLFW\include;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\inc\glm-1.0.2;$(ProjectDir)lib\inc;$(ProjectDir)lib\inc\spirv_reflect;$(ProjectDir)lib\inc\imgui;$(ProjectDir)lib\inc\imgui\backends;$(USERPROFILE)\Documents\1.4.335.0\Include;C:\VulkanSDK\1.4.335.0\Include;%(AdditionalIncludeDirectories);$(ProjectDir)inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)lib\inc\GLFW\include;$(ProjectDir)lib\inc\base64;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\inc\glm-1.0.2;$(ProjectDir)lib\inc;$(ProjectDir)lib\inc\spirv_reflect;$(ProjectDir)lib\inc\imgui;$(ProjectDir)lib\inc\imgui\backends;$(USERPROFILE)\Documents\1.4.335.0\Include;C:\VulkanSDK\1.4.335.0\Include;%(AdditionalIncludeDirectories);$(ProjectDir)inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -98,7 +98,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)lib\inc\GLFW\include;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\inc\glm-1.0.2;$(ProjectDir)lib\inc;$(ProjectDir)lib\inc\spirv_reflect;$(ProjectDir)lib\inc\imgui;$(ProjectDir)lib\inc\imgui\backends;$(USERPROFILE)\Documents\1.4.335.0\Include;C:\VulkanSDK\1.4.335.0\Include;%(AdditionalIncludeDirectories);$(ProjectDir)inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)lib\inc\GLFW\include;$(ProjectDir)lib\inc\base64;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\inc\glm-1.0.2;$(ProjectDir)lib\inc;$(ProjectDir)lib\inc\spirv_reflect;$(ProjectDir)lib\inc\imgui;$(ProjectDir)lib\inc\imgui\backends;$(USERPROFILE)\Documents\1.4.335.0\Include;C:\VulkanSDK\1.4.335.0\Include;%(AdditionalIncludeDirectories);$(ProjectDir)inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -120,7 +120,7 @@
       <PreprocessorDefinitions>NDEBUG;_LIB;STANDALONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)lib\inc\GLFW\include;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\inc\glm-1.0.2;$(ProjectDir)lib\inc;$(ProjectDir)lib\inc\spirv_reflect;$(ProjectDir)lib\inc\imgui;$(ProjectDir)lib\inc\imgui\backends;$(USERPROFILE)\Documents\1.4.335.0\Include;C:\VulkanSDK\1.4.335.0\Include;%(AdditionalIncludeDirectories);$(ProjectDir)inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)lib\inc\GLFW\include;$(ProjectDir)lib\inc\base64;C:\VulkanSDK\1.4.313.0\Include;$(ProjectDir)lib\inc\glm-1.0.2;$(ProjectDir)lib\inc;$(ProjectDir)lib\inc\spirv_reflect;$(ProjectDir)lib\inc\imgui;$(ProjectDir)lib\inc\imgui\backends;$(USERPROFILE)\Documents\1.4.335.0\Include;C:\VulkanSDK\1.4.335.0\Include;%(AdditionalIncludeDirectories);$(ProjectDir)inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -237,9 +237,6 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="hop-engine.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="engine.hop" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\icon.ico" />

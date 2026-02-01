@@ -10,17 +10,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="836e5fd3-1918-497f-b7c7-e36a55aacb04" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/hop_engine.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/hop_engine.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/math_helpers.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/math_helpers.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/pbr.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/pbr.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/pipeline.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/pipeline.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/uniform_block.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/uniform_block.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/window.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/window.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/math_helpers.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/math_helpers.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/uniform_block.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/uniform_block.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/window.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/window.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hop-engine.sln.DotSettings.user" beforeDir="false" afterPath="$PROJECT_DIR$/hop-engine.sln.DotSettings.user" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hop-engine.vcxproj" beforeDir="false" afterPath="$PROJECT_DIR$/hop-engine.vcxproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/mesh.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/mesh.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/package.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/package.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-builder.vcxproj" beforeDir="false" afterPath="$PROJECT_DIR$/package-builder.vcxproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-builder.vcxproj.filters" beforeDir="false" afterPath="$PROJECT_DIR$/package-builder.vcxproj.filters" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/mesh.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/mesh.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/package-builder/package-builder.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/package-builder/package-builder.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/package.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/package.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,7 +34,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://0" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://8" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -65,7 +65,7 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "reference.settingsdialog.IDE.editor.colors.Color Scheme Font",
+    "settings.editor.selected.configurable": "preferences.externalTools",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -129,6 +129,18 @@
         <option name="TERMINAL_INTERACTION_BEHAVIOR" value="AUTO_DETECT" />
         <option name="PROJECT_FILE_PATH" value="$PROJECT_DIR$/package-builder.vcxproj" />
       </configuration_1>
+      <configuration_2 setup="1">
+        <option name="CONFIGURATION" value="Debug" />
+        <option name="PLATFORM" value="x64" />
+        <option name="CURRENT_LAUNCH_PROFILE" value="Local" />
+        <option name="EXE_PATH" value="$(LocalDebuggerCommand)" />
+        <option name="PROGRAM_PARAMETERS" value="$(LocalDebuggerCommandArguments)" />
+        <option name="WORKING_DIRECTORY" value="$(LocalDebuggerWorkingDirectory)" />
+        <option name="PASS_PARENT_ENVS" value="1" />
+        <option name="USE_EXTERNAL_CONSOLE" value="0" />
+        <option name="TERMINAL_INTERACTION_BEHAVIOR" value="AUTO_DETECT" />
+        <option name="PROJECT_FILE_PATH" value="$PROJECT_DIR$/package-builder.vcxproj" />
+      </configuration_2>
       <option name="DEFAULT_PROJECT_PATH" value="$PROJECT_DIR$/package-builder.vcxproj" />
       <option name="PROJECT_FILE_PATH" value="$PROJECT_DIR$/package-builder.vcxproj" />
       <option name="AUTO_SELECT_PRIORITY" value="0" />
@@ -161,7 +173,11 @@
       <workItem from="1769641391986" duration="13610000" />
       <workItem from="1769714778345" duration="133000" />
       <workItem from="1769714987965" duration="5593000" />
-      <workItem from="1769733285056" duration="8346000" />
+      <workItem from="1769733285056" duration="8947000" />
+      <workItem from="1769806889937" duration="36000" />
+      <workItem from="1769933596928" duration="5718000" />
+      <workItem from="1769939355722" duration="726000" />
+      <workItem from="1769940504598" duration="1485000" />
     </task>
     <servers />
   </component>

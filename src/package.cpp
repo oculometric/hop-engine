@@ -32,8 +32,9 @@ struct PackageHeader
 {
 	uint32_t signature;
 	uint32_t version;
-	size_t file_size;
-	size_t package_entries;
+	uint64_t file_size;
+	uint32_t package_entries;
+	uint32_t alias_entries;
 };
 
 struct PackageEntry
@@ -42,20 +43,17 @@ struct PackageEntry
 	size_t data_total_size;
 };
 
+struct AliasEntry
+{
+	size_t a_string_length;
+	size_t b_string_length;
+};
+
 struct PackageDataHeader
 {
 	size_t name_size;
 	size_t data_size;
 };
-
-// package file structure
-// PackageHeader
-// data table: array of PackageEntry
-//
-// PackageDataHeader
-// name
-// data
-// ...
 
 bool Package::loadPackageFromMemory(vector<uint8_t>& content, const string& load_path)
 {
@@ -87,7 +85,7 @@ bool Package::loadPackageFromMemory(vector<uint8_t>& content, const string& load
 			return false;
 		}
 	}
-	else if (header.version != 1)
+	else if (header.version != 3)
 	{
 		DBG_ERROR("failed to load package: " + load_path + "; invalid version");
 		return false;
@@ -111,6 +109,19 @@ bool Package::loadPackageFromMemory(vector<uint8_t>& content, const string& load
 		vector<uint8_t> data(data_header.data_size);
 		memcpy(data.data(), (content.data() + data_header_offset + sizeof(PackageDataHeader) + name.size()), data.size());
 		application_package->database[name] = data;
+	}
+	
+	size_t offset = sizeof(PackageHeader) + (sizeof(PackageEntry) * entries.size());
+	for (size_t i = 0; i < header.alias_entries; ++i)
+	{
+		AliasEntry alias_header = *reinterpret_cast<AliasEntry*>(content.data() + offset);
+		string a_string(alias_header.a_string_length, ' ');
+		string b_string(alias_header.b_string_length, ' ');
+		memcpy(a_string.data(), content.data() + offset + sizeof(AliasEntry), alias_header.a_string_length);
+		memcpy(b_string.data(), content.data() + offset + sizeof(AliasEntry) + alias_header.a_string_length, alias_header.b_string_length);
+		application_package->alias_table[a_string] = b_string;
+		
+		offset += sizeof(AliasEntry) + alias_header.a_string_length + alias_header.b_string_length;
 	}
 
 	DBG_INFO("loaded " + to_string(header.package_entries) + " items from package: " + load_path);
@@ -154,10 +165,18 @@ vector<uint8_t> Package::loadData(const string& identifier)
 		Package::init();
 
 	DBG_VERBOSE("loading '" + identifier + "'");
-	const auto it = application_package->database.find(identifier);
+	const auto redirector = application_package->alias_table.find(identifier);
+	map<string, vector<uint8_t>>::iterator it;
+	if (redirector == application_package->alias_table.end())
+		it = application_package->database.find(identifier);
+	else
+		it = application_package->database.find(redirector->second);
 	if (it != application_package->database.end())
 		return it->second;
-	DBG_WARNING("found no data associated with '" + identifier + "'");
+	if (redirector == application_package->alias_table.end())
+		DBG_WARNING("found no data associated with '" + identifier + "'");
+	else
+		DBG_WARNING("found no data associated with '" + identifier + "' (redirected to '" + redirector->second + "')");
 	return { };
 }
 
@@ -166,8 +185,8 @@ vector<uint8_t> Package::tryLoadFile(const string& path_or_identifier)
 	if (!application_package)
 		Package::init();
 
-	static string res_prefix = "res://";
-	if (path_or_identifier.substr(0, res_prefix.size()) == res_prefix)
+	const static string res_prefix = "res://";
+	if (path_or_identifier.starts_with(res_prefix))
 	{
 		// load package resource
 		return Package::loadData(path_or_identifier.substr(res_prefix.size()));
@@ -208,12 +227,25 @@ bool Package::storePackage(const string& store_path)
 
 	PackageHeader header;
 	header.signature = SIGNATURE;
-	header.package_entries = application_package->database.size();
-	header.version = 1;
-
-	vector<PackageEntry> entries;
+	header.package_entries = static_cast<uint32_t>(application_package->database.size());
+	header.alias_entries = static_cast<uint32_t>(application_package->alias_table.size());
+	header.version = 3;
+	
 	vector<vector<uint8_t>> data_blocks;
-	size_t offset = sizeof(PackageHeader) + (application_package->database.size() * sizeof(PackageEntry));
+	size_t offset = sizeof(PackageHeader);
+	for (const auto& [a, b] : application_package->alias_table)
+	{
+		const AliasEntry entry = { a.size(), b.size() };
+		vector<uint8_t> data_block(sizeof(AliasEntry) + entry.a_string_length + entry.b_string_length);
+		memcpy(data_block.data(), &entry, sizeof(AliasEntry));
+		memcpy(data_block.data() + sizeof(AliasEntry), a.data(), entry.a_string_length);
+		memcpy(data_block.data() + sizeof(AliasEntry) + entry.a_string_length, b.data(), entry.b_string_length);
+		data_blocks.push_back(data_block);
+		offset += data_block.size();
+	}
+	
+	vector<PackageEntry> entries;
+	offset += (application_package->database.size() * sizeof(PackageEntry));
 	for (auto [identifier, object_data] : application_package->database)
 	{
 		PackageDataHeader data_header;
@@ -291,6 +323,7 @@ bool Package::storeCompressedPackage(const string& store_path)
 	PackageHeader header;
 	header.signature = SIGNATURE;
 	header.package_entries = 0;
+	header.alias_entries = 0;
 	header.file_size = sizeof(PackageHeader) + size;
 	header.version = 2;
 
@@ -301,7 +334,7 @@ bool Package::storeCompressedPackage(const string& store_path)
 		return false;
 	}
 	outfile.write(reinterpret_cast<char*>(&header), sizeof(PackageHeader));
-	outfile.write(reinterpret_cast<char*>(content.data()), static_cast<streamsize>(content.size()));
+	outfile.write(reinterpret_cast<char*>(content.data()), static_cast<streamsize>(size));
 	outfile.close();
 
 	DBG_INFO("stored compressed package: " + store_path);
@@ -332,6 +365,12 @@ void Package::tryWriteFile(const string& path, const vector<uint8_t>& data)
 	file.write(reinterpret_cast<const char*>(data.data()), static_cast<streamsize>(data.size()));
 	file.close();
 }
+
+void Package::setAlias(const std::string& a, const std::string& b)
+{ application_package->alias_table[a] = b; }
+
+void Package::clearAlias(const std::string& a)
+{ application_package->alias_table.erase(a); }
 
 Package::~Package()
 {
@@ -430,7 +469,7 @@ vector<uint8_t> Package::loadCompressedPackage(const vector<uint8_t>& data)
 		DBG_ERROR("failed to load package; invalid file size");
 		return { };
 	}
-	if (header.version != 1)
+	if (header.version != 3)
 	{
 		DBG_ERROR("failed to load package; invalid version");
 		return { };

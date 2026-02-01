@@ -2,7 +2,9 @@
 #include <iostream>
 #include <filesystem>
 #include <string>
+#include <base64.hpp>
 
+#include "mesh.h"
 #include "package.h"
 
 using namespace std;
@@ -33,17 +35,19 @@ vector<string>::iterator findArg(string s, vector<string>& v)
 // TODO: improve this to be much more advanced, multiple files/folders to specify, set root, etc
 int main(const int nargs, const char** vargs)
 {
-	HopEngine::Debug::init(HopEngine::Debug::DEBUG_FAULT);
+	HopEngine::Debug::init(HopEngine::DEBUG_FAULT);
 	if (nargs < 2)
 	{
 		cout << "usage: package-builder SOURCE_DIRECTORY [options] [OUTPUT_FILE]" << endl;
 		cout << "options: -c (compress output)" << endl;
 		cout << "         -p (add prefix to all identifiers)" << endl;
+		cout << "         -b (encode files as binary versions if possible)" << endl;
 		cout << "if OUTPUT_FILE is not specified, 'resources.hop'";
 		return -1;
 	}
 
 	bool compressed = false;
+	bool binary = false;
 	string target_dir = vargs[1];
 	string output_hop = "resources.hop";
 	string path_prefix;
@@ -55,6 +59,9 @@ int main(const int nargs, const char** vargs)
 	auto it = findArg("-c", args);
 	if (it != args.end())
 		compressed = true;
+	it = findArg("-b", args);
+	if (it != args.end())
+		binary = true;
 	it = findArg("-p", args);
 	if (it != args.end())
 	{
@@ -76,7 +83,13 @@ int main(const int nargs, const char** vargs)
 			for (char& c : identifier)
 				if (c == '\\')
 					c = '/';
-			HopEngine::Package::storeData(path_prefix + identifier, readFile(path));
+			if (binary && p.path().extension().string() == ".obj")
+			{
+				HopEngine::Package::storeData(path_prefix + identifier, HopEngine::Mesh::encodeBinaryMesh(path));
+				HopEngine::Package::setAlias(base64::to_base64(path_prefix + identifier), path_prefix + identifier);
+			}
+			else
+				HopEngine::Package::storeData(path_prefix + identifier, readFile(path));
 			++entries;
 		}
 	}

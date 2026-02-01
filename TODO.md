@@ -2,12 +2,12 @@
 
 ## v0.51
 - actually add comments to everything
-- improve scene tree so that objects know about their scene, and children, and can be removed [M]
 ---
 ## v0.52
+- improve scene tree so that objects know about their scene, and children, and can be removed [M]
 - object duplicate function [L]
 - shader & other resource reloading at runtime [H]
-- binary repackaging (i.e. read in OBJs and turn them into binary meshes to reduce load times)
+- binary repackaging for textures
 - implement imgui disable-enable
 ---
 ## v0.6
