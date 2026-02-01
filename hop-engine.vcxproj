@@ -126,7 +126,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)lib\bin\glfw-3.4.bin.WIN64\lib-vc2019;C:\VulkanSDK\1.4.313.0\Lib;$(USERPROFILE)\Documents\1.4.335.0\Lib;C:\VulkanSDK\1.4.335.0\Lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;shaderc_combined.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -240,6 +240,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="engine.hop" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

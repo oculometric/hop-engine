@@ -11,16 +11,6 @@
   <component name="ChangeListManager">
     <list default="true" id="836e5fd3-1918-497f-b7c7-e36a55aacb04" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hop-engine.sln.DotSettings.user" beforeDir="false" afterPath="$PROJECT_DIR$/hop-engine.sln.DotSettings.user" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hop-engine.vcxproj" beforeDir="false" afterPath="$PROJECT_DIR$/hop-engine.vcxproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/mesh.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/mesh.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/package.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/package.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-builder.vcxproj" beforeDir="false" afterPath="$PROJECT_DIR$/package-builder.vcxproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-builder.vcxproj.filters" beforeDir="false" afterPath="$PROJECT_DIR$/package-builder.vcxproj.filters" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/mesh.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/mesh.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/package-builder/package-builder.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/package-builder/package-builder.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/package.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/package.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -51,7 +41,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "C/C++ Project.hop-engine.executor": "Debug",
+    "C/C++ Project.hop-engine.executor": "Run",
     "C/C++ Project.package-builder.executor": "Debug",
     "C/C++ Project.spaceflight-test.executor": "Debug",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
@@ -177,7 +167,8 @@
       <workItem from="1769806889937" duration="36000" />
       <workItem from="1769933596928" duration="5718000" />
       <workItem from="1769939355722" duration="726000" />
-      <workItem from="1769940504598" duration="1485000" />
+      <workItem from="1769940504598" duration="2327000" />
+      <workItem from="1769948539447" duration="20000" />
     </task>
     <servers />
   </component>
