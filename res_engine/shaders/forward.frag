@@ -19,7 +19,6 @@ void main()
     
     out_colour = vec4(pbrSurface(albedo_val.rgb, frag.position.xyz, perturbed_normal, specular_colour.rgb, pbr_val.r, pbr_val.g, pbr_val.b, scene.ambient_light.rgb, scene.eye_position), 1.0f);
 
-    out_colour = vec4(col, 1);
     out_normal = vec4(perturbed_normal, 1);
     out_params.w = 0.0f;
 }

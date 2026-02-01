@@ -1,7 +1,7 @@
 #version 450
 
 #define VERTEX
-#include "engine/shaders/common.glsl"
+#include "../shaders/common.glsl"
 
 vec4 snap(vec4 value)
 {
