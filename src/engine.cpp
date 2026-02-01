@@ -63,7 +63,6 @@ void Engine::mainLoop()
 
             RenderServer::waitIdle();
             engine->imgui_func(engine->scene, delta.count());
-            engine->drawImGuiDebug(delta.count());
 
             ImGui::Render();
         }
@@ -259,6 +258,11 @@ size_t Engine::pruneUnusedResources()
     }
     DBG_INFO("pruned " + ::to_string(pruned_refs) + " total reference counted objects");
     return pruned_refs;
+}
+
+void Engine::drawImGuiDebug(float delta_time)
+{
+    engine->_drawImGuiDebug(delta_time);
 }
 
 Engine::Engine()

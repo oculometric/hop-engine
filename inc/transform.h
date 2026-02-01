@@ -30,7 +30,7 @@ public:
 	glm::mat4 getLocalMatrix() const { return local_matrix; }
 	glm::vec3 getPosition() const { return world_matrix[3]; }
 	glm::vec3 getEuler() const; // TODO:
-	glm::mat4 getMatrix() const { return world_matrix; }
+	glm::mat4 getMatrix() { worldFromLocal(); return world_matrix; }
 	glm::vec3 right() const { return world_matrix[0]; }		// represents world space X axis
 	glm::vec3 up() const { return world_matrix[1]; }			// represents world space Y axis
 	glm::vec3 forward() const { return -world_matrix[2]; }	// represents world space -Z axis

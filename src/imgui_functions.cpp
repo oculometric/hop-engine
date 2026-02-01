@@ -28,7 +28,6 @@ static WeakRef<Object> selected_object;
 static WeakRef<Material> selected_material;
 static Camera* selected_camera;
 
-#if !defined(STANDALONE)
 static Ref<Texture> texturePicker(const Ref<Texture>& current, const char* str)
 {
 	auto options = Engine::getAllRefs<Texture>();
@@ -79,11 +78,9 @@ static Ref<Material> materialPicker(const Ref<Material>& current, const char* st
 	ImGui::Combo(str, &selected, options_str.c_str());
 	return options[selected];
 }
-#endif
 
 void Object::drawImGuiDebug()
 {
-#if !defined(STANDALONE)
 	char name_space[128] = { 0 };
 	memcpy(name_space, name.c_str(), name.size());
 	if (ImGui::InputText("name", name_space, 128))
@@ -101,12 +98,10 @@ void Object::drawImGuiDebug()
 		ImGui::DragFloat3("scale", reinterpret_cast<float*>(&vec), 0.05f);
 		transform.setLocalScale(vec);
 	}
-#endif
 }
 
 void Camera::drawImGuiDebug()
 {
-#if !defined(STANDALONE)
 	Object::drawImGuiDebug();
 	if (ImGui::CollapsingHeader("camera params", ImGuiTreeNodeFlags_DefaultOpen))
 	{
@@ -117,12 +112,10 @@ void Camera::drawImGuiDebug()
 		if (ImGui::Button("take control"))
 			selected_camera = this;
 	}
-#endif
 }
 
 void StaticMesh::drawImGuiDebug()
 {
-#if !defined(STANDALONE)
 	Object::drawImGuiDebug();
 	if (ImGui::CollapsingHeader("static mesh params", ImGuiTreeNodeFlags_DefaultOpen))
 	{
@@ -162,12 +155,10 @@ void StaticMesh::drawImGuiDebug()
 			ImGui::EndTable();
 		}
 	}
-#endif
 }
 
 void TextBlock::drawImGuiDebug()
 {
-#if !defined(STANDALONE)
 	Object::drawImGuiDebug();
 	if (ImGui::CollapsingHeader("text block params", ImGuiTreeNodeFlags_DefaultOpen))
 	{
@@ -180,12 +171,10 @@ void TextBlock::drawImGuiDebug()
 		
 		updateGeometry();
 	}
-#endif
 }
 
 void Light::drawImGuiDebug()
 {
-#if !defined(STANDALONE)
 	Object::drawImGuiDebug();
 	if (ImGui::CollapsingHeader("light params", ImGuiTreeNodeFlags_DefaultOpen))
 	{
@@ -199,10 +188,8 @@ void Light::drawImGuiDebug()
 			spot_angle /= glm::pi<float>() / 180.0f;
 		}
 	}
-#endif
 }
 
-#if !defined(STANDALONE)
 static void drawImGuiSceneTreeItem(multimap<Object*, WeakRef<Object>>& parent_map, WeakRef<Object> parent)
 {
 	auto [range_start, range_end] = parent_map.equal_range(parent.get());
@@ -231,11 +218,9 @@ static void collectDescendents(multimap<Object*, WeakRef<Object>>& parent_map, O
 		++range_start;
 	}
 }
-#endif
 
 void Scene::drawImGuiDebug()
 {
-#if !defined(STANDALONE)
 	ImGui::LabelText("scene", "%s", getOrigin().c_str());
 	ImGui::ColorEdit3("ambient light", reinterpret_cast<float*>(&(ambient_colour)));
 	skybox = texturePicker(skybox, "skybox");
@@ -320,12 +305,10 @@ void Scene::drawImGuiDebug()
 	}
 	if (disabled)
 		ImGui::EndDisabled();
-#endif
 }
 
 void Material::drawImGuiDebug()
 {
-#if !defined(STANDALONE)
 	ImGui::LabelText("shader", "%s (%s)", shader->getOrigin().c_str(), PTR(shader.get()).c_str());
 	if (ImGui::CollapsingHeader("pipeline config", ImGuiTreeNodeFlags_DefaultOpen))
 	{
@@ -339,12 +322,10 @@ void Material::drawImGuiDebug()
 	uniforms->drawImGuiDebug(texture_name_to_binding);
 	// TODO: reload shader button
 	ImGui::Button("reload shader");
-#endif
 }
 
 bool Sampler::drawImGuiDebug()
 {
-#if !defined(STANDALONE)
 	ImGui::PushID(this);
 	static std::string filter_names[2] = 
 	{
@@ -374,13 +355,11 @@ bool Sampler::drawImGuiDebug()
 		return true;
 	}
 	ImGui::PopID();
-#endif
 	return false;
 }
 
 void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_binding)
 {
-#if !defined(STANDALONE)
 	map<uint32_t, string> binding_to_texture_name;
 	for (const auto& pair : texture_name_to_binding)
 		binding_to_texture_name[pair.second] = pair.first;
@@ -431,7 +410,6 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 		}
 		// TODO: variables be modifiable
 	}
-#endif
 }
 
 void Engine::debugCamera(float delta_time)
@@ -471,38 +449,30 @@ void Engine::debugCamera(float delta_time)
 
 void Engine::debugSelect(const WeakRef<Object>& object)
 {
-#if !defined(STANDALONE)
 	selected_object = object;
-#endif
 }
 
 void Engine::debugClearSelection(const WeakRef<Object>& object, const WeakRef<Material>& material, WeakRef<Camera> camera)
 {
-#if !defined(STANDALONE)
 	selected_object = object;
 	selected_material = material;
 	selected_camera = camera.get();
-#endif
 }
 
 WeakRef<Object> Engine::getDebugSelection()
 {
-#if !defined(STANDALONE)
 	return selected_object;
-#else
-	return WeakRef<Object>();
-#endif
 }
 
-void Engine::drawImGuiDebug(float delta_time) const
+void Engine::_drawImGuiDebug(float delta_time) const
 {
-#if !defined(STANDALONE)
 	static bool show_imgui = true;
 	static unsigned int align_windows = 3;
 	
 	ImGui::BeginMainMenuBar();
 	if (ImGui::BeginMenu("file"))
 	{
+#if !defined(STANDALONE)
 		if (ImGui::BeginMenu("open scene"))
 		{
 			if (ImGui::MenuItem("bunnygirl")) // TODO: remove this once the module is over
@@ -519,6 +489,7 @@ void Engine::drawImGuiDebug(float delta_time) const
 			}
 			ImGui::EndMenu();
 		}
+#endif
 		if (ImGui::MenuItem("quit"))
 			stop();
 		ImGui::EndMenu();
@@ -722,12 +693,10 @@ void Engine::drawImGuiDebug(float delta_time) const
 	
 	if (align_windows)
 		--align_windows;
-#endif
 }
 
 void RenderGraph::drawImGuiDebug()
 {
-#if !defined(STANDALONE)
 	ImGui::LabelText("render graph", "%s", getOrigin().c_str());
 	ImGui::InputInt("show step", &output_step, 1, 1);
 	ImGui::SliderInt("show attachment", &output_image, 0, 5);
@@ -805,5 +774,4 @@ void RenderGraph::drawImGuiDebug()
 		ImGui::EndTooltip();
 	}
 	ImGui::Text("hover over a render step for more info");
-#endif
 }

@@ -85,6 +85,7 @@ public:
 	static Ref<Texture> loadTexture3D(const std::string& path, int layers_wide, int layer_high);
 	static Ref<Mesh> loadMesh(const std::string& path);
 	static size_t pruneUnusedResources();
+	static void drawImGuiDebug(float delta_time);
 	
 private:
 	Engine();
@@ -95,7 +96,7 @@ private:
 	static void _keepLoaded(const Ref<Destructible>& ref);
 	void updateStats(const FrameStats& stats);
 	
-	void drawImGuiDebug(float delta_time) const;
+	void _drawImGuiDebug(float delta_time) const;
 };
 
 template<class T>
