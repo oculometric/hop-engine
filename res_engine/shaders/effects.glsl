@@ -62,6 +62,7 @@ float clip_to_view_depth(vec4 clip_postion)
     return z / w;
 }
 
+// this is based closely on the LearnOpenGL example - https://learnopengl.com/Advanced-Lighting/SSAO
 float computeSSAO(float radius, float power, float bias, vec2 uv, sampler2D normal_texture, sampler2D depth_texture, vec4 samples[NUM_SSAO_SAMPLES])
 {
     // original normal of the pixel in world and view space
@@ -75,6 +76,7 @@ float computeSSAO(float radius, float power, float bias, vec2 uv, sampler2D norm
     view_position /= view_position.w;
 
     // use the dither matrix to compute randomized normal, tangent, bitangent vectors
+    // this is an alternative method to passing in a bunch of vectors in a uniform buffer
     ivec2 pixel_uv = pixelCoord(uv, scene.viewport_size);
     float dither = (dither_map_4[(pixel_uv.x % 4) + ((pixel_uv.y % 4) * 4)] / 16.0f) * 2.0f - 1.0f;
     vec3 view_perp = cross(view_normal, vec3(0, 0, 1));
@@ -83,23 +85,30 @@ float computeSSAO(float radius, float power, float bias, vec2 uv, sampler2D norm
     vec3 view_tangent = normalize((sin(dither * 6.28f) * view_perp) + (cos(dither * 6.28f) * view_perp2));
     vec3 view_bitangent = cross(view_tangent, view_normal);
     view_tangent = normalize(cross(view_bitangent, view_normal));
+    // finally, create a TBN matrix for the pixel
     mat3x3 tbn = mat3x3(view_tangent, view_bitangent, view_normal);
 
+    // we accumulate occlusion from many samples
     float occlusion = 0.0f;
     for (int i = 0; i < NUM_SSAO_SAMPLES; ++i)
     {
+        // offset according to the random sample direction and radius (and TBN)
         vec3 sample_position = view_position.xyz + ((tbn * samples[i].xyz) * radius);
         vec4 sample_clip_position = scene.view_to_clip * vec4(sample_position, 1.0f);
         sample_clip_position /= sample_clip_position.w;
 
+        // take another sample of the depth at the resulting pixel
         float resample_z = texture(depth_texture, (sample_clip_position.xy * 0.5f) + 0.5f).r;
         vec4 resample_clip_position = vec4(sample_clip_position.xy, resample_z, 1.0f);
+        // custom depth recalculation to skip as much math as we can, while still giving the correct value
         float resample_view_z = clip_to_view_depth(resample_clip_position);
 
+        // if our origin pixel is possibly occluded by the geometry we encountered, add some occlusion
         if (resample_view_z >= sample_position.z + bias)
-        occlusion += smoothstep(0.0f, 1.0f, radius / abs(resample_view_z - view_position.z));
+            occlusion += smoothstep(0.0f, 1.0f, radius / abs(resample_view_z - view_position.z));
     }
 
+    // rescale occlusion and apply a power factor for visual niceness
     occlusion = pow(smoothstep(0.0f, 1.0f, 1.0f - (occlusion / NUM_SSAO_SAMPLES)), power);
 
     return occlusion;
