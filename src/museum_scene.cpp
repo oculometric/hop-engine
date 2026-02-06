@@ -188,6 +188,8 @@ static void imGuiMuseumScene(Ref<Scene> scene, const float delta_time)
         camera_flythrough_time += delta_time * 0.035f;
     }
     ImGui::End();
+    
+    Engine::drawImGuiDebug(delta_time);
 }
 
 SceneFuncSet getMuseumScene()

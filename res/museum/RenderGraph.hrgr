@@ -4,6 +4,7 @@ Resource(shader, "res://museum/blend") : blend;
 Resource(shader, "res://engine/shaders/deferred_post") : shading;
 Resource(shader, "res://engine/shaders/colour_correct") : colour_corrector;
 Resource(shader, "res://engine/shaders/blur") : blur;
+Resource(shader, "res://museum/multi_panel") : multi_panel;
 
 Camera(slot = 0, scale = 0.5) : camera;
 PostProcess(shader = @shading, scale = 0.5) : shaded
@@ -37,7 +38,18 @@ PostProcess(shader = @colour_corrector, scale = 0.5) : colour_grading
 {
     Input(binding = 0, step = @blend, attachment = 0, filter = NEAREST);
 };
+PostProcess(shader = @multi_panel) : multi_panel
+{
+    Input(binding = 0, step = @colour_grading, attachment = 0, filter = NEAREST);
+    Input(binding = 1, step = @camera, attachment = 0, filter = NEAREST);
+    Input(binding = 2, step = @camera, attachment = 1, filter = NEAREST);
+    Input(binding = 3, step = @camera, attachment = 2, filter = NEAREST);
+    Input(binding = 4, step = @camera, attachment = 3, filter = NEAREST);
+    Input(binding = 5, step = @camera, attachment = 4, filter = NEAREST);
+    Input(binding = 6, step = @shaded, attachment = 0, filter = NEAREST);
+    Input(binding = 7, step = @ssao, attachment = 0, filter = NEAREST);
+};
 PostProcess(shader = @blur) : blurred2
 {
-    Input(binding = 0, step = @colour_grading, attachment = 0);
+    Input(binding = 0, step = @multi_panel, attachment = 0);
 };

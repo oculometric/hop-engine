@@ -139,6 +139,8 @@ static void imGuiAshaScene(Ref<Scene> scene, float delta_time)
         offset = new_offset;
         ImGui::End();
     }
+    
+    Engine::drawImGuiDebug(delta_time);
 }
 
 SceneFuncSet getAshaScene()
