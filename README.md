@@ -3,11 +3,11 @@ hello! welcome to my advanced graphics project. i went a bit further with this t
 
 ## Navigation
 basic controls are what you'd expect:
-- W/S - move forward/backward
-- A/D - move left/right
-- E/Q - move up/down
-- Right Mouse + Drag - look around
-- Left Mouse - select object under cursor (can be unintuitive)
+- **W/S** - move forward/backward
+- **A/D** - move left/right
+- **E/Q** - move up/down
+- **Right Mouse + Drag** - look around
+- **Left Mouse** - select object under cursor (can be unintuitive)
 
 in addition, the demo contains a bunch of debug stuff to play around with. there should be a bunch of ImGui windows on the screen; below is a summary of what each one does:
 - resources window
@@ -79,7 +79,7 @@ if you want to see any of these bigger, you can use the render graph panel in th
 
 ## Features
 - render graph
-- scene heirarchy
+- scene heirarchy & nested transform tree
 - SSAO
 - colour grading and LUT post processing
 - resource packaging
@@ -96,17 +96,25 @@ if you want to see any of these bigger, you can use the render graph panel in th
 - automatic resource reference counting with custom reference counted type (weak and strong)
 - easy material modification with named texture and uniform variables via shader reflection
 - detailed console debug output with variable degrees of verbosity, including use of the Vulkan validation layers (if enabled)
+- render-to-texture can be bound and shown on an object in the scene
+- on-GPU frame duration information via query pool
+
+// TODO: explain features and where they're implemented, and where they can be seen
 
 ## Project Structure
 this turned into a really big project so the structure is a little complicated
 
+// TODO: project structure
+
 ## Limitations
 - does not support deferred lighting (i.e. separating deferred rendering), although this would be simple to implement via the render graph system
-- 
+- SSAO could definitely be better, including being replaced by HBAO
+- more control of the scene via ImGui would be nice (changing the culling behaviour of materials, modifying uniform variables)
+- a demonstration of tangent-space lighting would have been interesting (i tested this but settled on world-space since there seemed to be no performance benefits in my case, versus several maintainability concerns)
 
 ## Credits
-the beautiful skybox is a slightly modified (adding the checkerboard floor) version of the NASA 2020 SVS Deep Star Maps. credit for this:
-NASA/Goddard Space Flight Center Scientific Visualization Studio. Gaia DR2: ESA/Gaia/DPAC. Constellation figures based on those developed for the IAU by Alan MacRobert of Sky and Telescope magazine (Roger Sinnott and Rick Fienberg).
+the beautiful skybox is a slightly modified (adding the checkerboard floor) version of the NASA SVS Deep Star Maps 2020. credit for this:
+> NASA/Goddard Space Flight Center Scientific Visualization Studio. Gaia DR2: ESA/Gaia/DPAC. Constellation figures based on those developed for the IAU by Alan MacRobert of Sky and Telescope magazine (Roger Sinnott and Rick Fienberg).
 
 libraries used:
 - Vulkan
@@ -119,10 +127,6 @@ libraries used:
 
 all other assets (models, materials, textures, shaders, font, and demo scenes) are made by me. and the code obviously.
 
-particular thanks to LearnOpenGL, the Vulkan Tutorial, and David White for the guidance to develop this.
-additional thanks to Lucy and Louise for keeping me sane.
+**particular thanks to LearnOpenGL, the Vulkan Tutorial, and David White for the guidance to develop this.**
 
-
-// TODO: explain features and where they're implemented
-// TODO: project structure
-// TODO: reflect on limitations more
+_additional thanks to Lucy and Louise for keeping me alive and sane. <3_
