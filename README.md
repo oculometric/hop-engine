@@ -102,9 +102,141 @@ if you want to see any of these bigger, you can use the render graph panel in th
 // TODO: explain features and where they're implemented, and where they can be seen
 
 ## Project Structure
-this turned into a really big project so the structure is a little complicated
+this turned into a really big project so the structure is a little complicated. the main places of note are `src`, `inc`, and `res`/`res_engine`. part of this complexity is tied with having tested the engine to build as a static library (for the purpose of the assignment this is irrelevant, and the Release/x64 configuration should be used).
 
-// TODO: project structure
+- inc - contains nearly all header files
+  - counted_ref.h - contains reference counting classes
+  - window.h - encapsulates desktop window management
+  - graphics_environment.h - singleton which manages configuring Vulkan and other similar tasks
+  - vulkan_typedefs.h - typedefs and similar to avoid #including Vulkan in headers
+  - swapchain.h - encapsulates swapchain creation and resizing
+  - command_buffer.h - object for creating and submitting transient command buffers
+  - buffer.h - encapsulates GPU buffer object creation and mapping
+  - render_pass.h - encapsulates creation and resizing of render passes and their configurations
+  - pipeline.h - encapsulates pipeline creation
+  - shader.h - encapsulates shader compilation, linking, and descriptor set layout extraction via reflection
+  - mesh.h - encapsulates loading and management of a mesh
+  - texture.h - encapsulates loading and management of a texture/image
+  - sampler.h - encapsulates sampler creation
+  - uniform_block.h - encapsulates storage and management of uniform buffers
+  - material.h - encapsulates creation of pipelines for shaders, and management of uniforms/texture bindings
+  - render_graph.h - contains render graph system for multi-step rendering and post-processing
+  - font.h - encapsulates font information (glyph atlas texture and glyph size information)
+  - pbr.h - contains reflections of shader uniforms
+  - scene.h - manages a tree of objects other information needed to complete rendering (render graph, lights, cameras, skybox, etc)
+  - draw_command.h - represents a request for a specified mesh to be draw, using a specified material and specified object uniforms (gives flexibility for objects to submit multiple draw calls)
+  - transform.h - describes the transformation of objects as a nested hierarchy, providing transform operations in local and world space
+  - math_helpers.h - contains the ray-OBB intersection checker
+  - object.h - describes a generic scene object with no special attributes, capable of having a parent (also includes key object types - camera, static mesh, light)
+  - gizmo.h - subtype of scene object which can receive input to modify other objects (WIP and not relevant)
+  - node_view.h - subtype of scene object which renders arbitrary nodes onto a 2D canvas (WIP and not relevant)
+  - text_block.h - subtype of scene object which draws customisable text in world space using a bitmap font
+  - debug.h - contains macros + singleton to handle logging to the console
+  - engine.h - singleton which manages overall engine state and initialisation of subcomponents
+  - package.h - singleton which manages loading/storing of packages and data from files within packages
+  - input.h - singleton which handles receiving and polling input from keyboard, mouse, and gamepads
+  - token_file.h - provides utility functions + classes for reading arbitrary syntax tree files (such as scene, material, and render graph files)
+  - hop_engine.h - unifies all other headers into a single include
+  - hop_forward.h - contains forward definitions for most types
+  - common.h - contains some commonly used code which all (or nearly all) other files use
+- src - contains implementations plus some header files which are not intended to be externally used
+  - package-builder
+    - package-builder.cpp - for the package builder subproject, results in a simple executable which takes command line arguments to turn a folder of files into a single '.hop' package file (which can be read back in by the engine)
+  - window.cpp - partner to window.h
+  - graphics_environment.cpp - partner to graphics_environment.h
+  - swapchain.cpp - partner to swapchain.h
+  - swapchain_vulkan.h - contains additional Vulkan-specific definitions
+  - command_buffer.cpp - partner to command_buffer.h
+  - buffer.cpp - partner to buffer.h
+  - render_pass.cpp - partner to render_pass.h
+  - pipeline.cpp - partner to pipeline.h
+  - shader.cpp - partner to shader.h
+  - mesh.cpp - partner to mesh.h
+  - texture.cpp - partner to texture.h
+  - sampler.cpp - partner to sampler.h
+  - uniform_block.cpp - partner to uniform_block.h
+  - material.cpp - partner to material.h
+  - render_graph.cpp - partner to render_graph.h
+  - font.cpp - partner to font.h
+  - scene.cpp - partner to scene.h
+  - transform.cpp - partner to transform.h
+  - math_helpers.cpp - partner to math_helpers.h
+  - object.cpp - partner to object.h
+  - gizmo.cpp - partner to gizmo.h
+  - node_view.cpp - partner to node_view.h
+  - text_block.cpp - partner to text_block.h
+  - debug.cpp - partner to debug.h
+  - engine.cpp - partner to engine.h
+  - imgui_functions.cpp - contains functions from various types (engine, mesh, material, etc) which draw ImGui debug windows describing particular those types
+  - package.cpp - partner to package.h
+  - input.cpp - partner to input.h
+  - token_file.cpp - partner to token_file.h
+  - deserialise.cpp - contains functions from various types (scene, object, render graph, material) which can deserialise those types from text representations
+  - exec.cpp - contains a function for executing a command and capturing the output
+  - asha_scene.cpp - contains functions which represent the startup, update, and draw-debug functions for the bunnygirl scene
+  - museum_scene.cpp - contains functions which represent the startup, update, and draw-debug functions for the museum scene
+  - node_scene.cpp - contains functions which represent the startup, update, and draw-debug functions for the node scene (WIP and not relevant)
+  - main.cpp - contains the main function
+  - main.h - contains definitions for the three demo scenes (only bunnygirl and museum are playable)
+- res - contains resources for the demo scenes
+  - half_and_half.frag/.vert - post-process shader which overlays other camera passes on top of the main pass (used in the bunnygirl scene)
+  - icon.ico/.png - used for the app icon
+  - test_graph.hrgr - render graph used in the bunnygirl scene
+  - tux.obj - remodel of tux, from tuxracer of course!
+  - tux.png - texture for tux
+  - museum - contains all resources specific to the museum demo scene
+    - Museum.hscn - scene description for the museum
+    - RenderGraph.hrgr - render graph description for the museum. very complicated!
+    - *.hmat - various material descriptions of materials used in the scene (bind textures and assign uniform variables)
+    - *_t.png - albedo textures for various materials
+    - *_n.png - normal maps for various materials
+    - *.obj - meshes for various objects in the scene
+    - blend.frag/.vert - post-processing shader which blends SSAO over-top of the scene
+    - multi_panel.frag/.vert - post-processing shader which overlays various different render attachments on top of the main scene output for debug
+- res_engine - contains resources which are needed by the engine, or are provided as defaults/samples
+  - meshes
+    - axes_gizmo.obj - mesh for the translation gizmo
+    - rotate_gizmo.obj - mesh for the rotation gizmo
+    - skybox.obj - cube with flipped normals used for skybox rendering
+  - shaders
+    - common.glsl - contains various standard functions, defines, and layout directives to standardise/simplify other shaders
+    - dither.glsl - provides some dithering masks/functions
+    - effects.glsl - provides various functions which perform effects (sampling a convolution kernel, computing SSAO, etc)
+    - pbr_util.glsl - provides PBR suppport
+    - default_shader.frag/.vert - pink error shader for when a shader cannot be loaded
+    - deferred.frag/.vert - scene object shader which outputs information to various attachments to be later used by the deferred rendering pass
+    - deferred_post.frag/.vert - PBR deferred rendering post-processing pass, expects inputs to be in the form of outputs from deferred.frag
+    - forward.frag/.vert - PBR forward rendering scene object shader (uses same shading math as deferred_post.frag)
+    - passthrough.frag/.vert - post-process effect which does nothing but blit to the screen (used internally by the engine)
+    - skybox.frag/.vert - performs skybox shading
+    - ssao.frag/.vert - post-process effect which computes screen-space ambient occlusion
+    - fog.frag/.vert - post-process effect which applies depth fog
+    - blur.frag/.vert - post-process effect which blurs the input texture
+    - colour_correct.frag/.vert - post-process effect which applies LUT and basic colour correction
+    - text.frag/.vert - shader used by the text block object material
+    - gizmo.frag/.vert - shader used by the gizmo object material
+  - textures
+    - basic_lut.png - LUT texture with no colour alterations
+  - samples
+    - asha.obj - a character 3D model (a fanart made by me), the eponymous bunnygirl
+    - asha.png - texture for asha
+    - bunny.obj - a demo 3D model of a bunny (again by me), her name is Julia
+    - bunny.png - texture for bunny
+    - plane.obj - quad demo object
+    - cube.obj - cube demo object
+    - ico_sphere.obj - icosahedron demo object
+    - uv_sphere.obj - UV sphere demo object
+    - cylinder.obj - cylinder demo object
+    - cone.obj - cone demo object
+    - donut.obj - torus demo object
+    - torus.obj - another torus demo object?
+    - nasa_goddard_gaia_dr2_deep_star_map.png - NASA SVS Deep Star Maps 2020 skybox texture
+    - psx.frag/.vert - stylised simple shader with a vertex snapping/warping effect (used by asha and the bunny)
+  - font.bmp - basic bitmap font
+  - icon.ico/.png - another copy of the app icon
+  - newnodes.png - contains elements used for drawing the nodes in the node view
+  - nodelinks.png - contains more elements used for drawing the nodes in the node view
+  - node_shader.frag/.vert - shader which draws the nodes in the node view
 
 ## Limitations
 - does not support deferred lighting (i.e. separating deferred rendering), although this would be simple to implement via the render graph system
