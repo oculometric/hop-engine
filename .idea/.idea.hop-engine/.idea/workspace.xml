@@ -10,8 +10,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="836e5fd3-1918-497f-b7c7-e36a55aacb04" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/effects.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/effects.glsl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/asha_scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/asha_scene.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,7 +26,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://12" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://18" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -174,7 +175,7 @@
       <workItem from="1769977706537" duration="669000" />
       <workItem from="1769979057728" duration="1149000" />
       <workItem from="1770340367797" duration="65000" />
-      <workItem from="1770372591885" duration="5529000" />
+      <workItem from="1770372591885" duration="10558000" />
     </task>
     <servers />
   </component>
