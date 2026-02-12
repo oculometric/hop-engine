@@ -17,6 +17,9 @@ static WeakRef<StaticMesh> obj2;
 static WeakRef<StaticMesh> obj3;
 static WeakRef<StaticMesh> obj4;
 
+static WeakRef<StaticMesh> normal_demo_1;
+static WeakRef<StaticMesh> normal_demo_2;
+
 static WeakRef<StaticMesh> spline_obj;
 static Spline spline;
 static float spline_progress = 0.0f;
@@ -109,6 +112,24 @@ static Ref<Scene> initMuseumScene()
     cc_material->setFloatUniform("use_lut", 1);
     Engine::debugClearSelection(WeakRef<Object>(), WeakRef<Material>(), scene->getCamera(0));
 
+    normal_demo_1 = scene->insertObject<StaticMesh>(new StaticMesh(
+        Engine::loadMesh("res://engine/samples/plane.obj"),
+        new Material(Engine::loadShader("res://engine/shaders/deferred"))));
+    normal_demo_1->transform.setPosition(glm::vec3{ 0, -8, 0.8 });
+    normal_demo_1->material->setTexture(0, RenderServer::getDefaultTextureSampler().first);
+    normal_demo_1->material->setTexture(1, Engine::loadTexture("res://demo_normal.png"));
+    normal_demo_1->material->setVec4Uniform("base_colour", glm::vec4{ 1, 1, 1, 1 });
+    normal_demo_1->material->setVec4Uniform("specular_colour", glm::vec4{ 1, 1, 1, 1 });
+    normal_demo_1->material->setFloatUniform("roughness_factor_add", 0.5f);
+    normal_demo_1->material->setFloatUniform("normal_strength", 1.0f);
+    
+    normal_demo_2 = scene->insertObject<StaticMesh>(new StaticMesh(
+        Engine::loadMesh("res://museum/PipeL.obj"),
+        Engine::loadMaterial("res://museum/ShinyPipes.hmat")
+        ));
+    normal_demo_2->transform.setPosition(glm::vec3{ 0, -8, 2 });
+    normal_demo_2->transform.setLocalScale(glm::vec3{ 3, 3, 3 });
+
     return scene;
 }
 
@@ -144,6 +165,9 @@ static void updateMuseumScene(Ref<Scene> scene, const float delta_time)
     }
     
     crt->material->setTexture("albedo_tex", scene->render_graph->getFinalImage().first);
+    
+    normal_demo_1->transform.rotate(glm::vec3{ 0, 0, delta_time * 60.0f });
+    normal_demo_2->transform.rotate(glm::vec3{ delta_time * 80.0f, 0, delta_time * 40.0f });
     
     Input::resetMouseDelta();
 }

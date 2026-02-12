@@ -5,6 +5,7 @@ Resource(texture, "res://museum/ShinyPipes_n.png") : normal;
 Shader(resource = @shader);
 Texture(binding = "albedo_tex", resource = @albedo, filter = NEAREST);
 Texture(binding = "normal_tex", resource = @normal, filter = NEAREST);
+Culling(mode = NONE);
 Uniform()
 {
     vec4("base_colour", [ 1, 1, 1, 1 ]);

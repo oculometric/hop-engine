@@ -6,8 +6,8 @@ Resource(shader, "res://engine/shaders/colour_correct") : colour_corrector;
 Resource(shader, "res://engine/shaders/blur") : blur;
 Resource(shader, "res://museum/multi_panel") : multi_panel;
 
-Camera(slot = 0, scale = 0.5) : camera;
-PostProcess(shader = @shading, scale = 0.5) : shaded
+Camera(slot = 0) : camera;
+PostProcess(shader = @shading) : shaded
 {
     Input(binding = 0, step = @camera, attachment = 0, filter = NEAREST);
     Input(binding = 1, step = @camera, attachment = 1, filter = NEAREST);
@@ -15,26 +15,26 @@ PostProcess(shader = @shading, scale = 0.5) : shaded
     Input(binding = 3, step = @camera, attachment = 3, filter = NEAREST);
     Input(binding = 4, step = @camera, attachment = 4, filter = NEAREST);
 };
-PostProcess(shader = @fog, scale = 0.5) : fog
+PostProcess(shader = @fog) : fog
 {
     Input(binding = 0, step = @shaded, attachment = 0, filter = NEAREST);
     Input(binding = 1, step = @camera, attachment = 4, filter = NEAREST);
 };
-PostProcess(shader = @ssao, scale = 0.5) : ssao
+PostProcess(shader = @ssao, scale = 0.25) : ssao
 {
     Input(binding = 0, step = @camera, attachment = 1, filter = NEAREST);
     Input(binding = 1, step = @camera, attachment = 4, filter = NEAREST);
 };
-PostProcess(shader = @blur, scale = 0.5) : blurred
+PostProcess(shader = @blur, scale = 0.25) : blurred
 {
     Input(binding = 0, step = @ssao, attachment = 0, filter = NEAREST);
 };
-PostProcess(shader = @blend, scale = 0.5) : blend
+PostProcess(shader = @blend) : blend
 {
     Input(binding = 0, step = @fog, attachment = 0, filter = NEAREST);
-    Input(binding = 1, step = @blurred, attachment = 0, filter = NEAREST);
+    Input(binding = 1, step = @blurred, attachment = 0, filter = LINEAR);
 };
-PostProcess(shader = @colour_corrector, scale = 0.5) : colour_grading
+PostProcess(shader = @colour_corrector) : colour_grading
 {
     Input(binding = 0, step = @blend, attachment = 0, filter = NEAREST);
 };
