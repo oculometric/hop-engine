@@ -51,6 +51,7 @@ struct RenderStep
 struct RenderGraphBuilder
 {
 	std::vector<RenderStep> execution_steps;
+	SamplerFilter screen_filtering;
 
 	RenderGraphBuilder& addCamera(size_t slot);
 	RenderGraphBuilder& addCamera(size_t slot, const RenderOutput& render_pass_config, float size_factor = 1.0f, glm::u32vec2 custom_extent = { 128, 128 });
@@ -58,6 +59,7 @@ struct RenderGraphBuilder
 	RenderGraphBuilder& addPostProcess(const Ref<Shader>& shader, const std::map<uint32_t, RenderTextureBinding>& texture_bindings);
 	RenderGraphBuilder& addPostProcess(const Ref<Shader>& shader, const std::map<uint32_t, RenderTextureBinding>& texture_bindings, const RenderOutput& render_pass_config, float size_factor = 1.0f, glm::u32vec2 custom_extent = { 128, 128 });
 	RenderGraphBuilder& addPostProcess(const Ref<Shader>& shader, const std::map<uint32_t, RenderTextureBinding>& texture_bindings, float size_factor, glm::u32vec2 custom_extent = { 128, 128 });
+	RenderGraphBuilder& filtering(const SamplerFilter value) { screen_filtering = value; return *this; }
 };
 
 class RenderGraph : public Destructible
