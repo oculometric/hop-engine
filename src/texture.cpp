@@ -70,13 +70,17 @@ Texture::Texture(const string& file, const TextureBuilder& builder)
     }
     else
     {
-        const size_t row_size = static_cast<size_t>(extent.x) * 4;
-        void* tmp = new uint8_t[row_size];
-        for (size_t i = 0; i < extent.y / 2; ++i)
+        if (builder.layer_arrangement.x == 1 && builder.layer_arrangement.y == 1)
         {
-            memcpy(tmp, pixels + (i * row_size), row_size);
-            memcpy(pixels + (i * row_size), pixels + ((extent.y - i - 1) * row_size), row_size);
-            memcpy(pixels + ((extent.y - i - 1) * row_size), tmp, row_size);
+            const size_t row_size = static_cast<size_t>(img_width) * 4;
+            const size_t col_size = static_cast<size_t>(img_height);
+            void* tmp = new uint8_t[row_size];
+            for (size_t i = 0; i < col_size / 2; ++i)
+            {
+                memcpy(tmp, pixels + (i * row_size), row_size);
+                memcpy(pixels + (i * row_size), pixels + ((col_size - i - 1) * row_size), row_size);
+                memcpy(pixels + ((col_size - i - 1) * row_size), tmp, row_size);
+            }
         }
 
         loadFromMemory(pixels, builder.layer_arrangement);

@@ -125,6 +125,6 @@ vec3 sampleLut(vec3 colour, sampler3D lut)
     vec3 size = vec3(textureSize(lut, 0));
     float fract = (size.x - 1.0f) / size.x;
     float fract2 = 0.5f / size.x;
-    vec3 linear = toSRGB((colour * fract) + fract2);
+    vec3 linear = ((colour * fract) + fract2);
     return (texture(lut, linear).rgb);
 }
