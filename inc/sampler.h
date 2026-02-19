@@ -30,6 +30,15 @@ struct SamplerBuilder
 	SamplerBuilder& address(const SamplerAddress value) { address_mode = value; return *this; }
 };
 
+inline bool operator<(const SamplerBuilder& a, const SamplerBuilder& b)
+{
+	if (a.address_mode < b.address_mode)
+		return true;
+	if (a.filtering_mode < b.filtering_mode)
+		return true;
+	return false;
+}
+
 class Sampler : public Destructible
 {	
 private:

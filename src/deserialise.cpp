@@ -402,7 +402,7 @@ Ref<Material> Material::deserialise(const string& name)
 			sampler_builder.address(address);
 		}
 		material->setTexture(binding, texture_it->second);
-		material->setSampler(binding, new Sampler(sampler_builder));
+		material->setSampler(binding, Engine::makeSampler(sampler_builder));
 	}
 
 	for (const TokenReader::Statement& statement : uniforms)

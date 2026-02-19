@@ -196,6 +196,11 @@ Ref<Mesh> Engine::loadMesh(const string& path)
     return it->second;
 }
 
+Ref<Sampler> Engine::makeSampler(const SamplerBuilder& builder)
+{
+    return engine->premade_samplers[builder];
+}
+
 size_t Engine::pruneUnusedResources()
 {
     DBG_INFO("pruning currently loaded unused resources...");
@@ -287,6 +292,19 @@ Engine::Engine()
     Input::init(window);
     RenderServer::init(window);
     RenderServer::draw();
+    
+    SamplerBuilder builders[6] =
+    {
+        { FILTER_LINEAR, ADDRESS_REPEAT },
+        { FILTER_NEAREST, ADDRESS_REPEAT },
+        { FILTER_LINEAR, ADDRESS_MIRRORED },
+        { FILTER_NEAREST, ADDRESS_MIRRORED },
+        { FILTER_LINEAR, ADDRESS_CLAMP_EDGE },
+        { FILTER_NEAREST, ADDRESS_CLAMP_EDGE },
+    };
+    for (SamplerBuilder s : builders)
+        premade_samplers[s] = new Sampler(s);
+    
     window->setVisible(true);
     debugClearSelection();
 }
@@ -300,6 +318,7 @@ Engine::~Engine()
     loaded_materials.clear();
     loaded_textures.clear();
     loaded_meshes.clear();
+    premade_samplers.clear();
 
     RenderServer::destroy();
     Package::destroy();

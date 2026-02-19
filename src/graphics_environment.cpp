@@ -506,7 +506,7 @@ void RenderServer::createCommandPool()
     if (vkCreateCommandPool(device, &pool_create_info, nullptr, &command_pool) != VK_SUCCESS)
         DBG_FAULT("vkCreateCommandPool failed");
 
-    for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    for (uint32_t i = 0; i < static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT); ++i)
         command_buffers.push_back(new DrawCommandBuffer());
 }
 

@@ -186,7 +186,7 @@ void DrawCommandBuffer::bindDescriptorSetInternal(size_t set, GPUHandle descript
     
     current_descriptor_sets[set] = descriptor_set;
     VkDescriptorSet binding_set = static_cast<VkDescriptorSet>(descriptor_set);
-    vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, static_cast<VkPipelineLayout>(current_pipeline_layout), set, 1, &binding_set, 0, nullptr);
+    vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, static_cast<VkPipelineLayout>(current_pipeline_layout), static_cast<uint32_t>(set), 1, &binding_set, 0, nullptr);
 }
 
 void DrawCommandBuffer::bindVertexBuffer(GPUHandle vertex_buffer)

@@ -339,21 +339,7 @@ bool Sampler::drawImGuiDebug()
 		"CLAMP TO EDGE"
 	};
 	ImGui::LabelText("filter", "%s", filter_names[builder.filtering_mode].c_str());
-	SamplerFilter new_mode = builder.filtering_mode;
-	if (ImGui::Button("switch filtering"))
-		new_mode = static_cast<SamplerFilter>((new_mode + 1) % 2);
 	ImGui::LabelText("address", "%s", address_names[builder.address_mode].c_str());
-	SamplerAddress new_address = builder.address_mode;
-	if (ImGui::Button("switch addressing"))
-		new_address = static_cast<SamplerAddress>((new_address + 1) % 3);
-	if (new_mode != builder.filtering_mode || new_address != builder.address_mode)
-	{
-		builder.filtering_mode = new_mode;
-		builder.address_mode = new_address;
-		reconfigure(builder);
-		ImGui::PopID();
-		return true;
-	}
 	ImGui::PopID();
 	return false;
 }

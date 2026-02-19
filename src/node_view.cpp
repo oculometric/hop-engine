@@ -193,7 +193,7 @@ Ref<NodeView::Node> NodeView::select(glm::vec2 world_position)
 NodeView::NodeView() : StaticMesh(nullptr, nullptr)
 {
     material = new Material(new Shader("res://engine/node_shader"), PipelineBuilder().cullMode(CULL_NONE).depthTest(false).depthWrite(false));
-    Ref<Sampler> sampler = new Sampler(SamplerBuilder().filter(FILTER_NEAREST));
+    Ref<Sampler> sampler = Engine::makeSampler(SamplerBuilder().filter(FILTER_NEAREST));
     material->setSampler("node_atlas", sampler);
     material->setSampler("text_atlas", sampler);
     material->setSampler("link_atlas", sampler);

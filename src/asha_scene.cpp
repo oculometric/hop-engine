@@ -23,7 +23,7 @@ static Ref<Scene> initAshaScene()
             shader, PipelineBuilder().cullMode(CULL_NONE).stencilWrite(1)
         ))));
     asha->material->setTexture("albedo", Engine::loadTexture("res://engine/samples/asha.png"));
-    const Ref<Sampler> sampler = new Sampler(SamplerBuilder().filter(FILTER_NEAREST));
+    const Ref<Sampler> sampler = Engine::makeSampler(SamplerBuilder().filter(FILTER_NEAREST));
     asha->material->setSampler("albedo", sampler);
     asha->transform.setLocalPosition({ 0, 0, -0.9f });
 

@@ -1,7 +1,6 @@
 # TODO
 
 ## v0.51
-- eliminate sampler duplication [M]
 - custom shader format to keep stuff in one file [H]
 - reorganise engine scene render calls to be able to render multiple scenes [H]
 - improve scene tree so that objects know about their scene, and children, and can be removed [M]

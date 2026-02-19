@@ -82,7 +82,7 @@ RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader
 RenderGraph::RenderGraph(const RenderGraphBuilder& config)
 {
     passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough"), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), RenderServer::getFinalRenderPass());
-    passthrough->setSampler(0, new Sampler(SamplerBuilder().filter(config.screen_filtering)));
+    passthrough->setSampler(0, Engine::makeSampler(SamplerBuilder().filter(config.screen_filtering)));
     execution_steps = config.execution_steps;
     if (!config.execution_steps.empty())
         expected_extent = config.execution_steps[0].render_pass->getExtent();
@@ -323,7 +323,7 @@ void RenderGraph::rebuildBindings()
                 texture = binding_step.render_pass->getImage(0);
             }
             step.material->setTexture(texture_index, texture);
-            step.material->setSampler(texture_index, new Sampler(SamplerBuilder().filter(binding.filter_mode).address(binding.address_mode)));
+            step.material->setSampler(texture_index, Engine::makeSampler(SamplerBuilder().filter(binding.filter_mode).address(binding.address_mode)));
         }
     }
 }
