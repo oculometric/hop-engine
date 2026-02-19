@@ -283,6 +283,8 @@ void RenderGraph::recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, Ref
         command.uniforms->bind(command_buffer, 1);
         command.mesh->draw(command_buffer);
     }
+    
+    command_buffer->drawImGui();
 }
 
 size_t RenderGraph::findStep(const string& name) const

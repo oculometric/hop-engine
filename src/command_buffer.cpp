@@ -5,7 +5,6 @@
 #include <imgui/backends/imgui_impl_vulkan.h>
 
 #include "graphics_environment.h"
-#include "render_pass.h"
 #include "engine.h"
 
 using namespace HopEngine;
@@ -93,10 +92,15 @@ DrawCommandBuffer::~DrawCommandBuffer()
 // TODO: add state checks!! so you cant do illegal stuff
 void DrawCommandBuffer::begin(uint32_t index, FrameStats* frame_stats)
 {
+    if (begun)
+    {
+        DBG_ERROR("attempt to begin a command buffer which has already been started!");
+        return;
+    }
     stats = frame_stats;
     image_index = index;
     vkResetCommandBuffer(buffer, 0);
-    already_submitted = false;
+    submitted = false;
     current_render_pass = nullptr;
     current_descriptor_sets[0] = nullptr;
     current_descriptor_sets[1] = nullptr;
@@ -105,7 +109,6 @@ void DrawCommandBuffer::begin(uint32_t index, FrameStats* frame_stats)
     current_pipeline = nullptr;
     current_vertex_buffer = nullptr;
     current_index_buffer = nullptr;
-    cleared = true;
     
     DBG_BABBLE("recording command buffer");
     VkCommandBufferBeginInfo cmd_buffer_begin_info{ };
@@ -121,6 +124,12 @@ void DrawCommandBuffer::begin(uint32_t index, FrameStats* frame_stats)
 
 void DrawCommandBuffer::startRenderPassInternal(GPUHandle render_pass, GPUHandle framebuffer, glm::u32vec2 extent, vector<VkClearValue> clear_values, glm::vec3 clear_colour)
 {
+    if (!begun)
+    {
+        DBG_ERROR("attempt to start a render pass in a command buffer which has not been started!");
+        return;
+    }
+    
     if (current_render_pass)
     {
         writeTimestamp(true);
@@ -166,6 +175,17 @@ void DrawCommandBuffer::startRenderPassInternal(GPUHandle render_pass, GPUHandle
 
 void DrawCommandBuffer::bindPipelineInternal(GPUHandle pipeline)
 {
+    if (!begun)
+    {
+        DBG_ERROR("attempt to bind a pipeline in a command buffer which has not been started!");
+        return;
+    }
+    if (!current_render_pass)
+    {
+        DBG_ERROR("attempt to bind a pipeline in a command buffer where no render pass is in progress!");
+        return;
+    }
+    
     if (pipeline == current_pipeline)
         return;
     
@@ -176,11 +196,48 @@ void DrawCommandBuffer::bindPipelineInternal(GPUHandle pipeline)
 
 void DrawCommandBuffer::bindPipelineLayoutInternal(GPUHandle pipeline_layout)
 {
+    if (!begun)
+    {
+        DBG_ERROR("attempt to bind a pipeline layout in a command buffer which has not been started!");
+        return;
+    }
+    if (!current_render_pass)
+    {
+        DBG_ERROR("attempt to bind a pipeline layout in a command buffer where no render pass is in progress!");
+        return;
+    }
+    
     current_pipeline_layout = pipeline_layout;
 }
 
 void DrawCommandBuffer::bindDescriptorSetInternal(size_t set, GPUHandle descriptor_set)
 {
+    if (!begun)
+    {
+        DBG_ERROR("attempt to bind a descriptor set in a command buffer which has not been started!");
+        return;
+    }
+    if (!current_render_pass)
+    {
+        DBG_ERROR("attempt to bind a descriptor set in a command buffer where no render pass is in progress!");
+        return;
+    }
+    if (!current_pipeline_layout)
+    {
+        DBG_ERROR("attempt to bind a descriptor set in a command buffer where no pipeline layout is bound!");
+        return;
+    }
+    if (!current_pipeline)
+    {
+        DBG_ERROR("attempt to bind a descriptor set in a command buffer where no pipeline is bound!");
+        return;
+    }
+    if (set > 2)
+    {
+        DBG_ERROR("attempt to bind a descriptor set for set " + ::to_string(set) + ", which is not allowed");
+        return;
+    }
+    
     if (current_descriptor_sets[set] == descriptor_set)
         return;
     
@@ -191,6 +248,22 @@ void DrawCommandBuffer::bindDescriptorSetInternal(size_t set, GPUHandle descript
 
 void DrawCommandBuffer::bindVertexBuffer(GPUHandle vertex_buffer)
 {
+    if (!begun)
+    {
+        DBG_ERROR("attempt to bind a vertex buffer in a command buffer which has not been started!");
+        return;
+    }
+    if (!current_render_pass)
+    {
+        DBG_ERROR("attempt to bind a vertex buffer in a command buffer where no render pass is in progress!");
+        return;
+    }
+    if (!current_pipeline)
+    {
+        DBG_ERROR("attempt to bind a vertex buffer in a command buffer where no pipeline is bound!");
+        return;
+    }
+    
     if (current_vertex_buffer == vertex_buffer)
         return;
     
@@ -202,6 +275,22 @@ void DrawCommandBuffer::bindVertexBuffer(GPUHandle vertex_buffer)
 
 void DrawCommandBuffer::bindIndexBuffer(GPUHandle index_buffer)
 {
+    if (!begun)
+    {
+        DBG_ERROR("attempt to bind an index buffer in a command buffer which has not been started!");
+        return;
+    }
+    if (!current_render_pass)
+    {
+        DBG_ERROR("attempt to bind an index buffer in a command buffer where no render pass is in progress!");
+        return;
+    }
+    if (!current_pipeline)
+    {
+        DBG_ERROR("attempt to bind an index buffer in a command buffer where no pipeline is bound!");
+        return;
+    }
+    
     if (current_index_buffer == index_buffer)
         return;
     
@@ -211,6 +300,27 @@ void DrawCommandBuffer::bindIndexBuffer(GPUHandle index_buffer)
 
 void DrawCommandBuffer::drawMeshInternal(size_t indices)
 {
+    if (!begun)
+    {
+        DBG_ERROR("attempt to issue a draw command in a command buffer which has not been started!");
+        return;
+    }
+    if (!current_render_pass)
+    {
+        DBG_ERROR("attempt to issue a draw command in a command buffer where no render pass is in progress!");
+        return;
+    }
+    if (!current_pipeline)
+    {
+        DBG_ERROR("attempt to issue a draw command in a command buffer where no pipeline is bound!");
+        return;
+    }
+    if (!current_index_buffer || !current_vertex_buffer)
+    {
+        DBG_ERROR("attempt to issue a draw command in a command buffer where the vertex/index buffers are not bound!");
+        return;
+    }
+    
     vkCmdDrawIndexed(buffer, static_cast<uint32_t>(indices), 1, 0, 0, 0);
     stats->draw_calls++;
     stats->triangles += indices / 3;
@@ -218,6 +328,17 @@ void DrawCommandBuffer::drawMeshInternal(size_t indices)
 
 void DrawCommandBuffer::drawImGui()
 {
+    if (!begun)
+    {
+        DBG_ERROR("attempt to draw ImGui in a command buffer which has not been started!");
+        return;
+    }
+    if (!current_render_pass)
+    {
+        DBG_ERROR("attempt to draw ImGui in a command buffer where no render pass is in progress!");
+        return;
+    }
+    
     ImDrawData* draw_data = ImGui::GetDrawData();
     if (draw_data) ImGui_ImplVulkan_RenderDrawData(draw_data, buffer);
 }
@@ -239,6 +360,11 @@ void DrawCommandBuffer::extractTiming()
 
 void DrawCommandBuffer::end()
 {
+    if (!begun)
+    {
+        DBG_ERROR("attempt to end rendering in a command buffer which has not been started!");
+        return;
+    }
     if (current_render_pass)
     {
         writeTimestamp(true);
@@ -247,7 +373,7 @@ void DrawCommandBuffer::end()
     writeTimestamp(true);
     if (vkEndCommandBuffer(buffer) != VK_SUCCESS)
         DBG_FAULT("vkEndCommandBuffer failed");
-    already_submitted = true;
+    submitted = true;
     begun = false;
 }
 

@@ -42,13 +42,12 @@ private:
 	// the query pool allows us to pull useful frame stats (like timings) from the GPU
 	VkQueryPool query_pool = VK_NULL_HANDLE;
 	uint32_t query_offset = 0;
-	bool cleared = false;
 	bool begun = false;
-	bool already_submitted = false;
+	bool submitted = false;
 	uint32_t image_index = 0;
 	FrameStats* stats = nullptr;
 	
-	GPUHandle current_render_pass;
+	GPUHandle current_render_pass = nullptr;
 	GPUHandle current_descriptor_sets[3] = { nullptr };
 	GPUHandle current_pipeline_layout = nullptr;
 	GPUHandle current_pipeline = nullptr;

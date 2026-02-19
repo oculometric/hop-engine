@@ -11,18 +11,9 @@
   <component name="ChangeListManager">
     <list default="true" id="836e5fd3-1918-497f-b7c7-e36a55aacb04" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/engine.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/engine.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/sampler.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/sampler.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/asha_scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/asha_scene.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/command_buffer.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/command_buffer.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/command_buffer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/command_buffer.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/deserialise.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/deserialise.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/engine.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/graphics_environment.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/graphics_environment.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/imgui_functions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/imgui_functions.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/museum_scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/museum_scene.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/node_view.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/node_view.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/render_graph.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/render_graph.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/text_block.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/text_block.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,7 +27,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://105" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://106" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -189,7 +180,7 @@
       <workItem from="1770922486676" duration="3159000" />
       <workItem from="1771439766516" duration="2030000" />
       <workItem from="1771445414752" duration="2392000" />
-      <workItem from="1771447843349" duration="23110000" />
+      <workItem from="1771447843349" duration="24432000" />
     </task>
     <servers />
   </component>
