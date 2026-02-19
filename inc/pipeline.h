@@ -80,7 +80,7 @@ public:
 	Pipeline(const Ref<Shader>& shader, const PipelineBuilder& config, const Ref<RenderPass>& render_pass);
 	~Pipeline() override;
 	
-	VkPipeline getPipeline() const { return pipeline; }
+	void bind(Ref<DrawCommandBuffer> command_buffer);
 	PipelineBuilder getConfig() const { return pipeline_config; }
 };
 

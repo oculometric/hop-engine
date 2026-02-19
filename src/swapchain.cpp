@@ -6,6 +6,7 @@
 
 #include "swapchain_vulkan.h"
 #include "graphics_environment.h"
+#include "texture_vulkan.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -76,7 +77,7 @@ Swapchain::Swapchain(const uint32_t width, const uint32_t height, const VkSurfac
     // calculate actual swapchain parameters
     const SwapchainSupportInfo support_info = getSwapchainSupportInfo(RenderServer::getPhysicalDevice(), surface);
     VkSurfaceFormatKHR surface_format = getIdealSurfaceFormat(support_info);
-    format = surface_format.format;
+    format = FORMAT_B8G8R8A8_SRGB; // uhh.... yeah anyway
     extent = getIdealExtent(support_info, width, height);
 
     create_info[0] = VkSwapchainCreateInfoKHR{ };
@@ -119,7 +120,7 @@ Swapchain::Swapchain(const uint32_t width, const uint32_t height, const VkSurfac
         DBG_FAULT("vkCreateSwapchainKHR failed");
     createImageViews();
 
-    DBG_INFO("created swapchain at " + to_string(width) + "x" + to_string(height) + " with " + to_string(images.size()) + " images in present mode " + vk::to_string(static_cast<vk::PresentModeKHR>(create_info[0].presentMode)));
+    DBG_INFO("created swapchain at " + ::to_string(width) + "x" + ::to_string(height) + " with " + ::to_string(images.size()) + " images in present mode " + vk::to_string(static_cast<vk::PresentModeKHR>(create_info[0].presentMode)));
 }
 
 Swapchain::~Swapchain()
@@ -130,7 +131,7 @@ Swapchain::~Swapchain()
 
 void Swapchain::resize(const uint32_t width, const uint32_t height)
 {
-    DBG_VERBOSE("resizing swapchain to " + to_string(width) + "x" + to_string(height));
+    DBG_VERBOSE("resizing swapchain to " + ::to_string(width) + "x" + ::to_string(height));
     destroyResources();
 
     const SwapchainSupportInfo support_info = getSwapchainSupportInfo(RenderServer::getPhysicalDevice(), surface);
@@ -158,7 +159,7 @@ void Swapchain::createImageViews()
         view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         view_create_info.image = images[i];
         view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        view_create_info.format = format;
+        view_create_info.format = toVulkanFormat(format);
         view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
         view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
         view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;

@@ -51,7 +51,7 @@ struct RenderStep
 struct RenderGraphBuilder
 {
 	std::vector<RenderStep> execution_steps;
-	SamplerFilter screen_filtering;
+	SamplerFilter screen_filtering = FILTER_LINEAR;
 
 	RenderGraphBuilder& addCamera(size_t slot);
 	RenderGraphBuilder& addCamera(size_t slot, const RenderOutput& render_pass_config, float size_factor = 1.0f, glm::u32vec2 custom_extent = { 128, 128 });
@@ -91,8 +91,7 @@ public:
 	void setSkipStep(const std::string& name, bool skip);
 	void resizeBuffers(uint32_t width, uint32_t height);
 	void updateUniforms(uint32_t image_index, float time_since_start, Ref<Scene> scene);
-	void recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t image_index, Ref<Scene> scene, FrameStats& stats, Ref<RenderPass>
-	                         final_render_pass) const;
+	void recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, Ref<Scene> scene, FrameStats& stats, Ref<RenderPass> final_render_pass) const;
 
 	void drawImGuiDebug();
 	static Ref<RenderGraph> deserialise(const std::string& name);
@@ -100,8 +99,8 @@ public:
 private:
 	size_t findStep(const std::string& name) const;
 	void rebuildBindings();
-	static void recordCameraStep(VkCommandBuffer command_buffer, uint32_t image_index, const Ref<Camera>& camera, const Ref<RenderPass>& pass, const std::multiset<DrawCommand, DrawCommand>& commands, FrameStats& stats);
-	static void recordPostProcessStep(VkCommandBuffer command_buffer, uint32_t image_index, const Ref<Material>& material, VkDescriptorSet scene_descriptor_set, FrameStats& stats);
+	static void recordCameraStep(Ref<DrawCommandBuffer> command_buffer, const Ref<Camera>& camera, const Ref<RenderPass>& pass, const std::multiset<DrawCommand, DrawCommand>& commands);
+	static void recordPostProcessStep(Ref<DrawCommandBuffer> command_buffer, const Ref<Material>& material, const Ref<UniformBlock>& scene_descriptor_set);
 };
 
 }

@@ -46,13 +46,12 @@ public:
 	static std::vector<uint8_t> encodeBinaryMesh(const std::string& path);
 	
 	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
-	VkBuffer getVertexBuffer() const;
-	VkBuffer getIndexBuffer() const;
 	size_t getVertexCount() const { return vertex_count; }
 	size_t getIndexCount() const { return index_count; }
 	BoundingBox getBoundingBox() const { return bounding_box; }
 	bool isRenderable() const { return is_renderable; }
 	void updateData(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices, size_t vertex_alloc = 0, size_t index_alloc = 0);
+	void draw(Ref<DrawCommandBuffer> command_buffer);
 	
 private:
 	static bool decodeBinaryMesh(const std::vector<uint8_t>& data, std::vector<Vertex>& verts, std::vector<uint16_t>& inds);

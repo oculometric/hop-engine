@@ -32,11 +32,11 @@
 
 #if DEBUG_LEVEL == 0
 #undef DBG_BABBLE
-#define DBG_BABBLE(str) Debug::write(str, Debug::DEBUG_BABBLE)
+#define DBG_BABBLE(str) Debug::write(str, DEBUG_BABBLE)
 #endif
 #if DEBUG_LEVEL <= 1
 #undef DBG_VERBOSE
-#define DBG_VERBOSE(str) Debug::write(str, Debug::DEBUG_VERBOSE)
+#define DBG_VERBOSE(str) Debug::write(str, DEBUG_VERBOSE)
 #endif
 #if DEBUG_LEVEL <= 2
 #undef DBG_INFO

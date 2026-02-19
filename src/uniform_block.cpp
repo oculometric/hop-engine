@@ -4,6 +4,7 @@
 
 #include "graphics_environment.h"
 #include "buffer.h"
+#include "command_buffer.h"
 #include "texture.h"
 #include "sampler.h"
 
@@ -64,6 +65,11 @@ UniformBlock::~UniformBlock()
     descriptor_sets.clear();
     uniform_buffers.clear();
     live_uniform_buffer.clear();
+}
+
+void UniformBlock::bind(Ref<DrawCommandBuffer> command_buffer, size_t set)
+{
+    command_buffer->bindDescriptorSetInternal(set, descriptor_sets[command_buffer->getImageIndex()]);
 }
 
 void UniformBlock::setTexture(const uint32_t binding, const Ref<Texture>& image, const bool use_stencil)

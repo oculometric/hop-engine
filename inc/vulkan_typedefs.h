@@ -18,11 +18,6 @@ struct VkSwapchainCreateInfoKHR;
 
 union VkClearValue;
 
-enum VkFormat : int;
-enum VkImageLayout : int;
-enum VkPresentModeKHR : int;
-enum VkPipelineStageFlagBits : int;
-
 HANDLE_TYPE(VkDescriptorSet);
 HANDLE_TYPE(VkBuffer);
 HANDLE_TYPE(VkDescriptorSetLayout);

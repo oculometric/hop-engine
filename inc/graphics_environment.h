@@ -49,7 +49,7 @@ private:
 	VkQueue graphics_queue = VK_NULL_HANDLE;
 	VkQueue present_queue = VK_NULL_HANDLE;
 	VkCommandPool command_pool = VK_NULL_HANDLE;
-	std::vector<VkCommandBuffer> command_buffers;
+	std::vector<Ref<DrawCommandBuffer>> command_buffers;
 	std::vector<VkSemaphore> image_available_semaphores;
 	std::vector<VkSemaphore> render_finished_semaphores;
 	std::vector<VkFence> in_flight_fences;
@@ -62,10 +62,6 @@ private:
 	// final render pass for actually putting stuff on the window surface
 	Ref<RenderPass> final_render_pass;
 	
-	/* hawk tuah - els */
-	// the query pool allows us to pull useful frame stats (like timings) from the GPU
-	VkQueryPool query_pool = VK_NULL_HANDLE;
-	uint32_t query_offset = 0;
 	// pool from which descriptors and descriptor sets are allocated by the rest of
 	// the engine
 	VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
@@ -98,7 +94,6 @@ public:
 	static Ref<RenderPass> getMainRenderPass();
 	static Ref<RenderPass> getFinalRenderPass();
 	static glm::vec2 getFramebufferSize();
-	static VkQueryPool getQueryPool();
 	static VkDescriptorPool getDescriptorPool();
 	static VkDescriptorSetLayout getSceneDescriptorSetLayout();
 	static VkDescriptorSetLayout getObjectDescriptorSetLayout();
@@ -108,7 +103,6 @@ public:
 	static Ref<Material> getSkyboxMaterial();
 	static Ref<Mesh> getQuad();
 	static void waitIdle();
-	static void writeTimestamp(uint32_t image_index, VkPipelineStageFlagBits stage);
 	static FrameStats draw();
 	static void resize();
 
@@ -126,7 +120,7 @@ private:
 	FrameStats drawFrame();
 	void resizeSwapchain();
 
-	void recordRenderCommands(VkCommandBuffer command_buffer, uint32_t image_index, FrameStats& stats);
+	void recordRenderCommands(uint32_t image_index, FrameStats& stats);
 };
 
 }

@@ -9,13 +9,18 @@
 #include "graphics_environment.h"
 #include "command_buffer.h"
 #include "package.h"
+#include "texture_vulkan.h"
 
 using namespace HopEngine;
 using namespace std;
 
 TO_STRING_DEF_BITFLAGS(ImageUsage, 5, VARGS("TRANSFER_SRC", "TRANSFER_DST", "SAMPLED", "COLOR_ATTACHMENT", "DEPTH_STENCIL_ATTACHMENT"));
 
-Texture::Texture(const size_t _width, const size_t _height, const VkFormat _format, const TextureBuilder& builder)
+TO_STRING_DEF(ImageFormat, 4, VARGS("R8G8B8A8_SRGB", "D32_SFLOAT_S8_UINT", "R16G16B16A16_SFLOAT", "B8G8R8A8_SRGB"));
+
+TO_STRING_DEF(ImageLayout, 8, VARGS("UNDEFINED", "PRESENT_SRC", "COLOR_ATTACHMENT", "DEPTH_STENCIL_ATTACHMENT", "SHADER_READ_ONLY", "DEPTH_STENCIL_READ_ONLY", "TRANSFER_SRC", "TRANSFER_DST"))
+
+Texture::Texture(const size_t _width, const size_t _height, const ImageFormat _format, const TextureBuilder& builder)
 {
     format = _format;
     usage = builder.usage_flags;
@@ -54,7 +59,7 @@ Texture::Texture(const string& file, const TextureBuilder& builder)
     const auto file_data = Package::tryLoadFile(file);
     int img_width, img_height, img_channels;
     stbi_uc* pixels = stbi_load_from_memory(file_data.data(), static_cast<int>(file_data.size()), &img_width, &img_height, &img_channels, STBI_rgb_alpha);
-    format = VK_FORMAT_R8G8B8A8_SRGB;
+    format = FORMAT_R8G8B8A8_SRGB;
     usage = builder.usage_flags;
     extent = {
         static_cast<uint32_t>(img_width) / builder.layer_arrangement.x, 
@@ -86,7 +91,7 @@ Texture::Texture(const string& file, const TextureBuilder& builder)
         loadFromMemory(pixels, builder.layer_arrangement);
         stbi_image_free(pixels);
 
-        DBG_VERBOSE("created image from " + file + " with size " + ::to_string(extent.x) + "x" + ::to_string(extent.y) + " and format " + vk::to_string(static_cast<vk::Format>(format)));
+        DBG_VERBOSE("created image from " + file + " with size " + ::to_string(extent.x) + "x" + ::to_string(extent.y) + " and format " + to_string(format));
     }
 }
 
@@ -101,11 +106,35 @@ Texture::~Texture()
     vkFreeMemory(RenderServer::getDevice(), memory, nullptr);
 }
 
-VkFormat Texture::getDepthFormat()
-{ return VK_FORMAT_D32_SFLOAT_S8_UINT; }
+ImageFormat Texture::getDepthFormat()
+{ return FORMAT_D32_SFLOAT_S8_UINT; }
 
-VkFormat Texture::getDataFormat()
-{ return VK_FORMAT_R16G16B16A16_SFLOAT; }
+ImageFormat Texture::getDataFormat()
+{ return FORMAT_R16G16B16A16_SFLOAT; }
+
+constexpr VkFormat vulkan_image_format[4] = 
+{
+    VK_FORMAT_R8G8B8A8_SRGB,
+    VK_FORMAT_D32_SFLOAT_S8_UINT,
+    VK_FORMAT_R16G16B16A16_SFLOAT,
+    VK_FORMAT_B8G8R8A8_SRGB,
+};
+
+VkFormat HopEngine::toVulkanFormat(ImageFormat format) { return vulkan_image_format[format]; }
+
+constexpr VkImageLayout vulkan_image_layout[8] = 
+{
+    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+    VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
+    VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+};
+
+VkImageLayout HopEngine::toVulkanLayout(ImageLayout layout) { return vulkan_image_layout[layout]; }
 
 VkImageView Texture::getView(const bool stencil)
 {
@@ -120,19 +149,11 @@ VkImageView Texture::getView(const bool stencil)
     view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     view_create_info.image = image;
     view_create_info.viewType = extent.z == 1 ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_3D;
-    view_create_info.format = format;
-    if (format == VK_FORMAT_D16_UNORM
-        || format == VK_FORMAT_D16_UNORM_S8_UINT
-        || format == VK_FORMAT_D32_SFLOAT_S8_UINT
-        || format == VK_FORMAT_D32_SFLOAT
-        || format == VK_FORMAT_D24_UNORM_S8_UINT)
-    {
+    view_create_info.format = toVulkanFormat(format);
+    if (format == FORMAT_D32_SFLOAT_S8_UINT)
         view_create_info.subresourceRange.aspectMask = stencil ? VK_IMAGE_ASPECT_STENCIL_BIT : VK_IMAGE_ASPECT_DEPTH_BIT;
-    }
     else
-    {
         view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    }
     view_create_info.subresourceRange.baseMipLevel = 0;
     view_create_info.subresourceRange.levelCount = 1;
     view_create_info.subresourceRange.baseArrayLayer = 0;
@@ -144,14 +165,14 @@ VkImageView Texture::getView(const bool stencil)
     return stencil ? stencil_view : view;
 }
 
-void Texture::transitionLayout(const VkImageLayout new_layout)
+void Texture::transitionLayout(const ImageLayout new_layout)
 {
     DBG_BABBLE("transitioning image '" + getOrigin() + "' layout from " + vk::to_string((vk::ImageLayout)current_layout) + " to " + vk::to_string((vk::ImageLayout)new_layout));
 
     VkImageMemoryBarrier memory_barrier{ };
     memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    memory_barrier.oldLayout = current_layout;
-    memory_barrier.newLayout = new_layout;
+    memory_barrier.oldLayout = toVulkanLayout(current_layout);
+    memory_barrier.newLayout = toVulkanLayout(new_layout);
     memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     memory_barrier.image = image;
@@ -163,14 +184,14 @@ void Texture::transitionLayout(const VkImageLayout new_layout)
 
     VkPipelineStageFlags dst_stage;
     VkPipelineStageFlags src_stage;
-    if (current_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+    if (current_layout == LAYOUT_UNDEFINED && new_layout == LAYOUT_TRANSFER_DST)
     {
         memory_barrier.srcAccessMask = 0;
         src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
         memory_barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
     }
-    else if (current_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+    else if (current_layout == LAYOUT_TRANSFER_DST && new_layout == LAYOUT_SHADER_READ_ONLY)
     {
         memory_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
@@ -183,7 +204,7 @@ void Texture::transitionLayout(const VkImageLayout new_layout)
         return;
     }
 
-    Ref<CommandBuffer> cmd_buf = new CommandBuffer();
+    Ref<TransientCommandBuffer> cmd_buf = new TransientCommandBuffer();
 
     vkCmdPipelineBarrier(cmd_buf->getBuffer(), src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &memory_barrier);
 
@@ -208,9 +229,9 @@ void Texture::copyBufferToImage(Ref<Buffer> buffer) const
     image_copy.imageOffset = { 0, 0, 0 };
     image_copy.imageExtent = { extent.x, extent.y, extent.z };
 
-    Ref<CommandBuffer> cmd_buf = new CommandBuffer();
+    Ref<TransientCommandBuffer> cmd_buf = new TransientCommandBuffer();
 
-    vkCmdCopyBufferToImage(cmd_buf->getBuffer(), buffer->getBuffer(), image, current_layout, 1, &image_copy);
+    vkCmdCopyBufferToImage(cmd_buf->getBuffer(), buffer->getBuffer(), image, toVulkanLayout(current_layout), 1, &image_copy);
 
     cmd_buf->submit();
 }
@@ -232,7 +253,7 @@ void Texture::createImage()
     image_create_info.extent = { extent.x, extent.y, extent.z };
     image_create_info.mipLevels = 1;
     image_create_info.arrayLayers = 1;
-    image_create_info.format = format;
+    image_create_info.format = toVulkanFormat(format);
     image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     if (usage == IMAGE_USAGE_DEFAULT)
@@ -249,7 +270,7 @@ void Texture::createImage()
     image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
     if (vkCreateImage(RenderServer::getDevice(), &image_create_info, nullptr, &image) != VK_SUCCESS)
         DBG_FAULT("vkCreateImage failed");
-    current_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+    current_layout = LAYOUT_UNDEFINED;
 
     VkMemoryRequirements memory_requirements;
     vkGetImageMemoryRequirements(RenderServer::getDevice(), image, &memory_requirements);
@@ -295,7 +316,7 @@ void Texture::loadFromMemory(void* data, glm::u32vec2 layers)
     staging_buffer->unmapMemory();
 
     createImage();
-    transitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    transitionLayout(LAYOUT_TRANSFER_DST);
     copyBufferToImage(staging_buffer);
-    transitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    transitionLayout(LAYOUT_SHADER_READ_ONLY);
 }

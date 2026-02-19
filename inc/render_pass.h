@@ -5,6 +5,7 @@
 
 #include "common.h"
 #include "vulkan_typedefs.h"
+#include "texture.h"
 
 namespace HopEngine
 {
@@ -34,18 +35,18 @@ public:
 	
 	VkRenderPass getRenderPass() const { return render_pass; }
 	RenderOutput getOutputConfig() const { return output_config; }
-	VkFramebuffer getFramebuffer(size_t index) const { return framebuffers[index % framebuffers.size()]; }
 	Ref<Texture> getImage(size_t attachment) const;
 	std::vector<VkClearValue> getClearValues() const;
 	glm::u32vec2 getExtent() const { return extent; }
 	bool isCompatible(const Ref<RenderPass>& other) const;
 	Ref<RenderPass> duplicate() const;
 	void resize(uint32_t width = 0, uint32_t height = 0);
+	void begin(Ref<DrawCommandBuffer> command_buffer, glm::vec3 clear_colour);
 	
 private:
-	void createRenderPass(VkFormat main_colour_format, VkImageLayout final_main_colour_layout, bool make_readable);
+	void createRenderPass(ImageFormat main_colour_format, ImageLayout final_main_colour_layout, bool make_readable);
 	void createResources();
-	void createResources(VkFormat main_colour_format, uint32_t width, uint32_t height);
+	void createResources(ImageFormat main_colour_format, uint32_t width, uint32_t height);
 	void destroyResources();
 };
 

@@ -119,7 +119,7 @@ void Buffer::unmapMemory()
 void Buffer::copyToBuffer(const Ref<Buffer>& other) const
 {
     DBG_BABBLE("copying from " + PTR(this) + " to buffer " + PTR(other.get()));
-    Ref<CommandBuffer> cmd_buf = new CommandBuffer();
+    Ref<TransientCommandBuffer> cmd_buf = new TransientCommandBuffer();
 
     // perform vulkan buffer-to-buffer copy on an immediate command buffer
     // this assumes both buffers are the same size!
@@ -130,4 +130,12 @@ void Buffer::copyToBuffer(const Ref<Buffer>& other) const
     vkCmdCopyBuffer(cmd_buf->getBuffer(), buffer, other->buffer, 1, &buffer_copy);
 
     cmd_buf->submit();
+}
+
+void Buffer::bind(Ref<DrawCommandBuffer> command_buffer, int type)
+{
+    if (type == 0)
+        command_buffer->bindVertexBuffer(buffer);
+    else if (type == 1)
+        command_buffer->bindIndexBuffer(buffer);
 }

@@ -8,6 +8,7 @@
 #include <spirv_reflect/spirv_reflect.h>
 #include <filesystem>
 
+#include "command_buffer.h"
 #include "graphics_environment.h"
 #include "package.h"
 
@@ -86,6 +87,11 @@ Shader::~Shader()
 ShaderLayout Shader::getShaderLayout() const
 {
 	return { descriptor_set_layout, bindings };
+}
+
+void Shader::bind(Ref<DrawCommandBuffer> command_buffer)
+{
+	command_buffer->bindPipelineLayoutInternal(pipeline_layout);
 }
 
 vector<VkPipelineShaderStageCreateInfo> Shader::getShaderStageCreateInfos() const

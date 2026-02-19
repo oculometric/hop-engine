@@ -91,6 +91,8 @@ public:
 	 * @param other the destination buffer.
 	 */
 	void copyToBuffer(const Ref<Buffer>& other) const;
+	
+	void bind(Ref<DrawCommandBuffer> command_buffer, int type);
 };
 
 }

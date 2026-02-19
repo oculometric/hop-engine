@@ -4,7 +4,6 @@
 #include <glm/glm.hpp>
 
 #include "common.h"
-#include "vulkan_typedefs.h"
 #include "shader.h"
 #include "render_pass.h"
 #include "pipeline.h"
@@ -31,13 +30,11 @@ public:
 	
 	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 	Ref<Shader> getShader() const;
-	VkPipelineLayout getPipelineLayout() const;
-	VkPipeline getPipeline() const;
-	VkPipeline getDebugPipeline() const;
-	VkDescriptorSet getDescriptorSet(size_t index) const;
 	Ref<RenderPass> getRenderPass() const;
 	void pushToDescriptorSet(size_t index);
 	Ref<Material> duplicate() const;
+	
+	void bind(Ref<DrawCommandBuffer> command_buffer);
 	
 	void setTexture(uint32_t binding, const Ref<Texture>& texture, bool use_stencil = false);
 	void setSampler(uint32_t binding, const Ref<Sampler>& sampler);
@@ -65,6 +62,7 @@ public:
 	void setUniform(const std::string& name, const void* data, size_t size);
 
 	static Ref<Material> deserialise(const std::string& name);
+	
 	void drawImGuiDebug();
 };
 

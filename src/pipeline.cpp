@@ -3,6 +3,7 @@
 #include <array>
 #include <vulkan//vulkan.hpp>
 
+#include "command_buffer.h"
 #include "graphics_environment.h"
 #include "shader.h"
 #include "mesh.h"
@@ -143,4 +144,9 @@ Pipeline::~Pipeline()
 {
     DBG_VERBOSE("destroying pipeline " + PTR(this));
     vkDestroyPipeline(RenderServer::getDevice(), pipeline, nullptr);
+}
+
+void Pipeline::bind(Ref<DrawCommandBuffer> command_buffer)
+{
+    command_buffer->bindPipelineInternal(pipeline);
 }

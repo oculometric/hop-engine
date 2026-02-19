@@ -2,6 +2,7 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include "command_buffer.h"
 #include "graphics_environment.h"
 #include "render_pass.h"
 #include "pipeline.h"
@@ -49,26 +50,26 @@ Ref<Shader> Material::getShader() const
 {
 	return shader;
 }
-
-VkPipelineLayout Material::getPipelineLayout() const
-{
-	return shader->getPipelineLayout();
-}
-
-VkPipeline Material::getPipeline() const
-{
-	return pipeline->getPipeline();
-}
-
-VkPipeline Material::getDebugPipeline() const
-{
-	return debug_pipeline->getPipeline();
-}
-
-VkDescriptorSet Material::getDescriptorSet(const size_t index) const
-{
-	return uniforms->getDescriptorSet(index);
-}
+//
+// VkPipelineLayout Material::getPipelineLayout() const
+// {
+// 	return shader->getPipelineLayout();
+// }
+//
+// VkPipeline Material::getPipeline() const
+// {
+// 	return pipeline->getPipeline();
+// }
+//
+// VkPipeline Material::getDebugPipeline() const
+// {
+// 	return debug_pipeline->getPipeline();
+// }
+//
+// VkDescriptorSet Material::getDescriptorSet(const size_t index) const
+// {
+// 	return uniforms->getDescriptorSet(index);
+// }
 
 Ref<RenderPass> Material::getRenderPass() const
 {
@@ -84,6 +85,16 @@ void Material::pushToDescriptorSet(const size_t index)
 Ref<Material> Material::duplicate() const
 {
 	return new Material(shader, pipeline->getConfig(), render_pass);
+}
+
+void Material::bind(Ref<DrawCommandBuffer> command_buffer)
+{
+	if (Engine::isWireframeMode())
+		debug_pipeline->bind(command_buffer);
+	else
+		pipeline->bind(command_buffer);
+	shader->bind(command_buffer);
+	uniforms->bind(command_buffer, 2);
 }
 
 void Material::setTexture(const uint32_t binding, const Ref<Texture>& texture, const bool use_stencil)

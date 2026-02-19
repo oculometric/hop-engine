@@ -3,9 +3,11 @@
 #include <array>
 #include <vulkan/vulkan.hpp>
 
+#include "command_buffer.h"
 #include "graphics_environment.h"
 #include "swapchain.h"
 #include "texture.h"
+#include "texture_vulkan.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -15,7 +17,7 @@ RenderPass::RenderPass(const Ref<Swapchain>& _swapchain, const RenderOutput& con
     output_config = config;
     swapchain = _swapchain;
 
-    createRenderPass(swapchain->getFormat(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, false);
+    createRenderPass(swapchain->getFormat(), LAYOUT_PRESENT_SRC, false);
     createResources();
 
     DBG_VERBOSE(string("created render pass with colour buffer, ") + (config.has_depth_attachment ? "depth buffer, " : "") + "and " + ::to_string(config.additional_attachments) + " data attachments");
@@ -25,8 +27,8 @@ RenderPass::RenderPass(const uint32_t width, const uint32_t height, const Render
 {
     output_config = config;
 
-    createRenderPass(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, true);
-    createResources(VK_FORMAT_R8G8B8A8_SRGB, width, height);
+    createRenderPass(FORMAT_R8G8B8A8_SRGB, LAYOUT_SHADER_READ_ONLY, true);
+    createResources(FORMAT_R8G8B8A8_SRGB, width, height);
 }
 
 RenderPass::~RenderPass()
@@ -81,27 +83,32 @@ void RenderPass::resize(const uint32_t width, const uint32_t height)
     if (swapchain)
         createResources();
     else
-        createResources(VK_FORMAT_R8G8B8A8_SRGB, width, height);
+        createResources(FORMAT_R8G8B8A8_SRGB, width, height);
 }
 
-void RenderPass::createRenderPass(const VkFormat main_colour_format, const VkImageLayout final_main_colour_layout, const bool make_readable)
+void RenderPass::begin(Ref<DrawCommandBuffer> command_buffer, glm::vec3 clear_colour)
+{
+    command_buffer->startRenderPassInternal(render_pass, framebuffers[command_buffer->getImageIndex() % framebuffers.size()], extent, getClearValues(), clear_colour);
+}
+
+void RenderPass::createRenderPass(const ImageFormat main_colour_format, const ImageLayout final_main_colour_layout, const bool make_readable)
 {
     vector<VkAttachmentDescription> attachments;
     VkAttachmentDescription colour_attachment{ };
-    colour_attachment.format = main_colour_format;
+    colour_attachment.format = toVulkanFormat(main_colour_format);
     colour_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
     colour_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     colour_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     colour_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     colour_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     colour_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colour_attachment.finalLayout = final_main_colour_layout;
+    colour_attachment.finalLayout = toVulkanLayout(final_main_colour_layout);
     attachments.push_back(colour_attachment);
 
     for (size_t i = 0; i < output_config.additional_attachments; ++i)
     {
         VkAttachmentDescription attachment{ };
-        attachment.format = Texture::getDataFormat();
+        attachment.format = toVulkanFormat(Texture::getDataFormat());
         attachment.samples = VK_SAMPLE_COUNT_1_BIT;
         attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -115,7 +122,7 @@ void RenderPass::createRenderPass(const VkFormat main_colour_format, const VkIma
     if (output_config.has_depth_attachment)
     {
         VkAttachmentDescription depth_attachment{ };
-        depth_attachment.format = Texture::getDepthFormat();
+        depth_attachment.format = toVulkanFormat(Texture::getDepthFormat());
         depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
         depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -231,7 +238,7 @@ void RenderPass::createResources()
     }
 }
 
-void RenderPass::createResources(const VkFormat main_colour_format, const uint32_t width, const uint32_t height)
+void RenderPass::createResources(const ImageFormat main_colour_format, const uint32_t width, const uint32_t height)
 {
     extent = { width, height };
     // create texture buffers to back everything

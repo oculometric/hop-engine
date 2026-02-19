@@ -58,6 +58,8 @@ public:
 	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 	VkPipelineLayout getPipelineLayout() const { return pipeline_layout; }
 	ShaderLayout getShaderLayout() const;
+	void bind(Ref<DrawCommandBuffer> command_buffer);
+	
 	std::vector<VkPipelineShaderStageCreateInfo> getShaderStageCreateInfos() const;
 	bool reloadShader(); // TODO: shader reload
 

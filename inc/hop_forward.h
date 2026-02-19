@@ -5,7 +5,8 @@ namespace HopEngine
 
 class Window;
 class RenderServer;
-class CommandBuffer;
+class TransientCommandBuffer;
+class DrawCommandBuffer;
 class Swapchain;
 class RenderPass;
 class Pipeline;

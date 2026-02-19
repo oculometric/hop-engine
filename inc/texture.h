@@ -22,6 +22,28 @@ enum ImageUsage
 ENUM_OPERATOR(ImageUsage)
 TO_STRING_DEC(ImageUsage);
 
+enum ImageFormat
+{
+	FORMAT_R8G8B8A8_SRGB,
+	FORMAT_D32_SFLOAT_S8_UINT,
+	FORMAT_R16G16B16A16_SFLOAT,
+	FORMAT_B8G8R8A8_SRGB,
+};
+TO_STRING_DEC(ImageFormat);
+
+enum ImageLayout
+{
+	LAYOUT_UNDEFINED,
+	LAYOUT_PRESENT_SRC,
+	LAYOUT_COLOR_ATTACHMENT,
+	LAYOUT_DEPTH_STENCIL_ATTACHMENT,
+	LAYOUT_SHADER_READ_ONLY,
+	LAYOUT_DEPTH_STENCIL_READ_ONLY,
+	LAYOUT_TRANSFER_SRC,
+	LAYOUT_TRANSFER_DST,
+};
+TO_STRING_DEC(ImageLayout);
+
 struct TextureBuilder
 {
 	void* data_ptr = nullptr;
@@ -38,8 +60,8 @@ class Texture : public Destructible
 private:
 	std::string origin;
 	glm::u32vec3 extent;
-	VkImageLayout current_layout;
-	VkFormat format;
+	ImageLayout current_layout;
+	ImageFormat format;
 	ImageUsage usage;
 	VkImage image = VK_NULL_HANDLE;
 	VkDeviceMemory memory = VK_NULL_HANDLE;
@@ -48,18 +70,18 @@ private:
 
 public:
 	DELETE_CONSTRUCTORS(Texture);
-	Texture(size_t _width, size_t _height, VkFormat _format, const TextureBuilder& builder = TextureBuilder());
+	Texture(size_t _width, size_t _height, ImageFormat _format, const TextureBuilder& builder = TextureBuilder());
 	Texture(const std::string& file, const TextureBuilder& builder = TextureBuilder());
 	~Texture() override;
 	
-	static VkFormat getDepthFormat();
-	static VkFormat getDataFormat();
+	static ImageFormat getDepthFormat();
+	static ImageFormat getDataFormat();
 	
 	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 	glm::ivec2 getSize() const { return { extent.x, extent.y }; }
-	VkFormat getFormat() const { return format; }
+	ImageFormat getFormat() const { return format; }
 	VkImageView getView(bool stencil = false);
-	void transitionLayout(VkImageLayout new_layout);
+	void transitionLayout(ImageLayout new_layout);
 	void copyBufferToImage(Ref<Buffer> buffer) const;
 
 private:

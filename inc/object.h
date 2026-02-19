@@ -54,7 +54,7 @@ public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Camera);
 	Camera();
 
-	VkDescriptorSet getDescriptorSet(size_t index) const;
+	void bind(Ref<DrawCommandBuffer> command_buffer);
 	SceneUniforms getSceneUniforms(glm::ivec2 viewport_size, float time, const std::vector<LightParams>& lights, glm::vec4 ambient);
 	glm::mat4 getWorldToScreenMatrix();
 	void pushToDescriptorSet(size_t index) override;

@@ -6,6 +6,7 @@
 
 #include "graphics_environment.h"
 #include "buffer.h"
+#include "command_buffer.h"
 #include "package.h"
 
 using namespace HopEngine;
@@ -137,12 +138,12 @@ vector<uint8_t> Mesh::encodeBinaryMesh(const string& path)
     
     return data;
 }
-
-VkBuffer Mesh::getVertexBuffer() const
-{ return vertex_buffer->getBuffer(); }
-
-VkBuffer Mesh::getIndexBuffer() const
-{ return index_buffer->getBuffer(); }
+//
+// VkBuffer Mesh::getVertexBuffer() const
+// { return vertex_buffer->getBuffer(); }
+//
+// VkBuffer Mesh::getIndexBuffer() const
+// { return index_buffer->getBuffer(); }
 
 void Mesh::updateData(const vector<Vertex>& vertices, const vector<uint16_t>& indices, size_t vertex_alloc, size_t index_alloc)
 {
@@ -179,6 +180,13 @@ void Mesh::updateData(const vector<Vertex>& vertices, const vector<uint16_t>& in
     index_count = indices.size();
     
     recomputeBoundingBox(vertices);
+}
+
+void Mesh::draw(Ref<DrawCommandBuffer> command_buffer)
+{
+    vertex_buffer->bind(command_buffer, 0);
+    index_buffer->bind(command_buffer, 1);
+    command_buffer->drawMeshInternal(getIndexCount());
 }
 
 bool Mesh::decodeBinaryMesh(const vector<uint8_t>& data, vector<Vertex>& verts, vector<uint16_t>& inds)

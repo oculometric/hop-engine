@@ -17,6 +17,7 @@
 
 #include "hop_engine.h"
 #include "swapchain_vulkan.h"
+#include "command_buffer.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -52,16 +53,16 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
     switch (message_severity)
     {
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-        Debug::write("[ VALIDATION ]: " + string(callback_data->pMessage), Debug::DEBUG_VERBOSE);
+        Debug::write("[ VALIDATION ]: " + string(callback_data->pMessage), DEBUG_VERBOSE);
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-        Debug::write("[ VALIDATION ]: " + string(callback_data->pMessage), Debug::DEBUG_INFO);
+        Debug::write("[ VALIDATION ]: " + string(callback_data->pMessage), DEBUG_INFO);
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-        Debug::write("[ VALIDATION ]: " + string(callback_data->pMessage), Debug::DEBUG_WARNING);
+        Debug::write("[ VALIDATION ]: " + string(callback_data->pMessage), DEBUG_WARNING);
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-        Debug::write("[ VALIDATION ]: " + string(callback_data->pMessage), Debug::DEBUG_ERROR);
+        Debug::write("[ VALIDATION ]: " + string(callback_data->pMessage), DEBUG_ERROR);
         break;
     default: break;
     }
@@ -138,9 +139,6 @@ glm::vec2 RenderServer::getFramebufferSize()
     return glm::vec2{ static_cast<float>(ext.x), static_cast<float>(ext.y) };
 }
 
-VkQueryPool RenderServer::getQueryPool()
-{ return server->query_pool; }
-
 VkDescriptorPool RenderServer::getDescriptorPool()
 { return server->descriptor_pool; }
 
@@ -167,9 +165,6 @@ Ref<Mesh> RenderServer::getQuad()
 
 void RenderServer::waitIdle()
 { vkDeviceWaitIdle(server->device); }
-
-void RenderServer::writeTimestamp(const uint32_t image_index, const VkPipelineStageFlagBits stage)
-{ vkCmdWriteTimestamp(server->command_buffers[image_index], stage, server->query_pool, (image_index * 512) + server->query_offset++); }
 
 FrameStats RenderServer::draw()
 { return server->drawFrame(); }
@@ -201,7 +196,7 @@ RenderServer::RenderServer(const Ref<Window>& main_window)
     offscreen_pass = new RenderPass(1, 1, { 3, true });
 
     uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
-    default_image = new Texture(1, 1, VK_FORMAT_R8G8B8A8_SRGB, TextureBuilder().data(default_image_data));
+    default_image = new Texture(1, 1, FORMAT_R8G8B8A8_SRGB, TextureBuilder().data(default_image_data));
     default_sampler = new Sampler(SamplerBuilder());
 
     quad = new Mesh({
@@ -238,6 +233,7 @@ RenderServer::~RenderServer()
     }
 
     DBG_VERBOSE("destroying command pool");
+    command_buffers.clear();
     vkDestroyCommandPool(device, command_pool, nullptr);
     
     skybox_material = nullptr;
@@ -251,7 +247,6 @@ RenderServer::~RenderServer()
     vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
     vkDestroyDescriptorSetLayout(device, scene_descriptor_set_layout, nullptr);
     vkDestroyDescriptorSetLayout(device, object_descriptor_set_layout, nullptr);
-    vkDestroyQueryPool(device, query_pool, nullptr);
 
     offscreen_pass = nullptr;
     final_render_pass = nullptr;
@@ -495,13 +490,6 @@ void RenderServer::createDescriptorPoolAndSets()
 
     if (vkCreateDescriptorSetLayout(device, &layout_create_info, nullptr, &object_descriptor_set_layout) != VK_SUCCESS)
         DBG_FAULT("vkCreateDescriptorSetLayout failed");
-    
-    VkQueryPoolCreateInfo query_pool_create_info{ };
-    query_pool_create_info.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
-    query_pool_create_info.queryCount = MAX_FRAMES_IN_FLIGHT * 512;
-    query_pool_create_info.queryType = VK_QUERY_TYPE_TIMESTAMP;
-    if (vkCreateQueryPool(device, &query_pool_create_info, nullptr, &query_pool) != VK_SUCCESS)
-        DBG_FAULT("vkCreateQueryPool failed");
 }
 
 void RenderServer::createCommandPool()
@@ -518,15 +506,8 @@ void RenderServer::createCommandPool()
     if (vkCreateCommandPool(device, &pool_create_info, nullptr, &command_pool) != VK_SUCCESS)
         DBG_FAULT("vkCreateCommandPool failed");
 
-    VkCommandBufferAllocateInfo buffer_allocate_info{ };
-    buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    buffer_allocate_info.commandPool = command_pool;
-    buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    buffer_allocate_info.commandBufferCount = MAX_FRAMES_IN_FLIGHT;
-    command_buffers.resize(MAX_FRAMES_IN_FLIGHT);
-
-    if (vkAllocateCommandBuffers(device, &buffer_allocate_info, command_buffers.data()) != VK_SUCCESS)
-        DBG_FAULT("vkAllocateCommandBuffers failed");
+    for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+        command_buffers.push_back(new DrawCommandBuffer());
 }
 
 void RenderServer::createSyncObjects()
@@ -619,12 +600,10 @@ FrameStats RenderServer::drawFrame()
     stats.build_time = build_duration.count();
 
     const auto record_start = chrono::steady_clock::now();
-    query_offset = 0;
-    vkResetCommandBuffer(command_buffers[image_index], 0);
-    recordRenderCommands(command_buffers[image_index], image_index, stats);
+    recordRenderCommands(image_index, stats);
     const chrono::duration<float> record_duration = chrono::steady_clock::now() - record_start;
     stats.record_time = record_duration.count();
-
+    
     VkSubmitInfo submit_info{ };
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     const VkSemaphore wait_semaphores[] = { image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT] };
@@ -633,7 +612,8 @@ FrameStats RenderServer::drawFrame()
     submit_info.pWaitSemaphores = wait_semaphores;
     submit_info.pWaitDstStageMask = wait_stages;
     submit_info.commandBufferCount = 1;
-    submit_info.pCommandBuffers = &(command_buffers[image_index]);
+    VkCommandBuffer cmd_buf = command_buffers[image_index]->getCommandBuffer();
+    submit_info.pCommandBuffers = &cmd_buf;
     const VkSemaphore signal_semaphores[] = { render_finished_semaphores[image_index] };
     submit_info.signalSemaphoreCount = 1;
     submit_info.pSignalSemaphores = signal_semaphores;
@@ -652,17 +632,7 @@ FrameStats RenderServer::drawFrame()
     DBG_BABBLE("submitting present");
     vkQueuePresentKHR(present_queue, &present_info);
     
-    vector<uint32_t> results_buf;
-    results_buf.resize(query_offset, 0);
-    vkGetQueryPoolResults(device, query_pool, image_index * 512, query_offset, results_buf.size() * sizeof(uint32_t), results_buf.data(), 4, VK_QUERY_RESULT_WAIT_BIT);
-
-    const float render_time = static_cast<float>(results_buf[results_buf.size() - 1] - results_buf[0]) / (1000.0f * 1000.0f * 100.0f);
-    stats.render_time = render_time;
-    for (size_t offset = 1; offset < results_buf.size() - 1; offset += 2)
-    {   
-        float pass_time = static_cast<float>(results_buf[offset + 1] - results_buf[offset]) / (1000.0f * 1000.0f * 100.0f);
-        stats.pass_times.push_back(pass_time);
-    }
+    command_buffers[image_index]->extractTiming();
     return stats;
 }
 
@@ -676,43 +646,19 @@ void RenderServer::resizeSwapchain()
     final_render_pass->resize();
 }
 
-void RenderServer::recordRenderCommands(const VkCommandBuffer command_buffer, const uint32_t image_index, FrameStats& stats)
+void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
 {
-    DBG_BABBLE("recording command buffer");
-    VkCommandBufferBeginInfo cmd_buffer_begin_info{ };
-    cmd_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-    if (vkBeginCommandBuffer(command_buffer, &cmd_buffer_begin_info) != VK_SUCCESS)
-        DBG_FAULT("vkBeginCommandBuffer failed");
-    vkCmdResetQueryPool(command_buffer, query_pool, 0, MAX_FRAMES_IN_FLIGHT * 512);
-    writeTimestamp(image_index, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
-
+    Ref<DrawCommandBuffer> command_buffer = command_buffers[image_index];
+    command_buffer->begin(image_index, &stats);
+    
     Ref<Scene> scene = Engine::getScene();
 
     if (scene && scene->render_graph)
-        scene->render_graph->recordCommandBuffer(command_buffer, image_index, scene, stats, final_render_pass);
+        scene->render_graph->recordCommandBuffer(command_buffer, scene, stats, final_render_pass);
     else
-    {
-        VkRenderPassBeginInfo render_pass_begin_info{ };
-        render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        render_pass_begin_info.renderPass = final_render_pass->getRenderPass();
-        render_pass_begin_info.framebuffer = final_render_pass->getFramebuffer(image_index);
-        render_pass_begin_info.renderArea.offset = { 0, 0 };
-        const auto extent = final_render_pass->getExtent();
-        render_pass_begin_info.renderArea.extent = { extent.x, extent.y };
-        vector<VkClearValue> clear_values = final_render_pass->getClearValues();
-        clear_values[0].color = { { 0.02f, 0.02f, 0.02f } };
-        render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
-        render_pass_begin_info.pClearValues = clear_values.data();
+        final_render_pass->begin(command_buffer, glm::vec3{ 0.02f, 0.02f, 0.02f });
 
-        vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
-        stats.passes++;
-        vkCmdEndRenderPass(command_buffer);
-    }
-
-    writeTimestamp(image_index, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
-    if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS)
-        DBG_FAULT("vkEndCommandBuffer failed");
+    command_buffer->end();
 }
 
 bool DrawCommand::operator()(const DrawCommand& a, const DrawCommand& b) const

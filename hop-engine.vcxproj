@@ -189,6 +189,7 @@
     <ClInclude Include="resource1.h" />
     <ClInclude Include="src\main.h" />
     <ClInclude Include="src\swapchain_vulkan.h" />
+    <ClInclude Include="src\texture_vulkan.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lib\src\imgui.cpp" />

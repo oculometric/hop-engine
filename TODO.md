@@ -1,9 +1,10 @@
 # TODO
 
 ## v0.51
-- eliminate vulkan types being exposed outside of class implementations entirely, replace stuff like VkFormat etc
+- eliminate sampler duplication [M]
+- custom shader format to keep stuff in one file [H]
+- reorganise engine scene render calls to be able to render multiple scenes [H]
 - improve scene tree so that objects know about their scene, and children, and can be removed [M]
-- custom shader format to keep stuff in one file [L]
 - object duplicate function [L]
 ---
 ## v0.6
@@ -19,6 +20,7 @@
 - shader node editor
 - render graph node editor
 - shadows
+- textures should be loadable in linear mode?
 - a proper procedural shading art workflow
 ---
 - more scene control using ImGui (modify the render graph, material uniforms) [M]
