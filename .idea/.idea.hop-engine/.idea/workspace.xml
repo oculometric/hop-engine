@@ -10,8 +10,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="836e5fd3-1918-497f-b7c7-e36a55aacb04" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/res_engine/shaders/blur.glsl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/res_engine/shaders/default_shader.glsl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hop-engine.sln.DotSettings.user" beforeDir="false" afterPath="$PROJECT_DIR$/hop-engine.sln.DotSettings.user" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/shader.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/shader.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/res_engine/shaders/blur.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/blur.glsl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/res_engine/shaders/default_shader.frag" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/res_engine/shaders/default_shader.vert" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/graphics_environment.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/graphics_environment.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/shader.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/shader.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,7 +32,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://107" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://43" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -40,26 +47,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "C/C++ Project.hop-engine.executor": "Debug",
-    "C/C++ Project.package-builder.executor": "Debug",
-    "C/C++ Project.spaceflight-test.executor": "Debug",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "main",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.sourceCode.C++",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;C/C++ Project.hop-engine.executor&quot;: &quot;Debug&quot;,
+    &quot;C/C++ Project.package-builder.executor&quot;: &quot;Debug&quot;,
+    &quot;C/C++ Project.spaceflight-test.executor&quot;: &quot;Debug&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;shader-unification&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.sourceCode.C++&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="C/C++ Project.hop-engine">
     <configuration name="hop-engine" type="CppProject" factoryName="C++ Project">
       <configuration_1 setup="1">
@@ -178,7 +185,8 @@
       <workItem from="1770922486676" duration="3159000" />
       <workItem from="1771439766516" duration="2030000" />
       <workItem from="1771445414752" duration="2392000" />
-      <workItem from="1771447843349" duration="28250000" />
+      <workItem from="1771447843349" duration="28396000" />
+      <workItem from="1771525688264" duration="14846000" />
     </task>
     <servers />
   </component>
@@ -205,8 +213,18 @@
           <properties exception="System.Threading.ThreadAbortException" breakIfHandledByOtherCode="false" displayValue="System.Threading.ThreadAbortException" />
           <option name="timeStamp" value="3" />
         </breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/shader.cpp</url>
+          <line>29</line>
+          <option name="timeStamp" value="18" />
+        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
+    <watches-manager>
+      <configuration name="CppProject">
+        <watch expression="source_code" />
+      </configuration>
+    </watches-manager>
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

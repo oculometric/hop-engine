@@ -207,7 +207,7 @@ RenderServer::RenderServer(const Ref<Window>& main_window)
                     }, { 0, 3, 1, 0, 2, 3 });
     skybox_cube = new Mesh("res://engine/meshes/skybox.obj");
 
-    default_material = new Material(new Shader("res://engine/shaders/default_shader"));
+    default_material = new Material(new Shader("res://engine/shaders/default_shader.glsl"));
     skybox_material = new Material(new Shader("res://engine/shaders/skybox"), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
     
     initImGui();
