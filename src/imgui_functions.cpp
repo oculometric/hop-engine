@@ -14,7 +14,7 @@
 #include "uniform_block.h"
 #include "sampler.h"
 #include "render_graph.h"
-#include "graphics_environment.h"
+#include "render_server.h"
 #include "package.h"
 #if !defined(STANDALONE)
 #include "main.h"

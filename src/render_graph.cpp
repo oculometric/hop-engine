@@ -5,7 +5,7 @@
 #include <imgui_impl_vulkan.h>
 #include <vulkan/vulkan.hpp>
 
-#include "graphics_environment.h"
+#include "render_server.h"
 #include "render_pass.h"
 #include "material.h"
 #include "uniform_block.h"

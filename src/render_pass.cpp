@@ -4,7 +4,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include "command_buffer.h"
-#include "graphics_environment.h"
+#include "render_server.h"
 #include "swapchain.h"
 #include "texture.h"
 #include "texture_vulkan.h"

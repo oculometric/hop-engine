@@ -5,7 +5,7 @@
 #include "mesh.h"
 #include "material.h"
 #include "uniform_block.h"
-#include "graphics_environment.h"
+#include "render_server.h"
 #include "pbr.h"
 #include "command_buffer.h"
 

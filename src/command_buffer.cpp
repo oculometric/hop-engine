@@ -4,7 +4,7 @@
 #include <imgui/imgui.h>
 #include <imgui/backends/imgui_impl_vulkan.h>
 
-#include "graphics_environment.h"
+#include "render_server.h"
 #include "engine.h"
 
 using namespace HopEngine;

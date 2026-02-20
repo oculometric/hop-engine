@@ -6,7 +6,7 @@
 
 #include <glm/glm.hpp>
 
-#include "graphics_environment.h"
+#include "render_server.h"
 #include "buffer.h"
 #include "mesh.h"
 #include "material.h"

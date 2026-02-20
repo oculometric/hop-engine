@@ -158,8 +158,9 @@
     <ClInclude Include="inc\draw_command.h" />
     <ClInclude Include="inc\engine.h" />
     <ClInclude Include="inc\font.h" />
+    <ClInclude Include="inc\frame_stats.h" />
     <ClInclude Include="inc\gizmo.h" />
-    <ClInclude Include="inc\graphics_environment.h" />
+    <ClInclude Include="inc\render_server.h" />
     <ClInclude Include="inc\hop_engine.h" />
     <ClInclude Include="inc\hop_forward.h" />
     <ClInclude Include="inc\input.h" />
@@ -209,7 +210,7 @@
     <ClCompile Include="src\exec.cpp" />
     <ClCompile Include="src\font.cpp" />
     <ClCompile Include="src\gizmo.cpp" />
-    <ClCompile Include="src\graphics_environment.cpp" />
+    <ClCompile Include="src\render_server.cpp" />
     <ClCompile Include="src\imgui_functions.cpp" />
     <ClCompile Include="src\input.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -224,6 +225,7 @@
     <ClCompile Include="src\pipeline.cpp" />
     <ClCompile Include="src\render_graph.cpp" />
     <ClCompile Include="src\render_pass.cpp" />
+    <ClCompile Include="src\render_server_init.cpp" />
     <ClCompile Include="src\sampler.cpp" />
     <ClCompile Include="src\scene.cpp" />
     <ClCompile Include="src\shader.cpp" />

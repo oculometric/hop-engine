@@ -10,14 +10,29 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="836e5fd3-1918-497f-b7c7-e36a55aacb04" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/inc/frame_stats.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/render_server_init.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/command_buffer.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/command_buffer.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hop-engine.vcxproj" beforeDir="false" afterPath="$PROJECT_DIR$/hop-engine.vcxproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/engine.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/engine.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/graphics_environment.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/render_server.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/hop_engine.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/hop_engine.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/buffer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/buffer.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/command_buffer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/command_buffer.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/graphics_environment.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/graphics_environment.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gizmo.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gizmo.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/graphics_environment.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/render_server.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/imgui_functions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/imgui_functions.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/material.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/material.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/mesh.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/mesh.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/object.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/object.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pipeline.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/pipeline.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/render_graph.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/render_graph.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/render_pass.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/render_pass.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/sampler.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/sampler.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/shader.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/shader.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/swapchain.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/swapchain.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/texture.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/texture.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/uniform_block.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/uniform_block.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,7 +46,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://12" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://14" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -186,7 +201,7 @@
       <workItem from="1771445414752" duration="2392000" />
       <workItem from="1771447843349" duration="28396000" />
       <workItem from="1771525688264" duration="18248000" />
-      <workItem from="1771592373300" duration="11355000" />
+      <workItem from="1771592373300" duration="12011000" />
     </task>
     <servers />
   </component>

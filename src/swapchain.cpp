@@ -5,7 +5,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include "swapchain_vulkan.h"
-#include "graphics_environment.h"
+#include "render_server.h"
 #include "texture_vulkan.h"
 
 using namespace HopEngine;

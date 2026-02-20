@@ -6,7 +6,7 @@
 #include <stb_image.h>
 
 #include "buffer.h"
-#include "graphics_environment.h"
+#include "render_server.h"
 #include "command_buffer.h"
 #include "package.h"
 #include "texture_vulkan.h"
