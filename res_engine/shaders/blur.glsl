@@ -1,8 +1,7 @@
-#include "res://engine/common.glsl"
-#include "res://effects.glsl"
+#include "res://engine/shaders/common.glsl"
+#include "res://engine/shaders/effects.glsl"
 
-// uniforms have 'layout ... (set = 2, binding = n) ...' inserter automatically
-uniform sampler2D main_tex;
+layout(set = 2, binding = 0) uniform sampler2D main_tex;
 
 #pragma DEFAULT_VERTEX
 

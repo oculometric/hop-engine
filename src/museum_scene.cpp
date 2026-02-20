@@ -114,7 +114,7 @@ static Ref<Scene> initMuseumScene()
 
     normal_demo_1 = scene->insertObject<StaticMesh>(new StaticMesh(
         Engine::loadMesh("res://engine/samples/plane.obj"),
-        new Material(Engine::loadShader("res://engine/shaders/deferred"))));
+        new Material(Engine::loadShader("res://engine/shaders/deferred.glsl"))));
     normal_demo_1->transform.setPosition(glm::vec3{ 0, -8, 0.8 });
     normal_demo_1->material->setTexture(0, RenderServer::getDefaultTextureSampler().first);
     normal_demo_1->material->setTexture(1, Engine::loadTexture("res://demo_normal.png"));

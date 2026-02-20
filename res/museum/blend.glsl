@@ -1,16 +1,16 @@
-#version 450
+#pragma DEFAULT_VERTEX
 
-#define FRAGMENT
-#define NONSTANDARD_FRAG_OUT
-#define OMIT_OBJECT_SET
-#include "../engine/shaders/common.glsl"
+void vertex()
+{
+    #pragma CANVAS_TRANSFORM
+}
 
-layout(location = 0) out vec4 out_colour;
+#pragma CANVAS_ATTACHMENTS
 
 layout(set = 2, binding = 0) uniform sampler2D original;
 layout(set = 2, binding = 1) uniform sampler2D multiply;
 
-void main()
+void fragment()
 {
     out_colour = vec4(texture(original, frag.uv).rgb * texture(multiply, frag.uv).rgb, 1);
 }

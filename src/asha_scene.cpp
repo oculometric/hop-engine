@@ -16,7 +16,7 @@ static Ref<Scene> initAshaScene()
 {
     Ref<Scene> scene = new Scene();
     // load and configure asha's shader, mesh, and material
-    const Ref<Shader> shader = Engine::loadShader("res://engine/samples/psx");
+    const Ref<Shader> shader = Engine::loadShader("res://engine/samples/psx.glsl");
     asha = scene->insertObject<StaticMesh>(new StaticMesh(
         Engine::loadMesh("res://engine/samples/asha.obj"),
         Engine::keepLoaded(new Material(

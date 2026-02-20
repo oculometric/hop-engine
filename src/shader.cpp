@@ -312,6 +312,10 @@ void Shader::fixIncludes(string& source_code_text, const string& path_prefix, co
 				real_path = "res://" + real_path;
 		}
 		auto include_data = Package::tryLoadFile(real_path);
+		if (include_data.empty())
+		{
+			DBG_WARNING("included file " + real_path + " did not exist, or contained no data!");
+		}
 		string include_string(include_data.size(), ' ');
 		memcpy(include_string.data(), include_data.data(), include_data.size());
 		source_code_text.insert(source_code_text.begin() + static_cast<long long>(offset), include_data.begin(), include_data.end());
@@ -331,7 +335,7 @@ void Shader::preprocess(const string& source_code, string& vertex_shader_code, s
 	size_t comment_pos = common_code.find("//");
 	while (comment_pos != string::npos)
 	{
-		size_t comment_end = common_code.find('\n');
+		size_t comment_end = common_code.find('\n', comment_pos);
 		common_code.erase(comment_pos, (comment_end - comment_pos) + 1);
 		comment_pos = common_code.find("//", comment_pos);
 	}
@@ -339,7 +343,7 @@ void Shader::preprocess(const string& source_code, string& vertex_shader_code, s
 	comment_pos = common_code.find("/*");
 	while (comment_pos != string::npos)
 	{
-		size_t comment_end = common_code.find("*/");
+		size_t comment_end = common_code.find("*/", comment_pos);
 		common_code.erase(comment_pos, (comment_end - comment_pos) + 1);
 		comment_pos = common_code.find("/*", comment_pos);
 	}
@@ -563,7 +567,7 @@ bool Shader::compileShaders(const string& path, vector<uint32_t>& vert_blob, vec
 	
 	if (shader_data.empty())
 	{
-		DBG_WARNING("shader " + path + " not found");
+		DBG_ERROR("shader " + path + " not found");
 		return false;
 	}
 	
@@ -586,6 +590,8 @@ bool Shader::compileShaders(const string& path, vector<uint32_t>& vert_blob, vec
 	string fragment_text;
 	// TODO: preprocess uniforms to layout them in set 2 automatically
 	Shader::preprocess(shader_text, vertex_text, fragment_text, path);
+	if (vertex_text.empty() || fragment_text.empty())
+		return false;
 	
 	const shaderc::Compiler compiler;
 	shaderc::CompileOptions options;
@@ -594,6 +600,7 @@ bool Shader::compileShaders(const string& path, vector<uint32_t>& vert_blob, vec
 	if (result.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
 		DBG_ERROR("error compiling vertex shader " + path + ": " + result.GetErrorMessage());
+		DBG_INFO("see the full shader code below: " + vertex_text);
 		return false;
 	}
 	vert_blob = { result.cbegin(), result.cend() };
@@ -604,6 +611,7 @@ bool Shader::compileShaders(const string& path, vector<uint32_t>& vert_blob, vec
 	if (result.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
 		DBG_ERROR("error compiling fragment shader " + path + ": " + result.GetErrorMessage());
+		DBG_INFO("see the full shader code below: " + fragment_text);
 		return false;
 	}
 	frag_blob = { result.cbegin(), result.cend() };

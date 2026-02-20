@@ -1,4 +1,4 @@
-Resource(shader, "res://engine/shaders/deferred") : shader;
+Resource(shader, "res://engine/shaders/deferred.glsl") : shader;
 Resource(texture, "res://museum/IcePlanet_t.png") : albedo;
 
 Shader(resource = @shader);

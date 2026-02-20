@@ -138,8 +138,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Content Include="res\museum\blend.frag" />
-    <Content Include="res\museum\blend.vert" />
+    <Content Include="res\museum\blend.glsl" />
     <Content Include="res\museum\IcePlanet.hmat" />
     <Content Include="res\museum\RenderGraph.hrgr" />
     <Content Include="res\test_graph.hrgr" />

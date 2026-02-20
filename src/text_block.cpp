@@ -14,7 +14,7 @@ TextBlock::TextBlock(const string& _text) : StaticMesh(nullptr, nullptr)
 {
     name = "text block";
     font = new Font("res://engine/font.bmp", glm::ivec2{ 10, 18 });
-    material = new Material(Engine::loadShader("res://engine/shaders/text"));
+    material = new Material(Engine::loadShader("res://engine/shaders/text.glsl"));
     material->setTexture(0, font->getAtlas());
     material->setSampler(0, Engine::makeSampler(SamplerBuilder().filter(FILTER_NEAREST)));
     

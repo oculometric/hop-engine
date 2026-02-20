@@ -1,6 +1,12 @@
-#version 450
+#pragma DEFAULT_VERTEX
 
-#define FRAGMENT
+void vertex()
+{
+    #pragma DEFAULT_TRANSFORM
+}
+
+#pragma DEFAULT_ATTACHMENTS
+
 #include "common.glsl"
 #include "pbr_util.glsl"
 
@@ -13,10 +19,10 @@ layout(set = 2, binding = 3) uniform Params
     PBR_PARAMS;
 };
 
-void main()
+void fragment()
 {
     PBR_SETUP;
-    
+
     out_colour = vec4(pbrSurface(albedo_val.rgb, frag.position.xyz, perturbed_normal, specular_colour.rgb, pbr_val.r, pbr_val.g, pbr_val.b, scene.ambient_light.rgb, scene.eye_position), 1.0f);
 
     out_normal = vec4(perturbed_normal, 1);

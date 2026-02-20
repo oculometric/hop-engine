@@ -1,9 +1,6 @@
-#version 450
+#pragma DEFAULT_VERTEX
 
-#define VERTEX
-#include "common.glsl"
-
-void main()
+void vertex()
 {
     frag.uv = in_uv;
 
@@ -13,4 +10,14 @@ void main()
     to_clip[2] = normalize(to_clip[2]);
     to_clip[3] = vec4(0, 0, 0, 1);
     gl_Position = scene.view_to_clip * to_clip * vec4(in_position.xyz, 1.0);
+}
+
+#pragma DEFAULT_ATTACHMENTS
+
+layout(set = 2, binding = 0) uniform sampler2D tex;
+
+void fragment()
+{
+    out_colour = vec4(texture(tex, frag.uv).rgb, 1);
+    out_params.w = 0.0f;
 }
