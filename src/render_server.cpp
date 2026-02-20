@@ -156,7 +156,10 @@ FrameStats RenderServer::draw()
 { return server->drawFrame(); }
 
 void RenderServer::resize()
-{ server->resizeSwapchain(); }
+{
+    RenderServer::waitIdle();
+    server->resizeSwapchain();
+}
 
 void RenderServer::setSingleScene(const Ref<Scene>& scene)
 {
@@ -165,6 +168,7 @@ void RenderServer::setSingleScene(const Ref<Scene>& scene)
 
 void RenderServer::setMultiScene(const vector<MultiSceneRenderSpec>& multi_scenes)
 {
+    RenderServer::waitIdle();
     server->scenes.clear();
     for (auto& scene : multi_scenes)
     {
@@ -280,19 +284,27 @@ void RenderServer::updateUniforms(uint32_t image_index, float time_since_start, 
 {
     size_t valid_scenes = 0;
         
+    glm::mat4 clip_to_uv = scale(translate(glm::mat4(1), glm::vec3(1, 1, 0)), glm::vec3(0.5f, 0.5f, 1));
+    glm::mat4 uv_to_clip = inverse(clip_to_uv);
+    
     for (auto& [scene, uniforms] : scenes)
     {
         if (!scene.scene)
             continue;
         
         glm::ivec2 panel_extent = glm::vec2(swapchain->getExtent()) * scene.size_uv;
+        glm::vec2 top_left = (scene.start_uv * 2.0f) - 1.0f;
+        glm::vec2 size = scene.size_uv * 2.0f;
+        glm::vec2 offset = ((glm::vec2(1,1) * scene.size_uv) - 1.0f) + (scene.start_uv * 2.0f);
         
         SceneUniforms scene_uniforms;
         scene_uniforms.time = time_since_start;
         scene_uniforms.eye_position = { 0, 0, 0 };
         scene_uniforms.viewport_size = panel_extent;
         scene_uniforms.world_to_view = glm::mat4(1);
-        scene_uniforms.view_to_clip = translate(scale(glm::mat4(1), glm::vec3(scene.size_uv, 1)), glm::vec3(scene.start_uv, 0));
+        scene_uniforms.view_to_clip = scale(
+            translate(glm::mat4(1),glm::vec3(offset, 0)), 
+            glm::vec3(scene.size_uv, 1));
         scene_uniforms.clip_to_view = glm::mat4(1);
         scene_uniforms.view_to_world = glm::mat4(1);
         scene_uniforms.near_far = { -1, 1 };

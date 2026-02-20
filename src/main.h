@@ -5,7 +5,7 @@
 struct SceneFuncSet
 {
     std::wstring name;
-    void (*init_func)();
+    HopEngine::Ref<HopEngine::Scene>(*init_func)();
     void(*update_func)(HopEngine::Ref<HopEngine::Scene>, float);
     void(*imgui_func)(HopEngine::Ref<HopEngine::Scene>, float);
 };

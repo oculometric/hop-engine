@@ -29,14 +29,12 @@ void Engine::destroy()
 void Engine::stop()
 { engine->stop_requested = true; }
 
-void Engine::setup(void(* init_func)(), void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>, float))
+void Engine::setup(void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>, float))
 {
     RenderServer::waitIdle();
 
     engine->imgui_func = _imgui_func;
     engine->update_func = _update_func;
-    if (init_func)
-        init_func();
 }
 
 void Engine::mainLoop()
@@ -87,7 +85,7 @@ Ref<Scene> Engine::getScene()
     return engine->scene;
 }
 
-void Engine::setScene(Ref<Scene> new_scene)
+void Engine::setScene(const Ref<Scene>& new_scene)
 {
     Engine::debugClearSelection();
     engine->scene = new_scene;
