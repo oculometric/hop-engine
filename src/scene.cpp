@@ -100,3 +100,18 @@ void Scene::removeObject(Ref<Object> obj)
 
 void Scene::setCameraSlot(const Ref<Camera>& camera, const size_t slot)
 { cameras[slot] = camera; }
+
+void Scene::updateUniforms(uint32_t image_index, float time_since_start, glm::u32vec2 viewport_size, FrameStats& stats)
+{
+	if (!render_graph)
+		return;
+	
+	stats.lights = getLightParams().size();
+	const glm::u32vec2 graph_extent = render_graph->getExpectedExtent();
+	if (graph_extent.x != viewport_size.x || graph_extent.y != viewport_size.y)
+		render_graph->resizeBuffers(viewport_size.x, viewport_size.y);
+	render_graph->updateUniforms(image_index, time_since_start, WeakRef<Scene>(this));
+
+	for (Ref<Object>& object : objects)
+		object->pushToDescriptorSet(image_index);
+}

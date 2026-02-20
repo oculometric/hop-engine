@@ -72,11 +72,6 @@ void Camera::bind(Ref<DrawCommandBuffer> command_buffer)
 {
 	uniforms->bind(command_buffer, 0);
 }
-//
-// VkDescriptorSet Camera::getDescriptorSet(const size_t index) const
-// {
-// 	return uniforms->getDescriptorSet(index);
-// }
 
 SceneUniforms Camera::getSceneUniforms(const glm::ivec2 viewport_size, const float time, const vector<LightParams>& lights, const glm::vec4 ambient)
 {

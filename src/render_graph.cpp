@@ -81,6 +81,7 @@ RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader
 
 RenderGraph::RenderGraph(const RenderGraphBuilder& config)
 {
+    skybox_material = new Material(new Shader("res://engine/shaders/skybox.glsl"), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
     passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough.glsl"), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), RenderServer::getFinalRenderPass());
     passthrough->setSampler(0, Engine::makeSampler(SamplerBuilder().filter(config.screen_filtering)));
     execution_steps = config.execution_steps;
@@ -188,7 +189,7 @@ void RenderGraph::resizeBuffers(const uint32_t width, const uint32_t height)
     expected_extent = { width, height };
 }
 
-void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, Ref<Scene> scene)
+void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, WeakRef<Scene> scene)
 {
     for (const RenderStep& step : execution_steps)
     {
@@ -206,6 +207,12 @@ void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, R
             memcpy(step.scene_uniforms->getBuffer(), &uniforms, sizeof(SceneUniforms));
             step.scene_uniforms->pushToDescriptorSet(image_index);
         }
+    }
+    
+    if (scene->skybox && current_skybox != scene->skybox)
+    {
+        skybox_material->setTexture("tex", scene->skybox);
+        current_skybox = scene->skybox;
     }
     
     auto final_image_info = getFinalImage();
@@ -228,9 +235,9 @@ void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, R
     passthrough->pushToDescriptorSet(image_index);
 }
 
-void RenderGraph::recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, Ref<Scene> scene, FrameStats& stats, Ref<RenderPass> final_render_pass) const
+void RenderGraph::recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, WeakRef<Scene> scene, FrameStats& stats) const
 {
-    vector<multiset<DrawCommand, DrawCommand>> step_commands(execution_steps.size() + 1);
+    vector<multiset<DrawCommand, DrawCommand>> step_commands(execution_steps.size());
     auto scene_commands = scene->getDrawCommands();
     for (const auto& cmd : scene_commands)
     {
@@ -242,8 +249,6 @@ void RenderGraph::recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, Ref
             if (cmd.material->getRenderPass()->isCompatible(step.render_pass) && (cmd.camera_mask & (1 << step.camera_slot)))
                 step_commands[i].insert(cmd);
         }
-        if (cmd.material->getRenderPass()->isCompatible(final_render_pass) && cmd.camera_mask & 0xF0000000)
-            step_commands[execution_steps.size()].insert(cmd);
     }
 
     if (scene->skybox)
@@ -252,7 +257,7 @@ void RenderGraph::recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, Ref
         {
             if (!execution_steps[i].is_camera)
                 continue;
-            step_commands[i].insert(DrawCommand(RenderServer::getSkyboxMaterial(), RenderServer::getSkyboxCube()).priority(1000));
+            step_commands[i].insert(DrawCommand(skybox_material, RenderServer::getSkyboxCube().weak()).priority(1000));
         }
     }
 
@@ -268,23 +273,11 @@ void RenderGraph::recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, Ref
         else
             recordPostProcessStep(command_buffer, execution_steps[i].material, execution_steps[i].scene_uniforms);
     }
+}
 
-    final_render_pass->begin(command_buffer, { 0.02f, 0.02f, 0.02f });
+void RenderGraph::bind(Ref<DrawCommandBuffer> command_buffer)
+{
     passthrough->bind(command_buffer);
-    scene->getCamera(execution_steps[0].camera_slot)->bind(command_buffer);
-    
-    WeakRef<Mesh> quad = RenderServer::getQuad();
-    quad->draw(command_buffer);
-    
-    const auto final_step = step_commands[execution_steps.size()];
-    for (DrawCommand command : final_step)
-    {
-        command.material->bind(command_buffer);
-        command.uniforms->bind(command_buffer, 1);
-        command.mesh->draw(command_buffer);
-    }
-    
-    command_buffer->drawImGui();
 }
 
 size_t RenderGraph::findStep(const string& name) const

@@ -9,6 +9,7 @@
 
 namespace HopEngine
 {
+struct FrameStats;
 
 class Scene : public Destructible
 {
@@ -40,6 +41,7 @@ public:
 	template <class T> Ref<T> insertObject(Ref<T> obj);
 	void removeObject(Ref<Object> obj);
 	void setCameraSlot(const Ref<Camera>& camera, size_t slot);
+	void updateUniforms(uint32_t image_index, float time_since_start, glm::u32vec2 viewport_size, FrameStats& stats);
 	
 	static Ref<Scene> deserialise(const std::string& name);
 	

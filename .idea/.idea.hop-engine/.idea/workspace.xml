@@ -10,67 +10,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="836e5fd3-1918-497f-b7c7-e36a55aacb04" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/res_engine/shaders/ssao.glsl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hop-engine.vcxproj" beforeDir="false" afterPath="$PROJECT_DIR$/hop-engine.vcxproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/half_and_half.frag" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/half_and_half.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res/half_and_half.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/BlackBricks.hmat" beforeDir="false" afterPath="$PROJECT_DIR$/res/museum/BlackBricks.hmat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/CRTMonitor.hmat" beforeDir="false" afterPath="$PROJECT_DIR$/res/museum/CRTMonitor.hmat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/CRTMonitorScreen.hmat" beforeDir="false" afterPath="$PROJECT_DIR$/res/museum/CRTMonitorScreen.hmat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/ClassicBricks.hmat" beforeDir="false" afterPath="$PROJECT_DIR$/res/museum/ClassicBricks.hmat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/ConcretePanels.hmat" beforeDir="false" afterPath="$PROJECT_DIR$/res/museum/ConcretePanels.hmat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/Earth.hmat" beforeDir="false" afterPath="$PROJECT_DIR$/res/museum/Earth.hmat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/Gold.hmat" beforeDir="false" afterPath="$PROJECT_DIR$/res/museum/Gold.hmat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/IcePlanet.hmat" beforeDir="false" afterPath="$PROJECT_DIR$/res/museum/IcePlanet.hmat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/Marble.hmat" beforeDir="false" afterPath="$PROJECT_DIR$/res/museum/Marble.hmat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/PalmFrond.hmat" beforeDir="false" afterPath="$PROJECT_DIR$/res/museum/PalmFrond.hmat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/RenderGraph.hrgr" beforeDir="false" afterPath="$PROJECT_DIR$/res/museum/RenderGraph.hrgr" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/ShinyPipes.hmat" beforeDir="false" afterPath="$PROJECT_DIR$/res/museum/ShinyPipes.hmat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/WhitePlaster.hmat" beforeDir="false" afterPath="$PROJECT_DIR$/res/museum/WhitePlaster.hmat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/Wood.hmat" beforeDir="false" afterPath="$PROJECT_DIR$/res/museum/Wood.hmat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/blend.frag" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/blend.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res/museum/blend.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/multi_panel.frag" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/museum/multi_panel.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res/museum/multi_panel.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res/test_graph.hrgr" beforeDir="false" afterPath="$PROJECT_DIR$/res/test_graph.hrgr" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/node_shader.frag" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/node_shader.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/node_shader.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/samples/psx.frag" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/samples/psx.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/samples/psx.vert" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/blur.frag" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/blur.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/blur.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/blur.vert" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/colour_correct.frag" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/colour_correct.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/colour_correct.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/common.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/common.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/deferred.frag" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/deferred.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/deferred.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/deferred_post.frag" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/deferred_post.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/deferred_post.vert" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/effects.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/effects.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/fog.frag" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/fog.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/fog.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/forward.frag" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/forward.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/forward.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/gizmo.frag" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/gizmo.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/gizmo.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/passthrough.frag" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/passthrough.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/passthrough.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/skybox.frag" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/skybox.vert" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/skybox.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/ssao.frag" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/ssao.vert" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/text.frag" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/text.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/res_engine/shaders/text.vert" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/asha_scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/asha_scene.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gizmo.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gizmo.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/counted_ref.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/counted_ref.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/graphics_environment.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/graphics_environment.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/render_graph.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/render_graph.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/scene.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/scene.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/graphics_environment.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/graphics_environment.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/museum_scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/museum_scene.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/node_view.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/node_view.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/object.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/object.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/render_graph.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/render_graph.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/shader.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/shader.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/text_block.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/text_block.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/scene.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,7 +33,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://81" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://6" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -109,7 +58,7 @@
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;shader-unification&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -239,6 +188,7 @@
       <workItem from="1771445414752" duration="2392000" />
       <workItem from="1771447843349" duration="28396000" />
       <workItem from="1771525688264" duration="18248000" />
+      <workItem from="1771592373300" duration="5993000" />
     </task>
     <servers />
   </component>

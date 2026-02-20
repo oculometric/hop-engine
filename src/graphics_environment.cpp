@@ -157,9 +157,6 @@ Ref<Material> RenderServer::getDefaultMaterial()
 Ref<Mesh> RenderServer::getSkyboxCube()
 { return server->skybox_cube; }
 
-Ref<Material> RenderServer::getSkyboxMaterial()
-{ return server->skybox_material; }
-
 Ref<Mesh> RenderServer::getQuad()
 { return server->quad; }
 
@@ -193,6 +190,7 @@ RenderServer::RenderServer(const Ref<Window>& main_window)
     createSyncObjects();
 
     final_render_pass = new RenderPass(swapchain, { 0, true });
+    final_pass_uniforms = new UniformBlock(ShaderLayout{ scene_descriptor_set_layout, {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
     offscreen_pass = new RenderPass(1, 1, { 3, true });
 
     uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
@@ -208,7 +206,6 @@ RenderServer::RenderServer(const Ref<Window>& main_window)
     skybox_cube = new Mesh("res://engine/meshes/skybox.obj");
 
     default_material = new Material(new Shader("res://engine/shaders/default_shader.glsl"));
-    skybox_material = new Material(new Shader("res://engine/shaders/skybox.glsl"), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
     
     initImGui();
 
@@ -236,12 +233,12 @@ RenderServer::~RenderServer()
     command_buffers.clear();
     vkDestroyCommandPool(device, command_pool, nullptr);
     
-    skybox_material = nullptr;
     skybox_cube = nullptr;
     default_material = nullptr;
     quad = nullptr;
     default_image = nullptr;
     default_sampler = nullptr;
+    final_pass_uniforms = nullptr;
 
     DBG_VERBOSE("destroying descriptors");
     vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
@@ -576,26 +573,7 @@ FrameStats RenderServer::drawFrame()
     DBG_BABBLE("acquired image " + to_string(image_index));
 
     const auto build_start = chrono::steady_clock::now();
-    Ref<Scene> scene = Engine::getScene();
-    if (scene && scene->render_graph)
-    {
-        stats.lights = scene->getLightParams().size();
-        const glm::u32vec2 final_extent = swapchain->getExtent();
-        const glm::u32vec2 graph_extent = scene->render_graph->getExpectedExtent();
-        if (graph_extent.x != final_extent.x || graph_extent.y != final_extent.y)
-            scene->render_graph->resizeBuffers(final_extent.x, final_extent.y);
-        scene->render_graph->updateUniforms(image_index, since_start.count(), scene);
-        if (scene->skybox && current_skybox != scene->skybox)
-        {
-            skybox_material->setTexture("tex", scene->skybox);
-            current_skybox = scene->skybox;
-        }
-
-        for (Ref<Object>& object : scene->getAllObjects())
-            object->pushToDescriptorSet(image_index);
-    }
-    else
-        DBG_WARNING("no scene attached to server");
+    updateUniforms(image_index, since_start.count(), stats);
     const chrono::duration<float> build_duration = chrono::steady_clock::now() - build_start;
     stats.build_time = build_duration.count();
 
@@ -653,12 +631,48 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
     
     Ref<Scene> scene = Engine::getScene();
 
+    // render the scene to its own buffer
+    // IF we're in single-scene mode THEN render that scene's passthrough to the screen, and add imgui on top
+    // ELSE IF we're in multi-scene mode THEN render each scene's passthrough to individual quads, and add imgui on top
+    
     if (scene && scene->render_graph)
-        scene->render_graph->recordCommandBuffer(command_buffer, scene, stats, final_render_pass);
-    else
-        final_render_pass->begin(command_buffer, glm::vec3{ 0.02f, 0.02f, 0.02f });
+        scene->render_graph->recordCommandBuffer(command_buffer, scene, stats);
+    
+    final_render_pass->begin(command_buffer, glm::vec3{ 0.02f, 0.02f, 0.02f });
+    
+    if (scene && scene->render_graph)
+    {
+        scene->render_graph->bind(command_buffer);
+        final_pass_uniforms->bind(command_buffer, 0);
+        
+        quad->draw(command_buffer);
+    }
+    
+    command_buffer->drawImGui();
 
     command_buffer->end();
+}
+
+void RenderServer::updateUniforms(uint32_t image_index, float time_since_start, FrameStats& stats)
+{
+    SceneUniforms scene_uniforms;
+    scene_uniforms.time = time_since_start;
+    scene_uniforms.eye_position = { 0, 0, 0 };
+    scene_uniforms.viewport_size = swapchain->getExtent();
+    scene_uniforms.world_to_view = glm::mat4(1);
+    scene_uniforms.view_to_clip = glm::mat4(1);
+    scene_uniforms.clip_to_view = glm::mat4(1);
+    scene_uniforms.view_to_world = glm::mat4(1);
+    scene_uniforms.near_far = { -1, 1 };
+    memcpy(final_pass_uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
+    final_pass_uniforms->pushToDescriptorSet(image_index);
+    
+    // TODO: change the extent to be different if we're in multi-scene mode
+    Ref<Scene> scene = Engine::getScene();
+    if (scene)
+        scene->updateUniforms(image_index, time_since_start, swapchain->getExtent(), stats);
+    else
+        DBG_WARNING("no scene attached to server");
 }
 
 bool DrawCommand::operator()(const DrawCommand& a, const DrawCommand& b) const

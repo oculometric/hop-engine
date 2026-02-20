@@ -61,6 +61,7 @@ private:
     Ref<RenderPass> offscreen_pass;
 	// final render pass for actually putting stuff on the window surface
 	Ref<RenderPass> final_render_pass;
+	Ref<UniformBlock> final_pass_uniforms;
 	
 	// pool from which descriptors and descriptor sets are allocated by the rest of
 	// the engine
@@ -75,8 +76,6 @@ private:
 	Ref<Material> default_material;	// default material used when none is specified
 
 	Ref<Mesh> skybox_cube;			// mesh used to render skyboxes
-	Ref<Material> skybox_material;	// material used to render skyboxes
-	WeakRef<Texture> current_skybox;// skybox texture in use TODO: the graphics environment probably shouldn't manage the skybox
 	Ref<Mesh> quad;					// full screen quad mesh
 
 public:
@@ -100,7 +99,6 @@ public:
 	static std::pair<Ref<Texture>, Ref<Sampler>> getDefaultTextureSampler();
 	static Ref<Material> getDefaultMaterial();
 	static Ref<Mesh> getSkyboxCube();
-	static Ref<Material> getSkyboxMaterial();
 	static Ref<Mesh> getQuad();
 	static void waitIdle();
 	static FrameStats draw();
@@ -121,6 +119,7 @@ private:
 	void resizeSwapchain();
 
 	void recordRenderCommands(uint32_t image_index, FrameStats& stats);
+	void updateUniforms(uint32_t image_index, float time_since_start, FrameStats& stats);
 };
 
 }

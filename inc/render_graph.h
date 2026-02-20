@@ -73,6 +73,8 @@ private:
 	std::vector<RenderStep> execution_steps;
 	glm::u32vec2 expected_extent = { 0, 0 };
 	Ref<Material> passthrough;
+	Ref<Material> skybox_material;
+	WeakRef<Texture> current_skybox;
 	WeakRef<Texture> passthrough_texture;
 
 public:
@@ -90,9 +92,10 @@ public:
 	void setSkipStep(size_t step, bool skip);
 	void setSkipStep(const std::string& name, bool skip);
 	void resizeBuffers(uint32_t width, uint32_t height);
-	void updateUniforms(uint32_t image_index, float time_since_start, Ref<Scene> scene);
-	void recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, Ref<Scene> scene, FrameStats& stats, Ref<RenderPass> final_render_pass) const;
-
+	void updateUniforms(uint32_t image_index, float time_since_start, WeakRef<Scene> scene);
+	void recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, WeakRef<Scene> scene, FrameStats& stats) const;
+	void bind(Ref<DrawCommandBuffer> command_buffer);
+	
 	void drawImGuiDebug();
 	static Ref<RenderGraph> deserialise(const std::string& name);
 	

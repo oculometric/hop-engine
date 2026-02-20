@@ -126,6 +126,7 @@ public:
 	bool isValid() const { return payload != nullptr; }
 	operator bool() const { return isValid(); }
 	bool operator==(const Ref<T>& other) const { return other.payload == payload; }
+	bool operator==(const T* other) const { return other == payload; }
 	bool operator==(const WeakRef<T>& other) const { return other.payload == payload; }
 	T* operator->() { return payload; }
 	T* operator->() const { return payload; }
@@ -203,12 +204,29 @@ public:
 		payload = other.payload;
 		ref_counter = other.ref_counter;
 	}
+	
+	WeakRef(T* new_payload)
+	{
+		if (new_payload == payload)
+			return;
+
+		payload = new_payload;
+	}
+	
+	void operator=(T* other)
+	{
+		if (other == payload)
+			return;
+
+		payload = other;
+		ref_counter = nullptr;
+	}
 
 	WeakRef(const Ref<T>& other)
 	{
 		if (other.payload == payload)
 			return;
-
+	
 		payload = other.payload;
 		ref_counter = other.ref_counter;
 	}
@@ -256,7 +274,9 @@ Ref<T>::Ref(WeakRef<T>& other)
 template<typename T>
 WeakRef<T> Ref<T>::weak() const
 {
-    return WeakRef<T>(*this);
+	WeakRef<T> weakened;
+	weakened = *this;
+    return weakened;
 }
 
 };

@@ -11,10 +11,9 @@
 - frustrum culling [M]
 - audio loading and output
 - improved text block rendering with wrapping, alignment, font, etc
-- re-evaluate whether everything needs FRAMES_IN_FLIGHT copies of stuff
+- interactive node editor
 ---
 ## v0.7
-- interactive node editor
 - shader node editor
 - render graph node editor
 - shadows
