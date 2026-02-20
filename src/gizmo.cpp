@@ -11,7 +11,7 @@ using namespace std;
 Gizmo::Gizmo() : StaticMesh(nullptr, nullptr)
 {
     mesh = Engine::loadMesh("res://engine/meshes/axes_gizmo.obj");
-    material = new Material(Engine::loadShader("res://engine/shaders/gizmo"), PipelineBuilder().cullMode(CULL_NONE), RenderServer::getFinalRenderPass());
+    material = new Material(Engine::loadShader("res://engine/shaders/gizmo.glsl"), PipelineBuilder().cullMode(CULL_NONE), RenderServer::getFinalRenderPass());
     camera_mask = 0xF0000000;
     name = "gizmo";
 }

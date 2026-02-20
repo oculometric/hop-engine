@@ -1,11 +1,13 @@
-#version 450
+#pragma DEFAULT_VERTEX
 
-#define FRAGMENT
-#define NONSTANDARD_FRAG_OUT
-#define OMIT_OBJECT_SET
+void vertex()
+{
+    #pragma CANVAS_TRANSFORM
+}
+
+#pragma CANVAS_ATTACHMENTS
+
 #include "common.glsl"
-
-layout(location = 0) out vec4 out_colour;
 
 layout(set = 2, binding = 0) uniform sampler2D screen_texture;
 layout(set = 2, binding = 1) uniform sampler2D depth_texture;
@@ -18,7 +20,7 @@ layout(set = 2, binding = 2) uniform MaterialUniforms
     float fog_exponent;
 };
 
-void main()
+void fragment()
 {
     vec3 scene_colour = texture(screen_texture, frag.uv).rgb;
     if (fog_start == fog_end || fog_exponent == 0)
@@ -26,7 +28,7 @@ void main()
         out_colour = vec4(scene_colour, 1);
         return;
     }
-    
+
     float d = texture(depth_texture, frag.uv).r;
     if (d == 1)
     {

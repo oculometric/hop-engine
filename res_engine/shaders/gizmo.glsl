@@ -1,17 +1,18 @@
-#version 450
+#pragma DEFAULT_VERTEX
 
-#define NONSTANDARD_FRAG_OUT
-#define FRAGMENT
-#include "common.glsl"
+void vertex()
+{
+    #pragma DEFAULT_TRANSFORM
+}
 
-layout(location = 0) out vec4 out_colour;
+#pragma CANVAS_ATTACHMENTS
 
 layout(set = 2, binding = 0) uniform MaterialUniforms
 {
     vec3 colour_filter;
 };
 
-void main()
+void fragment()
 {
     if (length(frag.colour.rgb - colour_filter) < 0.01f)
         out_colour = vec4(1);

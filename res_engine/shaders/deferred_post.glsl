@@ -1,12 +1,14 @@
-#version 450
+#pragma DEFAULT_VERTEX
 
-#define FRAGMENT
-#define NONSTANDARD_FRAG_OUT
-#define OMIT_OBJECT_SET
+void vertex()
+{
+    #pragma CANVAS_TRANSFORM
+}
+
+#pragma CANVAS_ATTACHMENTS
+
 #include "common.glsl"
 #include "pbr_util.glsl"
-
-layout(location = 0) out vec4 out_colour;
 
 layout(set = 2, binding = 0) uniform sampler2D colour_tex;
 layout(set = 2, binding = 1) uniform sampler2D normal_tex;
@@ -14,7 +16,7 @@ layout(set = 2, binding = 2) uniform sampler2D param_tex;
 layout(set = 2, binding = 3) uniform sampler2D custom_tex;
 layout(set = 2, binding = 4) uniform sampler2D depth_tex;
 
-void main()
+void fragment()
 {
     vec4 colour_val = texture(colour_tex, frag.uv);
     vec4 param_val = texture(param_tex, frag.uv);
@@ -31,6 +33,6 @@ void main()
     view_position /= view_position.w;
     vec4 world_position = scene.view_to_world * view_position;
     // TODO: view space lighting?
-    
+
     out_colour = vec4(pbrSurface(colour_val.rgb, world_position.xyz, normal_val.xyz, specular_val.rgb, param_val.r, param_val.g, param_val.b, scene.ambient_light.rgb, scene.eye_position), 1.0f);
 }

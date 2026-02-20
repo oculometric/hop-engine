@@ -63,7 +63,7 @@ float clip_to_view_depth(vec4 clip_postion)
 }
 
 // this is based closely on the LearnOpenGL example - https://learnopengl.com/Advanced-Lighting/SSAO
-float computeSSAO(float radius, float power, float bias, vec2 uv, sampler2D normal_texture, sampler2D depth_texture, vec4 samples[NUM_SSAO_SAMPLES])
+float computeSSAO(float radius, float power, float bias, vec2 uv, vec2 frag_position, sampler2D normal_texture, sampler2D depth_texture, vec4 samples[NUM_SSAO_SAMPLES])
 {
     // original normal of the pixel in world and view space
     vec3 world_normal = texture(normal_texture, uv).xyz;
@@ -71,7 +71,7 @@ float computeSSAO(float radius, float power, float bias, vec2 uv, sampler2D norm
 
     // compute view position and depth at current pixel - would it be better to store this to speed up access?
     float z = texture(depth_texture, uv).r;
-    vec4 clip_position = vec4(frag.position.xy, z, 1.0f);
+    vec4 clip_position = vec4(frag_position, z, 1.0f);
     vec4 view_position = scene.clip_to_view * clip_position;
     view_position /= view_position.w;
 

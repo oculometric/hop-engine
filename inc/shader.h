@@ -67,7 +67,12 @@ private:
 	static std::vector<DescriptorBinding> mergeBindings(const std::vector<DescriptorBinding>& list_a, const std::vector<DescriptorBinding>& list_b);
 	static std::vector<DescriptorBinding> getReflectedBindings(const std::vector<uint32_t>& blob);
 	static VkShaderModule createShaderModule(const std::vector<uint32_t>& blob);
-	static void fixIncludes(std::vector<uint8_t>& source_code, const std::string& path_prefix, bool res_relative);
+	static void fixIncludes(std::string& source_code, const std::string& path_prefix, bool res_relative);
+	static void preprocess(const std::string& source_code, std::string& vertex_shader_code, std::string& fragment_shader_code, const std::string& path);
+	static std::string preprocessVertex(const std::string& common_code, const std::string& path);
+	static std::string preprocessFragment(const std::string& common_code, const std::string& path);
+	static void removeFunction(std::string& code, const std::string& signature);
+	static void destroyAllPragmas(std::string& code);
 	static bool compileShaders(const std::string& path, std::vector<uint32_t>& vert_blob, std::vector<uint32_t>& frag_blob);
 };
 

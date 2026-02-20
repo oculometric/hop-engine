@@ -1,10 +1,10 @@
-Resource(shader, "res://engine/shaders/fog") : fog;
-Resource(shader, "res://engine/shaders/ssao") : ssao;
-Resource(shader, "res://museum/blend") : blend;
-Resource(shader, "res://engine/shaders/deferred_post") : shading;
-Resource(shader, "res://engine/shaders/colour_correct") : colour_corrector;
-Resource(shader, "res://engine/shaders/blur") : blur;
-Resource(shader, "res://museum/multi_panel") : multi_panel;
+Resource(shader, "res://engine/shaders/fog.glsl") : fog;
+Resource(shader, "res://engine/shaders/ssao.glsl") : ssao;
+Resource(shader, "res://museum/blend.glsl") : blend;
+Resource(shader, "res://engine/shaders/deferred_post.glsl") : shading;
+Resource(shader, "res://engine/shaders/colour_correct.glsl") : colour_corrector;
+Resource(shader, "res://engine/shaders/blur.glsl") : blur;
+Resource(shader, "res://museum/multi_panel.glsl") : multi_panel;
 
 Camera(slot = 0) : camera;
 PostProcess(shader = @shading) : shaded

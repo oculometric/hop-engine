@@ -1,11 +1,11 @@
-#version 450
+#pragma DEFAULT_VERTEX
 
-#define FRAGMENT
-#define NONSTANDARD_FRAG_OUT
-#define OMIT_OBJECT_SET
-#include "../engine/shaders/common.glsl"
+void vertex()
+{
+    #pragma CANVAS_TRANSFORM
+}
 
-layout(location = 0) out vec4 out_colour;
+#pragma CANVAS_ATTACHMENTS
 
 layout(set = 2, binding = 0) uniform sampler2D main_tex;
 layout(set = 2, binding = 1) uniform sampler2D tex_1;
@@ -21,7 +21,7 @@ float lineariseDepth(float d)
     return (scene.near_far.x * scene.near_far.y / (scene.near_far.y + d * (scene.near_far.x - scene.near_far.y))) / scene.near_far.y;
 }
 
-void main()
+void fragment()
 {
     if (frag.uv.y < 0.125f)
     {

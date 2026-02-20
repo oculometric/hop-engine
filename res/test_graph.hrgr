@@ -1,6 +1,6 @@
-Resource(shader, "res://engine/shaders/ssao") : ssao_shader;
-Resource(shader, "res://half_and_half") : half_shader;
-Resource(shader, "res://engine/shaders/colour_correct") : cc_shader;
+Resource(shader, "res://engine/shaders/ssao.glsl") : ssao_shader;
+Resource(shader, "res://half_and_half.glsl") : half_shader;
+Resource(shader, "res://engine/shaders/colour_correct.glsl") : cc_shader;
 
 Camera(slot = 0) : main_cam;
 Camera(slot = 1) : right_cam;

@@ -1,6 +1,10 @@
-#version 450
+#pragma DEFAULT_VERTEX
 
-#define FRAGMENT
+void vertex()
+{
+    #pragma DEFAULT_TRANSFORM
+}
+
 #include "common.glsl"
 #include "pbr_util.glsl"
 
@@ -13,10 +17,12 @@ layout(set = 2, binding = 3) uniform Params
     PBR_PARAMS;
 };
 
-void main()
+#pragma DEFAULT_ATTACHMENTS
+
+void fragment()
 {
     PBR_SETUP;
-    
+
     // output format:
     // out_colour.rgb <- albedo
     // out_colour.a   <- EMPTY
