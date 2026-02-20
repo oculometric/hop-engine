@@ -89,7 +89,6 @@ DrawCommandBuffer::~DrawCommandBuffer()
     query_pool = nullptr;
 }
 
-// TODO: add state checks!! so you cant do illegal stuff
 void DrawCommandBuffer::begin(uint32_t index, FrameStats* frame_stats)
 {
     if (begun)

@@ -588,7 +588,6 @@ bool Shader::compileShaders(const string& path, vector<uint32_t>& vert_blob, vec
 	Shader::fixIncludes(shader_text, current_file_location, is_res_relative);
 	string vertex_text;
 	string fragment_text;
-	// TODO: preprocess uniforms to layout them in set 2 automatically
 	Shader::preprocess(shader_text, vertex_text, fragment_text, path);
 	if (vertex_text.empty() || fragment_text.empty())
 		return false;

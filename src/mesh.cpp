@@ -18,9 +18,6 @@ Mesh::Mesh(const string& path)
     vector<Vertex> verts;
     vector<uint16_t> inds;
     
-// TODO: mesh binary detection
-// TODO: mesh binary encoder/decoder
-
     if (readFileToArrays(path, verts, inds))
     {
         createFromArrays(verts, inds);

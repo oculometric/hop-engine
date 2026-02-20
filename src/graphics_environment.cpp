@@ -666,8 +666,6 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
             scene.scene->render_graph->bind(command_buffer);
             uniforms->bind(command_buffer, 0);
         
-            // TODO: rescale the quad so that it doesnt fill the screen, and instead draws according to the size spec
-            // therefore passthrough needs to adhere to the view-clip transform!
             quad->draw(command_buffer);
         }
     }

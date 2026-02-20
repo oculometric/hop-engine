@@ -461,7 +461,7 @@ void Engine::_drawImGuiDebug(float delta_time) const
 #if !defined(STANDALONE)
 		if (ImGui::BeginMenu("open scene"))
 		{
-			if (ImGui::MenuItem("bunnygirl")) // TODO: remove this once the module is over
+			if (ImGui::MenuItem("bunnygirl"))
 			{
 				const auto scn = getAshaScene();
 				debugClearSelection();

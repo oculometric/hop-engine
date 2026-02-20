@@ -82,8 +82,14 @@ Buffer::~Buffer()
 
 uint32_t Buffer::findMemoryType(const uint32_t type_bits, const MemoryProperties _properties)
 {
+    static map<pair<uint32_t, MemoryProperties>, uint32_t> known_memory_types;
+    
+    auto it = known_memory_types.find({ type_bits, _properties });
+    if (it != known_memory_types.end())
+        return it->second;
+    
     // check through the available vulkan memory types to find one which fits the
-    // requirements. TODO: this should probably cache its results for a given type_bits and _properties
+    // requirements.
     const VkMemoryPropertyFlags properties = convertFlags<VkMemoryPropertyFlagBits, MemoryProperties, 4>(_properties, vulkan_memory_props);
     VkPhysicalDeviceMemoryProperties memory_properties;
     vkGetPhysicalDeviceMemoryProperties(RenderServer::getPhysicalDevice(), &memory_properties);
@@ -91,7 +97,10 @@ uint32_t Buffer::findMemoryType(const uint32_t type_bits, const MemoryProperties
     for (uint32_t i = 0; i < memory_properties.memoryTypeCount; i++)
     {
         if ((type_bits & (1 << i)) && (memory_properties.memoryTypes[i].propertyFlags & properties) == properties)
+        {
+            known_memory_types[{ type_bits, _properties }] = i;
             return i;
+        }
     }
     DBG_FAULT("failed to find suitable memory type");
     return 0;
