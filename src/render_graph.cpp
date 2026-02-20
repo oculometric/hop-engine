@@ -222,10 +222,10 @@ void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, W
     static bool in_stencil_mode = false;
     if (new_passthrough_tex != passthrough_texture || final_image_info.second != in_stencil_mode)
     {
-        passthrough->setTexture(0, new_passthrough_tex);
+        passthrough->setTexture(0, new_passthrough_tex.strong());
         passthrough_texture = new_passthrough_tex;
         in_stencil_mode = final_image_info.second;
-        if (in_stencil_mode) passthrough->setTexture(1, new_passthrough_tex, true);
+        if (in_stencil_mode) passthrough->setTexture(1, new_passthrough_tex.strong(), true);
         else passthrough->setTexture(1, nullptr);
         if (new_passthrough_tex->getFormat() == Texture::getDepthFormat())
             passthrough->setIntUniform("display_depth", in_stencil_mode ? 2 : 1);

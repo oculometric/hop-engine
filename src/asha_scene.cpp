@@ -12,7 +12,7 @@ static WeakRef<StaticMesh> asha;
 static WeakRef<Material> cc_material;
 static WeakRef<Gizmo> gizmo;
 
-static Ref<Scene> initAshaScene()
+static void initAshaScene()
 {
     Ref<Scene> scene = new Scene();
     // load and configure asha's shader, mesh, and material
@@ -95,8 +95,8 @@ static Ref<Scene> initAshaScene()
     cc_material->setFloatUniform("exposure", 1.0f);
     cc_material->setFloatUniform("offset", 0.0f);
     
+    Engine::setScene(scene);
     Engine::debugClearSelection(asha.cast<Object>(), asha->material, scene->getCamera(0));
-    return scene;
 }
 
 static void updateAshaScene(Ref<Scene> scene, float delta_time)

@@ -118,8 +118,7 @@ template<class T>
 void Object::setParent(WeakRef<T> new_parent)
 {
 	static_assert(std::is_convertible_v<T*, Object*>, "parent must be a HopEngine::Object subclass");
-	Ref<T> strong_ref = new_parent;
-	setParent(strong_ref);
+	setParent(new_parent.strong());
 }
 
 }

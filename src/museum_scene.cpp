@@ -53,10 +53,11 @@ static Spline flythrough_spline
 };
 
 
-static Ref<Scene> initMuseumScene()
+static void initMuseumScene()
 {
     Ref<Scene> scene = Scene::deserialise("res://museum/Museum.hscn");
-    if (!scene) return scene;
+    if (!scene) return;
+    Engine::setScene(scene);
     
     obj = scene->findObject<StaticMesh>("orrery_core");
     obj2 = scene->findObject<StaticMesh>("orrery_mid");
@@ -129,8 +130,6 @@ static Ref<Scene> initMuseumScene()
         ));
     normal_demo_2->transform.setPosition(glm::vec3{ 0, -8, 2 });
     normal_demo_2->transform.setLocalScale(glm::vec3{ 3, 3, 3 });
-
-    return scene;
 }
 
 static void updateMuseumScene(Ref<Scene> scene, const float delta_time)

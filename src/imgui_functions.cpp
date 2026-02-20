@@ -42,7 +42,7 @@ static Ref<Texture> texturePicker(const Ref<Texture>& current, const char* str)
 		options_str.resize(options_str.size() + 1);
 	}
 	ImGui::Combo(str, &selected, options_str.c_str());
-	return options[selected];
+	return options[selected].strong();
 }
 
 static Ref<Mesh> meshPicker(const Ref<Mesh>& current, const char* str)
@@ -59,7 +59,7 @@ static Ref<Mesh> meshPicker(const Ref<Mesh>& current, const char* str)
 		options_str.resize(options_str.size() + 1);
 	}
 	ImGui::Combo(str, &selected, options_str.c_str());
-	return options[selected];
+	return options[selected].strong();
 }
 
 static Ref<Material> materialPicker(const Ref<Material>& current, const char* str)
@@ -76,7 +76,7 @@ static Ref<Material> materialPicker(const Ref<Material>& current, const char* st
 		options_str.resize(options_str.size() + 1);
 	}
 	ImGui::Combo(str, &selected, options_str.c_str());
-	return options[selected];
+	return options[selected].strong();
 }
 
 void Object::drawImGuiDebug()

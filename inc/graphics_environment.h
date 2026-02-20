@@ -17,6 +17,14 @@
 
 namespace HopEngine
 {
+
+struct MultiSceneRenderSpec
+{
+	Ref<Scene> scene;
+	glm::vec2 start_uv;
+	glm::vec2 size_uv;
+};
+
 /**
  * @brief encapsulates all the behaviour of actually initialising and running the
  * rendering environment.
@@ -61,7 +69,6 @@ private:
     Ref<RenderPass> offscreen_pass;
 	// final render pass for actually putting stuff on the window surface
 	Ref<RenderPass> final_render_pass;
-	Ref<UniformBlock> final_pass_uniforms;
 	
 	// pool from which descriptors and descriptor sets are allocated by the rest of
 	// the engine
@@ -77,6 +84,8 @@ private:
 
 	Ref<Mesh> skybox_cube;			// mesh used to render skyboxes
 	Ref<Mesh> quad;					// full screen quad mesh
+	
+	std::vector<std::pair<MultiSceneRenderSpec, Ref<UniformBlock>>> scenes;
 
 public:
 	DELETE_CONSTRUCTORS(RenderServer);
@@ -90,10 +99,11 @@ public:
 	static QueueFamilies getQueueFamilies(VkPhysicalDevice device);
 	static VkQueue getGraphicsQueue();
 	static VkCommandPool getCommandPool();
+	static VkDescriptorPool getDescriptorPool();
+	static glm::vec2 getFramebufferSize();
+	
 	static Ref<RenderPass> getMainRenderPass();
 	static Ref<RenderPass> getFinalRenderPass();
-	static glm::vec2 getFramebufferSize();
-	static VkDescriptorPool getDescriptorPool();
 	static VkDescriptorSetLayout getSceneDescriptorSetLayout();
 	static VkDescriptorSetLayout getObjectDescriptorSetLayout();
 	static std::pair<Ref<Texture>, Ref<Sampler>> getDefaultTextureSampler();
@@ -103,6 +113,9 @@ public:
 	static void waitIdle();
 	static FrameStats draw();
 	static void resize();
+	
+	static void setSingleScene(const Ref<Scene>& scene);
+	static void setMultiScene(const std::vector<MultiSceneRenderSpec>& multi_scenes);
 
 private:
 	RenderServer(const Ref<Window>& main_window);

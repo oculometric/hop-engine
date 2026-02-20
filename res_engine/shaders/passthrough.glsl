@@ -3,6 +3,7 @@
 void vertex()
 {
     #pragma CANVAS_TRANSFORM
+    gl_Position = scene.view_to_clip * vec4(in_position.xyz, 1);
 }
 
 #pragma CANVAS_ATTACHMENTS

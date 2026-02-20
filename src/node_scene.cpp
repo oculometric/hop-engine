@@ -8,7 +8,7 @@ using namespace HopEngine;
 static WeakRef<NodeView> node_view;
 static WeakRef<NodeView::Node> selected_node;
 
-static Ref<Scene> initNodeScene()
+static void initNodeScene()
 {
     Ref<Scene> scene = new Scene();
     node_view = scene->insertObject<NodeView>(new NodeView());
@@ -93,7 +93,7 @@ static Ref<Scene> initNodeScene()
     scene->getCamera(0)->transform.lookAt({ 0, 0, 6 }, { 0, 0, 0 }, { 0, 1, 0 });
     scene->getCamera(0)->clear_colour = {0, 0, 0};
     
-    return scene;
+    Engine::setScene(scene);
 }
 
 static void updateNodeScene(Ref<Scene> scene, float delta_time)

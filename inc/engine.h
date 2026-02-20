@@ -61,9 +61,10 @@ public:
 	static void destroy();
 	static void stop();
 
-	static void setup(Ref<Scene>(* init_func)(), void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>, float));
+	static void setup(void(* init_func)(), void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>, float));
 	static void mainLoop();
 	static Ref<Scene> getScene();
+	static void setScene(Ref<Scene> new_scene);
 	static void summariseTrackedObjects();
 	static FrameStats getFrameStats();
 	static float getSmoothedDeltaTime();

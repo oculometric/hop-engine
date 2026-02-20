@@ -84,8 +84,6 @@ public:
 		other.ref_counter = nullptr;
 	}
 
-	Ref(WeakRef<T>& other);
-
 	Ref(T* new_payload)
 	{
 		if (new_payload == payload)
@@ -242,6 +240,7 @@ public:
 
 	~WeakRef() { }
 
+	Ref<T> strong();
 	size_t getCount() const { return *ref_counter; }
 	bool isValid() const { return payload != nullptr; }
 	operator bool() const { return isValid(); }
@@ -260,15 +259,17 @@ public:
 };
 
 template<typename T>
-Ref<T>::Ref(WeakRef<T>& other)
+Ref<T> WeakRef<T>::strong()
 {
-	if (other.payload == payload)
-		return;
+	if (ref_counter == nullptr)
+		return nullptr;
+	
+	Ref<T> strong_ref;
+	memcpy(static_cast<void*>(&strong_ref), static_cast<void*>(this), sizeof(*this));
 
-	payload = other.payload;
-	ref_counter = other.ref_counter;
-	if (ref_counter != nullptr)
-		++(*ref_counter);
+	++(*ref_counter);
+	
+	return strong_ref;
 }
 
 template<typename T>

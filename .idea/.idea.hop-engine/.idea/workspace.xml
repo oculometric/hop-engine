@@ -11,15 +11,19 @@
   <component name="ChangeListManager">
     <list default="true" id="836e5fd3-1918-497f-b7c7-e36a55aacb04" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inc/counted_ref.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/counted_ref.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/engine.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/engine.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inc/graphics_environment.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/graphics_environment.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/render_graph.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/render_graph.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/scene.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/scene.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/object.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/object.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/res_engine/shaders/passthrough.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/shaders/passthrough.glsl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/asha_scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/asha_scene.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/graphics_environment.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/graphics_environment.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/object.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/object.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/imgui_functions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/imgui_functions.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/museum_scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/museum_scene.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/node_scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/node_scene.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/render_graph.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/render_graph.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/scene.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,7 +37,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://6" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://12" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -188,7 +192,7 @@
       <workItem from="1771445414752" duration="2392000" />
       <workItem from="1771447843349" duration="28396000" />
       <workItem from="1771525688264" duration="18248000" />
-      <workItem from="1771592373300" duration="5993000" />
+      <workItem from="1771592373300" duration="11023000" />
     </task>
     <servers />
   </component>

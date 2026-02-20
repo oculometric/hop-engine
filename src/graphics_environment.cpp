@@ -169,6 +169,25 @@ FrameStats RenderServer::draw()
 void RenderServer::resize()
 { server->resizeSwapchain(); }
 
+void RenderServer::setSingleScene(const Ref<Scene>& scene)
+{
+    setMultiScene({ { scene, glm::vec2{ 0, 0 }, glm::vec2{ 1, 1 } } });
+}
+
+void RenderServer::setMultiScene(const vector<MultiSceneRenderSpec>& multi_scenes)
+{
+    server->scenes.clear();
+    for (auto& scene : multi_scenes)
+    {
+        server->scenes.emplace_back(scene, 
+            new UniformBlock(
+                ShaderLayout{
+                    server->scene_descriptor_set_layout, 
+                    {{ 0, UNIFORM, sizeof(SceneUniforms) } }
+                }));
+    }
+}
+
 RenderServer::RenderServer(const Ref<Window>& main_window)
 {
     server = this;
@@ -190,7 +209,6 @@ RenderServer::RenderServer(const Ref<Window>& main_window)
     createSyncObjects();
 
     final_render_pass = new RenderPass(swapchain, { 0, true });
-    final_pass_uniforms = new UniformBlock(ShaderLayout{ scene_descriptor_set_layout, {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
     offscreen_pass = new RenderPass(1, 1, { 3, true });
 
     uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
@@ -233,12 +251,12 @@ RenderServer::~RenderServer()
     command_buffers.clear();
     vkDestroyCommandPool(device, command_pool, nullptr);
     
+    scenes.clear();
     skybox_cube = nullptr;
     default_material = nullptr;
     quad = nullptr;
     default_image = nullptr;
     default_sampler = nullptr;
-    final_pass_uniforms = nullptr;
 
     DBG_VERBOSE("destroying descriptors");
     vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
@@ -629,23 +647,29 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
     Ref<DrawCommandBuffer> command_buffer = command_buffers[image_index];
     command_buffer->begin(image_index, &stats);
     
-    Ref<Scene> scene = Engine::getScene();
-
     // render the scene to its own buffer
     // IF we're in single-scene mode THEN render that scene's passthrough to the screen, and add imgui on top
     // ELSE IF we're in multi-scene mode THEN render each scene's passthrough to individual quads, and add imgui on top
     
-    if (scene && scene->render_graph)
-        scene->render_graph->recordCommandBuffer(command_buffer, scene, stats);
+    for (auto& [scene, uniforms] : scenes)
+    {
+        if (scene.scene && scene.scene->render_graph)
+            scene.scene->render_graph->recordCommandBuffer(command_buffer, scene.scene, stats);
+    }
     
     final_render_pass->begin(command_buffer, glm::vec3{ 0.02f, 0.02f, 0.02f });
     
-    if (scene && scene->render_graph)
+    for (auto& [scene, uniforms] : scenes)
     {
-        scene->render_graph->bind(command_buffer);
-        final_pass_uniforms->bind(command_buffer, 0);
+        if (scene.scene && scene.scene->render_graph)
+        {
+            scene.scene->render_graph->bind(command_buffer);
+            uniforms->bind(command_buffer, 0);
         
-        quad->draw(command_buffer);
+            // TODO: rescale the quad so that it doesnt fill the screen, and instead draws according to the size spec
+            // therefore passthrough needs to adhere to the view-clip transform!
+            quad->draw(command_buffer);
+        }
     }
     
     command_buffer->drawImGui();
@@ -655,23 +679,30 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
 
 void RenderServer::updateUniforms(uint32_t image_index, float time_since_start, FrameStats& stats)
 {
-    SceneUniforms scene_uniforms;
-    scene_uniforms.time = time_since_start;
-    scene_uniforms.eye_position = { 0, 0, 0 };
-    scene_uniforms.viewport_size = swapchain->getExtent();
-    scene_uniforms.world_to_view = glm::mat4(1);
-    scene_uniforms.view_to_clip = glm::mat4(1);
-    scene_uniforms.clip_to_view = glm::mat4(1);
-    scene_uniforms.view_to_world = glm::mat4(1);
-    scene_uniforms.near_far = { -1, 1 };
-    memcpy(final_pass_uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
-    final_pass_uniforms->pushToDescriptorSet(image_index);
-    
-    // TODO: change the extent to be different if we're in multi-scene mode
-    Ref<Scene> scene = Engine::getScene();
-    if (scene)
-        scene->updateUniforms(image_index, time_since_start, swapchain->getExtent(), stats);
-    else
+    size_t valid_scenes = 0;
+        
+    for (auto& [scene, uniforms] : scenes)
+    {
+        if (!scene.scene)
+            continue;
+        
+        glm::ivec2 panel_extent = glm::vec2(swapchain->getExtent()) * scene.size_uv;
+        
+        SceneUniforms scene_uniforms;
+        scene_uniforms.time = time_since_start;
+        scene_uniforms.eye_position = { 0, 0, 0 };
+        scene_uniforms.viewport_size = panel_extent;
+        scene_uniforms.world_to_view = glm::mat4(1);
+        scene_uniforms.view_to_clip = translate(scale(glm::mat4(1), glm::vec3(scene.size_uv, 1)), glm::vec3(scene.start_uv, 0));
+        scene_uniforms.clip_to_view = glm::mat4(1);
+        scene_uniforms.view_to_world = glm::mat4(1);
+        scene_uniforms.near_far = { -1, 1 };
+        memcpy(uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
+        uniforms->pushToDescriptorSet(image_index);
+        scene.scene->updateUniforms(image_index, time_since_start, panel_extent, stats);
+        ++valid_scenes;
+    }
+    if (valid_scenes == 0)
         DBG_WARNING("no scene attached to server");
 }
 
