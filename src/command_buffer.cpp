@@ -297,6 +297,26 @@ void DrawCommandBuffer::bindIndexBuffer(GPUHandle index_buffer)
     current_index_buffer = index_buffer;
 }
 
+void DrawCommandBuffer::setScissorViewport(glm::vec2 offset, glm::vec2 size, glm::u32vec2 framebuffer_extent)
+{
+    VkRect2D scissor{ };
+    scissor.offset = {
+        static_cast<int32_t>(offset.x * static_cast<float>(framebuffer_extent.x)),
+        static_cast<int32_t>(offset.y * static_cast<float>(framebuffer_extent.y)) };
+    scissor.extent = {
+        static_cast<uint32_t>(size.x * static_cast<float>(framebuffer_extent.x)),
+        static_cast<uint32_t>(size.y * static_cast<float>(framebuffer_extent.y)) };
+    VkViewport viewport{ };
+    viewport.x = offset.x * static_cast<float>(framebuffer_extent.x);
+    viewport.y = offset.y * static_cast<float>(framebuffer_extent.y);
+    viewport.width = size.x * static_cast<float>(framebuffer_extent.x);
+    viewport.height = size.y * static_cast<float>(framebuffer_extent.y);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(buffer, 0, 1, &viewport);
+    vkCmdSetScissor(buffer, 0, 1, &scissor);
+}
+
 void DrawCommandBuffer::drawMeshInternal(size_t indices)
 {
     if (!begun)

@@ -71,7 +71,10 @@ RenderServer::RenderServer(const Ref<Window>& main_window)
     skybox_cube = new Mesh("res://engine/meshes/skybox.obj");
 
     default_material = new Material(new Shader("res://engine/shaders/default_shader.glsl"));
-    
+    final_pass_uniforms = new UniformBlock(ShaderLayout{
+                    server->scene_descriptor_set_layout, 
+                    {{ 0, UNIFORM, sizeof(SceneUniforms) } }
+                });
     initImGui();
 
     DBG_VERBOSE("graphics server initialised");
@@ -171,14 +174,7 @@ void RenderServer::setMultiScene(const vector<MultiSceneRenderSpec>& multi_scene
     RenderServer::waitIdle();
     server->scenes.clear();
     for (auto& scene : multi_scenes)
-    {
-        server->scenes.emplace_back(scene, 
-            new UniformBlock(
-                ShaderLayout{
-                    server->scene_descriptor_set_layout, 
-                    {{ 0, UNIFORM, sizeof(SceneUniforms) } }
-                }));
-    }
+        server->scenes.emplace_back(scene);
 }
 
 FrameStats RenderServer::drawFrame()
@@ -256,7 +252,7 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
     Ref<DrawCommandBuffer> command_buffer = command_buffers[image_index];
     command_buffer->begin(image_index, &stats);
     
-    for (auto& [scene, uniforms] : scenes)
+    for (auto& scene : scenes)
     {
         if (scene.scene && scene.scene->render_graph)
             scene.scene->render_graph->recordCommandBuffer(command_buffer, scene.scene, stats);
@@ -264,13 +260,14 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
     
     final_render_pass->begin(command_buffer, glm::vec3{ 0.02f, 0.02f, 0.02f });
     
-    for (auto& [scene, uniforms] : scenes)
+    for (auto& scene : scenes)
     {
         if (scene.scene && scene.scene->render_graph)
         {
             scene.scene->render_graph->bind(command_buffer);
-            uniforms->bind(command_buffer, 0);
+            final_pass_uniforms->bind(command_buffer, 0);
         
+            command_buffer->setScissorViewport(scene.start_uv, scene.size_uv, swapchain->getExtent());
             quad->draw(command_buffer);
         }
     }
@@ -284,33 +281,23 @@ void RenderServer::updateUniforms(uint32_t image_index, float time_since_start, 
 {
     size_t valid_scenes = 0;
         
-    glm::mat4 clip_to_uv = scale(translate(glm::mat4(1), glm::vec3(1, 1, 0)), glm::vec3(0.5f, 0.5f, 1));
-    glm::mat4 uv_to_clip = inverse(clip_to_uv);
+    SceneUniforms scene_uniforms;
+    scene_uniforms.time = time_since_start;
+    scene_uniforms.eye_position = { 0, 0, 0 };
+    scene_uniforms.viewport_size = swapchain->getExtent();
+    scene_uniforms.world_to_view = glm::mat4(1);
+    scene_uniforms.view_to_clip = glm::mat4(1);
+    scene_uniforms.clip_to_view = glm::mat4(1);
+    scene_uniforms.view_to_world = glm::mat4(1);
+    scene_uniforms.near_far = { -1, 1 };
+    memcpy(final_pass_uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
+    final_pass_uniforms->pushToDescriptorSet(image_index);
     
-    for (auto& [scene, uniforms] : scenes)
+    for (auto& scene : scenes)
     {
         if (!scene.scene)
             continue;
-        
-        glm::ivec2 panel_extent = glm::vec2(swapchain->getExtent()) * scene.size_uv;
-        glm::vec2 top_left = (scene.start_uv * 2.0f) - 1.0f;
-        glm::vec2 size = scene.size_uv * 2.0f;
-        glm::vec2 offset = ((glm::vec2(1,1) * scene.size_uv) - 1.0f) + (scene.start_uv * 2.0f);
-        
-        SceneUniforms scene_uniforms;
-        scene_uniforms.time = time_since_start;
-        scene_uniforms.eye_position = { 0, 0, 0 };
-        scene_uniforms.viewport_size = panel_extent;
-        scene_uniforms.world_to_view = glm::mat4(1);
-        scene_uniforms.view_to_clip = scale(
-            translate(glm::mat4(1),glm::vec3(offset, 0)), 
-            glm::vec3(scene.size_uv, 1));
-        scene_uniforms.clip_to_view = glm::mat4(1);
-        scene_uniforms.view_to_world = glm::mat4(1);
-        scene_uniforms.near_far = { -1, 1 };
-        memcpy(uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
-        uniforms->pushToDescriptorSet(image_index);
-        scene.scene->updateUniforms(image_index, time_since_start, panel_extent, stats);
+        scene.scene->updateUniforms(image_index, time_since_start, glm::vec2(swapchain->getExtent()) * scene.size_uv, stats);
         ++valid_scenes;
     }
     if (valid_scenes == 0)

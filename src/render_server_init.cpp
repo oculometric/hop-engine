@@ -13,7 +13,6 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 #include "hop_engine.h"
 #include "swapchain_vulkan.h"
@@ -91,6 +90,7 @@ RenderServer::~RenderServer()
     vkDestroyCommandPool(device, command_pool, nullptr);
     
     scenes.clear();
+    final_pass_uniforms = nullptr;
     skybox_cube = nullptr;
     default_material = nullptr;
     quad = nullptr;

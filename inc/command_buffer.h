@@ -71,6 +71,7 @@ public:
 	void bindDescriptorSetInternal(size_t set, GPUHandle descriptor_set);
 	void bindVertexBuffer(GPUHandle vertex_buffer);
 	void bindIndexBuffer(GPUHandle index_buffer);
+	void setScissorViewport(glm::vec2 offset, glm::vec2 size, glm::u32vec2 framebuffer_extent);
 	void drawMeshInternal(size_t indices);
 	void drawImGui();
 	void extractTiming();

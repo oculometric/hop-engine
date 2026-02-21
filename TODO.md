@@ -5,13 +5,12 @@
 - object duplicate function [L]
 ---
 ## v0.6
+- interactive node editor
 - multiple panels/scenes (i.e. nested shader graphs, decoupling shader graph from swapchain)
 - shader & other resource reloading at runtime [H]
 - frustrum culling [M]
 - audio loading and output
 - improved text block rendering with wrapping, alignment, font, etc
-- interactive node editor
-- improve multi-panel rendering efficiency by setting scissor regions
 ---
 ## v0.7
 - shader node editor

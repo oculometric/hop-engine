@@ -13,7 +13,7 @@
 // if uncommented, specifies that the vulkan debug and validation systems should
 // be enabled. should be disabled in release builds since the target machine is 
 // unlikely to have the vulkan SDK installed
-//#define VK_DEBUG
+#define VK_DEBUG
 
 namespace HopEngine
 {
@@ -85,7 +85,8 @@ private:
 	Ref<Mesh> skybox_cube;			// mesh used to render skyboxes
 	Ref<Mesh> quad;					// full screen quad mesh
 	
-	std::vector<std::pair<MultiSceneRenderSpec, Ref<UniformBlock>>> scenes;
+	Ref<UniformBlock> final_pass_uniforms;
+	std::vector<MultiSceneRenderSpec> scenes;
 
 public:
 	DELETE_CONSTRUCTORS(RenderServer);

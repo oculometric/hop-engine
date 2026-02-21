@@ -83,7 +83,7 @@ RenderGraph::RenderGraph(const RenderGraphBuilder& config)
 {
     skybox_material = new Material(new Shader("res://engine/shaders/skybox.glsl"), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
     passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough.glsl"), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), RenderServer::getFinalRenderPass());
-    passthrough->setSampler(0, Engine::makeSampler(SamplerBuilder().filter(config.screen_filtering)));
+    passthrough->setSampler(0, Engine::makeSampler(SamplerBuilder().filter(config.screen_filtering).address(ADDRESS_CLAMP_EDGE)));
     execution_steps = config.execution_steps;
     if (!config.execution_steps.empty())
         expected_extent = config.execution_steps[0].render_pass->getExtent();

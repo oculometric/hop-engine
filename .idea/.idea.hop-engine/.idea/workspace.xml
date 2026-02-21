@@ -12,6 +12,12 @@
     <list default="true" id="836e5fd3-1918-497f-b7c7-e36a55aacb04" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/command_buffer.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/command_buffer.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/render_server.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/render_server.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/command_buffer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/command_buffer.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/render_graph.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/render_graph.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/render_server.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/render_server.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/render_server_init.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/render_server_init.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,7 +31,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://16" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://13" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -182,7 +188,7 @@
       <workItem from="1771525688264" duration="18248000" />
       <workItem from="1771592373300" duration="13445000" />
       <workItem from="1771609916417" duration="1992000" />
-      <workItem from="1771693077839" duration="698000" />
+      <workItem from="1771693077839" duration="3050000" />
     </task>
     <servers />
   </component>
