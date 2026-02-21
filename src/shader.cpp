@@ -344,7 +344,7 @@ void Shader::preprocess(const string& source_code, string& vertex_shader_code, s
 	while (comment_pos != string::npos)
 	{
 		size_t comment_end = common_code.find("*/", comment_pos);
-		common_code.erase(comment_pos, (comment_end - comment_pos) + 1);
+		common_code.erase(comment_pos, (comment_end - comment_pos) + 2);
 		comment_pos = common_code.find("/*", comment_pos);
 	}
 	

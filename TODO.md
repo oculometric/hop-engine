@@ -11,6 +11,7 @@
 - audio loading and output
 - improved text block rendering with wrapping, alignment, font, etc
 - interactive node editor
+- improve multi-panel rendering efficiency by setting scissor regions
 ---
 ## v0.7
 - shader node editor
