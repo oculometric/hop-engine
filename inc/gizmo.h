@@ -15,10 +15,13 @@ private:
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Gizmo);
-    Gizmo();
+    static Ref<Gizmo> create();
 
     void trackObject(const WeakRef<Object>& object, const WeakRef<Camera>& camera);
 
+protected:
+    Gizmo();
+    
 private:
     void setHighlightColour(glm::vec3 new_colour);
 };

@@ -677,7 +677,7 @@ struct SceneResources
 
 static Ref<Object> deserialiseStaticMesh(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<StaticMesh> obj = new StaticMesh(nullptr, nullptr);
+	Ref<StaticMesh> obj = StaticMesh::create(nullptr, nullptr);
 	auto it = args.find("mesh");
 	if (it != args.end())
 	{
@@ -711,7 +711,7 @@ static Ref<Object> deserialiseStaticMesh(const map<string, TokenReader::Token>& 
 
 static Ref<Object> deserialiseLight(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<Light> obj = new Light(Light::DIRECTIONAL);
+	Ref<Light> obj = Light::create(Light::DIRECTIONAL);
 	auto it = args.find("type");
 	if (it != args.end())
 	{
@@ -743,7 +743,7 @@ static Ref<Object> deserialiseLight(const map<string, TokenReader::Token>& args,
 
 static Ref<Object> deserialiseCamera(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<Camera> obj = new Camera();
+	Ref<Camera> obj = Camera::create();
 	auto it = args.find("slot");
 	if (it != args.end())
 		scene->setCameraSlot(obj, it->second.i_value);
@@ -767,7 +767,7 @@ static Ref<Object> deserialiseCamera(const map<string, TokenReader::Token>& args
 
 static Ref<Object> deserialiseTextBlock(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<TextBlock> obj = new TextBlock("Text");
+	Ref<TextBlock> obj = TextBlock::create("Text");
 	auto it = args.find("text");
 	if (it != args.end())
 		obj->setText(it->second.s_value);
@@ -828,7 +828,7 @@ static bool deserialiseObject(const TokenReader::Statement& statement, const Ref
 		return false;
 	
 	if (statement.keyword == "Object")
-		obj = new Object();
+		obj = Object::create();
 	else
 		obj = info.builder_function(args, scene, resources);
 	if (obj == nullptr)
@@ -836,7 +836,7 @@ static bool deserialiseObject(const TokenReader::Statement& statement, const Ref
 	
 	scene->insertObject(obj);
 	if (parent)
-		obj->setParent(parent);
+		parent->addChild(obj);
 	
 	auto it = args.find("position");
 	if (it != args.end())
@@ -892,7 +892,7 @@ Ref<Scene> Scene::deserialise(const string& name)
 	map<string, Ref<Texture>> textures;
 	map<string, Ref<RenderGraph>> render_graphs;
 	
-	Ref<Scene> scene = new Scene(name);
+	Ref<Scene> scene = Scene::create(name);
 	
 	for (const TokenReader::Statement& statement : syntax_tree)
 	{

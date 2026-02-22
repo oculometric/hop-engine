@@ -4,7 +4,7 @@
 #include <imgui.h>
 
 #include "hop_engine.h"
-#include "main.h"
+#include "../main.h"
 
 using namespace HopEngine;
 
@@ -65,7 +65,7 @@ static Ref<Scene> initMuseumScene()
     obj4 = scene->findObject<StaticMesh>("orrery_orbit_b");
     
     spline_obj = scene->insertObject<StaticMesh>(
-        new StaticMesh(
+        StaticMesh::create(
             Engine::loadMesh("res://museum/IcePlanet.obj"), 
             Engine::loadMaterial("res://museum/IcePlanet.hmat")));
     spline_obj->transform.setLocalScale({ 0.3f, 0.3f, 0.3f });
@@ -113,7 +113,7 @@ static Ref<Scene> initMuseumScene()
     cc_material->setFloatUniform("use_lut", 1);
     Engine::debugClearSelection(WeakRef<Object>(), WeakRef<Material>(), scene->getCamera(0));
 
-    normal_demo_1 = scene->insertObject<StaticMesh>(new StaticMesh(
+    normal_demo_1 = scene->insertObject<StaticMesh>(StaticMesh::create(
         Engine::loadMesh("res://engine/samples/plane.obj"),
         new Material(Engine::loadShader("res://engine/shaders/deferred.glsl"))));
     normal_demo_1->transform.setPosition(glm::vec3{ 0, -8, 0.8 });
@@ -124,7 +124,7 @@ static Ref<Scene> initMuseumScene()
     normal_demo_1->material->setFloatUniform("roughness_factor_add", 0.5f);
     normal_demo_1->material->setFloatUniform("normal_strength", 1.0f);
     
-    normal_demo_2 = scene->insertObject<StaticMesh>(new StaticMesh(
+    normal_demo_2 = scene->insertObject<StaticMesh>(StaticMesh::create(
         Engine::loadMesh("res://museum/PipeL.obj"),
         Engine::loadMaterial("res://museum/ShinyPipes.hmat")
         ));

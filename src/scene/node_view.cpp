@@ -10,6 +10,13 @@ using namespace std;
 constexpr float character_padding = 1.0f;
 constexpr size_t v_i_buffer_rounding_size = 256;
 
+Ref<NodeView> NodeView::create()
+{
+    Ref obj = new NodeView();
+    obj->self = obj.cast<Object>();
+    return obj;
+}
+
 void NodeView::setStyle(Style new_style)
 {
     material->setTexture("text_atlas", new_style.font->getAtlas());

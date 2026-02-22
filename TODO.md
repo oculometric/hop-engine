@@ -1,7 +1,6 @@
 # TODO
 
 ## v0.51
-- improve scene tree so that objects know about their scene, and children, and can be removed [M]
 - object duplicate function [L]
 ---
 ## v0.6

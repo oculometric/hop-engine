@@ -80,14 +80,17 @@ private:
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(NodeView);
+	static Ref<NodeView> create();
 	
 	inline Style getStyle() { return style; }
 	void setStyle(Style new_style);
 	void updateMesh();
 	Ref<Node> select(glm::vec2 world_position);
 
-	NodeView();
 	~NodeView() override;
+	
+protected:
+	NodeView();
 
 private:
 	void addQuad(glm::vec2 position, glm::vec2 size, glm::vec4 colour, glm::vec3 tint, bool clip_uv, int uv_index);

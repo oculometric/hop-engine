@@ -1,9 +1,9 @@
 #pragma once
 
+#include <set>
 #include <vector>
 
 #include "common.h"
-#include "vulkan_typedefs.h"
 #include "transform.h"
 #include "pbr.h"
 #include "draw_command.h"
@@ -20,27 +20,44 @@ public:
 
 protected:
 	Ref<UniformBlock> uniforms;
+	WeakRef<Object> self;
 	
 private:
-	Ref<Object> parent;
+	WeakRef<Scene> scene;
+	WeakRef<Object> parent;
+	std::vector<Ref<Object>> children;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Object);
-	Object();
+	static Ref<Object> create();
 	~Object() override;
 	
 	virtual std::vector<DrawCommand> getDrawCommands() const;
-	Ref<Object> getParent();
 	virtual BoundingBox getLocalBounds() const;
-	template <class T> void setParent(Ref<T> new_parent);
-	template <class T> void setParent(WeakRef<T> new_parent);
 	virtual void pushToDescriptorSet(size_t index);
-
+	
+	WeakRef<Scene> getScene();
+	void setScene(WeakRef<Scene> new_scene);
+	void removeFromScene();
+	WeakRef<Object> getParent();
+	void removeFromParent();
+	size_t getChildCount() const;
+	Ref<Object> getChild(size_t index);
+	void addChild(Ref<Object> object);
+	template<class T> void addChild(Ref<T> obj);
+	
 	virtual void drawImGuiDebug();
 	
-private:
-	void _setParent(const Ref<Object>& new_parent);
+protected:
+	Object();
 };
+
+template <class T>
+void Object::addChild(Ref<T> obj)
+{
+	static_assert(std::is_convertible_v<T*, Object*>, "object must be a HopEngine::Object subclass");
+	return addChild(obj.template cast<Object>());
+}
 
 class Camera : public Object
 {
@@ -52,15 +69,18 @@ public:
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Camera);
-	Camera();
+	static Ref<Camera> create();
 
-	void bind(Ref<DrawCommandBuffer> command_buffer);
+	void bind(const Ref<DrawCommandBuffer>& command_buffer);
 	SceneUniforms getSceneUniforms(glm::ivec2 viewport_size, float time, const std::vector<LightParams>& lights, glm::vec4 ambient);
 	glm::mat4 getWorldToScreenMatrix();
 	void pushToDescriptorSet(size_t index) override;
 	void pushToCameraDescriptorSet(size_t index, glm::ivec2 viewport_size, float time, const std::vector<LightParams>& lights, glm::vec4 ambient);
 	
 	void drawImGuiDebug() override;
+	
+protected:
+	Camera();
 };
 
 class StaticMesh : public Object
@@ -72,13 +92,16 @@ public:
 
 public:
 	DELETE_CONSTRUCTORS(StaticMesh);
-	StaticMesh(const Ref<Mesh>& _mesh, const Ref<Material>& _material);
+	static Ref<StaticMesh> create(const Ref<Mesh>& _mesh, const Ref<Material>& _material);
 
 	std::vector<DrawCommand> getDrawCommands() const override;
 	BoundingBox getLocalBounds() const override;
 	void pushToDescriptorSet(size_t index) override;
 	
 	void drawImGuiDebug() override;
+	
+protected:
+	StaticMesh(const Ref<Mesh>& _mesh, const Ref<Material>& _material);
 };
 
 class Light : public Object
@@ -99,26 +122,14 @@ public:
 
 public:
 	DELETE_CONSTRUCTORS(Light);
-	Light(LightType _type);
+	static Ref<Light> create(LightType _type);
 
 	LightParams getParamsStructure();
 	
 	void drawImGuiDebug() override;
+	
+protected:
+	Light(LightType _type);
 };
-
-template<class T>
-void Object::setParent(Ref<T> new_parent)
-{
-	static_assert(std::is_convertible_v<T*, Object*>, "parent must be a HopEngine::Object subclass");
-	auto cast = new_parent ? new_parent.template cast<Object>() : Ref<Object>();
-	_setParent(cast);
-}
-
-template<class T>
-void Object::setParent(WeakRef<T> new_parent)
-{
-	static_assert(std::is_convertible_v<T*, Object*>, "parent must be a HopEngine::Object subclass");
-	setParent(new_parent.strong());
-}
 
 }

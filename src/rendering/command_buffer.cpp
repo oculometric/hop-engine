@@ -297,7 +297,7 @@ void DrawCommandBuffer::bindIndexBuffer(GPUHandle index_buffer)
     current_index_buffer = index_buffer;
 }
 
-void DrawCommandBuffer::setScissorViewport(glm::vec2 offset, glm::vec2 size, glm::u32vec2 framebuffer_extent)
+void DrawCommandBuffer::setScissorViewport(glm::vec2 offset, glm::vec2 size, glm::u32vec2 framebuffer_extent) const
 {
     VkRect2D scissor{ };
     scissor.offset = {
@@ -317,7 +317,7 @@ void DrawCommandBuffer::setScissorViewport(glm::vec2 offset, glm::vec2 size, glm
     vkCmdSetScissor(buffer, 0, 1, &scissor);
 }
 
-void DrawCommandBuffer::drawMeshInternal(size_t indices)
+void DrawCommandBuffer::drawMeshInternal(size_t indices) const
 {
     if (!begun)
     {
@@ -345,7 +345,7 @@ void DrawCommandBuffer::drawMeshInternal(size_t indices)
     stats->triangles += indices / 3;
 }
 
-void DrawCommandBuffer::drawImGui()
+void DrawCommandBuffer::drawImGui() const
 {
     if (!begun)
     {
@@ -362,7 +362,7 @@ void DrawCommandBuffer::drawImGui()
     if (draw_data) ImGui_ImplVulkan_RenderDrawData(draw_data, buffer);
 }
 
-void DrawCommandBuffer::extractTiming()
+void DrawCommandBuffer::extractTiming() const
 {
     vector<uint32_t> results_buf;
     results_buf.resize(query_offset, 0);

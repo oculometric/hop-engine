@@ -17,6 +17,13 @@ Gizmo::Gizmo() : StaticMesh(nullptr, nullptr)
     name = "gizmo";
 }
 
+Ref<Gizmo> Gizmo::create()
+{
+    Ref obj = new Gizmo();
+    obj->self = obj.cast<Object>();
+    return obj;
+}
+
 void Gizmo::trackObject(const WeakRef<Object>& object, const WeakRef<Camera>& camera)
 {
     if (!object)

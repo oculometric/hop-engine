@@ -12,12 +12,44 @@
     <list default="true" id="836e5fd3-1918-497f-b7c7-e36a55aacb04" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hop-engine.vcxproj" beforeDir="false" afterPath="$PROJECT_DIR$/hop-engine.vcxproj" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inc/command_buffer.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/command_buffer.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/render_server.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/render_server.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/command_buffer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/command_buffer.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/render_graph.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/render_graph.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/render_server.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/render_server.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/render_server_init.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/render_server_init.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/gizmo.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/gizmo.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/node_view.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/node_view.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/object.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/object.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/scene.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/scene.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/text_block.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/text_block.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/uniform_block.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/uniform_block.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/asha_scene.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/buffer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/rendering/buffer.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/command_buffer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/rendering/command_buffer.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/debug.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/deserialise.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gizmo.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/scene/gizmo.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/imgui_functions.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/material.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/rendering/material.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/mesh.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/rendering/mesh.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/museum_scene.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/node_scene.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/node_view.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/scene/node_view.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/object.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/scene/object.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/package.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pipeline.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/rendering/pipeline.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/render_graph.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/rendering/render_graph.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/render_pass.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/rendering/render_pass.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/render_server.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/rendering/render_server.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/render_server_init.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/rendering/render_server_init.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/sampler.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/rendering/sampler.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/scene/scene.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/shader.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/rendering/shader.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/swapchain.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/rendering/swapchain.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/swapchain_vulkan.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/text_block.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/scene/text_block.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/texture.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/rendering/texture.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/texture_vulkan.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/rendering/texture_vulkan.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/token_file.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/transform.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/scene/transform.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/uniform_block.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/rendering/uniform_block.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,7 +63,10 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://13" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://25" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/src/debug/imgui_functions.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/src/demo/node_scene.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/src/file/token_file.cpp" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -188,7 +223,8 @@
       <workItem from="1771525688264" duration="18248000" />
       <workItem from="1771592373300" duration="13445000" />
       <workItem from="1771609916417" duration="1992000" />
-      <workItem from="1771693077839" duration="3050000" />
+      <workItem from="1771693077839" duration="9133000" />
+      <workItem from="1771750979304" duration="14795000" />
     </task>
     <servers />
   </component>
@@ -216,12 +252,12 @@
           <option name="timeStamp" value="3" />
         </breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/shader.cpp</url>
+          <url>file://$PROJECT_DIR$/src/rendering/shader.cpp</url>
           <line>569</line>
           <option name="timeStamp" value="21" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/shader.cpp</url>
+          <url>file://$PROJECT_DIR$/src/rendering/shader.cpp</url>
           <line>24</line>
           <option name="timeStamp" value="22" />
         </line-breakpoint>

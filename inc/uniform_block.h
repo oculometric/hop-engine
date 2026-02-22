@@ -43,7 +43,7 @@ public:
 	UniformBlock(const ShaderLayout& layout_info);
 	~UniformBlock() override;
 	
-	void bind(Ref<DrawCommandBuffer> command_buffer, size_t set);
+	void bind(Ref<DrawCommandBuffer> command_buffer, size_t set) const;
 	//VkDescriptorSet getDescriptorSet(const size_t index) const { return descriptor_sets[index]; }
 	void* getBuffer() { return live_uniform_buffer.data(); }
 	VkDeviceSize getSize() const { return size; }

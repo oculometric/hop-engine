@@ -17,7 +17,7 @@
 #include "render_server.h"
 #include "package.h"
 #if !defined(STANDALONE)
-#include "main.h"
+#include "../main.h"
 #endif
 #include "text_block.h"
 
@@ -190,34 +190,32 @@ void Light::drawImGuiDebug()
 	}
 }
 
-static void drawImGuiSceneTreeItem(multimap<Object*, WeakRef<Object>>& parent_map, WeakRef<Object> parent)
+static void drawImGuiSceneTreeItem(WeakRef<Object> parent)
 {
-	auto [range_start, range_end] = parent_map.equal_range(parent.get());
-	while (range_start != range_end)
+	for (size_t i = 0; i < parent->getChildCount(); ++i)
 	{
-		WeakRef<Object> child = range_start->second;
+		WeakRef<Object> child = parent->getChild(i);
 		
 		if (ImGui::TreeNode((child->name + " - " + PTR(child.get())).c_str()))
 		{
 			if (ImGui::Button("select"))
 				selected_object = child;
-			drawImGuiSceneTreeItem(parent_map, child);
+			drawImGuiSceneTreeItem(child);
 			ImGui::TreePop();
 		}
-		++range_start;
 	}
 }
-
-static void collectDescendents(multimap<Object*, WeakRef<Object>>& parent_map, Object* parent, vector<Object*>& descendents)
-{
-	auto [range_start, range_end] = parent_map.equal_range(parent);
-	while (range_start != range_end)
-	{
-		descendents.push_back(range_start->second.get());
-		collectDescendents(parent_map, range_start->second.get(), descendents);
-		++range_start;
-	}
-}
+//
+// static void collectDescendents(multimap<Object*, WeakRef<Object>>& parent_map, Object* parent, vector<Object*>& descendents)
+// {
+// 	auto [range_start, range_end] = parent_map.equal_range(parent);
+// 	while (range_start != range_end)
+// 	{
+// 		descendents.push_back(range_start->second.get());
+// 		collectDescendents(parent_map, range_start->second.get(), descendents);
+// 		++range_start;
+// 	}
+// }
 
 void Scene::drawImGuiDebug()
 {
@@ -225,36 +223,16 @@ void Scene::drawImGuiDebug()
 	ImGui::ColorEdit3("ambient light", reinterpret_cast<float*>(&(ambient_colour)));
 	skybox = texturePicker(skybox, "skybox");
 	ImGui::LabelText("total objects", "%zu", objects.size());
-	multimap<Object*, WeakRef<Object>> parent_map;
-	for (auto object : objects)
-		parent_map.insert({ object->getParent().get(), object});
-	parent_map.insert({ (nullptr), root });
 
 	if (ImGui::CollapsingHeader("object heirarchy", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
-		drawImGuiSceneTreeItem(parent_map, WeakRef<Object>(nullptr));
+		drawImGuiSceneTreeItem(root);
 	ImGui::Text("selected: %s", selected_object ? (selected_object->name + " - " + PTR(selected_object.get())).c_str() : "none");
 	const bool disabled = !selected_object;
 	if (disabled)
 		ImGui::BeginDisabled();
 	if (selected_object != root && ImGui::Button("remove from tree"))
 	{
-		vector<Object*> objects_to_remove;
-		objects_to_remove.push_back(selected_object.get());
-		collectDescendents(parent_map, selected_object.get(), objects_to_remove);
-		for (const Object* obj : objects_to_remove)
-		{ // TODO: improve scene tree so that objects know about their children, can be removed
-			auto it = objects.begin();
-			while (it != objects.end())
-			{
-				if (it->get() == obj)
-				{
-					objects.erase(it);
-					break;
-				}
-				++it;
-			}
-		}
-		selected_object->setParent(WeakRef<Object>());
+		selected_object->removeFromScene();
 		selected_object = nullptr;
 	}
 	if (selected_object != root && ImGui::Button("reparent"))
@@ -265,7 +243,7 @@ void Scene::drawImGuiDebug()
 	{
 		if (ImGui::SmallButton((root->name + " - " + PTR(root.get())).c_str()))
 		{
-			selected_object->setParent(root);
+			selected_object->removeFromParent();
 			ImGui::CloseCurrentPopup();
 		}
 		for (const auto& object : objects)
@@ -274,7 +252,7 @@ void Scene::drawImGuiDebug()
 				continue;
 			if (ImGui::SmallButton((object->name + " - " + PTR(object.get())).c_str()))
 			{
-				selected_object->setParent(object);
+				object->addChild(selected_object.strong());
 				ImGui::CloseCurrentPopup();
 			}
 		}
@@ -288,17 +266,22 @@ void Scene::drawImGuiDebug()
 	{
 		if (ImGui::Button("object"))
 		{
-			insertObject<Object>(new Object())->setParent(selected_object);
+			selected_object->addChild(Object::create());
 			ImGui::CloseCurrentPopup();
 		}
 		if (ImGui::Button("static mesh"))
 		{
-			insertObject<StaticMesh>(new StaticMesh(RenderServer::getQuad(), RenderServer::getDefaultMaterial()))->setParent(selected_object);
+			selected_object->addChild(StaticMesh::create(RenderServer::getQuad(), RenderServer::getDefaultMaterial()));
 			ImGui::CloseCurrentPopup();
 		}
 		if (ImGui::Button("light"))
 		{
-			insertObject<Light>(new Light(Light::DIRECTIONAL))->setParent(selected_object);
+			selected_object->addChild(Light::create(Light::DIRECTIONAL));
+			ImGui::CloseCurrentPopup();
+		}
+		if (ImGui::Button("text"))
+		{
+			selected_object->addChild(TextBlock::create("Text goes here"));
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndPopup();

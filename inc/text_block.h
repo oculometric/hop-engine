@@ -14,7 +14,7 @@ private:
     
 public:
     DELETE_CONSTRUCTORS(TextBlock);
-    TextBlock(const std::string& _text);
+    static Ref<TextBlock> create(const std::string& _text);
     
     std::string getText() const { return text; }
     void setText(const std::string& value) { text = value; updateGeometry(); }
@@ -22,6 +22,8 @@ public:
     
 	void drawImGuiDebug() override;
     
+protected:
+    TextBlock(const std::string& _text);
 private:
     void updateGeometry();
 };

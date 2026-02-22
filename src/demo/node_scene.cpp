@@ -1,7 +1,7 @@
 #if !defined(STANDALONE)
 
 #include "hop_engine.h"
-#include "main.h"
+#include "../main.h"
 
 using namespace HopEngine;
 
@@ -10,8 +10,8 @@ static WeakRef<NodeView::Node> selected_node;
 
 static Ref<Scene> initNodeScene()
 {
-    Ref<Scene> scene = new Scene();
-    node_view = scene->insertObject<NodeView>(new NodeView());
+    Ref<Scene> scene = Scene::create();
+    node_view = scene->insertObject<NodeView>(NodeView::create());
     node_view->nodes.push_back(new NodeView::Node
         { "Hello, World!",
         {

@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <map>
+#include <set>
 
 #include "common.h"
 #include "object.h"
@@ -9,6 +10,7 @@
 
 namespace HopEngine
 {
+
 struct FrameStats;
 
 class Scene : public Destructible
@@ -20,71 +22,56 @@ public:
 
 private:
 	std::string origin;
-	std::vector<Ref<Object>> objects;
-	std::map<size_t, Ref<Camera>> cameras;
-	Ref<Camera> backup_camera;
+	WeakRef<Scene> self;
 	Ref<Object> root;
+	std::vector<Ref<Object>> objects;
+	Ref<Camera> backup_camera;
+	std::map<size_t, Ref<Camera>> cameras;
 	std::vector<Ref<Light>> lights;
 
 public:
-	DELETE_NOT_ALL_CONSTRUCTORS(Scene);
-	Scene(const std::string& name = "scene");
+	DELETE_CONSTRUCTORS(Scene);
+	static Ref<Scene> create(const std::string& name = "scene");
 	~Scene() override;
 	
 	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
-	std::vector<Ref<Object>> getAllObjects() const;
-	template <class T> Ref<T> findObject(std::string name) const;
+	std::vector<WeakRef<Object>> getAllObjects() const;
+	Ref<Object> findObject(const std::string& name) const;
+	template<class T> Ref<T> findObject(const std::string& name) const;
+	Ref<Object> insertObject(Ref<Object> obj);
+	template<class T> Ref<T> insertObject(Ref<T> obj);
+	void removeObject(Ref<Object> obj);
+	
 	Ref<Camera> getCamera(size_t slot) const;
 	std::vector<LightParams> getLightParams() const;
 	std::vector<DrawCommand> getDrawCommands() const;
-	WeakRef<Object> raycast(glm::vec3 position, glm::vec3 direction);
-	template <class T> Ref<T> insertObject(Ref<T> obj);
-	void removeObject(Ref<Object> obj);
+	WeakRef<Object> raycast(glm::vec3 position, glm::vec3 direction) const;
 	void setCameraSlot(const Ref<Camera>& camera, size_t slot);
 	void updateUniforms(uint32_t image_index, float time_since_start, glm::u32vec2 viewport_size, FrameStats& stats);
 	
 	static Ref<Scene> deserialise(const std::string& name);
 	
 	void drawImGuiDebug();
+	
+private:
+	Scene(const std::string& name);
 };
 
-template<class T> Ref<T> Scene::findObject(const std::string name) const
+template <class T>
+Ref<T> Scene::findObject(const std::string& name) const
 {
 	static_assert(std::is_convertible_v<T*, Object*>, "expected type must be a HopEngine::Object subclass");
-	for (auto test_obj : objects)
-	{
-		if (test_obj->name == name)
-			return test_obj.cast<T>();
-	}
+	Ref<Object> obj = findObject(name);
+	if (obj)
+		return obj.cast<T>();
 	return nullptr;
 }
 
-template<class T> Ref<T> Scene::insertObject(Ref<T> obj)
+template <class T>
+Ref<T> Scene::insertObject(Ref<T> obj)
 {
 	static_assert(std::is_convertible_v<T*, Object*>, "object must be a HopEngine::Object subclass");
-	if (obj.get() == root.get())
-	{
-		DBG_ERROR("attempt to insert object '" + obj->name + "' (" + PTR(obj.get()) + ") into scene " + PTR(this) + " but it is already present in the tree!");
-		return nullptr;
-	}
-
-	for (auto& test_obj : objects)
-	{
-		if (test_obj.get() == obj.get())
-		{
-			DBG_ERROR("attempt to insert object '" + obj->name + "' (" + PTR(obj.get()) + ") into scene " + PTR(this) + " but it is already present in the tree!");
-			return obj;
-		}
-	}
-
-	auto ref = obj.template cast<Object>();
-	objects.push_back(ref);
-	if (!ref->getParent()) ref->setParent(root);
-	if (dynamic_cast<Light*>(obj.get()) != nullptr)
-	{
-		auto ref2 = obj.template cast<Light>();
-		lights.push_back(ref2);
-	}
+	insertObject(obj.template cast<Object>()).cast<T>();
 	return obj;
 }
 

@@ -67,7 +67,7 @@ UniformBlock::~UniformBlock()
     live_uniform_buffer.clear();
 }
 
-void UniformBlock::bind(Ref<DrawCommandBuffer> command_buffer, size_t set)
+void UniformBlock::bind(Ref<DrawCommandBuffer> command_buffer, size_t set) const
 {
     command_buffer->bindDescriptorSetInternal(set, descriptor_sets[command_buffer->getImageIndex()]);
 }

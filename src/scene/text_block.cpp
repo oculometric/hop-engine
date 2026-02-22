@@ -10,6 +10,13 @@
 using namespace HopEngine;
 using namespace std;
 
+Ref<TextBlock> TextBlock::create(const std::string& _text)
+{
+    Ref obj = new TextBlock(_text);
+    obj->self = obj.cast<Object>();
+    return obj;
+}
+
 TextBlock::TextBlock(const string& _text) : StaticMesh(nullptr, nullptr)
 {
     name = "text block";

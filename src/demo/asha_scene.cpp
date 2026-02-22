@@ -4,7 +4,7 @@
 #include <imgui.h>
 
 #include "hop_engine.h"
-#include "main.h"
+#include "../main.h"
 
 using namespace HopEngine;
 
@@ -14,10 +14,10 @@ static WeakRef<Gizmo> gizmo;
 
 static Ref<Scene> initAshaScene()
 {
-    Ref<Scene> scene = new Scene();
+    Ref<Scene> scene = Scene::create();
     // load and configure asha's shader, mesh, and material
     const Ref<Shader> shader = Engine::loadShader("res://engine/samples/psx.glsl");
-    asha = scene->insertObject<StaticMesh>(new StaticMesh(
+    asha = scene->insertObject<StaticMesh>(StaticMesh::create(
         Engine::loadMesh("res://engine/samples/asha.obj"),
         Engine::keepLoaded(new Material(
             shader, PipelineBuilder().cullMode(CULL_NONE).stencilWrite(1)
@@ -28,18 +28,18 @@ static Ref<Scene> initAshaScene()
     asha->transform.setLocalPosition({ 0, 0, -0.9f });
 
     // create the bunny
-    Ref<StaticMesh> bunny = scene->insertObject<StaticMesh>(new StaticMesh(
+    Ref<StaticMesh> bunny = scene->insertObject<StaticMesh>(StaticMesh::create(
         Engine::loadMesh("res://engine/samples/bunny.obj"),
         Engine::keepLoaded(new Material(shader, PipelineBuilder().cullMode(CULL_NONE).stencilWrite(2)
         ))));
     bunny->material->setTexture("albedo", Engine::loadTexture("res://engine/samples/bunny.png"));
     bunny->material->setSampler("albedo", sampler);
-    bunny->setParent(asha);
+    asha->addChild(bunny);
     bunny->transform.setLocalPosition({ 0, -0.5f, 0.9f });
     bunny->transform.scaleLocal({ 2, 2, 2 });
 
     // create tux
-    Ref<StaticMesh> tux = scene->insertObject<StaticMesh>(new StaticMesh(
+    Ref<StaticMesh> tux = scene->insertObject<StaticMesh>(StaticMesh::create(
         Engine::loadMesh("res://tux.obj"),
         Engine::keepLoaded(new Material(shader, PipelineBuilder().cullMode(CULL_NONE)))
     ));
@@ -48,7 +48,7 @@ static Ref<Scene> initAshaScene()
     tux->transform.translateLocal({ 2, 0, 0 });
 
     // initialise sun and main camera
-    auto sun_lamp = scene->insertObject<Light>(new Light(Light::DIRECTIONAL));
+    auto sun_lamp = scene->insertObject<Light>(Light::create(Light::DIRECTIONAL));
     sun_lamp->transform.setLocalEuler({ -17.0f, -34.0f, -189.0f });
     sun_lamp->colour = { 1.0f, 1.0f, 1.0f };
 
@@ -57,18 +57,18 @@ static Ref<Scene> initAshaScene()
         glm::vec3(0.0f, 0.0f, 1.0f));
 
     // demo gizmo
-    gizmo = scene->insertObject<Gizmo>(new Gizmo());
+    gizmo = scene->insertObject<Gizmo>(Gizmo::create());
     // set skybox texture
     scene->skybox = Engine::loadTexture("res://engine/samples/nasa_goddard_gaia_dr2_deep_star_map.png");
 
     // initialise the other two cameras. these will render into different slots in the render graph
-    Ref<Camera> second_cam = new Camera();
+    Ref<Camera> second_cam = Camera::create();
     scene->insertObject(second_cam);
     scene->setCameraSlot(second_cam, 1);
     second_cam->transform.lookAt({ 0, -2.0f, 0.7f }, { 0, 0, 0.7f }, { 0, 0, 1 });
     second_cam->fov = 20.0f;
 
-    Ref<Camera> third_cam = new Camera();
+    Ref<Camera> third_cam = Camera::create();
     scene->insertObject(third_cam);
     scene->setCameraSlot(third_cam, 2);
     third_cam->transform.lookAt({ 0, -0.2f, 0.8f }, { 0, 0, 0.7f }, { 0, 0, 1 });
