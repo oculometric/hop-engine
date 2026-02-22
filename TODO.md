@@ -1,8 +1,5 @@
 # TODO
 
-## v0.51
-- object duplicate function [L]
----
 ## v0.6
 - interactive node editor
 - multiple panels/scenes (i.e. nested shader graphs, decoupling shader graph from swapchain)
@@ -10,6 +7,7 @@
 - frustrum culling [M]
 - audio loading and output
 - improved text block rendering with wrapping, alignment, font, etc
+- object duplicate function [L]
 ---
 ## v0.7
 - shader node editor
