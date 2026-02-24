@@ -11,7 +11,13 @@
   <component name="ChangeListManager">
     <list default="true" id="836e5fd3-1918-497f-b7c7-e36a55aacb04" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.hop-engine/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/node_view.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/node_view.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/scene.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/scene.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/res_engine/node_shader.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/res_engine/node_shader.glsl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/demo/node_scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/demo/node_scene.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scene/node_view.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/scene/node_view.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scene/scene.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/scene/scene.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,7 +31,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://25" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://72" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/src/debug/imgui_functions.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/src/demo/node_scene.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/src/file/token_file.cpp" root0="FORCE_HIGHLIGHTING" />
@@ -186,7 +192,12 @@
       <workItem from="1771592373300" duration="13445000" />
       <workItem from="1771609916417" duration="1992000" />
       <workItem from="1771693077839" duration="9133000" />
-      <workItem from="1771750979304" duration="14982000" />
+      <workItem from="1771750979304" duration="15333000" />
+      <workItem from="1771809276529" duration="768000" />
+      <workItem from="1771860455309" duration="280000" />
+      <workItem from="1771873799988" duration="7583000" />
+      <workItem from="1771942026349" duration="1705000" />
+      <workItem from="1771943790273" duration="7285000" />
     </task>
     <servers />
   </component>
@@ -217,11 +228,6 @@
           <url>file://$PROJECT_DIR$/src/rendering/shader.cpp</url>
           <line>569</line>
           <option name="timeStamp" value="21" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/rendering/shader.cpp</url>
-          <line>24</line>
-          <option name="timeStamp" value="22" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

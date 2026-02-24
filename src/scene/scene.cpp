@@ -145,6 +145,7 @@ void Scene::setCameraSlot(const Ref<Camera>& camera, const size_t slot)
 
 void Scene::updateUniforms(uint32_t image_index, float time_since_start, glm::u32vec2 viewport_size, FrameStats& stats)
 {
+	last_viewport_size = viewport_size;
 	if (!render_graph)
 		return;
 	

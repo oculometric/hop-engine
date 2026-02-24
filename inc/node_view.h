@@ -3,6 +3,8 @@
 #include <vector>
 #include <glm/vec2.hpp>
 
+#include "command_buffer.h"
+#include "command_buffer.h"
 #include "common.h"
 #include "object.h"
 #include "mesh.h"
@@ -18,60 +20,58 @@ public:
 		ELEMENT_INPUT,
 		ELEMENT_OUTPUT,
 		ELEMENT_TEXT,
-		ELEMENT_SPACE,
-		ELEMENT_BLOCK
+		ELEMENT_SPACE
 	};
 	
 	struct NodeElement
 	{
 		std::string text;
 		NodeElementType type;
-		int pin_type = 0;
+		uint8_t pin_type = 0;
 		bool pin_solid = true;
 		
-		inline NodeElement(const std::string& _text, const NodeElementType _type, const int _pin_type = 0, const bool _pin_solid = true)
+		NodeElement(const std::string& _text, const NodeElementType _type, const int _pin_type = 0, const bool _pin_solid = true)
 			: text(_text), type(_type), pin_type(_pin_type), pin_solid(_pin_solid) { }
+		NodeElement()
+			: text("text"), type(ELEMENT_INPUT), pin_type(0), pin_solid(true) { }
 	};
 
 	struct Node
 	{
-		friend class NodeView;
-	public:
-		std::string title;
+		std::string title = "node";
 		std::vector<NodeElement> elements;
 		glm::vec2 position;
-		int palette_index = 1;
+		glm::vec3 colour = { 1.0f, 0.44f, 0.0f };
 		bool highlighted = false;
-
-		glm::vec2 last_size;
-	};
-
-	struct Link
-	{
-		Ref<Node> start_node = 0;
-		int start_output = 0;
-		Ref<Node> end_node = nullptr;
-		int end_input = 0;
-		int palette_index = 1;
 	};
 
 	struct Style
 	{
-		std::vector<glm::vec3> palette;
-		bool use_dynamic_background = false;
-		float background_factor = 0.02f;
 		Ref<Font> font = nullptr;
+		
 		Ref<Texture> node_atlas = nullptr;
-		Ref<Texture> link_atlas = nullptr;
+		
 		float grid_size = 24.0f;
-		glm::vec2 title_offset = glm::vec2{ 1.5, 0.0f };
-		float text_top_inset = 6.0f;
-		float text_left_inset = 6.0f;
+		
+		int header_height = 2;
+		int header_align = -1;
+		bool header_at_top = true;
+		bool header_fill = true;
+		bool header_outline = false;
+		float header_offset = 0.0f; // 0 is inside, 0.5 is inline, 1.0 is above
+		
+		glm::vec2 text_offset = { 6.0f, 0.0f };
+		glm::vec3 text_colour = { 1.0f, 1.0f, 1.0f };
+		float text_spacing = 1.0f;
+		
+		bool outline_show = true;
+		float outline_colour_mult = 1.0f;
+		
+		glm::vec3 grid_colour = { 0.01f, 0.01f, 0.01f };
 	};
 
 public:
 	std::vector<Ref<Node>> nodes;
-	std::vector<Link> links;
 
 private:
 	std::vector<Vertex> vertices;
@@ -81,29 +81,20 @@ private:
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(NodeView);
 	static Ref<NodeView> create();
+	~NodeView() override;
 	
-	inline Style getStyle() { return style; }
+	Style getStyle() { return style; }
 	void setStyle(Style new_style);
 	void updateMesh();
-	Ref<Node> select(glm::vec2 world_position);
-
-	~NodeView() override;
+	void checkInput();
 	
 protected:
 	NodeView();
 
 private:
-	void addQuad(glm::vec2 position, glm::vec2 size, glm::vec4 colour, glm::vec3 tint, bool clip_uv, int uv_index);
-	void addFrame(glm::vec2 position, glm::vec2 size, glm::vec3 tint);
-	void addBadge(glm::vec2 position, glm::vec2 size, glm::vec3 tint);
-	void addBlock(glm::vec2 position, glm::vec2 size, glm::vec3 tint, bool outline);
+	void addFrame(glm::vec2 position, glm::vec2 size, glm::vec3 tint, bool filled);
 	void addPin(glm::vec2 position, glm::vec3 tint, int type, bool filled);
-	void addCharacter(char c, glm::vec2 position, glm::vec3 tint);
-	void addText(std::string text, glm::vec2 start, glm::vec3 tint);
-	void addLinkElem(glm::vec2 position, glm::vec3 tint, int type);
-	void addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, glm::vec3 tint);
-	glm::vec3 getForegroundColour(int index) const;
-	glm::vec3 getBackgroundColour(glm::vec3 fg_col) const;
+	void addText(const std::string& text, glm::vec2 start, glm::vec3 tint);
 };
 
 }

@@ -28,6 +28,7 @@ private:
 	Ref<Camera> backup_camera;
 	std::map<size_t, Ref<Camera>> cameras;
 	std::vector<Ref<Light>> lights;
+	glm::u32vec2 last_viewport_size;
 
 public:
 	DELETE_CONSTRUCTORS(Scene);
@@ -42,6 +43,7 @@ public:
 	template<class T> Ref<T> insertObject(Ref<T> obj);
 	void removeObject(Ref<Object> obj);
 	
+	glm::u32vec2 getViewportSize() const { return last_viewport_size; }
 	Ref<Camera> getCamera(size_t slot) const;
 	std::vector<LightParams> getLightParams() const;
 	std::vector<DrawCommand> getDrawCommands() const;
