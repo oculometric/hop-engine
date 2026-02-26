@@ -45,9 +45,6 @@
     <ClInclude Include="inc\gizmo.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="inc\graphics_environment.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="inc\hop_engine.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -132,6 +129,15 @@
     <ClInclude Include="resource.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="inc\frame_stats.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\render_server.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\texture_vulkan.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lib\src\imgui.cpp">
@@ -167,100 +173,103 @@
     <ClCompile Include="src\engine.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\deserialise.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\imgui_functions.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\object.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\scene.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\input.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\render_graph.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\uniform_block.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\text_block.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mesh.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\math_helpers.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\pipeline.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\render_pass.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\material.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\token_file.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\shader.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\graphics_environment.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\package.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\texture.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\sampler.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\window.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\transform.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\swapchain.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\node_view.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\gizmo.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\font.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\command_buffer.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\buffer.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\debug.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\exec.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\node_scene.cpp">
+    <ClCompile Include="src\debug\debug.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\asha_scene.cpp">
+    <ClCompile Include="src\debug\imgui_functions.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\museum_scene.cpp">
+    <ClCompile Include="src\demo\asha_scene.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\demo\museum_scene.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\demo\node_scene.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\file\deserialise.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\file\package.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\file\token_file.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\buffer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\command_buffer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\material.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\mesh.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\pipeline.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\render_graph.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\render_pass.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\render_server.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\render_server_init.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\sampler.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\shader.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\swapchain.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\texture.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\uniform_block.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scene\gizmo.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scene\node_view.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scene\object.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scene\scene.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scene\text_block.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scene\transform.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
