@@ -23,6 +23,7 @@
 #include "mesh.h"
 #include "window.h"
 #include "command_buffer.h"
+#include "scene.h"
 #include "swapchain_vulkan.h"
 
 using namespace HopEngine;

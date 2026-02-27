@@ -8,6 +8,10 @@ using namespace HopEngine;
 using namespace std;
 
 constexpr size_t v_i_buffer_rounding_size = 256;
+constexpr float RENDER_MODE_BOX = 0.0f;
+constexpr float RENDER_MODE_TEXT = 0.1f;
+constexpr float RENDER_MODE_PINS = 0.2f;
+constexpr float RENDER_MODE_BACKGROUND = 0.3f;
 
 static glm::vec2 flipUV(glm::vec2 v)
 {
@@ -26,11 +30,16 @@ void NodeView::setStyle(Style new_style)
     material->setTexture("text_atlas", new_style.font->getAtlas());
     material->setTexture("node_atlas", new_style.node_atlas);
     material->setFloatUniform("grid_size", new_style.grid_size);
+    material->setVec3Uniform("outline_colour", new_style.outline_colour);
+    material->setIntUniform("outline_style", new_style.outline_style);
+    material->setFloatUniform("outline_modulate", new_style.outline_colour_mult);
+    material->setVec3Uniform("fill_colour", new_style.fill_colour);
+    material->setFloatUniform("fill_modulate", new_style.fill_colour_mult);
+    material->setFloatUniform("grid_dots_modulate", new_style.grid_dots_modulate);
     style = new_style;
     updateMesh();
 }
 
-// TODO: new font
 void NodeView::updateMesh()
 {
     if (nodes.empty())
@@ -105,27 +114,10 @@ void NodeView::updateMesh()
     //     addLink(start_pos, end_pos, getForegroundColour(link.palette_index));
     // }
     //
+
     
-    glm::vec2 half_viewport = glm::vec2{1000000.0f};//glm::vec2(getScene()->getViewportSize()) / 2.0f;
-    glm::vec4 grid_colour = glm::vec4{ style.grid_colour, 0 };
-    glm::vec4 normal_value = glm::vec4{ 0, 0, 0.2f, 0 };
-    uint16_t v_off = static_cast<uint16_t>(vertices.size());
-    
-    // top left
-    vertices.push_back(Vertex{ { -half_viewport.x, half_viewport.y, 0, 1 }, grid_colour, normal_value, { }, glm::vec2{ 0, 0 } });
-    // top right
-    vertices.push_back(Vertex{ { half_viewport.x, half_viewport.y, 0, 1 }, grid_colour, normal_value, { }, glm::vec2{ 1, 0 } });
-    // bottom left
-    vertices.push_back(Vertex{ { -half_viewport.x, -half_viewport.y, 0, 1 }, grid_colour, normal_value, { }, glm::vec2{ 0, 1 } });
-    // bottom right
-    vertices.push_back(Vertex{ { half_viewport.x, -half_viewport.y, 0, 1 }, grid_colour, normal_value, { }, glm::vec2{ 1, 1 } });
-    
-    indices.push_back(v_off + 0);
-    indices.push_back(v_off + 3);
-    indices.push_back(v_off + 1);
-    indices.push_back(v_off + 0);
-    indices.push_back(v_off + 2);
-    indices.push_back(v_off + 3);
+    glm::vec2 half_viewport = glm::vec2{1000000.0f};
+    addQuad(-half_viewport, half_viewport * 2.0f, { 0, 0 }, { 1, 1 }, style.grid_colour, RENDER_MODE_BACKGROUND);
     
     // draw nodes
     for (auto& node : nodes)
@@ -133,6 +125,19 @@ void NodeView::updateMesh()
         int node_width_tiles = 10;
         int node_height_tiles = 16;
         
+
+
+        float node_fill_mode = style.fill_modulate_colour ? 2.0f : 0.0f;
+
+        addQuad(node->position, glm::vec2{ node_width_tiles, 1 } * style.grid_size,
+            { 0, 0 }, { 1, 0.5f },
+            node->colour, RENDER_MODE_BOX,
+            { 1.0f, style.header_fill ? 1.0f : node_fill_mode, 0.0f });
+        addQuad(node->position + glm::vec2{ 0, style.grid_size }, glm::vec2{ node_width_tiles, node_height_tiles - 1 } * style.grid_size,
+            { 0, 0.5f }, { 1, 1 },
+            node->colour, RENDER_MODE_BOX,
+            { style.outline_style == HIDDEN ? 0.0f : 1.0f, node_fill_mode, 0.0f });
+
         // TODO: overhaul all of this!
         //  one quad for the title (integer mode including fill/border, fill mode, outline mode), cut off UVs
         //  one quad for the rest of the box (ditto)
@@ -144,17 +149,17 @@ void NodeView::updateMesh()
         // TODO: shadows!
         // TODO: ability to have just the fill (no frame)
         // TODO: header text align
-        addFrame(node->position, glm::vec2{ node_width_tiles, node_height_tiles } * style.grid_size, node->colour, false);
+        //addFrame(node->position, glm::vec2{ node_width_tiles, node_height_tiles } * style.grid_size, node->colour, false);
         
         glm::vec2 header_box_pos = node->position;
-        glm::vec2 header_box_size = glm::vec2{ node_width_tiles, 1 } * style.grid_size;
-        if (!style.header_at_top)
-            header_box_pos = node->position + glm::vec2{ 0, node_height_tiles * style.grid_size } - glm::vec2{ 0, header_box_size.y };
-        
-        if (style.header_outline) // TODO: a third section of the node atlas which has header elements
-            addFrame(header_box_pos, header_box_size, node->colour * style.outline_colour_mult, false);
-        if (style.header_fill)
-            addFrame(header_box_pos, header_box_size, node->colour * style.outline_colour_mult, true);
+        //glm::vec2 header_box_size = glm::vec2{ node_width_tiles, 1 } * style.grid_size;
+        //if (!style.header_at_top)
+        //    header_box_pos = node->position + glm::vec2{ 0, node_height_tiles * style.grid_size } - glm::vec2{ 0, header_box_size.y };
+        //
+        //if (style.header_outline) // TODO: a third section of the node atlas which has header elements
+        //    addFrame(header_box_pos, header_box_size, node->colour * style.outline_colour_mult, false);
+        //if (style.header_fill)
+        //    addFrame(header_box_pos, header_box_size, node->colour * style.outline_colour_mult, true);
         addText("test title", header_box_pos, style.text_colour);
         
         
@@ -215,19 +220,19 @@ NodeView::NodeView() : StaticMesh(nullptr, nullptr)
     material->setSampler("text_atlas", sampler);
 
     style.node_atlas = new Texture("res_engine/textures/node_atlas.png");
-    style.font = new Font("res://engine/font.bmp", glm::ivec2{ 10, 18 });
+    style.font = new Font("res_engine/textures/font_IBM_XGA_AI_12x23.png", glm::ivec2{ 14, 25 });
 
     setStyle(style);
 }
 
-void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode)
+void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode, glm::vec3 extra)
 {
     uint16_t v_off = static_cast<uint16_t>(vertices.size());
     
     glm::vec4 normal_value = { size.x, size.y, mode, 0.0f };
-    glm::vec4 tangent_value = { 0, 0, 0, 1 };
+    glm::vec4 tangent_value = { extra, 1 };
     glm::vec4 colour_value = glm::vec4{ colour, 1 };
-    
+
     // top left
     vertices.push_back(Vertex{
         { position.x, -position.y, 0, 1 },
@@ -257,11 +262,6 @@ void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm:
     indices.push_back(v_off + 3);
 }
 
-void NodeView::addFrame(glm::vec2 position, glm::vec2 size, glm::vec3 tint, bool filled)
-{
-    addQuad(position, size, { 0, 0 }, { 1, 1 }, tint, filled ? 0.1f : 0.0f);
-}
-
 void NodeView::addPin(glm::vec2 position, glm::vec3 tint, int type, bool filled)
 {
     //addQuad(position, glm::vec2{ style.grid_size, style.grid_size }, { 0, 0, filled ? 10 : 1, 0 }, tint, true, type);
@@ -280,9 +280,9 @@ void NodeView::addText(const string& text, glm::vec2 start, glm::vec3 tint)
         glm::vec2 uv_tl = flipUV(uv_base);
         glm::vec4 pos_tl = { position.x, -position.y, 0, 1 };
 
-        addQuad(pos_tl, char_size, uv_tl, uv_br, tint, 0.5f);        
+        addQuad(pos_tl, char_size, uv_tl, uv_br, tint, RENDER_MODE_TEXT);
         
-        position.x += style.font->getGlyphSize().x + style.text_spacing;
+        position.x += style.font->getGlyphSize().x + style.text_spacing - 2.0f;
     }
 }
 

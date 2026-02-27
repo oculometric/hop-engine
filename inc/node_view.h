@@ -45,6 +45,14 @@ public:
 		bool highlighted = false;
 	};
 
+	enum OutlineStyle
+	{
+		HIDDEN,
+		PRESET_COLOUR,
+		NODE_COLOUR,
+		MODULATE_NODE_COLOUR
+	};
+
 	struct Style
 	{
 		Ref<Font> font = nullptr;
@@ -62,8 +70,7 @@ public:
 		glm::vec3 text_colour = { 1.0f, 1.0f, 1.0f };
 		float text_spacing = 1.0f;
 		
-		bool outline_show = true;
-		bool outline_modulate_colour = false;
+		OutlineStyle outline_style = PRESET_COLOUR;
 		glm::vec3 outline_colour = { 0.05f, 0.05f, 0.05f };
 		float outline_colour_mult = 0.7f;
 		
@@ -72,6 +79,7 @@ public:
 		float fill_colour_mult = 0.1f;
 		
 		glm::vec3 grid_colour = { 0.01f, 0.01f, 0.01f };
+		float grid_dots_modulate = 10.0f;
 	};
 
 public:
@@ -96,8 +104,7 @@ protected:
 	NodeView();
 
 private:
-	void addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode);
-	void addFrame(glm::vec2 position, glm::vec2 size, glm::vec3 tint, bool filled);
+	void addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode, glm::vec3 extra = { 0.0f, 0.0f, 0.0f });
 	void addPin(glm::vec2 position, glm::vec3 tint, int type, bool filled);
 	void addText(const std::string& text, glm::vec2 start, glm::vec3 tint);
 };

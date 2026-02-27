@@ -147,7 +147,6 @@ void imguiNodeScene(Ref<Scene> scene, float delta_time)
     
     if (ImGui::CollapsingHeader("outline", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        ImGui::Checkbox("outline_show", &style.outline_show);
         ImGui::SliderFloat("outline_colour_mult", &style.outline_colour_mult, 0.0f, 1.0f);
         ImGui::Spacing();
     }

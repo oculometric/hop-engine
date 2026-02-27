@@ -3,7 +3,24 @@
 layout(set = 2, binding = 0) uniform MaterialUniforms
 {
     float grid_size;
+    vec3 outline_colour;
+    int outline_style;
+    float outline_modulate;
+    vec3 fill_colour;
+    float fill_modulate;
+    float grid_dots_modulate;
 };
+
+// int outline_mode;
+// 0 - no outline
+// 1 - outline use preset colour
+// 2 - outline use node colour
+// 3 - outline modulate node colour
+
+// int fill_mode;
+// 0 - fill use preset colour
+// 1 - fill use node colour
+// 2 - fill modulate node colour
 
 void vertex()
 {
@@ -28,7 +45,6 @@ vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size)
 {
     // FIXME: actually fix nine-slicing so the UVs behave correctly, and we can index individual segments of the texture
     
-    
     vec2 coordinate = uv * quad_size;
     vec2 atlas_border = atlas_size / 4.0f;
     vec2 c_over_s = coordinate / atlas_size;
@@ -44,46 +60,60 @@ vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size)
     return uv;
 }
 
+#define RENDER_MODE_BOX 0.0f
+#define RENDER_MODE_TEXT 0.1f
+#define RENDER_MODE_PINS 0.2f
+#define RENDER_MODE_BACKGROUND 0.3f
+
 void fragment()
 {
     vec2 uv = frag.uv;
     float render_mode = frag.normal.z;
     vec2 quad_size = frag.normal.xy;
     vec2 atlas_size = textureSize(node_atlas, 0);
-    
-    // TODO: different modes: filled/bordered box (with submodes for fill and border behaviour), text, pins, background grid
-    
-    if (render_mode < 0.1f)
+
+    if (render_mode == RENDER_MODE_BOX)
     {
+        // box mode
         uv = nineSliceUV(uv, quad_size, atlas_size);
+
+        vec3 fill = fill_colour;
+        if (frag.tangent.y == 1.0f)      fill = frag.colour.rgb;
+        else if (frag.tangent.y == 2.0f) fill = frag.colour.rgb * fill_modulate;
+
+        vec3 outline = fill;
+        if (frag.tangent.x > 0.0f)
+        {
+            if (outline_style == 1)      outline = outline_colour;
+            else if (outline_style == 2) outline = frag.colour.rgb;
+            else if (outline_style == 3) outline = frag.colour.rgb * outline_modulate;
+        }
 
         vec4 alb = texture(node_atlas, uv);
         if (alb.r < 0.001f) discard;
-        if (alb.r > 0.9f) out_colour = vec4(frag.colour.rgb, 1);
-        else out_colour = vec4(frag.colour.rgb * 0.03f, 1);
+        if (alb.r > 0.9f)   out_colour = vec4(fill, 1);
+        else                out_colour = vec4(outline, 1);
     }
-    else if (render_mode < 0.2f)
+    else if (render_mode == RENDER_MODE_TEXT)
     {
-        uv = nineSliceUV(uv, quad_size, atlas_size);
-
-        vec4 alb = texture(node_atlas, uv);
-        if (alb.g < 0.001f) discard;
-        if (alb.g > 0.9f) out_colour = vec4(frag.colour.rgb, 1);
-        else out_colour = vec4(frag.colour.rgb * 0.03f, 1);
-    }
-    else if (render_mode < 0.3f)
-    {
-        vec2 mods = mod(abs(frag.position.xy), vec2(grid_size));
-        // TODO: dots!
-        //out_colour = vec4(mods.xy, 0, 1);
-        if (mods.x < 1.0f || mods.y < 1.0f)
-            out_colour = vec4(frag.colour.rgb, 1);
-        else
-            discard;
-    }
-    else
-    {
+        // text mode
         if (texture(text_atlas, uv).r < 0.5f) discard;
         out_colour = vec4(frag.colour.rgb, 1);
     }
+    else if (render_mode == RENDER_MODE_PINS)
+    {
+        // pins mode
+    }
+    else if (render_mode == RENDER_MODE_BACKGROUND)
+    {
+        // background grid mode
+        vec2 mods = mod(abs(frag.position.xy), vec2(grid_size));
+        float factor = float(mods.x < 1.0f) + float(mods.y < 1.0f);
+        if (factor > 0.0f)
+            out_colour = vec4(frag.colour.rgb * (factor > 1.0f ? grid_dots_modulate : 1.0f), 1);
+        else
+            discard;
+    }
+    
+    // TODO: different modes: filled/bordered box (with submodes for fill and border behaviour), text, pins, background grid
 }
