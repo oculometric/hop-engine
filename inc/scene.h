@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <map>
-#include <set>
 
 #include "common.h"
 #include "object.h"

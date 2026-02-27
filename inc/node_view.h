@@ -53,19 +53,23 @@ public:
 		
 		float grid_size = 24.0f;
 		
-		int header_height = 2;
 		int header_align = -1;
 		bool header_at_top = true;
 		bool header_fill = true;
 		bool header_outline = false;
-		float header_offset = 0.0f; // 0 is inside, 0.5 is inline, 1.0 is above
 		
 		glm::vec2 text_offset = { 6.0f, 0.0f };
 		glm::vec3 text_colour = { 1.0f, 1.0f, 1.0f };
 		float text_spacing = 1.0f;
 		
 		bool outline_show = true;
-		float outline_colour_mult = 1.0f;
+		bool outline_modulate_colour = false;
+		glm::vec3 outline_colour = { 0.05f, 0.05f, 0.05f };
+		float outline_colour_mult = 0.7f;
+		
+		bool fill_modulate_colour = false;
+		glm::vec3 fill_colour = { 0.9f, 0.85f, 0.81f };
+		float fill_colour_mult = 0.1f;
 		
 		glm::vec3 grid_colour = { 0.01f, 0.01f, 0.01f };
 	};
@@ -92,6 +96,7 @@ protected:
 	NodeView();
 
 private:
+	void addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode);
 	void addFrame(glm::vec2 position, glm::vec2 size, glm::vec3 tint, bool filled);
 	void addPin(glm::vec2 position, glm::vec3 tint, int type, bool filled);
 	void addText(const std::string& text, glm::vec2 start, glm::vec3 tint);

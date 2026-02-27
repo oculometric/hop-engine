@@ -132,20 +132,30 @@ void NodeView::updateMesh()
     {
         int node_width_tiles = 10;
         int node_height_tiles = 16;
+        
+        // TODO: overhaul all of this!
+        //  one quad for the title (integer mode including fill/border, fill mode, outline mode), cut off UVs
+        //  one quad for the rest of the box (ditto)
+        //  both of those use the same render mode in the shader
+        //  quads for each pin
+        //  text
+        
+        
+        // TODO: shadows!
         // TODO: ability to have just the fill (no frame)
         // TODO: header text align
         addFrame(node->position, glm::vec2{ node_width_tiles, node_height_tiles } * style.grid_size, node->colour, false);
         
-        glm::vec2 header_box_pos = node->position - glm::vec2{ 0, style.header_offset * style.grid_size };
-        glm::vec2 header_box_size = glm::vec2{ node_width_tiles, style.header_height } * style.grid_size;
+        glm::vec2 header_box_pos = node->position;
+        glm::vec2 header_box_size = glm::vec2{ node_width_tiles, 1 } * style.grid_size;
         if (!style.header_at_top)
-            header_box_pos = node->position + glm::vec2{ 0, node_height_tiles * style.grid_size } + glm::vec2{ 0, style.header_offset * style.grid_size } - glm::vec2{ 0, header_box_size.y };
+            header_box_pos = node->position + glm::vec2{ 0, node_height_tiles * style.grid_size } - glm::vec2{ 0, header_box_size.y };
         
         if (style.header_outline) // TODO: a third section of the node atlas which has header elements
             addFrame(header_box_pos, header_box_size, node->colour * style.outline_colour_mult, false);
         if (style.header_fill)
             addFrame(header_box_pos, header_box_size, node->colour * style.outline_colour_mult, true);
-        addText("test title", header_box_pos + glm::round(glm::vec2{ 0, static_cast<float>(style.header_height - 1) * 0.5f * style.grid_size }), style.text_colour);
+        addText("test title", header_box_pos, style.text_colour);
         
         
         //     Ref<Node> node = *it;
@@ -209,56 +219,35 @@ NodeView::NodeView() : StaticMesh(nullptr, nullptr)
 
     setStyle(style);
 }
-//
-// void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec4 colour, glm::vec3 tint, bool clip_uv, int uv_index)
-// {
-//     uint16_t v_off = static_cast<uint16_t>(vertices.size());
-//     glm::vec4 segment_size = { glm::ceil(size.x / style.grid_size), glm::ceil(size.y / style.grid_size), 0, 0 };
-//
-//     glm::vec2 tl_uv = { 0, 1 };
-//     glm::vec2 tr_uv = { 1, 1 };
-//     glm::vec2 bl_uv = { 0, 0 };
-//     glm::vec2 br_uv = { 1, 0 };
-//
-//     if (clip_uv)
-//     {
-//         glm::vec2 slice_offset = { uv_index % 3, 2.0f - (int)(uv_index / 3) };
-//
-//         tl_uv = (tl_uv + slice_offset) / 3.0f;
-//         tr_uv = (tr_uv + slice_offset) / 3.0f;
-//         bl_uv = (bl_uv + slice_offset) / 3.0f;
-//         br_uv = (br_uv + slice_offset) / 3.0f;
-//
-//         segment_size += glm::vec4{ 2.0f, 2.0f, 0.0f, 0.0f };
-//     }
-//
-//     vertices.push_back(Vertex{ { position.x, -position.y, 0, 1 }, colour, segment_size, glm::vec4(tint, 0), tl_uv });
-//     vertices.push_back(Vertex{ { position.x + size.x, -position.y, 0, 1 }, colour, segment_size, glm::vec4(tint, 0), tr_uv });
-//     vertices.push_back(Vertex{ { position.x, -position.y - size.y, 0, 1 }, colour, segment_size, glm::vec4(tint, 0), bl_uv });
-//     vertices.push_back(Vertex{ { position.x + size.x, -position.y - size.y, 0, 1 }, colour, segment_size, glm::vec4(tint, 0), br_uv });
-//
-//     indices.push_back(v_off + 0);
-//     indices.push_back(v_off + 3);
-//     indices.push_back(v_off + 1);
-//     indices.push_back(v_off + 0);
-//     indices.push_back(v_off + 2);
-//     indices.push_back(v_off + 3);
-// }
 
-void NodeView::addFrame(glm::vec2 position, glm::vec2 size, glm::vec3 tint, bool filled)
+void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode)
 {
     uint16_t v_off = static_cast<uint16_t>(vertices.size());
     
-    glm::vec4 normal_value = { size.x, size.y, filled ? 0.1f : 0.0f, 0.0f };
+    glm::vec4 normal_value = { size.x, size.y, mode, 0.0f };
+    glm::vec4 tangent_value = { 0, 0, 0, 1 };
+    glm::vec4 colour_value = glm::vec4{ colour, 1 };
     
     // top left
-    vertices.push_back(Vertex{ { position.x, -position.y, 0, 1 }, glm::vec4{ tint, 0 }, normal_value, { 0, 0, 0, 1}, glm::vec2{ 0, 0 } });
+    vertices.push_back(Vertex{
+        { position.x, -position.y, 0, 1 },
+        colour_value, normal_value, tangent_value,
+        uv_tl });
     // top right
-    vertices.push_back(Vertex{ { position.x + size.x, -position.y, 0, 1 }, glm::vec4{ tint, 0 }, normal_value, { 0, 0, 0, 1}, glm::vec2{ 1, 0 } });
+    vertices.push_back(Vertex{
+        { position.x + size.x, -position.y, 0, 1 },
+        colour_value, normal_value, tangent_value,
+        glm::vec2{ uv_br.x, uv_tl.y } });
     // bottom left
-    vertices.push_back(Vertex{ { position.x, -position.y - size.y, 0, 1 }, glm::vec4{ tint, 0 }, normal_value, { 0, 0, 0, 1}, glm::vec2{ 0, 1 } });
+    vertices.push_back(Vertex{
+        { position.x, -position.y - size.y, 0, 1 },
+        colour_value, normal_value, tangent_value,
+        glm::vec2{ uv_tl.x, uv_br.y } });
     // bottom right
-    vertices.push_back(Vertex{ { position.x + size.x, -position.y - size.y, 0, 1 }, glm::vec4{ tint, 0 }, normal_value, { 0, 0, 0, 1}, glm::vec2{ 1, 1 } });
+    vertices.push_back(Vertex{
+        { position.x + size.x, -position.y - size.y, 0, 1 },
+        colour_value, normal_value, tangent_value,
+        uv_br });
     
     indices.push_back(v_off + 0);
     indices.push_back(v_off + 3);
@@ -268,43 +257,30 @@ void NodeView::addFrame(glm::vec2 position, glm::vec2 size, glm::vec3 tint, bool
     indices.push_back(v_off + 3);
 }
 
+void NodeView::addFrame(glm::vec2 position, glm::vec2 size, glm::vec3 tint, bool filled)
+{
+    addQuad(position, size, { 0, 0 }, { 1, 1 }, tint, filled ? 0.1f : 0.0f);
+}
+
 void NodeView::addPin(glm::vec2 position, glm::vec3 tint, int type, bool filled)
 {
-    
     //addQuad(position, glm::vec2{ style.grid_size, style.grid_size }, { 0, 0, filled ? 10 : 1, 0 }, tint, true, type);
 }
 
 void NodeView::addText(const string& text, glm::vec2 start, glm::vec3 tint)
 {
+    const glm::vec2 uv_size = style.font->getGlyphUVSize();
+    const glm::vec2 char_size = style.font->getGlyphSize();
     glm::vec2 position = start + style.text_offset + glm::vec2{ 0, (style.grid_size - style.font->getGlyphSize().y) };
     for (char c : text)
     {
         glm::vec2 uv_base = style.font->getGlyphUVOffset(c);
-        glm::vec2 uv_size = style.font->getGlyphUVSize();
 
-        glm::vec2 uv_bl = flipUV(uv_base + glm::vec2{ 0, uv_size.y });
         glm::vec2 uv_br = flipUV(uv_base + uv_size);
         glm::vec2 uv_tl = flipUV(uv_base);
-        glm::vec2 uv_tr = flipUV(uv_base + glm::vec2{ uv_size.x, 0 });
-
-        glm::vec2 char_size = style.font->getGlyphSize();
-        glm::vec4 pos_bl = { position.x, (-position.y - char_size.y), 0, 1 };
-        glm::vec4 pos_br = { position.x + char_size.x, (-position.y - char_size.y), 0, 1 };
         glm::vec4 pos_tl = { position.x, -position.y, 0, 1 };
-        glm::vec4 pos_tr = { position.x + char_size.x, -position.y, 0, 1 };
 
-        uint16_t v_off = static_cast<uint16_t>(vertices.size());
-        vertices.push_back(Vertex{ pos_bl, glm::vec4(tint, 1), { 0, 0, 0.5f, 0 }, {}, uv_bl });
-        vertices.push_back(Vertex{ pos_br, glm::vec4(tint, 1), { 0, 0, 0.5f, 0 }, {}, uv_br });
-        vertices.push_back(Vertex{ pos_tl, glm::vec4(tint, 1), { 0, 0, 0.5f, 0 }, {}, uv_tl });
-        vertices.push_back(Vertex{ pos_tr, glm::vec4(tint, 1), { 0, 0, 0.5f, 0 }, {}, uv_tr });
-
-        indices.push_back(v_off + 1);
-        indices.push_back(v_off + 3);
-        indices.push_back(v_off + 0);
-        indices.push_back(v_off + 3);
-        indices.push_back(v_off + 2);
-        indices.push_back(v_off + 0);
+        addQuad(pos_tl, char_size, uv_tl, uv_br, tint, 0.5f);        
         
         position.x += style.font->getGlyphSize().x + style.text_spacing;
     }

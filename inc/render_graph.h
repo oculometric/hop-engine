@@ -7,7 +7,6 @@
 #include <glm/vec2.hpp>
 
 #include "common.h"
-#include "vulkan_typedefs.h"
 #include "sampler.h"
 #include "render_pass.h"
 #include "draw_command.h"

@@ -130,12 +130,10 @@ void imguiNodeScene(Ref<Scene> scene, float delta_time)
     
     if (ImGui::CollapsingHeader("header", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        ImGui::InputInt("header_height", &style.header_height, 1, 1);
         ImGui::InputInt("header_align", &style.header_align, 1, 1);
         ImGui::Checkbox("header_at_top", &style.header_at_top);
         ImGui::Checkbox("header_fill", &style.header_fill);
         ImGui::Checkbox("header_outline", &style.header_outline);
-        ImGui::SliderFloat("header_offset", &style.header_offset, 0.0f, 1.0f);
         ImGui::Spacing();
     }
     

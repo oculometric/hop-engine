@@ -26,6 +26,9 @@ layout(set = 2, binding = 2) uniform sampler2D text_atlas;
 
 vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size)
 {
+    // FIXME: actually fix nine-slicing so the UVs behave correctly, and we can index individual segments of the texture
+    
+    
     vec2 coordinate = uv * quad_size;
     vec2 atlas_border = atlas_size / 4.0f;
     vec2 c_over_s = coordinate / atlas_size;
@@ -48,6 +51,8 @@ void fragment()
     vec2 quad_size = frag.normal.xy;
     vec2 atlas_size = textureSize(node_atlas, 0);
     
+    // TODO: different modes: filled/bordered box (with submodes for fill and border behaviour), text, pins, background grid
+    
     if (render_mode < 0.1f)
     {
         uv = nineSliceUV(uv, quad_size, atlas_size);
@@ -69,6 +74,7 @@ void fragment()
     else if (render_mode < 0.3f)
     {
         vec2 mods = mod(abs(frag.position.xy), vec2(grid_size));
+        // TODO: dots!
         //out_colour = vec4(mods.xy, 0, 1);
         if (mods.x < 1.0f || mods.y < 1.0f)
             out_colour = vec4(frag.colour.rgb, 1);
@@ -80,34 +86,4 @@ void fragment()
         if (texture(text_atlas, uv).r < 0.5f) discard;
         out_colour = vec4(frag.colour.rgb, 1);
     }
-//    else
-//    {
-//        vec2 size_units = frag.normal.xy;
-//        vec2 scaled_uv = frag.uv * size_units;
-//        ivec2 segment = ivec2(floor(scaled_uv));
-//        if (debug_segments)
-//        {
-//            out_colour = vec4(fract(scaled_uv), 0, 1);
-//        }
-//        else
-//        {
-//            vec2 fraction = fract(scaled_uv);
-//            fraction *= border_ratio;
-//            fraction += border_fraction;
-//            uv = fraction + 1.0f;
-//            uv -= vec2(lessThan(segment, ivec2(1, 1)));
-//            uv += vec2(greaterThan(segment, size_units - ivec2(2, 2)));
-//
-//            uv /= 3.0f;
-//
-//            vec4 tex_sample = texture(node_atlas, uv);
-//            float factor = length(tex_sample.rgb * frag.colour.rgb) * tex_sample.a;
-//            if (factor <= 0.001f)
-//                discard;
-//            else if (factor <= 0.7f)
-//                out_colour = vec4(background_mode == 0 ? background_colour.rgb : frag.tangent.rgb * background_factor, 1);
-//            else
-//                out_colour = vec4(frag.tangent.rgb, 1);
-//        }
-//    }
 }
