@@ -38,6 +38,7 @@ void NodeView::setStyle(Style new_style)
     material->setVec3Uniform("fill_colour", new_style.fill_colour);
     material->setFloatUniform("fill_modulate", new_style.fill_colour_mult);
     material->setFloatUniform("grid_dots_modulate", new_style.grid_dots_modulate);
+    material->setIntUniform("grid_scale", new_style.grid_scale);
 
     if (getScene())
         getScene()->getCamera(0)->clear_colour = style.background_colour;
@@ -153,13 +154,12 @@ void NodeView::updateMesh()
                 ++it;
         }
 
-        // TODO: make bevel smaller
         // TODO: node minimise button
         // TODO: shadows!
+        // TODO: interactions
         
         // TODO: pin colour override?
         // TODO: come up with a list of input types
-        // TODO: higher-order grid
     }
 
     size_t vertices_rounded_up = ((vertices.size() / v_i_buffer_rounding_size) + 2) * v_i_buffer_rounding_size;
@@ -174,7 +174,7 @@ void NodeView::updateMesh()
 NodeView::NodeView() : StaticMesh(nullptr, nullptr)
 {
     // FIXME: make these paths res-relative again!
-    material = new Material(new Shader("res_engine/node_shader.glsl"), PipelineBuilder().cullMode(CULL_NONE).depthTest(false).depthWrite(false));
+    material = new Material(new Shader("res_engine/shaders/node_shader.glsl"), PipelineBuilder().cullMode(CULL_NONE).depthTest(false).depthWrite(false));
     Ref<Sampler> sampler = Engine::makeSampler(SamplerBuilder().filter(FILTER_NEAREST));
     material->setSampler("node_atlas", sampler);
     material->setSampler("text_atlas", sampler);
@@ -191,7 +191,6 @@ void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm:
 {
     uint16_t v_off = static_cast<uint16_t>(vertices.size());
     
-    // FIXME: fix the stupid inverted Y stuff
     glm::vec4 normal_value = { size.x, size.y, mode, 0.0f };
     if (fake_size.x != 0.0f)
         normal_value.x = fake_size.x;

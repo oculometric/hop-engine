@@ -9,6 +9,7 @@ layout(set = 2, binding = 0) uniform MaterialUniforms
     vec3 fill_colour;
     float fill_modulate;
     float grid_dots_modulate;
+    int grid_scale;
 };
 
 // int outline_mode;
@@ -110,7 +111,7 @@ void fragment()
     else if (render_mode == RENDER_MODE_BACKGROUND)
     {
         // background grid mode
-        vec2 mods = mod(abs(frag.position.xy), vec2(grid_size));
+        vec2 mods = mod(abs(frag.position.xy), vec2(grid_size) * grid_scale);
         float factor = float(mods.x < 1.0f) + float(mods.y < 1.0f);
         if (factor > 0.0f)
             out_colour = vec4(frag.colour.rgb * (factor > 1.0f ? grid_dots_modulate : 1.0f), 1);

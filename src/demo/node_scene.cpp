@@ -165,6 +165,7 @@ void imguiNodeScene(Ref<Scene> scene, float delta_time)
     {
         ImGui::ColorEdit3("background_colour", (float*)&style.background_colour);
         ImGui::Checkbox("show_grid", &style.show_grid);
+        ImGui::InputInt("grid_scale", &style.grid_scale, 1);
         ImGui::ColorEdit3("grid_colour", (float*)&style.grid_colour);
         ImGui::SliderFloat("grid_dots_modulate", &style.grid_dots_modulate, 0.0f, 10.0f);
         ImGui::Spacing();

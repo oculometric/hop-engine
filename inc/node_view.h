@@ -82,6 +82,7 @@ public:
 		
 		glm::vec3 background_colour = { 0.94f, 0.94f, 0.94f };
 		bool show_grid = true;
+		int grid_scale = 4;
 		glm::vec3 grid_colour = { 0.70f, 0.70f, 0.70f };
 		float grid_dots_modulate = 0.001f;
 
