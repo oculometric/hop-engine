@@ -60,6 +60,7 @@ public:
 		
 		Ref<Texture> node_atlas = nullptr;
 		Ref<Texture> extra_atlas = nullptr;
+		Ref<Texture> ui_atlas = nullptr;
 		
 		float grid_size = 32.0f;
 		
@@ -74,6 +75,7 @@ public:
 		
 		OutlineStyle outline_style = PRESET_COLOUR;
 		glm::vec3 outline_colour = { 0.020f, 0.020f, 0.038f };
+		glm::vec3 outline_colour_highlight = { 0.75f, 0.087f, 0.0f };
 		float outline_colour_mult = 0.7f;
 		
 		bool fill_modulate_colour = false;

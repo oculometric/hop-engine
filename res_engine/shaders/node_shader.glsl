@@ -10,6 +10,7 @@ layout(set = 2, binding = 0) uniform MaterialUniforms
     float fill_modulate;
     float grid_dots_modulate;
     int grid_scale;
+    vec3 outline_colour_highlight;
 };
 
 // int outline_mode;
@@ -40,6 +41,7 @@ void vertex()
 layout(set = 2, binding = 1) uniform sampler2D node_atlas;
 layout(set = 2, binding = 2) uniform sampler2D text_atlas;
 layout(set = 2, binding = 3) uniform sampler2D extra_atlas;
+layout(set = 2, binding = 4) uniform sampler2D ui_atlas;
 
 vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size)
 {
@@ -61,9 +63,10 @@ vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size)
 }
 
 #define RENDER_MODE_BOX 0.0f
-#define RENDER_MODE_TEXT 0.1f
-#define RENDER_MODE_PINS 0.2f
-#define RENDER_MODE_BACKGROUND 0.3f
+#define RENDER_MODE_TEXT 1.0f
+#define RENDER_MODE_PINS 2.0f
+#define RENDER_MODE_BACKGROUND 3.0f
+#define RENDER_MODE_UI 4.0f
 
 void fragment()
 {
@@ -82,7 +85,11 @@ void fragment()
         else if (frag.tangent.y == 2.0f) fill = frag.colour.rgb * fill_modulate;
 
         vec3 outline = fill;
-        if (frag.tangent.x > 0.0f)
+        if (frag.tangent.x > 1.0f)
+        {
+            outline = outline_colour_highlight;
+        }
+        else if (frag.tangent.x > 0.0f)
         {
             if (outline_style == 1)      outline = outline_colour;
             else if (outline_style == 2) outline = frag.colour.rgb;
@@ -117,5 +124,13 @@ void fragment()
             out_colour = vec4(frag.colour.rgb * (factor > 1.0f ? grid_dots_modulate : 1.0f), 1);
         else
             discard;
+    }
+    else if (render_mode == RENDER_MODE_UI)
+    {
+        // ui elements
+        float v = texture(ui_atlas, uv).r;
+        if (v < 0.001f) discard;
+        if (v < 0.5f) out_colour = vec4(frag.tangent.rgb, 1);
+        else out_colour = vec4(frag.colour.rgb, 1);
     }
 }

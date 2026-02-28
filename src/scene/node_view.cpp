@@ -9,9 +9,10 @@ using namespace std;
 
 constexpr size_t v_i_buffer_rounding_size = 256;
 constexpr float RENDER_MODE_BOX = 0.0f;
-constexpr float RENDER_MODE_TEXT = 0.1f;
-constexpr float RENDER_MODE_PINS = 0.2f;
-constexpr float RENDER_MODE_BACKGROUND = 0.3f;
+constexpr float RENDER_MODE_TEXT = 1.0f;
+constexpr float RENDER_MODE_PINS = 2.0f;
+constexpr float RENDER_MODE_BACKGROUND = 3.0f;
+constexpr float RENDER_MODE_UI = 4.0f;
 
 static glm::vec2 flipUV(glm::vec2 v)
 {
@@ -30,6 +31,7 @@ void NodeView::setStyle(Style new_style)
     material->setTexture("text_atlas", new_style.font->getAtlas());
     material->setTexture("node_atlas", new_style.node_atlas);
     material->setTexture("extra_atlas", new_style.extra_atlas);
+    material->setTexture("ui_atlas", new_style.ui_atlas);
 
     material->setFloatUniform("grid_size", new_style.grid_size);
     material->setVec3Uniform("outline_colour", new_style.outline_colour);
@@ -39,6 +41,7 @@ void NodeView::setStyle(Style new_style)
     material->setFloatUniform("fill_modulate", new_style.fill_colour_mult);
     material->setFloatUniform("grid_dots_modulate", new_style.grid_dots_modulate);
     material->setIntUniform("grid_scale", new_style.grid_scale);
+    material->setVec3Uniform("outline_colour_highlight", new_style.outline_colour_highlight);
 
     if (getScene())
         getScene()->getCamera(0)->clear_colour = style.background_colour;
@@ -71,46 +74,68 @@ void NodeView::updateMesh()
         int node_height_tiles = node->elements.size() + style.after_header_spacing + style.after_elements_spacing;
         
         float node_fill_mode = style.fill_modulate_colour ? 2.0f : 0.0f;
+        float node_outline_mode = style.outline_style == HIDDEN ? 0.0f : 1.0f;
+        if (node->highlighted)
+            node_outline_mode = 2.0f;
         const glm::vec2 box_width = glm::vec2{ node_width_tiles, 0 } * style.grid_size;
         const glm::vec2 half_tile_width = glm::vec2{ style.grid_size * 0.5f, 0 };
         const glm::vec2 pin_offset = glm::vec2{ style.pin_offset, 0 };
 
         // heading box
         glm::vec2 header_position = node->position;
-        float header_uv_top = 0.0f;
-        float header_uv_bottom = 0.5f;
-        if (!style.header_at_top)
         {
-            header_position = header_position + glm::vec2{ 0, node_height_tiles * style.grid_size };
-            header_uv_top = 0.5f;
-            header_uv_bottom = 1.0f;
+            float header_uv_top = 0.0f;
+            float header_uv_bottom = 0.5f;
+            if (!style.header_at_top)
+            {
+                header_position = header_position + glm::vec2{ 0, node_height_tiles * style.grid_size };
+                header_uv_top = 0.5f;
+                header_uv_bottom = 1.0f;
+            }
+            if (node->minimised)
+            {
+                header_uv_top = 0.0f;
+                header_uv_bottom = 1.0f;
+            }
+            addQuad(header_position, glm::vec2{ node_width_tiles, 1 } * style.grid_size,
+                { 0, header_uv_top }, { 1, header_uv_bottom },
+                node->colour, RENDER_MODE_BOX,
+                { node_outline_mode, style.header_fill ? 1.0f : node_fill_mode, 0.0f },
+                glm::vec2{ node_width_tiles, node->minimised ? 1.0f : 2.0f } * style.grid_size);
+            if (style.header_align > 0) header_position = header_position + box_width;
+            else if (style.header_align == 0) header_position = header_position + (box_width * 0.5f);
+            addText(node->title, header_position, style.text_colour, style.header_align);
+
+            // minimise button
+            glm::vec2 seg_size = glm::vec2(style.ui_atlas->getSize()) / 4.0f;
+            glm::vec2 uv_size = glm::vec2(1.0f / 4.0f);
+            glm::vec2 uv_base = glm::vec2{ uv_size.x * (0 % 4), uv_size.y * (0 / 4) };
+            addQuad(header_position + glm::round((style.grid_size - seg_size) * 0.5f) + (glm::vec2{ node_width_tiles - 1, 0 } * style.grid_size), seg_size,
+                flipUV(uv_base), flipUV(uv_base + uv_size), style.outline_colour, RENDER_MODE_UI, style.fill_colour);
+
+            if (node->minimised)
+                continue;
         }
-        addQuad(header_position, glm::vec2{ node_width_tiles, 1 } * style.grid_size,
-            { 0, header_uv_top }, { 1, header_uv_bottom },
-            node->colour, RENDER_MODE_BOX,
-            { style.outline_style == HIDDEN ? 0.0f : 1.0f, style.header_fill ? 1.0f : node_fill_mode, 0.0f },
-            glm::vec2{ node_width_tiles, 1.0f * 2.0f } * style.grid_size);
-        if (style.header_align > 0) header_position = header_position + box_width;
-        else if (style.header_align == 0) header_position = header_position + (box_width * 0.5f);
-        addText(node->title, header_position, style.text_colour, style.header_align);
-        
+
         // TODO: line between header and main area
         
         // main box
         glm::vec2 box_position = node->position + glm::vec2{ 0, style.grid_size };
-        float box_uv_top = 0.5f;
-        float box_uv_bottom = 1.0f;
-        if (!style.header_at_top)
         {
-            box_position -= glm::vec2{ 0, style.grid_size };
-            box_uv_top = 0.0f;
-            box_uv_bottom = 0.5f;
+            float box_uv_top = 0.5f;
+            float box_uv_bottom = 1.0f;
+            if (!style.header_at_top)
+            {
+                box_position -= glm::vec2{ 0, style.grid_size };
+                box_uv_top = 0.0f;
+                box_uv_bottom = 0.5f;
+            }
+            addQuad(box_position, glm::vec2{ node_width_tiles, node_height_tiles } * style.grid_size,
+                { 0, box_uv_top }, { 1, box_uv_bottom },
+                node->colour, RENDER_MODE_BOX,
+                { node_outline_mode, node_fill_mode, 0.0f },
+                glm::vec2{ node_width_tiles, node_height_tiles * 2.0f } * style.grid_size);
         }
-        addQuad(box_position, glm::vec2{ node_width_tiles, node_height_tiles } * style.grid_size,
-            { 0, box_uv_top }, { 1, box_uv_bottom },
-            node->colour, RENDER_MODE_BOX,
-            { style.outline_style == HIDDEN ? 0.0f : 1.0f, node_fill_mode, 0.0f },
-            glm::vec2{ node_width_tiles, node_height_tiles * 2.0f } * style.grid_size);
 
         // elements
         glm::vec2 position = box_position;
@@ -154,11 +179,8 @@ void NodeView::updateMesh()
                 ++it;
         }
 
-        // TODO: node minimise button
         // TODO: shadows!
         // TODO: interactions
-        
-        // TODO: pin colour override?
         // TODO: come up with a list of input types
     }
 
@@ -179,9 +201,11 @@ NodeView::NodeView() : StaticMesh(nullptr, nullptr)
     material->setSampler("node_atlas", sampler);
     material->setSampler("text_atlas", sampler);
     material->setSampler("extra_atlas", sampler);
+    material->setSampler("ui_atlas", sampler);
 
     style.node_atlas = new Texture("res_engine/textures/node_atlas.png");
     style.extra_atlas = new Texture("res_engine/textures/extra_atlas.png");
+    style.ui_atlas = new Texture("res_engine/textures/ui_atlas.png");
     style.font = new Font("res_engine/textures/font_IBM_XGA_AI_12x23.png", glm::ivec2{ 14, 25 });
 
     setStyle(style);

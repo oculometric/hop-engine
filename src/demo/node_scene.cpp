@@ -25,6 +25,7 @@ static Ref<Scene> initNodeScene()
             NodeView::NodeElement( "above is a banner", NodeView::ELEMENT_TEXT),
             NodeView::NodeElement( "extra bottom spacing", NodeView::ELEMENT_TEXT),
         }, glm::vec2{ 0, 0 } * 32.0f });
+    selected_node = node_view->nodes[0];
     // node_view->nodes.push_back(new NodeView::Node
     //     { "multiply",
     //     {
@@ -125,6 +126,11 @@ static void updateNodeScene(Ref<Scene> scene, float delta_time)
 
 void imguiNodeScene(Ref<Scene> scene, float delta_time)
 {
+    ImGui::Begin("node options", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::Checkbox("minimised", &selected_node->minimised);
+    ImGui::Checkbox("highlighted", &selected_node->highlighted);
+    ImGui::End();
+
     ImGui::Begin("style controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     NodeView::Style style = node_view->getStyle();
     
@@ -149,6 +155,7 @@ void imguiNodeScene(Ref<Scene> scene, float delta_time)
     {
         ImGui::Combo("outline_style", (int*)&style.outline_style, "HIDDEN\0PRESET_COLOUR\0NODE_COLOUR\0MODULATE_NODE_COLOUR\0");
         ImGui::ColorEdit3("outline_colour", (float*)&style.outline_colour);
+        ImGui::ColorEdit3("outline_colour_highlight", (float*)&style.outline_colour_highlight);
         ImGui::SliderFloat("outline_colour_mult", &style.outline_colour_mult, 0.0f, 1.0f);
         ImGui::Spacing();
     }
