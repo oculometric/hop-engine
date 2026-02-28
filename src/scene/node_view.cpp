@@ -57,8 +57,11 @@ void NodeView::updateMesh()
     vertices.clear();
     indices.clear();
     
-    glm::vec2 half_viewport = glm::vec2{ 1000000.0f };
-    addQuad(-half_viewport, half_viewport * 2.0f, { 0, 0 }, { 1, 1 }, style.grid_colour, RENDER_MODE_BACKGROUND);
+    if (style.show_grid)
+    {
+        const glm::vec2 half_viewport = glm::vec2{ 1000000.0f };
+        addQuad(-half_viewport, half_viewport * 2.0f, { 0, 0 }, { 1, 1 }, style.grid_colour, RENDER_MODE_BACKGROUND);
+    }
     
     // draw nodes
     for (auto& node : nodes)
@@ -72,30 +75,58 @@ void NodeView::updateMesh()
         const glm::vec2 pin_offset = glm::vec2{ style.pin_offset, 0 };
 
         // heading box
-        // TODO: header at bottom
-        addQuad(node->position, glm::vec2{ node_width_tiles, 1 } * style.grid_size,
-            { 0, 0 }, { 1, 0.5f },
+        glm::vec2 header_position = node->position;
+        float header_uv_top = 0.0f;
+        float header_uv_bottom = 0.5f;
+        if (!style.header_at_top)
+        {
+            header_position = header_position + glm::vec2{ 0, node_height_tiles * style.grid_size };
+            header_uv_top = 0.5f;
+            header_uv_bottom = 1.0f;
+        }
+        addQuad(header_position, glm::vec2{ node_width_tiles, 1 } * style.grid_size,
+            { 0, header_uv_top }, { 1, header_uv_bottom },
             node->colour, RENDER_MODE_BOX,
             { style.outline_style == HIDDEN ? 0.0f : 1.0f, style.header_fill ? 1.0f : node_fill_mode, 0.0f },
             glm::vec2{ node_width_tiles, 1.0f * 2.0f } * style.grid_size);
-        glm::vec2 header_position = node->position;
-        if (style.header_align > 0) header_position = node->position + box_width;
-        else if (style.header_align == 0) header_position = node->position + (box_width * 0.5f);
+        if (style.header_align > 0) header_position = header_position + box_width;
+        else if (style.header_align == 0) header_position = header_position + (box_width * 0.5f);
         addText(node->title, header_position, style.text_colour, style.header_align);
         
         // TODO: line between header and main area
         
         // main box
-        addQuad(node->position + glm::vec2{ 0, style.grid_size }, glm::vec2{ node_width_tiles, node_height_tiles } * style.grid_size,
-            { 0, 0.5f }, { 1, 1 },
+        glm::vec2 box_position = node->position + glm::vec2{ 0, style.grid_size };
+        float box_uv_top = 0.5f;
+        float box_uv_bottom = 1.0f;
+        if (!style.header_at_top)
+        {
+            box_position -= glm::vec2{ 0, style.grid_size };
+            box_uv_top = 0.0f;
+            box_uv_bottom = 0.5f;
+        }
+        addQuad(box_position, glm::vec2{ node_width_tiles, node_height_tiles } * style.grid_size,
+            { 0, box_uv_top }, { 1, box_uv_bottom },
             node->colour, RENDER_MODE_BOX,
             { style.outline_style == HIDDEN ? 0.0f : 1.0f, node_fill_mode, 0.0f },
             glm::vec2{ node_width_tiles, node_height_tiles * 2.0f } * style.grid_size);
 
         // elements
-        glm::vec2 position = node->position - glm::vec2{ 0, (style.after_header_spacing + 1) * style.grid_size };
-        for (const auto& elem : node->elements)
+        glm::vec2 position = box_position;
+        if (style.header_at_top)
+            position += glm::vec2{ 0, style.after_header_spacing * style.grid_size };
+        else
+            position += glm::vec2{ 0, style.after_elements_spacing * style.grid_size };
+        auto it = node->elements.begin();
+        auto end_it = node->elements.end();
+        if (style.reverse_element_order)
         {
+            it = node->elements.end() - 1;
+            end_it = node->elements.begin() - 1;
+        }
+        while (!node->elements.empty())
+        {
+            const auto& elem = *it;
             switch (elem.type)
             {
             case ELEMENT_INPUT:
@@ -113,16 +144,22 @@ void NodeView::updateMesh()
                     addText(elem.text, position, style.text_colour);
                 break;
             }
-            position -= glm::vec2{ 0, style.grid_size };
+            position += glm::vec2{ 0, style.grid_size };
+            if (it == end_it)
+                break;
+            if (style.reverse_element_order)
+                --it;
+            else
+                ++it;
         }
 
-        // TODO: grid toggle
-        // TODO: element reverse
-        // TODO: imgui update
+        // TODO: make bevel smaller
         // TODO: node minimise button
         // TODO: shadows!
+        
         // TODO: pin colour override?
         // TODO: come up with a list of input types
+        // TODO: higher-order grid
     }
 
     size_t vertices_rounded_up = ((vertices.size() / v_i_buffer_rounding_size) + 2) * v_i_buffer_rounding_size;
@@ -197,7 +234,6 @@ void NodeView::addPin(glm::vec2 position, glm::vec3 tint, int type, bool filled)
     glm::vec2 seg_size = style.extra_atlas->getSize() / 3;
     glm::vec2 uv_size = glm::vec2{ 1.0f / 3.0f };
     glm::vec2 uv_base = glm::vec2{ uv_size.x * (type % 3), uv_size.y * (type / 3) };
-    position.y = -position.y;
     addQuad(position + glm::round((style.grid_size - seg_size) * 0.5f), seg_size, flipUV(uv_base), flipUV(uv_base + uv_size), tint, RENDER_MODE_PINS, {filled ? 1 : 0, 0, 0});
 }
 
@@ -213,14 +249,14 @@ void NodeView::addText(const string& text, glm::vec2 _start, glm::vec3 tint, int
     else if (align == 0)
         start.x -= glm::round(width / 2.0f);
 
-    glm::vec2 position = start + style.text_offset + glm::vec2{ 0, (style.grid_size - style.font->getGlyphSize().y) };
+    glm::vec2 position = start + style.text_offset + glm::vec2{ 0, (style.grid_size - style.font->getGlyphSize().y) * 0.5f };
     for (char c : text)
     {
         glm::vec2 uv_base = style.font->getGlyphUVOffset(c);
 
         glm::vec2 uv_br = flipUV(uv_base + uv_size);
         glm::vec2 uv_tl = flipUV(uv_base);
-        glm::vec4 pos_tl = { position.x, -position.y, 0, 1 };
+        glm::vec4 pos_tl = { position.x, position.y, 0, 1 };
 
         addQuad(pos_tl, char_size, uv_tl, uv_br, tint, RENDER_MODE_TEXT);
         

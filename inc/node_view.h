@@ -43,6 +43,7 @@ public:
 		glm::vec2 position;
 		glm::vec3 colour = { 1.0f, 0.44f, 0.0f };
 		bool highlighted = false;
+		bool minimised = false;
 	};
 
 	enum OutlineStyle
@@ -67,7 +68,7 @@ public:
 		bool header_fill = true;
 		int after_header_spacing = 0;
 
-		glm::vec2 text_offset = { 6.0f, -12.0f };
+		glm::vec2 text_offset = { 6.0f, 4.0f };
 		glm::vec3 text_colour = { 0.020f, 0.020f, 0.038f };
 		float text_spacing = -1.0f;
 		

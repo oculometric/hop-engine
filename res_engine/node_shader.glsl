@@ -117,6 +117,4 @@ void fragment()
         else
             discard;
     }
-    
-    // TODO: different modes: filled/bordered box (with submodes for fill and border behaviour), text, pins, background grid
 }
