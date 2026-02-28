@@ -181,7 +181,7 @@ FrameStats RenderServer::drawFrame()
 {
     static size_t frame_index = 0;
     ++frame_index;
-    DBG_BABBLE("drawing frame " + to_string(frame_index));
+    DBG_BABBLE("drawing frame " + ::to_string(frame_index));
 
     static auto start_time = chrono::steady_clock::now();
     FrameStats stats;
@@ -193,7 +193,7 @@ FrameStats RenderServer::drawFrame()
 
     uint32_t image_index;
     vkAcquireNextImageKHR(device, swapchain->getSwapchain(), UINT64_MAX, image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT], VK_NULL_HANDLE, &image_index);
-    DBG_BABBLE("acquired image " + to_string(image_index));
+    DBG_BABBLE("acquired image " + ::to_string(image_index));
 
     const auto build_start = chrono::steady_clock::now();
     updateUniforms(image_index, since_start.count(), stats);

@@ -64,7 +64,7 @@ Buffer::Buffer(VkDeviceSize size, const BufferUsage usage, const MemoryPropertie
     // and bind it to our buffer
     vkBindBufferMemory(RenderServer::getDevice(), buffer, memory, 0);
 
-    DBG_BABBLE("created buffer of size " + to_string(size) + " with usage " + to_string(usage) + " and memory properties " + to_string(properties));
+    DBG_BABBLE("created buffer of size " + ::to_string(size) + " with usage " + to_string(usage) + " and memory properties " + to_string(properties));
 
     buffer_size = size;
 }

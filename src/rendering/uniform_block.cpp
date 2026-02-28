@@ -111,7 +111,7 @@ void UniformBlock::applyDescriptorBindings()
     // updating the descriptor set bindings so that they correctly connect
     // to our specified textures, and our uniform buffers
     RenderServer::waitIdle();
-    DBG_BABBLE("uniform block " + PTR(this) + " updating " + to_string(layout.bindings.size()) + " descriptor bindings");
+    DBG_BABBLE("uniform block " + PTR(this) + " updating " + ::to_string(layout.bindings.size()) + " descriptor bindings");
     for (size_t i = 0; i < descriptor_sets.size(); ++i)
     {
         VkDeviceSize offset = 0;

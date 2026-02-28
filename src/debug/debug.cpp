@@ -146,6 +146,11 @@ Debug::Debug()
 	const string file_name = format("{}engine_{:0>2}_{:0>2}_{:0>2}.log", DEBUG_LOGFILE, time.tm_hour, time.tm_min, time.tm_sec);
 	filesystem::create_directory(DEBUG_LOGFILE);
 	file_output.open(file_name);
+	if (!file_output.is_open())
+	{
+		DEBUG_TERMINAL << "FATAL ERROR: FAILED TO OPEN LOG FILE." << endl;
+		exit(-1);
+	}
 #endif
 }
 
