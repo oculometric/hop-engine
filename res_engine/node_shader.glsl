@@ -38,8 +38,7 @@ void vertex()
 
 layout(set = 2, binding = 1) uniform sampler2D node_atlas;
 layout(set = 2, binding = 2) uniform sampler2D text_atlas;
-
-// different modes: node frame, fill, text, pins, background grid
+layout(set = 2, binding = 3) uniform sampler2D extra_atlas;
 
 vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size)
 {
@@ -103,6 +102,10 @@ void fragment()
     else if (render_mode == RENDER_MODE_PINS)
     {
         // pins mode
+        float v = texture(extra_atlas, uv).b;
+        if (v < 0.001f) discard;
+        if (v < 0.5f && frag.tangent.x < 0.5f) discard;
+        out_colour = vec4(frag.colour.rgb, 1);
     }
     else if (render_mode == RENDER_MODE_BACKGROUND)
     {

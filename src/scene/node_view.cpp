@@ -29,6 +29,8 @@ void NodeView::setStyle(Style new_style)
 {
     material->setTexture("text_atlas", new_style.font->getAtlas());
     material->setTexture("node_atlas", new_style.node_atlas);
+    material->setTexture("extra_atlas", new_style.extra_atlas);
+
     material->setFloatUniform("grid_size", new_style.grid_size);
     material->setVec3Uniform("outline_colour", new_style.outline_colour);
     material->setIntUniform("outline_style", new_style.outline_style);
@@ -36,6 +38,10 @@ void NodeView::setStyle(Style new_style)
     material->setVec3Uniform("fill_colour", new_style.fill_colour);
     material->setFloatUniform("fill_modulate", new_style.fill_colour_mult);
     material->setFloatUniform("grid_dots_modulate", new_style.grid_dots_modulate);
+
+    if (getScene())
+        getScene()->getCamera(0)->clear_colour = style.background_colour;
+
     style = new_style;
     updateMesh();
 }
@@ -58,10 +64,12 @@ void NodeView::updateMesh()
     for (auto& node : nodes)
     {
         int node_width_tiles = 10;
-        int node_height_tiles = node->elements.size() + 2;
+        int node_height_tiles = node->elements.size() + style.after_header_spacing + style.after_elements_spacing;
         
         float node_fill_mode = style.fill_modulate_colour ? 2.0f : 0.0f;
-        glm::vec2 box_width = glm::vec2{ node_width_tiles, 0 } * style.grid_size;
+        const glm::vec2 box_width = glm::vec2{ node_width_tiles, 0 } * style.grid_size;
+        const glm::vec2 half_tile_width = glm::vec2{ style.grid_size * 0.5f, 0 };
+        const glm::vec2 pin_offset = glm::vec2{ style.pin_offset, 0 };
 
         // heading box
         // TODO: header at bottom
@@ -78,23 +86,25 @@ void NodeView::updateMesh()
         // TODO: line between header and main area
         
         // main box
-        addQuad(node->position + glm::vec2{ 0, style.grid_size }, glm::vec2{ node_width_tiles, node_height_tiles - 1 } * style.grid_size,
+        addQuad(node->position + glm::vec2{ 0, style.grid_size }, glm::vec2{ node_width_tiles, node_height_tiles } * style.grid_size,
             { 0, 0.5f }, { 1, 1 },
             node->colour, RENDER_MODE_BOX,
             { style.outline_style == HIDDEN ? 0.0f : 1.0f, node_fill_mode, 0.0f },
-            glm::vec2{ node_width_tiles, (node_height_tiles - 1) * 2.0f } * style.grid_size);
+            glm::vec2{ node_width_tiles, node_height_tiles * 2.0f } * style.grid_size);
 
         // elements
-        glm::vec2 position = node->position - glm::vec2{ 0, style.grid_size };
+        glm::vec2 position = node->position - glm::vec2{ 0, (style.after_header_spacing + 1) * style.grid_size };
         for (const auto& elem : node->elements)
         {
             switch (elem.type)
             {
             case ELEMENT_INPUT:
-                addText(elem.text, position, style.text_colour);
+                addText(elem.text, position + half_tile_width, style.text_colour);
+                addPin(position + pin_offset - half_tile_width, style.outline_colour, elem.pin_type, elem.pin_solid);
                 break;
             case ELEMENT_OUTPUT:
-                addText(elem.text, position + box_width, style.text_colour, 1);
+                addText(elem.text, position + box_width - half_tile_width, style.text_colour, 1);
+                addPin(position + box_width - (half_tile_width + pin_offset), style.outline_colour, elem.pin_type, elem.pin_solid);
                 break;
             case ELEMENT_TEXT:
                 if (style.center_text_elements)
@@ -103,34 +113,16 @@ void NodeView::updateMesh()
                     addText(elem.text, position, style.text_colour);
                 break;
             }
-            // TODO: pins
             position -= glm::vec2{ 0, style.grid_size };
         }
 
+        // TODO: grid toggle
+        // TODO: element reverse
+        // TODO: imgui update
         // TODO: node minimise button
         // TODO: shadows!
-        
-    //     for (const NodeElement& element : node->elements)
-    //     {
-    //         glm::vec2 line_pos_base = box_base + glm::vec2{ 0, box_height_lines * style.grid_size };
-    //         switch (element.type)
-    //         {
-    //         case ELEMENT_INPUT:
-    //             addPin(line_pos_base, foreground_colour, element.pin_type, element.pin_solid);
-    //             addText(element.text, line_pos_base + glm::vec2{ style.text_left_inset + style.grid_size, 0 }, foreground_colour);
-    //             break;
-    //         case ELEMENT_OUTPUT:
-    //             addPin(line_pos_base + glm::vec2{ box_width - 1, 0 } * style.grid_size, foreground_colour, element.pin_type, element.pin_solid);
-    //             text_width = (size_t)(style.font->getGlyphSize().x) * element.text.size();
-    //             addText(element.text, line_pos_base + glm::vec2{ (box_width * style.grid_size) - (style.text_left_inset + style.grid_size + text_width), 0.0f }, foreground_colour);
-    //             break;
-    //         case ELEMENT_TEXT:
-    //             addText(element.text, line_pos_base + glm::vec2{ style.text_left_inset + style.grid_size, 0 }, foreground_colour);
-    //             break;
-    //         case ELEMENT_SPACE: break;
-    //         }
-    //         box_height_lines++;
-    //     }
+        // TODO: pin colour override?
+        // TODO: come up with a list of input types
     }
 
     size_t vertices_rounded_up = ((vertices.size() / v_i_buffer_rounding_size) + 2) * v_i_buffer_rounding_size;
@@ -149,8 +141,10 @@ NodeView::NodeView() : StaticMesh(nullptr, nullptr)
     Ref<Sampler> sampler = Engine::makeSampler(SamplerBuilder().filter(FILTER_NEAREST));
     material->setSampler("node_atlas", sampler);
     material->setSampler("text_atlas", sampler);
+    material->setSampler("extra_atlas", sampler);
 
     style.node_atlas = new Texture("res_engine/textures/node_atlas.png");
+    style.extra_atlas = new Texture("res_engine/textures/extra_atlas.png");
     style.font = new Font("res_engine/textures/font_IBM_XGA_AI_12x23.png", glm::ivec2{ 14, 25 });
 
     setStyle(style);
@@ -160,6 +154,7 @@ void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm:
 {
     uint16_t v_off = static_cast<uint16_t>(vertices.size());
     
+    // FIXME: fix the stupid inverted Y stuff
     glm::vec4 normal_value = { size.x, size.y, mode, 0.0f };
     if (fake_size.x != 0.0f)
         normal_value.x = fake_size.x;
@@ -199,7 +194,11 @@ void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm:
 
 void NodeView::addPin(glm::vec2 position, glm::vec3 tint, int type, bool filled)
 {
-    //addQuad(position, glm::vec2{ style.grid_size, style.grid_size }, { 0, 0, filled ? 10 : 1, 0 }, tint, true, type);
+    glm::vec2 seg_size = style.extra_atlas->getSize() / 3;
+    glm::vec2 uv_size = glm::vec2{ 1.0f / 3.0f };
+    glm::vec2 uv_base = glm::vec2{ uv_size.x * (type % 3), uv_size.y * (type / 3) };
+    position.y = -position.y;
+    addQuad(position + glm::round((style.grid_size - seg_size) * 0.5f), seg_size, flipUV(uv_base), flipUV(uv_base + uv_size), tint, RENDER_MODE_PINS, {filled ? 1 : 0, 0, 0});
 }
 
 void NodeView::addText(const string& text, glm::vec2 _start, glm::vec3 tint, int align)

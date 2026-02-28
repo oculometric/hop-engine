@@ -58,14 +58,16 @@ public:
 		Ref<Font> font = nullptr;
 		
 		Ref<Texture> node_atlas = nullptr;
+		Ref<Texture> extra_atlas = nullptr;
 		
 		float grid_size = 32.0f;
 		
 		int header_align = -1;
 		bool header_at_top = true;
 		bool header_fill = true;
-		
-		glm::vec2 text_offset = { 6.0f, -14.0f };
+		int after_header_spacing = 0;
+
+		glm::vec2 text_offset = { 6.0f, -12.0f };
 		glm::vec3 text_colour = { 0.020f, 0.020f, 0.038f };
 		float text_spacing = -1.0f;
 		
@@ -77,13 +79,17 @@ public:
 		glm::vec3 fill_colour = { 0.9f, 0.85f, 0.81f };
 		float fill_colour_mult = 0.1f;
 		
-		glm::vec3 grid_colour = { 0.01f, 0.01f, 0.01f };
-		float grid_dots_modulate = 10.0f;
+		glm::vec3 background_colour = { 0.94f, 0.94f, 0.94f };
+		bool show_grid = true;
+		glm::vec3 grid_colour = { 0.70f, 0.70f, 0.70f };
+		float grid_dots_modulate = 0.001f;
 
-		int after_header_spacing = 0;// TODO:
-		bool reverse_element_order = false; // TODO:
-		bool shadows = true; // TODO:
+		float pin_offset = 2.0f;
+		bool reverse_element_order = false;
 		bool center_text_elements = true;
+		int after_elements_spacing = 0;
+
+		bool shadows = true;
 	};
 
 public:

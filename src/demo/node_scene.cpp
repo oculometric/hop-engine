@@ -17,14 +17,14 @@ static Ref<Scene> initNodeScene()
     node_view->nodes.push_back(new NodeView::Node
         { "Hello, World!",
         {
-            NodeView::NodeElement("Outputs on right", NodeView::ELEMENT_OUTPUT),
-            NodeView::NodeElement( "text 6px inwards", NodeView::ELEMENT_OUTPUT),
-            NodeView::NodeElement( "text 4px down", NodeView::ELEMENT_OUTPUT),
+            NodeView::NodeElement("Outputs on right", NodeView::ELEMENT_OUTPUT, 0),
+            NodeView::NodeElement( "text 6px inwards", NodeView::ELEMENT_OUTPUT, 1),
+            NodeView::NodeElement( "text 4px down", NodeView::ELEMENT_OUTPUT, 2),
             NodeView::NodeElement( "Inputs on the left", NodeView::ELEMENT_INPUT),
             NodeView::NodeElement( "", NodeView::ELEMENT_SPACE),
             NodeView::NodeElement( "above is a banner", NodeView::ELEMENT_TEXT),
             NodeView::NodeElement( "extra bottom spacing", NodeView::ELEMENT_TEXT),
-        }, glm::vec2{ 0, 0 } * 24.0f });
+        }, glm::vec2{ 0, 0 } * 32.0f });
     // node_view->nodes.push_back(new NodeView::Node
     //     { "multiply",
     //     {
@@ -68,9 +68,9 @@ static Ref<Scene> initNodeScene()
     node_view->updateMesh();
 
     auto style = node_view->getStyle();
+    node_view->setStyle(style);
 
     scene->getCamera(0)->transform.lookAt({ 0, 0, 6 }, { 0, 0, 0 }, { 0, 1, 0 });
-    scene->getCamera(0)->clear_colour = {0, 0, 0};
     
     Engine::setScene(scene);
     return scene;
@@ -133,6 +133,7 @@ void imguiNodeScene(Ref<Scene> scene, float delta_time)
         ImGui::InputInt("header_align", &style.header_align, 1, 1);
         ImGui::Checkbox("header_at_top", &style.header_at_top);
         ImGui::Checkbox("header_fill", &style.header_fill);
+        ImGui::InputInt("after_header_spacing", &style.after_header_spacing, 1, 1);
         ImGui::Spacing();
     }
     
@@ -160,8 +161,19 @@ void imguiNodeScene(Ref<Scene> scene, float delta_time)
         ImGui::Spacing();
     }
     
-    ImGui::ColorEdit3("grid_colour", (float*)&style.grid_colour);
-    ImGui::SliderFloat("grid_dots_modulate", &style.grid_dots_modulate, 0.0f, 10.0f);
+    if (ImGui::CollapsingHeader("background", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::ColorEdit3("background_colour", (float*)&style.background_colour);
+        ImGui::Checkbox("show_grid", &style.show_grid);
+        ImGui::ColorEdit3("grid_colour", (float*)&style.grid_colour);
+        ImGui::SliderFloat("grid_dots_modulate", &style.grid_dots_modulate, 0.0f, 10.0f);
+        ImGui::Spacing();
+    }
+
+    ImGui::InputFloat("pin_offset", &style.pin_offset, 1.0f, 1.0f);
+    ImGui::Checkbox("reverse_element_order", &style.reverse_element_order);
+    ImGui::Checkbox("center_text_elements", &style.center_text_elements);
+    ImGui::InputInt("after_elements_spacing", &style.after_elements_spacing, 1, 1);
 
     node_view->setStyle(style);
     ImGui::End();
