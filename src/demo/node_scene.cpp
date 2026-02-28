@@ -133,7 +133,6 @@ void imguiNodeScene(Ref<Scene> scene, float delta_time)
         ImGui::InputInt("header_align", &style.header_align, 1, 1);
         ImGui::Checkbox("header_at_top", &style.header_at_top);
         ImGui::Checkbox("header_fill", &style.header_fill);
-        ImGui::Checkbox("header_outline", &style.header_outline);
         ImGui::Spacing();
     }
     
@@ -141,18 +140,29 @@ void imguiNodeScene(Ref<Scene> scene, float delta_time)
     {
         ImGui::SliderFloat2("text_offset", (float*)&style.text_offset, -10.0f, 10.0f);
         ImGui::ColorEdit3("text_colour", (float*)&style.text_colour);
-        ImGui::SliderFloat("text_spacing", &style.text_spacing, 0.0f, 4.0f);
+        ImGui::SliderFloat("text_spacing", &style.text_spacing, -2.0f, 4.0f);
         ImGui::Spacing();
     }
     
     if (ImGui::CollapsingHeader("outline", ImGuiTreeNodeFlags_DefaultOpen))
     {
+        ImGui::Combo("outline_style", (int*)&style.outline_style, "HIDDEN\0PRESET_COLOUR\0NODE_COLOUR\0MODULATE_NODE_COLOUR\0");
+        ImGui::ColorEdit3("outline_colour", (float*)&style.outline_colour);
         ImGui::SliderFloat("outline_colour_mult", &style.outline_colour_mult, 0.0f, 1.0f);
+        ImGui::Spacing();
+    }
+
+    if (ImGui::CollapsingHeader("fill", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::Checkbox("fill_modulate_colour", &style.fill_modulate_colour);
+        ImGui::ColorEdit3("fill_colour", (float*)&style.fill_colour);
+        ImGui::SliderFloat("fill_colour_mult", &style.fill_colour_mult, 0.0f, 1.0f);
         ImGui::Spacing();
     }
     
     ImGui::ColorEdit3("grid_colour", (float*)&style.grid_colour);
-    
+    ImGui::SliderFloat("grid_dots_modulate", &style.grid_dots_modulate, 0.0f, 10.0f);
+
     node_view->setStyle(style);
     ImGui::End();
 }

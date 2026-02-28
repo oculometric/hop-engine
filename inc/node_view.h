@@ -59,19 +59,18 @@ public:
 		
 		Ref<Texture> node_atlas = nullptr;
 		
-		float grid_size = 24.0f;
+		float grid_size = 32.0f;
 		
 		int header_align = -1;
 		bool header_at_top = true;
 		bool header_fill = true;
-		bool header_outline = false;
 		
-		glm::vec2 text_offset = { 6.0f, 0.0f };
-		glm::vec3 text_colour = { 1.0f, 1.0f, 1.0f };
-		float text_spacing = 1.0f;
+		glm::vec2 text_offset = { 6.0f, -14.0f };
+		glm::vec3 text_colour = { 0.020f, 0.020f, 0.038f };
+		float text_spacing = -1.0f;
 		
 		OutlineStyle outline_style = PRESET_COLOUR;
-		glm::vec3 outline_colour = { 0.05f, 0.05f, 0.05f };
+		glm::vec3 outline_colour = { 0.020f, 0.020f, 0.038f };
 		float outline_colour_mult = 0.7f;
 		
 		bool fill_modulate_colour = false;
@@ -80,6 +79,11 @@ public:
 		
 		glm::vec3 grid_colour = { 0.01f, 0.01f, 0.01f };
 		float grid_dots_modulate = 10.0f;
+
+		int after_header_spacing = 0;// TODO:
+		bool reverse_element_order = false; // TODO:
+		bool shadows = true; // TODO:
+		bool center_text_elements = true;
 	};
 
 public:
@@ -104,9 +108,9 @@ protected:
 	NodeView();
 
 private:
-	void addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode, glm::vec3 extra = { 0.0f, 0.0f, 0.0f });
+	void addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode, glm::vec3 extra = { 0.0f, 0.0f, 0.0f }, glm::vec2 fake_size = { 0, 0 });
 	void addPin(glm::vec2 position, glm::vec3 tint, int type, bool filled);
-	void addText(const std::string& text, glm::vec2 start, glm::vec3 tint);
+	void addText(const std::string& text, glm::vec2 _start, glm::vec3 tint, int align = -1);
 };
 
 }
