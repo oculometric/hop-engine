@@ -43,6 +43,7 @@ public:
 		glm::vec2 position = { 0, 0 };
 		glm::vec2 size = { 8, 1 };
 		glm::vec3 colour = { 1.0f, 0.44f, 0.0f };
+		std::vector<std::pair<WeakRef<Node>, size_t>> outgoing_links;
 		bool highlighted = false;
 		bool minimised = false;
 	};
@@ -70,7 +71,7 @@ public:
 		bool header_fill = true;
 		int after_header_spacing = 0;
 
-		glm::vec2 text_offset = { 6.0f, 4.0f };
+		glm::vec2 text_offset = { 6.0f, 2.0f };
 		glm::vec3 text_colour = { 0.020f, 0.020f, 0.038f };
 		float text_spacing = -1.0f;
 		
@@ -124,6 +125,7 @@ private:
 	void addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode, glm::vec3 extra = { 0.0f, 0.0f, 0.0f }, glm::vec2 fake_size = { 0, 0 });
 	void addPin(glm::vec2 position, glm::vec3 tint, int type, bool filled);
 	void addText(const std::string& text, glm::vec2 _start, glm::vec3 tint, int align = -1);
+	void addLink(glm::vec2 link_start, glm::vec2 link_end);
 };
 
 }

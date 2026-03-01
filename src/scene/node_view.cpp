@@ -194,6 +194,14 @@ void NodeView::updateMesh()
                 ++it;
         }
 
+        // links
+        for (auto& link : node->outgoing_links)
+        {
+            glm::vec2 link_start = header_position + box_width - half_tile_width;
+            glm::vec2 link_end = (link.first->position * style->grid_size) - half_tile_width;
+            addLink(link_start, link_end);
+        }
+
         // TODO: come up with a list of input types
     }
 
@@ -208,20 +216,21 @@ void NodeView::updateMesh()
 
 void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
 {
+    static glm::vec2 mouse_delta_since_down = glm::vec2{ 0, 0 };
+
     glm::vec2 mouse_pos = Input::getMousePosition();
     if (mouse_pos.x < rect_min.x
         || mouse_pos.y < rect_min.y
         || mouse_pos.x > rect_min.x + rect_size.x
         || mouse_pos.y > rect_min.y + rect_size.y)
         return;
+    glm::vec2 node_space_pos = (mouse_pos - glm::vec2(rect_min)) - (glm::vec2(rect_size) / 2.0f);
 
     bool needs_update = false;
-
-    glm::vec2 node_space_pos = (mouse_pos - glm::vec2(rect_min)) - (glm::vec2(rect_size) / 2.0f);
+    static auto it = nodes.rend();
     if (Input::wasMousePressed(Input::MOUSE_LEFT))
     {
-        bool clicked_node = false;
-        for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
+        for (it = nodes.rbegin(); it != nodes.rend(); ++it)
         {
             auto node = *it;
             glm::vec2 node_min = node->position * style->grid_size;
@@ -231,7 +240,37 @@ void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
                 || node_space_pos.x > node_max.x
                 || node_space_pos.y > node_max.y)
                 continue;
-            clicked_node = true;
+            break;
+        }
+        mouse_delta_since_down = glm::vec2{ 0, 0 };
+        if (it == nodes.rend())
+        {
+            for (auto& n : nodes)
+                n->highlighted = false;
+            needs_update = true;
+        }
+    }
+    if (Input::isMouseDown(Input::MOUSE_LEFT))
+        mouse_delta_since_down += Input::getMouseDelta();
+
+    if (it != nodes.rend() && (length(mouse_delta_since_down) < 2.0f) && !Input::isMouseDown(Input::MOUSE_LEFT))
+    {
+        // mouse pressed and released quickly
+        auto node = *it;
+
+        glm::vec2 minibox_min = (node->position + glm::vec2{ node->size.x - 1, 0 }) * style->grid_size;
+        glm::vec2 minibox_max = minibox_min + style->grid_size;
+        if (!(node_space_pos.x < minibox_min.x
+            || node_space_pos.y < minibox_min.y
+            || node_space_pos.x > minibox_max.x
+            || node_space_pos.y > minibox_max.y))
+        {
+            node->minimised = !node->minimised;
+            it = nodes.rend();
+            needs_update = true;
+        }
+        else
+        {
             if (!Input::isKeyDown(Input::KEY_LEFT_SHIFT))
             {
                 for (auto& n : nodes)
@@ -242,22 +281,40 @@ void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
                 node->highlighted = !node->highlighted;
             nodes.erase((it + 1).base());
             nodes.insert(nodes.end(), node);
-            needs_update = true;
-            break;
-        }
-        if (!clicked_node)
-        {
-            for (auto& n : nodes)
-                n->highlighted = false;
+            it = nodes.rend();
             needs_update = true;
         }
     }
+    else if (length(mouse_delta_since_down) > 2.0f && Input::isMouseDown(Input::MOUSE_LEFT))
+    {
+        // mouse drag is occurring!
+        if (it != nodes.rend() && !(*it)->highlighted && !Input::isKeyDown(Input::KEY_LEFT_SHIFT))
+        {
+            auto node = *it;
+            for (auto& n : nodes)
+                n->highlighted = false;
+            node->highlighted = true;
+            nodes.erase((it + 1).base());
+            nodes.insert(nodes.end(), node);
+            it = nodes.rend();
+        }
 
+        for (auto& n : nodes)
+            if (n->highlighted)
+                n->position += Input::getMouseDelta() / style->grid_size;
+        needs_update = true;
+    }
+    else if (length(mouse_delta_since_down) > 2.0f)
+    {
+        for (auto& n : nodes)
+            if (n->highlighted)
+                n->position = glm::round(n->position);
+        needs_update = true;
+    }
+
+    // TODO: links
     // TODO: add new
     // TODO: resize
-    // TODO: move
-    // TODO: links
-    // TODO: minimise
     if (needs_update)
         updateMesh();
     Input::resetMouseDelta();
@@ -356,6 +413,11 @@ void NodeView::addText(const string& text, glm::vec2 _start, glm::vec3 tint, int
         
         position.x += style->font->getGlyphSize().x + style->text_spacing - 2.0f;
     }
+}
+
+void NodeView::addLink(glm::vec2 link_start, glm::vec2 link_end)
+{
+    // TODO: link rendering
 }
 
 NodeView::~NodeView()
