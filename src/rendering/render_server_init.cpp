@@ -14,9 +14,17 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#include "hop_engine.h"
-#include "swapchain_vulkan.h"
+#include "pipeline.h"
+#include "material.h"
+#include "uniform_block.h"
+#include "render_graph.h"
+#include "swapchain.h"
+#include "engine.h"
+#include "mesh.h"
+#include "window.h"
 #include "command_buffer.h"
+#include "scene.h"
+#include "swapchain_vulkan.h"
 
 using namespace HopEngine;
 using namespace std;

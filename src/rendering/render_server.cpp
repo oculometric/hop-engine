@@ -11,7 +11,16 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "hop_engine.h"
+#include "pipeline.h"
+#include "material.h"
+#include "uniform_block.h"
+#include "render_graph.h"
+#include "swapchain.h"
+#include "engine.h"
+#include "mesh.h"
+#include "window.h"
+#include "pbr.h"
+#include "scene.h"
 #include "command_buffer.h"
 
 using namespace HopEngine;

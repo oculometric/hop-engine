@@ -1,11 +1,13 @@
 # TODO
 
 ## v0.6
+- CMake build system
+- make package-builder independent of hop-engine (provide prebuilt)
 - interactive node editor
-- multiple panels/scenes (i.e. nested shader graphs, decoupling shader graph from swapchain)
+- audio loading and output
+- actual editor (separate project)
 - shader & other resource reloading at runtime [H]
 - frustrum culling [M]
-- audio loading and output
 - improved text block rendering with wrapping, alignment, font, etc
 - object duplicate function [L]
 ---

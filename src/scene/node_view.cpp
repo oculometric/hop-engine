@@ -7,8 +7,17 @@
 using namespace HopEngine;
 using namespace std;
 
-constexpr float character_padding = 1.0f;
 constexpr size_t v_i_buffer_rounding_size = 256;
+constexpr float RENDER_MODE_BOX = 0.0f;
+constexpr float RENDER_MODE_TEXT = 1.0f;
+constexpr float RENDER_MODE_PINS = 2.0f;
+constexpr float RENDER_MODE_BACKGROUND = 3.0f;
+constexpr float RENDER_MODE_UI = 4.0f;
+
+static glm::vec2 flipUV(glm::vec2 v)
+{
+    return { v.x, 1.0f - v.y };
+}
 
 Ref<NodeView> NodeView::create()
 {
@@ -17,34 +26,30 @@ Ref<NodeView> NodeView::create()
     return obj;
 }
 
-void NodeView::setStyle(Style new_style)
+void NodeView::setStyle(Ref<Style> new_style)
 {
-    material->setTexture("text_atlas", new_style.font->getAtlas());
+    material->setTexture("text_atlas", new_style->font->getAtlas());
+    material->setTexture("node_atlas", new_style->node_atlas);
+    material->setTexture("extra_atlas", new_style->extra_atlas);
+    material->setTexture("ui_atlas", new_style->ui_atlas);
 
-    material->setTexture("node_atlas", new_style.node_atlas);
+    material->setFloatUniform("grid_size", new_style->grid_size);
+    material->setVec3Uniform("outline_colour", new_style->outline_colour);
+    material->setIntUniform("outline_style", new_style->outline_style);
+    material->setFloatUniform("outline_modulate", new_style->outline_colour_mult);
+    material->setVec3Uniform("fill_colour", new_style->fill_colour);
+    material->setFloatUniform("fill_modulate", new_style->fill_colour_mult);
+    material->setFloatUniform("grid_dots_modulate", new_style->grid_dots_modulate);
+    material->setIntUniform("grid_scale", new_style->grid_scale);
+    material->setVec3Uniform("outline_colour_highlight", new_style->outline_colour_highlight);
 
-    material->setTexture("link_atlas", new_style.link_atlas);
-
-    glm::vec3 new_background_colour = new_style.palette.empty() ?
-        glm::vec3{ 0.005f, 0.005f, 0.005f }
-    : style.palette[0];
-
-    glm::vec3 background_colour = style.palette.empty() ?
-        glm::vec3{ 0.005f, 0.005f, 0.005f }
-    : style.palette[0];
-    if (new_background_colour != background_colour)
-        material->setVec4Uniform("background_colour", glm::vec4(new_background_colour, 1));
-
-    if (new_style.background_factor != style.background_factor)
-        material->setFloatUniform("background_factor", new_style.background_factor);
-    if (new_style.use_dynamic_background != style.use_dynamic_background)
-        material->setIntUniform("background_mode", new_style.use_dynamic_background);
+    if (getScene())
+        getScene()->getCamera(0)->clear_colour = style->background_colour;
 
     style = new_style;
     updateMesh();
 }
 
-// TODO: new font
 void NodeView::updateMesh()
 {
     if (nodes.empty())
@@ -55,114 +60,141 @@ void NodeView::updateMesh()
     
     vertices.clear();
     indices.clear();
-
-    // prepass to calculate node sizes
-    for (Ref<Node> node : nodes)
+    
+    if (style->show_grid)
     {
-        size_t box_width = 3;
-        size_t text_width = 0;
-        text_width = (size_t)(style.font->getGlyphSize().x) * node->title.size();
-        box_width = glm::max(box_width, ((size_t)(text_width / style.grid_size) + 4));
-        for (const NodeElement& element : node->elements)
-        {
-            switch (element.type)
-            {
-            case ELEMENT_TEXT:
-            case ELEMENT_BLOCK:
-            case ELEMENT_OUTPUT:
-            case ELEMENT_INPUT:
-                text_width = (size_t)(style.font->getGlyphSize().x) * element.text.size();
-                box_width = glm::max(box_width, ((size_t)(text_width / style.grid_size) + 4));
-                break;
-            case ELEMENT_SPACE: break;
-            }
-        }
-
-        size_t box_height_lines = node->elements.size() + 2;
-        node->last_size = glm::vec2{ box_width, box_height_lines } * style.grid_size;
+        const glm::vec2 half_viewport = glm::vec2{ 1000000.0f };
+        addQuad(-half_viewport, half_viewport * 2.0f, { 0, 0 }, { 1, 1 }, style->grid_colour, RENDER_MODE_BACKGROUND);
     }
-
-    // draw links
-    for (Link& link : links)
-    {
-        Ref<Node> start = link.start_node;
-        Ref<Node> end = link.end_node;
-
-        glm::ivec2 start_pos = glm::round(start->position);
-        start_pos.x += (int)(start->last_size.x / style.grid_size) - 1;
-        int start_offset = 0;
-        for (int output_num = 0; start_offset < (int)start->elements.size(); ++start_offset)
-        {
-            if (start->elements[start_offset].type == ELEMENT_OUTPUT)
-            {
-                if (output_num == link.start_output)
-                    break;
-                ++output_num;
-            }
-        }
-        start_pos.y += start_offset + 1;
-
-        glm::ivec2 end_pos = glm::round(end->position);
-        int end_offset = 0;
-        for (int input_num = 0; end_offset < (int)end->elements.size(); ++end_offset)
-        {
-            if (end->elements[end_offset].type == ELEMENT_INPUT)
-            {
-                if (input_num == link.end_input)
-                    break;
-                ++input_num;
-            }
-        }
-        end_pos.y += end_offset + 1;
-
-        
-        addLink(start_pos, end_pos, getForegroundColour(link.palette_index));
-    }
-
+    
     // draw nodes
-    for (auto it = nodes.rbegin(); it != nodes.rend(); it++)
+    for (auto& node : nodes)
     {
-        Ref<Node> node = *it;
-        size_t box_width = (size_t)(node->last_size.x / style.grid_size);
-        glm::vec2 box_base = (glm::round(node->position) * style.grid_size);
-        glm::vec3 foreground_colour = getForegroundColour(node->palette_index);
-        glm::vec3 background_colour = getBackgroundColour(foreground_colour);
+        const glm::vec2 position = node->position * style->grid_size;
+        int node_width_tiles = static_cast<int>(node->size.x);
+        int node_height_tiles = static_cast<int>(node->elements.size()) + style->after_header_spacing + style->after_elements_spacing;
+        node->size.y = static_cast<float>(node_height_tiles);
 
-        addBlock(box_base, node->last_size, background_colour, false);
-        addFrame(box_base, node->last_size, foreground_colour);
+        float node_fill_mode = style->fill_modulate_colour ? 2.0f : 0.0f;
+        float node_outline_mode = style->outline_style == HIDDEN ? 0.0f : 1.0f;
+        if (node->highlighted)
+            node_outline_mode = 2.0f;
+        const glm::vec2 box_width = glm::vec2{ node_width_tiles, 0 } * style->grid_size;
+        const glm::vec2 half_tile_width = glm::vec2{ style->grid_size * 0.5f, 0 };
+        const glm::vec2 pin_offset = glm::vec2{ style->pin_offset, 0 };
 
-        size_t box_height_lines = 0;
-        size_t text_width = 0;
-        text_width = (size_t)(style.font->getGlyphSize().x) * node->title.size();
-        addBlock(box_base + glm::vec2{ style.grid_size - 4.0f, 0 }, glm::vec2{ ((size_t)(text_width / style.grid_size) + 2), 1 } *style.grid_size, foreground_colour, !node->highlighted);
-        addText(node->title, box_base + (style.title_offset * style.grid_size), node->highlighted ? background_colour : foreground_colour);
-        box_height_lines++;
-
-        for (const NodeElement& element : node->elements)
+        // shadows
+        if (style->shadows)
         {
-            glm::vec2 line_pos_base = box_base + glm::vec2{ 0, box_height_lines * style.grid_size };
-            switch (element.type)
+            addQuad(position + style->shadow_offset, glm::vec2{ node_width_tiles, 1 + (node->minimised ? 0 : node_height_tiles) } * style->grid_size,
+                glm::vec2{ 0, 0 }, glm::vec2{ 1, 1 },
+                style->shadow_colour, RENDER_MODE_BOX, { 0, 1, 0 });
+        //    float shadow_width_extra = (style->grid_size * 0.25f);
+        //    addQuad(position + (glm::vec2{ 0,  } * style->grid_size) + glm::vec2{ style->shadow_offset.x, -shadow_width_extra }, glm::vec2{ node_width_tiles * style->grid_size, style->shadow_offset.y + shadow_width_extra },
+        //        glm::vec2{ 0, 0.5f }, glm::vec2{ 1, 1 }, style->shadow_colour, RENDER_MODE_BOX, { 0, 1, 0 }, glm::vec2{ node_width_tiles * style->grid_size, (style->shadow_offset.y + shadow_width_extra) * 2.0f });
+        //    addQuad(position + (glm::vec2{ node_width_tiles, 0 } * style->grid_size) + glm::vec2{ -shadow_width_extra, style->shadow_offset.y }, glm::vec2{ style->shadow_offset.x + shadow_width_extra, (1 + (node->minimised ? 0 : node_height_tiles)) * style->grid_size },
+        //        glm::vec2{ 0.5f, 0 }, glm::vec2{ 1, 1 }, style->shadow_colour, RENDER_MODE_BOX, { 0, 1, 0 }, glm::vec2{ (style->shadow_offset.x + shadow_width_extra) * 2.0f, (1 + (node->minimised ? 0 : node_height_tiles)) * style->grid_size });
+        }
+
+        // heading box
+        glm::vec2 header_position = position;
+        {
+            float header_uv_top = 0.0f;
+            float header_uv_bottom = 0.5f;
+            if (!style->header_at_top)
+            {
+                header_position = header_position + glm::vec2{ 0, node_height_tiles * style->grid_size };
+                header_uv_top = 0.5f;
+                header_uv_bottom = 1.0f;
+            }
+            if (node->minimised)
+            {
+                header_uv_top = 0.0f;
+                header_uv_bottom = 1.0f;
+            }
+            addQuad(header_position, glm::vec2{ node_width_tiles, 1 } * style->grid_size,
+                { 0, header_uv_top }, { 1, header_uv_bottom },
+                node->colour, RENDER_MODE_BOX,
+                { node_outline_mode, style->header_fill ? 1.0f : node_fill_mode, 0.0f },
+                glm::vec2{ node_width_tiles, node->minimised ? 1.0f : 2.0f } * style->grid_size);
+            if (style->header_align > 0) header_position = header_position + box_width;
+            else if (style->header_align == 0) header_position = header_position + (box_width * 0.5f);
+            addText(node->title, header_position, style->text_colour, style->header_align);
+
+            // minimise button
+            glm::vec2 seg_size = glm::vec2(style->ui_atlas->getSize()) / 4.0f;
+            glm::vec2 uv_size = glm::vec2(1.0f / 4.0f);
+            glm::vec2 uv_base = glm::vec2{ uv_size.x * (0 % 4), uv_size.y * (0 / 4) };
+            addQuad(header_position + glm::round((style->grid_size - seg_size) * 0.5f) + (glm::vec2{ node_width_tiles - 1, 0 } * style->grid_size), seg_size,
+                flipUV(uv_base), flipUV(uv_base + uv_size), style->outline_colour, RENDER_MODE_UI, style->fill_colour);
+
+            if (node->minimised)
+                continue;
+        }
+
+        // TODO: line between header and main area
+        
+        // main box
+        glm::vec2 box_position = position + glm::vec2{ 0, style->grid_size };
+        {
+            float box_uv_top = 0.5f;
+            float box_uv_bottom = 1.0f;
+            if (!style->header_at_top)
+            {
+                box_position -= glm::vec2{ 0, style->grid_size };
+                box_uv_top = 0.0f;
+                box_uv_bottom = 0.5f;
+            }
+            addQuad(box_position, glm::vec2{ node_width_tiles, node_height_tiles } * style->grid_size,
+                { 0, box_uv_top }, { 1, box_uv_bottom },
+                node->colour, RENDER_MODE_BOX,
+                { node_outline_mode, node_fill_mode, 0.0f },
+                glm::vec2{ node_width_tiles, node_height_tiles * 2.0f } * style->grid_size);
+        }
+
+        // elements
+        glm::vec2 elem_position = box_position;
+        if (style->header_at_top)
+            elem_position += glm::vec2{ 0, style->after_header_spacing * style->grid_size };
+        else
+            elem_position += glm::vec2{ 0, style->after_elements_spacing * style->grid_size };
+        auto it = node->elements.begin();
+        auto end_it = node->elements.end() - 1;
+        if (style->reverse_element_order)
+        {
+            it = node->elements.end() - 1;
+            end_it = node->elements.begin();
+        }
+        while (!node->elements.empty())
+        {
+            const auto& elem = *it;
+            switch (elem.type)
             {
             case ELEMENT_INPUT:
-                addPin(line_pos_base, foreground_colour, element.pin_type, element.pin_solid);
-                addText(element.text, line_pos_base + glm::vec2{ style.text_left_inset + style.grid_size, 0 }, foreground_colour);
+                addText(elem.text, elem_position + half_tile_width, style->text_colour);
+                addPin(elem_position + pin_offset - half_tile_width, style->outline_colour, elem.pin_type, elem.pin_solid);
                 break;
             case ELEMENT_OUTPUT:
-                addPin(line_pos_base + glm::vec2{ box_width - 1, 0 } * style.grid_size, foreground_colour, element.pin_type, element.pin_solid);
-                text_width = (size_t)(style.font->getGlyphSize().x) * element.text.size();
-                addText(element.text, line_pos_base + glm::vec2{ (box_width * style.grid_size) - (style.text_left_inset + style.grid_size + text_width), 0.0f }, foreground_colour);
-                break;
-            case ELEMENT_BLOCK:
-                addBlock(line_pos_base + glm::vec2{ style.grid_size / 2.0f, 0 }, glm::vec2{ box_width - 1, 1 } *style.grid_size, foreground_colour, false);
-                addText(element.text, line_pos_base + glm::vec2{ style.text_left_inset + style.grid_size, 0 }, background_colour);
+                addText(elem.text, elem_position + box_width - half_tile_width, style->text_colour, 1);
+                addPin(elem_position + box_width - (half_tile_width + pin_offset), style->outline_colour, elem.pin_type, elem.pin_solid);
                 break;
             case ELEMENT_TEXT:
-                addText(element.text, line_pos_base + glm::vec2{ style.text_left_inset + style.grid_size, 0 }, foreground_colour);
+                if (style->center_text_elements)
+                    addText(elem.text, elem_position + (box_width * 0.5f), style->text_colour, 0);
+                else
+                    addText(elem.text, elem_position, style->text_colour);
                 break;
-            case ELEMENT_SPACE: break;
             }
-            box_height_lines++;
+            if (it == end_it)
+                break;
+            elem_position += glm::vec2{ 0, style->grid_size };
+            if (style->reverse_element_order)
+                --it;
+            else
+                ++it;
         }
+
+        // TODO: come up with a list of input types
     }
 
     size_t vertices_rounded_up = ((vertices.size() / v_i_buffer_rounding_size) + 2) * v_i_buffer_rounding_size;
@@ -174,352 +206,162 @@ void NodeView::updateMesh()
         mesh = new Mesh(vertices, indices, true);
 }
 
-Ref<NodeView::Node> NodeView::select(glm::vec2 world_position)
+void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
 {
-    for (size_t node_index = 0; node_index < nodes.size(); ++node_index)
+    glm::vec2 mouse_pos = Input::getMousePosition();
+    if (mouse_pos.x < rect_min.x
+        || mouse_pos.y < rect_min.y
+        || mouse_pos.x > rect_min.x + rect_size.x
+        || mouse_pos.y > rect_min.y + rect_size.y)
+        return;
+
+    bool needs_update = false;
+
+    glm::vec2 node_space_pos = (mouse_pos - glm::vec2(rect_min)) - (glm::vec2(rect_size) / 2.0f);
+    if (Input::wasMousePressed(Input::MOUSE_LEFT))
     {
-        Ref<Node> node = nodes[node_index];
-        glm::vec2 node_position = node->position * style.grid_size;
-        if (world_position.x < node_position.x ||
-            world_position.y < node_position.y ||
-            world_position.x > node_position.x + node->last_size.x ||
-            world_position.y > node_position.y + node->last_size.y)
+        bool clicked_node = false;
+        for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
         {
-            continue;
+            auto node = *it;
+            glm::vec2 node_min = node->position * style->grid_size;
+            glm::vec2 node_max = node_min + (node->size * style->grid_size);
+            if (node_space_pos.x < node_min.x
+                || node_space_pos.y < node_min.y
+                || node_space_pos.x > node_max.x
+                || node_space_pos.y > node_max.y)
+                continue;
+            clicked_node = true;
+            if (!Input::isKeyDown(Input::KEY_LEFT_SHIFT))
+            {
+                for (auto& n : nodes)
+                    n->highlighted = false;
+                node->highlighted = true;
+            }
+            else
+                node->highlighted = !node->highlighted;
+            nodes.erase((it + 1).base());
+            nodes.insert(nodes.end(), node);
+            needs_update = true;
+            break;
         }
-
-        // re-order nodes list
-        nodes.erase(nodes.begin() + node_index);
-        nodes.insert(nodes.begin(), node);
-
-        return node;
+        if (!clicked_node)
+        {
+            for (auto& n : nodes)
+                n->highlighted = false;
+            needs_update = true;
+        }
     }
-    return nullptr;
+
+    // TODO: add new
+    // TODO: resize
+    // TODO: move
+    // TODO: links
+    // TODO: minimise
+    if (needs_update)
+        updateMesh();
+    Input::resetMouseDelta();
+    //DBG_INFO("pos: " + ::to_string(node_space_pos.x) + ", " + ::to_string(node_space_pos.y));
 }
 
 NodeView::NodeView() : StaticMesh(nullptr, nullptr)
 {
-    material = new Material(new Shader("res://engine/node_shader.glsl"), PipelineBuilder().cullMode(CULL_NONE).depthTest(false).depthWrite(false));
+    material = new Material(new Shader("res://engine/shaders/node_shader.glsl"), PipelineBuilder().cullMode(CULL_NONE).depthTest(false).depthWrite(false));
     Ref<Sampler> sampler = Engine::makeSampler(SamplerBuilder().filter(FILTER_NEAREST));
     material->setSampler("node_atlas", sampler);
     material->setSampler("text_atlas", sampler);
-    material->setSampler("link_atlas", sampler);
-    material->setIntUniform("background_mode", 0);
-    material->setFloatUniform("background_factor", style.background_factor);
+    material->setSampler("extra_atlas", sampler);
+    material->setSampler("ui_atlas", sampler);
 
-    style.node_atlas = new Texture("res://engine/newnodes.png");
-    style.link_atlas = new Texture("res://engine/nodelinks.png");
-    style.font = new Font("res://engine/font.bmp", glm::ivec2{ 10, 18 });
-
-    style.palette =
-    {
-        { 0.005f, 0.005f, 0.005f },
-        { 1.000f, 0.319f, 0.000f },
-        { 1.000f, 0.133f, 0.000f },
-        { 0.624f, 0.027f, 0.012f },
-        { 0.127f, 0.027f, 0.304f },
-        { 0.175f, 0.451f, 0.005f },
-        { 0.292f, 0.041f, 0.117f }
-    };
+    style = new Style();
+    style->node_atlas = new Texture("res://engine/textures/node_atlas.png");
+    style->extra_atlas = new Texture("res://engine/textures/extra_atlas.png");
+    style->ui_atlas = new Texture("res://engine/textures/ui_atlas.png");
+    style->font = new Font("res://engine/textures/font_IBM_XGA_AI_12x23.png", glm::ivec2{ 14, 25 });
 
     setStyle(style);
 }
 
-void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec4 colour, glm::vec3 tint, bool clip_uv, int uv_index)
+void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode, glm::vec3 extra, glm::vec2 fake_size)
 {
     uint16_t v_off = static_cast<uint16_t>(vertices.size());
-    glm::vec4 segment_size = { glm::ceil(size.x / style.grid_size), glm::ceil(size.y / style.grid_size), 0, 0 };
+    
+    glm::vec4 normal_value = { size.x, size.y, mode, 0.0f };
+    if (fake_size.x != 0.0f)
+        normal_value.x = fake_size.x;
+    if (fake_size.y != 0.0f)
+        normal_value.y = fake_size.y;
+    glm::vec4 tangent_value = { extra, 1 };
+    glm::vec4 colour_value = glm::vec4{ colour, 1 };
 
-    glm::vec2 tl_uv = { 0, 1 };
-    glm::vec2 tr_uv = { 1, 1 };
-    glm::vec2 bl_uv = { 0, 0 };
-    glm::vec2 br_uv = { 1, 0 };
-
-    if (clip_uv)
-    {
-        glm::vec2 slice_offset = { uv_index % 3, 2.0f - (int)(uv_index / 3) };
-
-        tl_uv = (tl_uv + slice_offset) / 3.0f;
-        tr_uv = (tr_uv + slice_offset) / 3.0f;
-        bl_uv = (bl_uv + slice_offset) / 3.0f;
-        br_uv = (br_uv + slice_offset) / 3.0f;
-
-        segment_size += glm::vec4{ 2.0f, 2.0f, 0.0f, 0.0f };
-    }
-
-    vertices.push_back(Vertex{ { position.x, -position.y, 0, 1 }, colour, segment_size, glm::vec4(tint, 0), tl_uv });
-    vertices.push_back(Vertex{ { position.x + size.x, -position.y, 0, 1 }, colour, segment_size, glm::vec4(tint, 0), tr_uv });
-    vertices.push_back(Vertex{ { position.x, -position.y - size.y, 0, 1 }, colour, segment_size, glm::vec4(tint, 0), bl_uv });
-    vertices.push_back(Vertex{ { position.x + size.x, -position.y - size.y, 0, 1 }, colour, segment_size, glm::vec4(tint, 0), br_uv });
-
+    // top left
+    vertices.push_back(Vertex{
+        { position.x, -position.y, 0, 1 },
+        colour_value, normal_value, tangent_value,
+        uv_tl });
+    // top right
+    vertices.push_back(Vertex{
+        { position.x + size.x, -position.y, 0, 1 },
+        colour_value, normal_value, tangent_value,
+        glm::vec2{ uv_br.x, uv_tl.y } });
+    // bottom left
+    vertices.push_back(Vertex{
+        { position.x, -position.y - size.y, 0, 1 },
+        colour_value, normal_value, tangent_value,
+        glm::vec2{ uv_tl.x, uv_br.y } });
+    // bottom right
+    vertices.push_back(Vertex{
+        { position.x + size.x, -position.y - size.y, 0, 1 },
+        colour_value, normal_value, tangent_value,
+        uv_br });
+    
     indices.push_back(v_off + 0);
     indices.push_back(v_off + 3);
     indices.push_back(v_off + 1);
     indices.push_back(v_off + 0);
     indices.push_back(v_off + 2);
     indices.push_back(v_off + 3);
-}
-
-void NodeView::addFrame(glm::vec2 position, glm::vec2 size, glm::vec3 tint)
-{
-    addQuad(position, size, { 1, 0, 0, 0 }, tint, false, 0);
-}
-
-void NodeView::addBadge(glm::vec2 position, glm::vec2 size, glm::vec3 tint)
-{
-    addQuad(position, size, { 0, 1, 0, 0 }, tint, false, 0);
-}
-
-void NodeView::addBlock(glm::vec2 position, glm::vec2 size, glm::vec3 tint, bool outline)
-{
-    addQuad(position, size, { 0, 4, 0, 0 }, tint, true, 4);
-    if (outline)
-        addQuad(position + 2.0f, size - 4.0f, { 0, 1, 0, 0 }, getBackgroundColour(tint), true, 4);
 }
 
 void NodeView::addPin(glm::vec2 position, glm::vec3 tint, int type, bool filled)
 {
-    addQuad(position, glm::vec2{ style.grid_size, style.grid_size }, { 0, 0, filled ? 10 : 1, 0 }, tint, true, type);
+    glm::vec2 seg_size = style->extra_atlas->getSize() / 3;
+    glm::vec2 uv_size = glm::vec2{ 1.0f / 3.0f };
+    glm::vec2 uv_base = glm::vec2{ uv_size.x * (type % 3), uv_size.y * (type / 3) };
+    addQuad(position + glm::round((style->grid_size - seg_size) * 0.5f), seg_size, flipUV(uv_base), flipUV(uv_base + uv_size), tint, RENDER_MODE_PINS, {filled ? 1 : 0, 0, 0});
 }
 
-static glm::vec2 flipUV(glm::vec2 v)
+void NodeView::addText(const string& text, glm::vec2 _start, glm::vec3 tint, int align)
 {
-    return { v.x, 1.0f - v.y };
-}
+    const glm::vec2 uv_size = style->font->getGlyphUVSize();
+    const glm::vec2 char_size = style->font->getGlyphSize();
+    
+    glm::vec2 start = _start;
+    float width = ((text.size() + 1) * (style->font->getGlyphSize().x + style->text_spacing - 2.0f)) - (style->text_spacing - 2.0f);
+    if (align > 0)
+        start.x -= width;
+    else if (align == 0)
+        start.x -= glm::round(width / 2.0f);
 
-void NodeView::addCharacter(char c, glm::vec2 position, glm::vec3 tint)
-{
-    glm::vec2 uv_base = style.font->getGlyphUVOffset(c);
-    glm::vec2 uv_size = style.font->getGlyphUVSize();
-
-    glm::vec2 uv_bl = flipUV(uv_base + glm::vec2{ 0, uv_size.y });
-    glm::vec2 uv_br = flipUV(uv_base + uv_size);
-    glm::vec2 uv_tl = flipUV(uv_base);
-    glm::vec2 uv_tr = flipUV(uv_base + glm::vec2{ uv_size.x, 0 });
-
-    glm::vec2 char_size = style.font->getGlyphSize();
-    float top_inset = style.text_top_inset - character_padding;
-    glm::vec4 pos_bl = { position.x, (-position.y - char_size.y) - top_inset, 0, 1 };
-    glm::vec4 pos_br = { position.x + char_size.x, (-position.y - char_size.y) - top_inset, 0, 1 };
-    glm::vec4 pos_tl = { position.x, -position.y - top_inset, 0, 1 };
-    glm::vec4 pos_tr = { position.x + char_size.x, -position.y - top_inset, 0, 1 };
-
-    uint16_t v_off = static_cast<uint16_t>(vertices.size());
-    vertices.push_back(Vertex{ pos_bl, glm::vec4(tint, 1), { 0, 0, 0.5f, 0 }, {}, uv_bl });
-    vertices.push_back(Vertex{ pos_br, glm::vec4(tint, 1), { 0, 0, 0.5f, 0 }, {}, uv_br });
-    vertices.push_back(Vertex{ pos_tl, glm::vec4(tint, 1), { 0, 0, 0.5f, 0 }, {}, uv_tl });
-    vertices.push_back(Vertex{ pos_tr, glm::vec4(tint, 1), { 0, 0, 0.5f, 0 }, {}, uv_tr });
-
-    indices.push_back(v_off + 0);
-    indices.push_back(v_off + 3);
-    indices.push_back(v_off + 1);
-    indices.push_back(v_off + 0);
-    indices.push_back(v_off + 2);
-    indices.push_back(v_off + 3);
-}
-
-void NodeView::addText(std::string text, glm::vec2 start, glm::vec3 tint)
-{
-    glm::vec2 position = start;
+    glm::vec2 position = start + style->text_offset + glm::vec2{ 0, (style->grid_size - style->font->getGlyphSize().y) * 0.5f };
     for (char c : text)
     {
-        addCharacter(c, position, tint);
-        position.x += style.font->getGlyphSize().x;
+        glm::vec2 uv_base = style->font->getGlyphUVOffset(c);
+
+        glm::vec2 uv_br = flipUV(uv_base + uv_size);
+        glm::vec2 uv_tl = flipUV(uv_base);
+        glm::vec4 pos_tl = { position.x, position.y, 0, 1 };
+
+        addQuad(pos_tl, char_size, uv_tl, uv_br, tint, RENDER_MODE_TEXT);
+        
+        position.x += style->font->getGlyphSize().x + style->text_spacing - 2.0f;
     }
-}
-
-void NodeView::addLinkElem(glm::vec2 position, glm::vec3 tint, int type)
-{
-    static const glm::vec2 uv_sets[18][4] =
-    {   // tl       tr        bl        br
-        { { 0, 0 }, { 1, 0 }, { 0, 1 }, { 1, 1 } }, // outgoing link    - 00
-        { { 1, 0 }, { 0, 0 }, { 1, 1 }, { 0, 1 } }, // incoming link    - 01
-        { { 1, 0 }, { 2, 0 }, { 1, 1 }, { 2, 1 } }, // horizontal link  - 02
-        { { 1, 1 }, { 1, 0 }, { 2, 1 }, { 2, 0 } }, // vertical link    - 03
-        { { 2, 0 }, { 3, 0 }, { 2, 1 }, { 3, 1 } }, // left-down angle  - 04
-        { { 2, 1 }, { 3, 1 }, { 2, 0 }, { 3, 0 } }, // left-up angle    - 05
-        { { 3, 0 }, { 2, 0 }, { 3, 1 }, { 2, 1 } }, // right-down angle - 06
-        { { 3, 1 }, { 2, 1 }, { 3, 0 }, { 2, 0 } }, // right-up angle   - 07
-        { { 3, 0 }, { 4, 0 }, { 3, 1 }, { 4, 1 } }, // tl-br slant      - 08
-        { { 3, 1 }, { 4, 1 }, { 3, 0 }, { 4, 0 } }, // tr-bl slant      - 09
-        { { 0, 1 }, { 1, 1 }, { 0, 2 }, { 1, 2 } }, // left-br angle    - 10
-        { { 1, 1 }, { 0, 1 }, { 1, 2 }, { 0, 2 } }, // right-bl angle   - 11
-        { { 0, 2 }, { 1, 2 }, { 0, 1 }, { 1, 1 } }, // left-tr angle    - 12
-        { { 1, 2 }, { 0, 2 }, { 1, 1 }, { 0, 1 } }, // right-tl angle   - 13
-        { { 0, 1 }, { 0, 2 }, { 1, 1 }, { 1, 2 }, }, // top-br angle    - 14
-        { { 0, 2 }, { 0, 1 }, { 1, 2 }, { 1, 1 }, }, // top-bl angle    - 15
-        { { 1, 1 }, { 1, 2 }, { 0, 1 }, { 0, 2 }, }, // bottom-tr angle - 16
-        { { 1, 2 }, { 1, 1 }, { 0, 2 }, { 0, 1 }, }, // bottom-tl angle - 17
-    };
-
-    {
-        glm::vec2 uv_tl = uv_sets[type][0];
-        glm::vec2 uv_tr = uv_sets[type][1];
-        glm::vec2 uv_bl = uv_sets[type][2];
-        glm::vec2 uv_br = uv_sets[type][3];
-
-        glm::vec4 pos_tl = { position.x, -position.y, 0, 1 };
-        glm::vec4 pos_tr = { position.x + style.grid_size, -position.y, 0, 1 };
-        glm::vec4 pos_bl = { position.x, -position.y - style.grid_size, 0, 1 };
-        glm::vec4 pos_br = { position.x + style.grid_size, -position.y - style.grid_size, 0, 1 };
-
-        uint16_t v_off = static_cast<uint16_t>(vertices.size());
-        vertices.push_back(Vertex{ pos_bl, glm::vec4(tint, 1), { 0, 0, 1, 0 }, {}, uv_bl });
-        vertices.push_back(Vertex{ pos_br, glm::vec4(tint, 1), { 0, 0, 1, 0 }, {}, uv_br });
-        vertices.push_back(Vertex{ pos_tl, glm::vec4(tint, 1), { 0, 0, 1, 0 }, {}, uv_tl });
-        vertices.push_back(Vertex{ pos_tr, glm::vec4(tint, 1), { 0, 0, 1, 0 }, {}, uv_tr });
-
-        indices.push_back(v_off + 0);
-        indices.push_back(v_off + 3);
-        indices.push_back(v_off + 1);
-        indices.push_back(v_off + 0);
-        indices.push_back(v_off + 2);
-        indices.push_back(v_off + 3);
-    }
-}
-
-void NodeView::addLink(glm::ivec2 grid_start, glm::ivec2 grid_end, glm::vec3 tint)
-{
-    glm::ivec2 difference = grid_end - grid_start;
-    if (difference.x <= 0)
-        return;
-    if (difference.x <= 1 && difference.y != 0)
-        return;
-
-    glm::vec2 position = glm::vec2(grid_start) * style.grid_size;
-    addLinkElem(position, tint, 0);
-    addLinkElem(glm::vec2(grid_end) * style.grid_size, tint, 1);
-
-    if (difference.y == 0)
-    {
-        while (difference.x > 1)
-        {
-            grid_start.x++;
-            addLinkElem(glm::vec2(grid_start) * style.grid_size, tint, 2);
-            difference.x--;
-        }
-        return;
-    }
-
-    if (difference.x < abs(difference.y) + 2)
-    {
-        bool positive = difference.y > 0;
-        int y_delta = positive ? -1 : 1;
-        if (difference.x == 2)
-        {
-            grid_start.x++;
-            addLinkElem(glm::vec2(grid_start) * style.grid_size, tint, positive ? 4 : 5);
-            difference.x--;
-            while (abs(difference.y) > 1)
-            {
-                grid_start.y -= y_delta;
-                addLinkElem(glm::vec2(grid_start) * style.grid_size, tint, 3);
-                difference.y += y_delta;
-            }
-            grid_start.y = grid_end.y;
-            addLinkElem(glm::vec2(grid_start) * style.grid_size, tint, positive ? 7 : 6);
-            return;
-        }
-
-        grid_start.x++;
-        addLinkElem(glm::vec2(grid_start) * style.grid_size, tint, positive ? 4 : 5);
-        difference.x--;
-
-        while (difference.x < abs(difference.y))
-        {
-            grid_start.y -= y_delta;
-            addLinkElem(glm::vec2(grid_start) * style.grid_size, tint, 3);
-            difference.y += y_delta;
-        }
-
-        grid_start.y -= y_delta;
-        addLinkElem(glm::vec2(grid_start) * style.grid_size, tint, positive ? 14 : 16);
-        addLinkElem((glm::vec2(grid_start) + glm::vec2{ 0.5f, -y_delta * 0.5f }) * style.grid_size, tint, positive ? 8 : 9);
-        difference.y += y_delta;
-
-        while (abs(difference.x) > 2)
-        {
-            grid_start.x++;
-            grid_start.y -= y_delta;
-            addLinkElem(glm::vec2(grid_start) * style.grid_size, tint, positive ? 8 : 9);
-            addLinkElem((glm::vec2(grid_start) + glm::vec2{ 0.5f, -y_delta * 0.5f }) * style.grid_size, tint, positive ? 8 : 9);
-            difference.x--;
-            difference.y += y_delta;
-        }
-
-        grid_start.x++;
-        grid_start.y -= y_delta;
-        addLinkElem(glm::vec2(grid_start) * style.grid_size, tint, positive ? 13 : 11);
-        return;
-    }
-    else
-    {
-        int horizontal_space = (difference.x - (abs(difference.y) + 2)) / 2;
-        while (horizontal_space > 0)
-        {
-            grid_start.x++;
-            addLinkElem(glm::vec2(grid_start) * style.grid_size, tint, 2);
-            difference.x--;
-            horizontal_space--;
-        }
-
-        bool positive = difference.y > 0;
-        int y_delta = positive ? -1 : 1;
-        grid_start.x++;
-        addLinkElem(glm::vec2(grid_start) * style.grid_size, tint, positive ? 10 : 12);
-        addLinkElem((glm::vec2(grid_start) + glm::vec2{ 0.5f, -y_delta * 0.5f }) * style.grid_size, tint, positive ? 8 : 9);
-        difference.x--;
-        while (abs(difference.y) > 1)
-        {
-            grid_start.x++;
-            grid_start.y -= y_delta;
-            addLinkElem(glm::vec2(grid_start) * style.grid_size, tint, positive ? 8 : 9);
-            addLinkElem((glm::vec2(grid_start) + glm::vec2{ 0.5f, -y_delta * 0.5f }) * style.grid_size, tint, positive ? 8 : 9);
-            difference.x--;
-            difference.y += y_delta;
-        }
-        grid_start.x++;
-        grid_start.y -= y_delta;
-        addLinkElem(glm::vec2(grid_start) * style.grid_size, tint, positive ? 13 : 11);
-
-        while (difference.x > 1)
-        {
-            grid_start.x++;
-            addLinkElem(glm::vec2(grid_start) * style.grid_size, tint, 2);
-            difference.x--;
-        }
-
-        return;
-    }
-}
-
-glm::vec3 NodeView::getForegroundColour(int index) const
-{
-    static const glm::vec3 default_col = glm::vec3{ 1.000f, 0.319f, 0.000f };
-    if (style.palette.empty())
-        return default_col;
-    if (index < (int)style.palette.size())
-        return style.palette[index];
-    return style.palette[(index % ((int)style.palette.size() - 1)) + 1];
-}
-
-glm::vec3 NodeView::getBackgroundColour(glm::vec3 fg_col) const
-{
-    if (style.use_dynamic_background)
-        return fg_col * style.background_factor;
-    
-    glm::vec3 background_colour = style.palette.empty() ?
-        glm::vec3{ 0.005f, 0.005f, 0.005f }
-    : style.palette[0];
-    return background_colour;
 }
 
 NodeView::~NodeView()
 {
-    style.font = nullptr;
-    style.node_atlas = nullptr;
-    style.link_atlas = nullptr;
+    style->font = nullptr;
+    style->node_atlas = nullptr;
     material = nullptr;
     nodes.clear();
-    links.clear();
 }
