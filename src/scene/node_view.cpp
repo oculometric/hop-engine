@@ -208,20 +208,21 @@ void NodeView::updateMesh()
 
 void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
 {
+    static glm::vec2 mouse_delta_since_down = glm::vec2{ 0, 0 };
+
     glm::vec2 mouse_pos = Input::getMousePosition();
     if (mouse_pos.x < rect_min.x
         || mouse_pos.y < rect_min.y
         || mouse_pos.x > rect_min.x + rect_size.x
         || mouse_pos.y > rect_min.y + rect_size.y)
         return;
+    glm::vec2 node_space_pos = (mouse_pos - glm::vec2(rect_min)) - (glm::vec2(rect_size) / 2.0f);
 
     bool needs_update = false;
-
-    glm::vec2 node_space_pos = (mouse_pos - glm::vec2(rect_min)) - (glm::vec2(rect_size) / 2.0f);
+    static auto it = nodes.rend();
     if (Input::wasMousePressed(Input::MOUSE_LEFT))
     {
-        bool clicked_node = false;
-        for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
+        for (it = nodes.rbegin(); it != nodes.rend(); ++it)
         {
             auto node = *it;
             glm::vec2 node_min = node->position * style->grid_size;
@@ -231,32 +232,59 @@ void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
                 || node_space_pos.x > node_max.x
                 || node_space_pos.y > node_max.y)
                 continue;
-            clicked_node = true;
-            if (!Input::isKeyDown(Input::KEY_LEFT_SHIFT))
-            {
-                for (auto& n : nodes)
-                    n->highlighted = false;
-                node->highlighted = true;
-            }
-            else
-                node->highlighted = !node->highlighted;
-            nodes.erase((it + 1).base());
-            nodes.insert(nodes.end(), node);
-            needs_update = true;
             break;
         }
-        if (!clicked_node)
+        mouse_delta_since_down = glm::vec2{ 0, 0 };
+        if (it == nodes.rend())
         {
             for (auto& n : nodes)
                 n->highlighted = false;
             needs_update = true;
         }
     }
+    if (Input::isMouseDown(Input::MOUSE_LEFT))
+        mouse_delta_since_down += Input::getMouseDelta();
 
+    if (it != nodes.rend() && (length(mouse_delta_since_down) < 2.0f) && !Input::isMouseDown(Input::MOUSE_LEFT))
+    {
+        // mouse pressed and released quickly
+        auto node = *it;
+        if (!Input::isKeyDown(Input::KEY_LEFT_SHIFT))
+        {
+            for (auto& n : nodes)
+                n->highlighted = false;
+            node->highlighted = true;
+        }
+        else
+            node->highlighted = !node->highlighted;
+        nodes.erase((it + 1).base());
+        nodes.insert(nodes.end(), node);
+        it = nodes.rend();
+        needs_update = true;
+    }
+    else if (length(mouse_delta_since_down) > 2.0f && Input::isMouseDown(Input::MOUSE_LEFT))
+    {
+        // mouse drag is occurring!
+        if (it != nodes.rend() && !(*it)->highlighted && !Input::isKeyDown(Input::KEY_LEFT_SHIFT))
+        {
+            auto node = *it;
+            for (auto& n : nodes)
+                n->highlighted = false;
+            node->highlighted = true;
+            nodes.erase((it + 1).base());
+            nodes.insert(nodes.end(), node);
+            it = nodes.rend();
+        }
+
+        for (auto& n : nodes)
+            if (n->highlighted)
+                n->position += Input::getMouseDelta() * 4.0f / style->grid_size;
+        needs_update = true;
+    }
+
+    // TODO: links
     // TODO: add new
     // TODO: resize
-    // TODO: move
-    // TODO: links
     // TODO: minimise
     if (needs_update)
         updateMesh();
