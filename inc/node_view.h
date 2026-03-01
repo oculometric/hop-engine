@@ -94,6 +94,8 @@ public:
 		int after_elements_spacing = 0;
 
 		bool shadows = true;
+		glm::vec2 shadow_offset = { 6.0f, 6.0f };
+		glm::vec3 shadow_colour = { 0.047f, 0.047f, 0.12f };
 	};
 
 public:

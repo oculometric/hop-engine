@@ -178,10 +178,18 @@ void imguiNodeScene(Ref<Scene> scene, float delta_time)
         ImGui::Spacing();
     }
 
-    ImGui::InputFloat("pin_offset", &style.pin_offset, 1.0f, 1.0f);
-    ImGui::Checkbox("reverse_element_order", &style.reverse_element_order);
-    ImGui::Checkbox("center_text_elements", &style.center_text_elements);
-    ImGui::InputInt("after_elements_spacing", &style.after_elements_spacing, 1, 1);
+    if (ImGui::CollapsingHeader("elements", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::InputFloat("pin_offset", &style.pin_offset, 1.0f, 1.0f);
+        ImGui::Checkbox("reverse_element_order", &style.reverse_element_order);
+        ImGui::Checkbox("center_text_elements", &style.center_text_elements);
+        ImGui::InputInt("after_elements_spacing", &style.after_elements_spacing, 1, 1);
+        ImGui::Spacing();
+    }
+
+    ImGui::Checkbox("shadows", &style.shadows);
+    ImGui::SliderFloat2("shadow_offset", (float*)&style.shadow_offset, -12, 12);
+    ImGui::ColorEdit3("shadow_colour", (float*)&style.shadow_colour);
 
     node_view->setStyle(style);
     ImGui::End();

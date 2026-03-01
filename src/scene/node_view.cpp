@@ -81,6 +81,19 @@ void NodeView::updateMesh()
         const glm::vec2 half_tile_width = glm::vec2{ style.grid_size * 0.5f, 0 };
         const glm::vec2 pin_offset = glm::vec2{ style.pin_offset, 0 };
 
+        // shadows
+        if (style.shadows)
+        {
+            addQuad(node->position + style.shadow_offset, glm::vec2{ node_width_tiles, 1 + (node->minimised ? 0 : node_height_tiles) } * style.grid_size,
+                glm::vec2{ 0, 0 }, glm::vec2{ 1, 1 },
+                style.shadow_colour, RENDER_MODE_BOX, { 0, 1, 0 });
+        //    float shadow_width_extra = (style.grid_size * 0.25f);
+        //    addQuad(node->position + (glm::vec2{ 0,  } * style.grid_size) + glm::vec2{ style.shadow_offset.x, -shadow_width_extra }, glm::vec2{ node_width_tiles * style.grid_size, style.shadow_offset.y + shadow_width_extra },
+        //        glm::vec2{ 0, 0.5f }, glm::vec2{ 1, 1 }, style.shadow_colour, RENDER_MODE_BOX, { 0, 1, 0 }, glm::vec2{ node_width_tiles * style.grid_size, (style.shadow_offset.y + shadow_width_extra) * 2.0f });
+        //    addQuad(node->position + (glm::vec2{ node_width_tiles, 0 } * style.grid_size) + glm::vec2{ -shadow_width_extra, style.shadow_offset.y }, glm::vec2{ style.shadow_offset.x + shadow_width_extra, (1 + (node->minimised ? 0 : node_height_tiles)) * style.grid_size },
+        //        glm::vec2{ 0.5f, 0 }, glm::vec2{ 1, 1 }, style.shadow_colour, RENDER_MODE_BOX, { 0, 1, 0 }, glm::vec2{ (style.shadow_offset.x + shadow_width_extra) * 2.0f, (1 + (node->minimised ? 0 : node_height_tiles)) * style.grid_size });
+        }
+
         // heading box
         glm::vec2 header_position = node->position;
         {
@@ -170,16 +183,15 @@ void NodeView::updateMesh()
                     addText(elem.text, position, style.text_colour);
                 break;
             }
-            position += glm::vec2{ 0, style.grid_size };
             if (it == end_it)
                 break;
+            position += glm::vec2{ 0, style.grid_size };
             if (style.reverse_element_order)
                 --it;
             else
                 ++it;
         }
 
-        // TODO: shadows!
         // TODO: interactions
         // TODO: come up with a list of input types
     }
