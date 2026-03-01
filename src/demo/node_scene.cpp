@@ -39,7 +39,7 @@ static Ref<Scene> initNodeScene()
                 { "result", NodeView::ELEMENT_OUTPUT },
                 { "input a", NodeView::ELEMENT_INPUT },
                 { "input b", NodeView::ELEMENT_INPUT },
-            }, { -6, 0 } });
+            }, { -14, 0 }, { 6, 0 }, { 1, 0, 0 }, { { node_view->nodes[0], 0 }}});
         node_view->nodes.push_back(new NodeView::Node
             { "multiply add",
             {
@@ -79,6 +79,7 @@ static Ref<Scene> initNodeScene()
 
 static void updateNodeScene(Ref<Scene> scene, float delta_time)
 {
+    // FIXME: input  mouse delta is weird on non-fullscreen window?
     node_view->checkInput({ 0, 0 }, scene->getViewportSize());
 }
 

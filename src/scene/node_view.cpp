@@ -194,6 +194,14 @@ void NodeView::updateMesh()
                 ++it;
         }
 
+        // links
+        for (auto& link : node->outgoing_links)
+        {
+            glm::vec2 link_start = header_position + box_width - half_tile_width;
+            glm::vec2 link_end = (link.first->position * style->grid_size) - half_tile_width;
+            addLink(link_start, link_end);
+        }
+
         // TODO: come up with a list of input types
     }
 
@@ -293,7 +301,14 @@ void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
 
         for (auto& n : nodes)
             if (n->highlighted)
-                n->position += Input::getMouseDelta() * 4.0f / style->grid_size;
+                n->position += Input::getMouseDelta() / style->grid_size;
+        needs_update = true;
+    }
+    else if (length(mouse_delta_since_down) > 2.0f)
+    {
+        for (auto& n : nodes)
+            if (n->highlighted)
+                n->position = glm::round(n->position);
         needs_update = true;
     }
 
@@ -398,6 +413,11 @@ void NodeView::addText(const string& text, glm::vec2 _start, glm::vec3 tint, int
         
         position.x += style->font->getGlyphSize().x + style->text_spacing - 2.0f;
     }
+}
+
+void NodeView::addLink(glm::vec2 link_start, glm::vec2 link_end)
+{
+    // TODO: link rendering
 }
 
 NodeView::~NodeView()
