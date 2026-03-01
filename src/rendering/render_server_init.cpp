@@ -262,7 +262,7 @@ void RenderServer::createDevice()
                 score = 0;
         }
 
-        DBG_BABBLE("found device " + string(properties.deviceName) + ", scored " + to_string(score));
+        DBG_BABBLE("found device " + string(properties.deviceName) + ", scored " + ::to_string(score));
         device_scores.insert({ score, test_device });
     }
     // check if any of the devices were suitable, and if so,

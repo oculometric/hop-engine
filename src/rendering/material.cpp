@@ -79,7 +79,7 @@ Ref<RenderPass> Material::getRenderPass() const
 
 void Material::pushToDescriptorSet(const size_t index)
 {
-	DBG_BABBLE("material '" + getOrigin() + "' pushing to descriptor set " + to_string(index));
+	DBG_BABBLE("material '" + getOrigin() + "' pushing to descriptor set " + ::to_string(index));
 	uniforms->pushToDescriptorSet(index);
 }
 
@@ -100,13 +100,13 @@ void Material::bind(Ref<DrawCommandBuffer> command_buffer)
 
 void Material::setTexture(const uint32_t binding, const Ref<Texture>& texture, const bool use_stencil)
 {
-	DBG_BABBLE("material '" + getOrigin() + "' assigned texture '" + texture->getOrigin() + "' to binding " + to_string(binding));
+	DBG_BABBLE("material '" + getOrigin() + "' assigned texture '" + texture->getOrigin() + "' to binding " + ::to_string(binding));
 	uniforms->setTexture(binding, texture, use_stencil);
 }
 
 void Material::setSampler(const uint32_t binding, const Ref<Sampler>& sampler)
 {
-	DBG_BABBLE("material '" + getOrigin() + "' assigned sampler " + PTR(sampler.get()) + " to binding " + to_string(binding));
+	DBG_BABBLE("material '" + getOrigin() + "' assigned sampler " + PTR(sampler.get()) + " to binding " + ::to_string(binding));
 	uniforms->setSampler(binding, sampler);
 }
 
