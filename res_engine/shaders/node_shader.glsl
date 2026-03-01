@@ -112,8 +112,8 @@ void fragment()
         // pins mode
         float v = texture(extra_atlas, uv).b;
         if (v < 0.001f) discard;
-        if (v < 0.5f && frag.tangent.x < 0.5f) discard;
-        out_colour = vec4(frag.colour.rgb, 1);
+        if (v < 0.5f && frag.tangent.x < 0.5f) out_colour = vec4(fill_colour, 1);
+        else out_colour = vec4(frag.colour.rgb, 1);
     }
     else if (render_mode == RENDER_MODE_BACKGROUND)
     {

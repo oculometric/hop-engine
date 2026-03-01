@@ -94,8 +94,8 @@ public:
 		int after_elements_spacing = 0;
 
 		bool shadows = true;
-		glm::vec2 shadow_offset = { 6.0f, 6.0f };
-		glm::vec3 shadow_colour = { 0.047f, 0.047f, 0.12f };
+		glm::vec2 shadow_offset = { 4.0f, 4.0f };
+		glm::vec3 shadow_colour = { 0.14f, 0.14f, 0.29f };
 	};
 
 public:
@@ -104,15 +104,15 @@ public:
 private:
 	std::vector<Vertex> vertices;
 	std::vector<uint16_t> indices;
-	Style style;
+	Ref<Style> style;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(NodeView);
 	static Ref<NodeView> create();
 	~NodeView() override;
 	
-	Style getStyle() { return style; }
-	void setStyle(Style new_style);
+	Ref<Style> getStyle() { return style; }
+	void setStyle(Ref<Style> new_style);
 	void updateMesh();
 	void checkInput();
 	
