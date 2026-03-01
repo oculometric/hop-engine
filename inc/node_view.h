@@ -40,7 +40,8 @@ public:
 	{
 		std::string title = "node";
 		std::vector<NodeElement> elements;
-		glm::vec2 position;
+		glm::vec2 position = { 0, 0 };
+		glm::vec2 size = { 8, 1 };
 		glm::vec3 colour = { 1.0f, 0.44f, 0.0f };
 		bool highlighted = false;
 		bool minimised = false;
@@ -114,7 +115,7 @@ public:
 	Ref<Style> getStyle() { return style; }
 	void setStyle(Ref<Style> new_style);
 	void updateMesh();
-	void checkInput();
+	void checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size);
 	
 protected:
 	NodeView();

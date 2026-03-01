@@ -70,9 +70,11 @@ void NodeView::updateMesh()
     // draw nodes
     for (auto& node : nodes)
     {
-        int node_width_tiles = 10;
-        int node_height_tiles = node->elements.size() + style->after_header_spacing + style->after_elements_spacing;
-        
+        const glm::vec2 position = node->position * style->grid_size;
+        int node_width_tiles = static_cast<int>(node->size.x);
+        int node_height_tiles = static_cast<int>(node->elements.size()) + style->after_header_spacing + style->after_elements_spacing;
+        node->size.y = static_cast<float>(node_height_tiles);
+
         float node_fill_mode = style->fill_modulate_colour ? 2.0f : 0.0f;
         float node_outline_mode = style->outline_style == HIDDEN ? 0.0f : 1.0f;
         if (node->highlighted)
@@ -84,18 +86,18 @@ void NodeView::updateMesh()
         // shadows
         if (style->shadows)
         {
-            addQuad(node->position + style->shadow_offset, glm::vec2{ node_width_tiles, 1 + (node->minimised ? 0 : node_height_tiles) } * style->grid_size,
+            addQuad(position + style->shadow_offset, glm::vec2{ node_width_tiles, 1 + (node->minimised ? 0 : node_height_tiles) } * style->grid_size,
                 glm::vec2{ 0, 0 }, glm::vec2{ 1, 1 },
                 style->shadow_colour, RENDER_MODE_BOX, { 0, 1, 0 });
         //    float shadow_width_extra = (style->grid_size * 0.25f);
-        //    addQuad(node->position + (glm::vec2{ 0,  } * style->grid_size) + glm::vec2{ style->shadow_offset.x, -shadow_width_extra }, glm::vec2{ node_width_tiles * style->grid_size, style->shadow_offset.y + shadow_width_extra },
+        //    addQuad(position + (glm::vec2{ 0,  } * style->grid_size) + glm::vec2{ style->shadow_offset.x, -shadow_width_extra }, glm::vec2{ node_width_tiles * style->grid_size, style->shadow_offset.y + shadow_width_extra },
         //        glm::vec2{ 0, 0.5f }, glm::vec2{ 1, 1 }, style->shadow_colour, RENDER_MODE_BOX, { 0, 1, 0 }, glm::vec2{ node_width_tiles * style->grid_size, (style->shadow_offset.y + shadow_width_extra) * 2.0f });
-        //    addQuad(node->position + (glm::vec2{ node_width_tiles, 0 } * style->grid_size) + glm::vec2{ -shadow_width_extra, style->shadow_offset.y }, glm::vec2{ style->shadow_offset.x + shadow_width_extra, (1 + (node->minimised ? 0 : node_height_tiles)) * style->grid_size },
+        //    addQuad(position + (glm::vec2{ node_width_tiles, 0 } * style->grid_size) + glm::vec2{ -shadow_width_extra, style->shadow_offset.y }, glm::vec2{ style->shadow_offset.x + shadow_width_extra, (1 + (node->minimised ? 0 : node_height_tiles)) * style->grid_size },
         //        glm::vec2{ 0.5f, 0 }, glm::vec2{ 1, 1 }, style->shadow_colour, RENDER_MODE_BOX, { 0, 1, 0 }, glm::vec2{ (style->shadow_offset.x + shadow_width_extra) * 2.0f, (1 + (node->minimised ? 0 : node_height_tiles)) * style->grid_size });
         }
 
         // heading box
-        glm::vec2 header_position = node->position;
+        glm::vec2 header_position = position;
         {
             float header_uv_top = 0.0f;
             float header_uv_bottom = 0.5f;
@@ -133,7 +135,7 @@ void NodeView::updateMesh()
         // TODO: line between header and main area
         
         // main box
-        glm::vec2 box_position = node->position + glm::vec2{ 0, style->grid_size };
+        glm::vec2 box_position = position + glm::vec2{ 0, style->grid_size };
         {
             float box_uv_top = 0.5f;
             float box_uv_bottom = 1.0f;
@@ -151,17 +153,17 @@ void NodeView::updateMesh()
         }
 
         // elements
-        glm::vec2 position = box_position;
+        glm::vec2 elem_position = box_position;
         if (style->header_at_top)
-            position += glm::vec2{ 0, style->after_header_spacing * style->grid_size };
+            elem_position += glm::vec2{ 0, style->after_header_spacing * style->grid_size };
         else
-            position += glm::vec2{ 0, style->after_elements_spacing * style->grid_size };
+            elem_position += glm::vec2{ 0, style->after_elements_spacing * style->grid_size };
         auto it = node->elements.begin();
-        auto end_it = node->elements.end();
+        auto end_it = node->elements.end() - 1;
         if (style->reverse_element_order)
         {
             it = node->elements.end() - 1;
-            end_it = node->elements.begin() - 1;
+            end_it = node->elements.begin();
         }
         while (!node->elements.empty())
         {
@@ -169,30 +171,29 @@ void NodeView::updateMesh()
             switch (elem.type)
             {
             case ELEMENT_INPUT:
-                addText(elem.text, position + half_tile_width, style->text_colour);
-                addPin(position + pin_offset - half_tile_width, style->outline_colour, elem.pin_type, elem.pin_solid);
+                addText(elem.text, elem_position + half_tile_width, style->text_colour);
+                addPin(elem_position + pin_offset - half_tile_width, style->outline_colour, elem.pin_type, elem.pin_solid);
                 break;
             case ELEMENT_OUTPUT:
-                addText(elem.text, position + box_width - half_tile_width, style->text_colour, 1);
-                addPin(position + box_width - (half_tile_width + pin_offset), style->outline_colour, elem.pin_type, elem.pin_solid);
+                addText(elem.text, elem_position + box_width - half_tile_width, style->text_colour, 1);
+                addPin(elem_position + box_width - (half_tile_width + pin_offset), style->outline_colour, elem.pin_type, elem.pin_solid);
                 break;
             case ELEMENT_TEXT:
                 if (style->center_text_elements)
-                    addText(elem.text, position + (box_width * 0.5f), style->text_colour, 0);
+                    addText(elem.text, elem_position + (box_width * 0.5f), style->text_colour, 0);
                 else
-                    addText(elem.text, position, style->text_colour);
+                    addText(elem.text, elem_position, style->text_colour);
                 break;
             }
             if (it == end_it)
                 break;
-            position += glm::vec2{ 0, style->grid_size };
+            elem_position += glm::vec2{ 0, style->grid_size };
             if (style->reverse_element_order)
                 --it;
             else
                 ++it;
         }
 
-        // TODO: interactions
         // TODO: come up with a list of input types
     }
 
@@ -205,10 +206,67 @@ void NodeView::updateMesh()
         mesh = new Mesh(vertices, indices, true);
 }
 
+void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
+{
+    glm::vec2 mouse_pos = Input::getMousePosition();
+    if (mouse_pos.x < rect_min.x
+        || mouse_pos.y < rect_min.y
+        || mouse_pos.x > rect_min.x + rect_size.x
+        || mouse_pos.y > rect_min.y + rect_size.y)
+        return;
+
+    bool needs_update = false;
+
+    glm::vec2 node_space_pos = (mouse_pos - glm::vec2(rect_min)) - (glm::vec2(rect_size) / 2.0f);
+    if (Input::wasMousePressed(Input::MOUSE_LEFT))
+    {
+        bool clicked_node = false;
+        for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
+        {
+            auto node = *it;
+            glm::vec2 node_min = node->position * style->grid_size;
+            glm::vec2 node_max = node_min + (node->size * style->grid_size);
+            if (node_space_pos.x < node_min.x
+                || node_space_pos.y < node_min.y
+                || node_space_pos.x > node_max.x
+                || node_space_pos.y > node_max.y)
+                continue;
+            clicked_node = true;
+            if (!Input::isKeyDown(Input::KEY_LEFT_SHIFT))
+            {
+                for (auto& n : nodes)
+                    n->highlighted = false;
+                node->highlighted = true;
+            }
+            else
+                node->highlighted = !node->highlighted;
+            nodes.erase((it + 1).base());
+            nodes.insert(nodes.end(), node);
+            needs_update = true;
+            break;
+        }
+        if (!clicked_node)
+        {
+            for (auto& n : nodes)
+                n->highlighted = false;
+            needs_update = true;
+        }
+    }
+
+    // TODO: add new
+    // TODO: resize
+    // TODO: move
+    // TODO: links
+    // TODO: minimise
+    if (needs_update)
+        updateMesh();
+    Input::resetMouseDelta();
+    //DBG_INFO("pos: " + ::to_string(node_space_pos.x) + ", " + ::to_string(node_space_pos.y));
+}
+
 NodeView::NodeView() : StaticMesh(nullptr, nullptr)
 {
-    // FIXME: make these paths res-relative again!
-    material = new Material(new Shader("res_engine/shaders/node_shader.glsl"), PipelineBuilder().cullMode(CULL_NONE).depthTest(false).depthWrite(false));
+    material = new Material(new Shader("res://engine/shaders/node_shader.glsl"), PipelineBuilder().cullMode(CULL_NONE).depthTest(false).depthWrite(false));
     Ref<Sampler> sampler = Engine::makeSampler(SamplerBuilder().filter(FILTER_NEAREST));
     material->setSampler("node_atlas", sampler);
     material->setSampler("text_atlas", sampler);
@@ -216,10 +274,10 @@ NodeView::NodeView() : StaticMesh(nullptr, nullptr)
     material->setSampler("ui_atlas", sampler);
 
     style = new Style();
-    style->node_atlas = new Texture("res_engine/textures/node_atlas.png");
-    style->extra_atlas = new Texture("res_engine/textures/extra_atlas.png");
-    style->ui_atlas = new Texture("res_engine/textures/ui_atlas.png");
-    style->font = new Font("res_engine/textures/font_IBM_XGA_AI_12x23.png", glm::ivec2{ 14, 25 });
+    style->node_atlas = new Texture("res://engine/textures/node_atlas.png");
+    style->extra_atlas = new Texture("res://engine/textures/extra_atlas.png");
+    style->ui_atlas = new Texture("res://engine/textures/ui_atlas.png");
+    style->font = new Font("res://engine/textures/font_IBM_XGA_AI_12x23.png", glm::ivec2{ 14, 25 });
 
     setStyle(style);
 }
