@@ -249,18 +249,33 @@ void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
     {
         // mouse pressed and released quickly
         auto node = *it;
-        if (!Input::isKeyDown(Input::KEY_LEFT_SHIFT))
+
+        glm::vec2 minibox_min = (node->position + glm::vec2{ node->size.x - 1, 0 }) * style->grid_size;
+        glm::vec2 minibox_max = minibox_min + style->grid_size;
+        if (!(node_space_pos.x < minibox_min.x
+            || node_space_pos.y < minibox_min.y
+            || node_space_pos.x > minibox_max.x
+            || node_space_pos.y > minibox_max.y))
         {
-            for (auto& n : nodes)
-                n->highlighted = false;
-            node->highlighted = true;
+            node->minimised = !node->minimised;
+            it = nodes.rend();
+            needs_update = true;
         }
         else
-            node->highlighted = !node->highlighted;
-        nodes.erase((it + 1).base());
-        nodes.insert(nodes.end(), node);
-        it = nodes.rend();
-        needs_update = true;
+        {
+            if (!Input::isKeyDown(Input::KEY_LEFT_SHIFT))
+            {
+                for (auto& n : nodes)
+                    n->highlighted = false;
+                node->highlighted = true;
+            }
+            else
+                node->highlighted = !node->highlighted;
+            nodes.erase((it + 1).base());
+            nodes.insert(nodes.end(), node);
+            it = nodes.rend();
+            needs_update = true;
+        }
     }
     else if (length(mouse_delta_since_down) > 2.0f && Input::isMouseDown(Input::MOUSE_LEFT))
     {
@@ -285,7 +300,6 @@ void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
     // TODO: links
     // TODO: add new
     // TODO: resize
-    // TODO: minimise
     if (needs_update)
         updateMesh();
     Input::resetMouseDelta();
