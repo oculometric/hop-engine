@@ -2,6 +2,8 @@
 
 ## v0.6
 - CMake build system
+- get/set whole window size
+- fix weird mouse delta behaviour in small window
 - make package-builder independent of hop-engine (provide prebuilt)
 - interactive node editor
 - audio loading and output
