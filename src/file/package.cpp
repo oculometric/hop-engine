@@ -308,7 +308,7 @@ bool Package::storeCompressedPackage(const string& store_path)
 	ifstream file(temp_address, ios::ate | ios::binary);
 	if (!file.is_open())
 	{
-		//filesystem::remove(temp_address);
+		filesystem::remove(temp_address);
 		DBG_ERROR("failed to generate compressed package: " + store_path + "; unable to open zip file");
 		return false;
 	}
@@ -318,7 +318,7 @@ bool Package::storeCompressedPackage(const string& store_path)
 	file.seekg(0);
 	file.read(reinterpret_cast<char*>(content.data()), static_cast<streamsize>(size));
 	file.close();
-	//filesystem::remove(temp_address);
+	filesystem::remove(temp_address);
 
 	PackageHeader header;
 	header.signature = SIGNATURE;

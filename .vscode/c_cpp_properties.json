@@ -5,6 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/lib/**",
+                "C:/VulkanSDK/1.4.313.0/Include",
+                "${workspaceFolder}/inc"
             ],
             "defines": [],
             "cStandard": "c20",

@@ -26,7 +26,7 @@ UniformBlock::UniformBlock(const ShaderLayout& layout_info)
         else if (binding.type == TEXTURE)
         {
             const auto [texture, sampler] = RenderServer::getDefaultTextureSampler();
-            textures_in_use[binding.binding] = { texture, sampler, false };
+            textures_in_use[binding.binding] = { nullptr, sampler, false };
         }
     }
 
@@ -80,12 +80,6 @@ void UniformBlock::setTexture(const uint32_t binding, const Ref<Texture>& image,
     // update the binding
     textures_in_use[binding].texture = image;
     textures_in_use[binding].use_stencil = use_stencil;
-    if (!image)
-    {
-        // if the specified image was null, use the default engine texture
-        textures_in_use[binding].texture = RenderServer::getDefaultTextureSampler().first;
-        textures_in_use[binding].use_stencil = false;
-    }
     applyDescriptorBindings();
 }
 
@@ -145,7 +139,10 @@ void UniformBlock::applyDescriptorBindings()
                 // if the binding is a texture-sampler, give it the image view
                 // and sampler specified in the texture map
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = textures_in_use[binding.binding].texture->getView(textures_in_use[binding.binding].use_stencil);
+                if (textures_in_use[binding.binding].texture)
+                    image_info.imageView = textures_in_use[binding.binding].texture->getView(textures_in_use[binding.binding].use_stencil);
+                else
+                    image_info.imageView = nullptr;
                 image_info.sampler = textures_in_use[binding.binding].sampler->getSampler();
                 descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 descriptor_write.pImageInfo = &image_info;
