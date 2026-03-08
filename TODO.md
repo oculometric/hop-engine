@@ -1,10 +1,18 @@
 # TODO
 
 ## v0.6
-- CMake build system
+- get debug builds working again (release mode, but with optimisation disabled)
+- simplify sampler (incorporate into texture)
+- remove default texture
+- refactor swapchain code
+- overhaul some interfaces (ref project placeholder) (uniform creation, pipeline creation, draw calls, uniform updating happens during command buffer build)
 - get/set whole window size
 - fix weird mouse delta behaviour in small window
-- make package-builder independent of hop-engine (provide prebuilt)
+- fix crashing with renderdoc
+- fix multi-pass rendering not working
+- make the behaviour of cameras and scene drawing more sensible
+- change the way refs work, and the way `new`ing works
+- separate vulkan code from generic code e.g. OBJ loading
 - interactive node editor
 - audio loading and output
 - actual editor (separate project)

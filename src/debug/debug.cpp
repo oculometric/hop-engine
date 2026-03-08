@@ -36,6 +36,9 @@ static string makeANSIColour(const int fgcol, const int bgcol)
 
 void Debug::close()
 {
+	if (application_debug == nullptr)
+		return;
+		
 	Debug::flush();
 #if defined(DEBUG_LOGFILE)
 	file_output.close();
@@ -50,7 +53,10 @@ string Debug::pointerToString(const void* ptr)
 void Debug::write(const string& description, DebugLevel severity)
 {
 	if (application_debug == nullptr)
-		Debug::init(DEBUG_FAULT);
+	{
+		std::cout << description << std::endl;
+		return;
+	}
 
 	if (severity < application_debug->log_level)
 		return;
@@ -123,6 +129,8 @@ void Debug::write(const string& description, DebugLevel severity)
 
 void Debug::flush()
 {
+	if (application_debug == nullptr)
+		return;
 #if defined(DEBUG_LOGFILE)
 	file_output.flush();
 #endif

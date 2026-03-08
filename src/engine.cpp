@@ -2,8 +2,8 @@
 
 #include <chrono>
 #include <imgui/imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_vulkan.h>
+#include <imgui/backends/imgui_impl_glfw.h>
+#include <imgui/backends/imgui_impl_vulkan.h>
 #include <format>
 #if defined(_WIN32)
 #include <Windows.h>
@@ -281,17 +281,17 @@ Engine::Engine()
     Debug::init(DEBUG_FAULT);
     Package::init();
 
-#if defined(_WIN32)
-    const HRSRC res = FindResource(nullptr, MAKEINTRESOURCE(IDR_HOP1), L"HOP");
-    const DWORD size = SizeofResource(nullptr, res);
-    const HGLOBAL data = LoadResource(nullptr, res);
-    vector<uint8_t> engine_package;
-    engine_package.resize(size);
-    memcpy(engine_package.data(), data, size);
-    Package::loadPackageFromMemory(engine_package, "engine.hop (internal)");
-#else
+// #if defined(_WIN32)
+//     const HRSRC res = FindResource(nullptr, MAKEINTRESOURCE(IDR_HOP1), L"HOP");
+//     const DWORD size = SizeofResource(nullptr, res);
+//     const HGLOBAL data = LoadResource(nullptr, res);
+//     vector<uint8_t> engine_package;
+//     engine_package.resize(size);
+//     memcpy(engine_package.data(), data, size);
+//     Package::loadPackageFromMemory(engine_package, "engine.hop (internal)");
+// #else
     Package::loadPackage("engine.hop");
-#endif
+// #endif
     window = new Window(1024, 1024, "STARTING HOP-ENGINE");
     window->setIcon("res://engine/icon.png");
     Input::init(window);

@@ -1,8 +1,8 @@
 #include "render_graph.h"
 
 #include <execution>
-#include <imgui.h>
-#include <imgui_impl_vulkan.h>
+#include <imgui/imgui.h>
+#include <imgui/backends/imgui_impl_vulkan.h>
 #include <vulkan/vulkan.hpp>
 
 #include "render_server.h"

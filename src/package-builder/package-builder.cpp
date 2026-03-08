@@ -2,7 +2,7 @@
 #include <iostream>
 #include <filesystem>
 #include <string>
-#include <base64.hpp>
+#include <base64/base64.hpp>
 
 #include "mesh.h"
 #include "package.h"
@@ -35,7 +35,6 @@ vector<string>::iterator findArg(string s, vector<string>& v)
 // TODO: improve this to be much more advanced, multiple files/folders to specify, set root, etc
 int main(const int nargs, const char** vargs)
 {
-	HopEngine::Debug::init(HopEngine::DEBUG_FAULT);
 	if (nargs < 2)
 	{
 		cout << "usage: package-builder SOURCE_DIRECTORY [options] [OUTPUT_FILE]" << endl;
@@ -98,6 +97,8 @@ int main(const int nargs, const char** vargs)
 		HopEngine::Package::storeCompressedPackage(output_hop);
 	else
 		HopEngine::Package::storePackage(output_hop);
+
+
 
 	return 0;
 }

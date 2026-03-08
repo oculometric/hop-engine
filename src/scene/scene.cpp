@@ -1,6 +1,6 @@
 #include "scene.h"
 
-#include <imgui.h>
+#include <imgui/imgui.h>
 
 #include "texture.h"
 #include "render_graph.h"
