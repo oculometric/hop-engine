@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fstream>
+
 #if defined(_WIN32)
 #pragma warning(push)
 #pragma warning(disable: 4005)
@@ -26,9 +28,6 @@
 #define PTR(ptr) Debug::pointerToString(ptr)
 
 #if defined (DEBUG_ENABLED)
-
-#define DEBUG_TERMINAL cout
-#define DEBUG_LOGFILE "log/"
 
 #if DEBUG_LEVEL == 0
 #undef DBG_BABBLE
@@ -91,6 +90,7 @@ private:
 	DebugLevel log_level = DEBUG_INFO;
 	// minimum severity for a debug command to trigger a program crash.
 	DebugLevel crash_level = DEBUG_FAULT;
+	ofstream file_output;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Debug);
@@ -133,7 +133,7 @@ public:
 	static void flush();
 
 private:
-	Debug();
+	Debug(DebugLevel crash);
 	~Debug();
 };
 

@@ -28,6 +28,7 @@ void Input::destroy()
 	}
 }
 
+
 bool Input::isKeyDown(const int key)
 {
 	if (ImGui::GetIO().WantTextInput)
@@ -171,5 +172,4 @@ Input::Input()
 
 Input::~Input()
 {
-	window = nullptr;
 }

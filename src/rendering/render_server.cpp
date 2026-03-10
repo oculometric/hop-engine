@@ -46,6 +46,7 @@ void RenderServer::destroy()
     }
 }
 
+
 VkDescriptorSetLayout RenderServer::getSceneDescriptorSetLayout()
 { return server->scene_descriptor_set_layout; }
 

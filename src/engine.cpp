@@ -24,7 +24,14 @@ void Engine::init()
 }
 
 void Engine::destroy()
-{ delete engine; }
+{
+    if (engine != nullptr)
+    {
+        delete engine;
+        engine = nullptr;
+    }
+}
+
 
 void Engine::stop()
 { engine->stop_requested = true; }
@@ -341,8 +348,6 @@ Engine::~Engine()
     else
         DBG_INFO("good girl for cleaning up!");
     Debug::close();
-
-    engine = nullptr;
 }
 
 Engine* Engine::getEngine()

@@ -7,24 +7,25 @@
 using namespace HopEngine;
 using namespace std;
 
-static Package* application_package = nullptr;
+static Package* instance = nullptr;
 
 void Package::init()
 {
 	DBG_INFO("initialising package manager");
-	if (application_package == nullptr)
-		application_package = new Package();
+	if (instance == nullptr)
+		instance = new Package();
 }
 
 void Package::destroy()
 {
 	DBG_INFO("destroying package manager");
-	if (application_package != nullptr)
+	if (instance != nullptr)
 	{
-		delete application_package;
-		application_package = nullptr;
+		delete instance;
+		instance = nullptr;
 	}
 }
+
 
 constexpr uint32_t SIGNATURE = 0xCA55E77E;
 
@@ -108,7 +109,7 @@ bool Package::loadPackageFromMemory(vector<uint8_t>& content, const string& load
 		memcpy((char*)(name.data()), (content.data() + data_header_offset + sizeof(PackageDataHeader)), name.size());
 		vector<uint8_t> data(data_header.data_size);
 		memcpy(data.data(), (content.data() + data_header_offset + sizeof(PackageDataHeader) + name.size()), data.size());
-		application_package->database[name] = data;
+		instance->database[name] = data;
 	}
 	
 	size_t offset = sizeof(PackageHeader) + (sizeof(PackageEntry) * entries.size());
@@ -119,7 +120,7 @@ bool Package::loadPackageFromMemory(vector<uint8_t>& content, const string& load
 		string b_string(alias_header.b_string_length, ' ');
 		memcpy(a_string.data(), content.data() + offset + sizeof(AliasEntry), alias_header.a_string_length);
 		memcpy(b_string.data(), content.data() + offset + sizeof(AliasEntry) + alias_header.a_string_length, alias_header.b_string_length);
-		application_package->alias_table[a_string] = b_string;
+		instance->alias_table[a_string] = b_string;
 		
 		offset += sizeof(AliasEntry) + alias_header.a_string_length + alias_header.b_string_length;
 	}
@@ -130,7 +131,7 @@ bool Package::loadPackageFromMemory(vector<uint8_t>& content, const string& load
 
 bool Package::loadPackage(const string& load_path)
 {
-	if (!application_package)
+	if (!instance)
 		Package::init();
 
 	DBG_VERBOSE("loading package: " + load_path);
@@ -153,27 +154,27 @@ bool Package::loadPackage(const string& load_path)
 vector<string> Package::listLoadedEntries()
 {
 	vector<string> names;
-	names.reserve(application_package->database.size());
-	for (const auto& [identifier, _] : application_package->database)
+	names.reserve(instance->database.size());
+	for (const auto& [identifier, _] : instance->database)
 		names.push_back(identifier);
 	return names;
 }
 
 vector<uint8_t> Package::loadData(const string& identifier)
 {
-	if (!application_package)
+	if (!instance)
 		Package::init();
 
 	DBG_VERBOSE("loading '" + identifier + "'");
-	const auto redirector = application_package->alias_table.find(identifier);
+	const auto redirector = instance->alias_table.find(identifier);
 	map<string, vector<uint8_t>>::iterator it;
-	if (redirector == application_package->alias_table.end())
-		it = application_package->database.find(identifier);
+	if (redirector == instance->alias_table.end())
+		it = instance->database.find(identifier);
 	else
-		it = application_package->database.find(redirector->second);
-	if (it != application_package->database.end())
+		it = instance->database.find(redirector->second);
+	if (it != instance->database.end())
 		return it->second;
-	if (redirector == application_package->alias_table.end())
+	if (redirector == instance->alias_table.end())
 		DBG_WARNING("found no data associated with '" + identifier + "'");
 	else
 		DBG_WARNING("found no data associated with '" + identifier + "' (redirected to '" + redirector->second + "')");
@@ -182,7 +183,7 @@ vector<uint8_t> Package::loadData(const string& identifier)
 
 vector<uint8_t> Package::tryLoadFile(const string& path_or_identifier)
 {
-	if (!application_package)
+	if (!instance)
 		Package::init();
 
 	const static string res_prefix = "res://";
@@ -214,7 +215,7 @@ vector<uint8_t> Package::tryLoadFile(const string& path_or_identifier)
 
 bool Package::storePackage(const string& store_path)
 {
-	if (!application_package)
+	if (!instance)
 		Package::init();
 
 	DBG_VERBOSE("storing package: " + store_path);
@@ -227,13 +228,13 @@ bool Package::storePackage(const string& store_path)
 
 	PackageHeader header;
 	header.signature = SIGNATURE;
-	header.package_entries = static_cast<uint32_t>(application_package->database.size());
-	header.alias_entries = static_cast<uint32_t>(application_package->alias_table.size());
+	header.package_entries = static_cast<uint32_t>(instance->database.size());
+	header.alias_entries = static_cast<uint32_t>(instance->alias_table.size());
 	header.version = 3;
 	
 	vector<vector<uint8_t>> data_blocks;
 	size_t offset = sizeof(PackageHeader);
-	for (const auto& [a, b] : application_package->alias_table)
+	for (const auto& [a, b] : instance->alias_table)
 	{
 		const AliasEntry entry = { a.size(), b.size() };
 		vector<uint8_t> data_block(sizeof(AliasEntry) + entry.a_string_length + entry.b_string_length);
@@ -245,8 +246,8 @@ bool Package::storePackage(const string& store_path)
 	}
 	
 	vector<PackageEntry> entries;
-	offset += (application_package->database.size() * sizeof(PackageEntry));
-	for (auto [identifier, object_data] : application_package->database)
+	offset += (instance->database.size() * sizeof(PackageEntry));
+	for (auto [identifier, object_data] : instance->database)
 	{
 		PackageDataHeader data_header;
 		data_header.name_size = identifier.size();
@@ -278,7 +279,7 @@ bool Package::storePackage(const string& store_path)
 
 bool Package::storeCompressedPackage(const string& store_path)
 {
-	if (!application_package)
+	if (!instance)
 		Package::init();
 
 	DBG_VERBOSE("storing compressed package: " + store_path);
@@ -293,7 +294,7 @@ bool Package::storeCompressedPackage(const string& store_path)
 	command = "zip.exe -j ";
 #endif
 
-	string temp_address = Package::getTempPath() + "hop_package_tmp" + PTR(application_package) + ".zip";
+	string temp_address = Package::getTempPath() + "hop_package_tmp" + PTR(instance) + ".zip";
 	filesystem::create_directories(Package::getTempPath());
 	command = command + temp_address + ' ' + store_path;
 	string output;
@@ -343,16 +344,16 @@ bool Package::storeCompressedPackage(const string& store_path)
 
 void Package::storeData(const string& identifier, const vector<uint8_t>& data)
 {
-	if (!application_package)
+	if (!instance)
 		Package::init();
 
 	DBG_VERBOSE("storing '" + identifier + "'; " + to_string(data.size()) + " bytes");
-	application_package->database[identifier] = data;
+	instance->database[identifier] = data;
 }
 
 void Package::tryWriteFile(const string& path, const vector<uint8_t>& data)
 {
-	if (!application_package)
+	if (!instance)
 		Package::init();
 
 	DBG_VERBOSE("storing '" + path + "' to file; " + to_string(data.size()) + " bytes");
@@ -367,19 +368,18 @@ void Package::tryWriteFile(const string& path, const vector<uint8_t>& data)
 }
 
 void Package::setAlias(const std::string& a, const std::string& b)
-{ application_package->alias_table[a] = b; }
+{ instance->alias_table[a] = b; }
 
 void Package::clearAlias(const std::string& a)
-{ application_package->alias_table.erase(a); }
+{ instance->alias_table.erase(a); }
 
 Package::~Package()
 {
-	database.clear();
 }
 
 vector<uint8_t> Package::loadCompressedPackage(const vector<uint8_t>& data)
 {
-	if (!application_package)
+	if (!instance)
 		Package::init();
 
 	PackageHeader header = *reinterpret_cast<const PackageHeader*>(data.data());

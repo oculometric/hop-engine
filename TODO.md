@@ -1,14 +1,13 @@
 # TODO
 
 ## v0.52
-- refactor init/destroy/construct/destruct
 - make frame index accessible
 - get build time down!
+- refactor the way engine loop/setup works
 ---
 ## v0.53
 - separate vulkan code from generic code e.g. OBJ loading
 - multi-scene mode in the engine
-- refactor the way engine loop/setup works
 - don't make post-process shaders go into wireframe mode
 - refactor swapchain code
 - overhaul some interfaces (ref project placeholder) (uniform creation into renderserver, pipeline creation into shader, draw calls, uniform updating happens during command buffer build)
