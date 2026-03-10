@@ -34,7 +34,7 @@ public:
 	void pushToDescriptorSet(size_t index);
 	Ref<Material> duplicate() const;
 	
-	void bind(Ref<DrawCommandBuffer> command_buffer);
+	void bind(Ref<DrawCommandBuffer> command_buffer, bool wireframe_allowed = true);
 	
 	void setTexture(uint32_t binding, const Ref<Texture>& texture, bool use_stencil = false);
 	void setSampler(uint32_t binding, const Ref<Sampler>& sampler);

@@ -275,7 +275,7 @@ void RenderGraph::recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, Wea
 
 void RenderGraph::bind(Ref<DrawCommandBuffer> command_buffer)
 {
-    passthrough->bind(command_buffer);
+    passthrough->bind(command_buffer, false);
 }
 
 size_t RenderGraph::findStep(const string& name) const
@@ -345,7 +345,7 @@ void RenderGraph::recordPostProcessStep(Ref<DrawCommandBuffer> command_buffer, c
 {
     material->getRenderPass()->begin(command_buffer, { 0, 0, 0 });
     
-    material->bind(command_buffer);
+    material->bind(command_buffer, false);
     scene_descriptor_set->bind(command_buffer, 0);
     
     WeakRef<Mesh> quad = RenderServer::getQuad();

@@ -48,26 +48,6 @@ Ref<Shader> Material::getShader() const
 {
 	return shader;
 }
-//
-// VkPipelineLayout Material::getPipelineLayout() const
-// {
-// 	return shader->getPipelineLayout();
-// }
-//
-// VkPipeline Material::getPipeline() const
-// {
-// 	return pipeline->getPipeline();
-// }
-//
-// VkPipeline Material::getDebugPipeline() const
-// {
-// 	return debug_pipeline->getPipeline();
-// }
-//
-// VkDescriptorSet Material::getDescriptorSet(const size_t index) const
-// {
-// 	return uniforms->getDescriptorSet(index);
-// }
 
 Ref<RenderPass> Material::getRenderPass() const
 {
@@ -85,9 +65,9 @@ Ref<Material> Material::duplicate() const
 	return new Material(shader, pipeline->getConfig(), render_pass);
 }
 
-void Material::bind(Ref<DrawCommandBuffer> command_buffer)
+void Material::bind(Ref<DrawCommandBuffer> command_buffer, bool wireframe_allowed)
 {
-	if (Engine::isWireframeMode())
+	if (Engine::isWireframeMode() && wireframe_allowed)
 		debug_pipeline->bind(command_buffer);
 	else
 		pipeline->bind(command_buffer);

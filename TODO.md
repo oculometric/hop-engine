@@ -1,18 +1,12 @@
 # TODO
 
 ## v0.52
-- get build time down!
----
-## v0.53
+- overhaul some interfaces (ref project placeholder) (uniform creation into renderserver, pipeline creation into shader, draw calls, uniform updating happens during command buffer build)
 - separate vulkan code from generic code e.g. OBJ loading
 - multi-scene mode in the engine
-- don't make post-process shaders go into wireframe mode
 - refactor swapchain code
-- overhaul some interfaces (ref project placeholder) (uniform creation into renderserver, pipeline creation into shader, draw calls, uniform updating happens during command buffer build)
 - simplify texture to be in one of several 'modes/types' (fix the way view aspects behave), overhaul initialisation
 - simplify sampler (remove rebuilding)
----
-## v0.54
 - create image view on image create
 - fix crashing with renderdoc
 - fix multi-pass rendering not working
