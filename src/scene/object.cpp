@@ -9,6 +9,7 @@
 #include "pbr.h"
 #include "command_buffer.h"
 #include "scene.h"
+#include "engine.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -177,10 +178,10 @@ void Camera::bind(const Ref<DrawCommandBuffer>& command_buffer)
 	uniforms->bind(command_buffer, 0);
 }
 
-SceneUniforms Camera::getSceneUniforms(const glm::ivec2 viewport_size, const float time, const vector<LightParams>& lights, const glm::vec4 ambient)
+SceneUniforms Camera::getSceneUniforms(const glm::ivec2 viewport_size, const vector<LightParams>& lights, const glm::vec4 ambient)
 {
 	SceneUniforms scene_uniforms;
-	scene_uniforms.time = time;
+	scene_uniforms.time = Engine::getEngineTime();
 	scene_uniforms.eye_position = transform.getPosition();
 	scene_uniforms.viewport_size = viewport_size;
 	scene_uniforms.world_to_view = glm::inverse(transform.getMatrix());
@@ -209,9 +210,9 @@ glm::mat4 Camera::getWorldToScreenMatrix()
 
 void Camera::pushToDescriptorSet(size_t index) { }
 
-void Camera::pushToCameraDescriptorSet(const size_t index, const glm::ivec2 viewport_size, const float time, const vector<LightParams>& lights, const glm::vec4 ambient)
+void Camera::pushToCameraDescriptorSet(const size_t index, const glm::ivec2 viewport_size, const vector<LightParams>& lights, const glm::vec4 ambient)
 {
-	SceneUniforms scene_uniforms = getSceneUniforms(viewport_size, time, lights, ambient);
+	SceneUniforms scene_uniforms = getSceneUniforms(viewport_size, lights, ambient);
 
 	memcpy(uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
 	uniforms->pushToDescriptorSet(index);

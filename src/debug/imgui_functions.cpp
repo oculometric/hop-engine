@@ -381,13 +381,13 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 	}
 }
 
-void Engine::debugCamera(float delta_time)
+void Engine::debugCamera()
 {
 	if (!selected_camera)
 		return;
 
 	glm::vec2 mouse_delta = { 0, 0 };
-	mouse_delta += glm::vec2{ Input::getGamepadAxis(Input::GAMEPAD_RX), Input::getGamepadAxis(Input::GAMEPAD_RY) } * delta_time * 160.0f;
+	mouse_delta += glm::vec2{ Input::getGamepadAxis(Input::GAMEPAD_RX), Input::getGamepadAxis(Input::GAMEPAD_RY) } * Engine::getDeltaTime() * 160.0f;
 	static bool mouse_down = false;
 	if (Input::isMouseDown(Input::MOUSE_RIGHT))
 	{
@@ -410,7 +410,7 @@ void Engine::debugCamera(float delta_time)
 		                              Input::getAxis('A', 'D') + Input::getGamepadAxis(Input::GAMEPAD_LX),
 		                              Input::getAxis('Q', 'E') + Input::getGamepadAxis(Input::GAMEPAD_BUTTONS),
 		                              Input::getAxis('W', 'S') + Input::getGamepadAxis(Input::GAMEPAD_LY)
-	                              } * delta_time * 1.5f;
+	                              } * Engine::getDeltaTime() * 1.5f;
 	if (Input::isKeyDown(Input::KEY_LEFT_SHIFT) || Input::isGamepadButtonDown(Input::GAMEPAD_B))
 		local_move_vector *= 3.0f;
 	selected_camera->transform.translateLocal(local_move_vector);

@@ -48,7 +48,7 @@ public:
 	std::vector<DrawCommand> getDrawCommands() const;
 	WeakRef<Object> raycast(glm::vec3 position, glm::vec3 direction) const;
 	void setCameraSlot(const Ref<Camera>& camera, size_t slot);
-	void updateUniforms(uint32_t image_index, float time_since_start, glm::u32vec2 viewport_size, FrameStats& stats);
+	void updateUniforms(uint32_t image_index, glm::u32vec2 viewport_size, FrameStats& stats);
 	
 	static Ref<Scene> deserialise(const std::string& name);
 	

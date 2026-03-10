@@ -91,7 +91,7 @@ public:
 	void setSkipStep(size_t step, bool skip);
 	void setSkipStep(const std::string& name, bool skip);
 	void resizeBuffers(uint32_t width, uint32_t height);
-	void updateUniforms(uint32_t image_index, float time_since_start, WeakRef<Scene> scene);
+	void updateUniforms(uint32_t image_index, WeakRef<Scene> scene);
 	void recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, WeakRef<Scene> scene, FrameStats& stats) const;
 	void bind(Ref<DrawCommandBuffer> command_buffer);
 	

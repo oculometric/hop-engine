@@ -83,7 +83,7 @@ static void updateNodeScene(Ref<Scene> scene, float delta_time)
     node_view->checkInput({ 0, 0 }, scene->getViewportSize());
 }
 
-void imguiNodeScene(Ref<Scene> scene, float delta_time)
+void imguiNodeScene(Ref<Scene> scene)
 {
     ImGui::Begin("style controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     {

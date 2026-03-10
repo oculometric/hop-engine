@@ -189,20 +189,20 @@ void RenderGraph::resizeBuffers(const uint32_t width, const uint32_t height)
     expected_extent = { width, height };
 }
 
-void RenderGraph::updateUniforms(uint32_t image_index, float time_since_start, WeakRef<Scene> scene)
+void RenderGraph::updateUniforms(uint32_t image_index, WeakRef<Scene> scene)
 {
     for (const RenderStep& step : execution_steps)
     {
         if (step.is_camera)
         {
             glm::u32vec2 extent = step.render_pass->getExtent();
-            scene->getCamera(step.camera_slot)->pushToCameraDescriptorSet(image_index, { extent.x, extent.y }, time_since_start, scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
+            scene->getCamera(step.camera_slot)->pushToCameraDescriptorSet(image_index, { extent.x, extent.y }, scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
         }
         else
         {
             glm::u32vec2 extent = execution_steps[0].render_pass->getExtent();
             step.material->pushToDescriptorSet(image_index);
-            SceneUniforms uniforms = scene->getCamera(execution_steps[0].camera_slot)->getSceneUniforms({ extent.x, extent.y }, time_since_start, scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
+            SceneUniforms uniforms = scene->getCamera(execution_steps[0].camera_slot)->getSceneUniforms({ extent.x, extent.y }, scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
             uniforms.viewport_size = { step.render_pass->getExtent().x, step.render_pass->getExtent().y };
             memcpy(step.scene_uniforms->getBuffer(), &uniforms, sizeof(SceneUniforms));
             step.scene_uniforms->pushToDescriptorSet(image_index);

@@ -72,10 +72,10 @@ public:
 	static Ref<Camera> create();
 
 	void bind(const Ref<DrawCommandBuffer>& command_buffer);
-	SceneUniforms getSceneUniforms(glm::ivec2 viewport_size, float time, const std::vector<LightParams>& lights, glm::vec4 ambient);
+	SceneUniforms getSceneUniforms(glm::ivec2 viewport_size, const std::vector<LightParams>& lights, glm::vec4 ambient);
 	glm::mat4 getWorldToScreenMatrix();
 	void pushToDescriptorSet(size_t index) override;
-	void pushToCameraDescriptorSet(size_t index, glm::ivec2 viewport_size, float time, const std::vector<LightParams>& lights, glm::vec4 ambient);
+	void pushToCameraDescriptorSet(size_t index, glm::ivec2 viewport_size, const std::vector<LightParams>& lights, glm::vec4 ambient);
 	
 	void drawImGuiDebug() override;
 	

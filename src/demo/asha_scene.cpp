@@ -103,17 +103,14 @@ static Ref<Scene> initAshaScene()
 
 static void updateAshaScene(Ref<Scene> scene, float delta_time)
 {
-    static float total_time = 0;
-    total_time += delta_time;
-
     // tick the debug camera
-    Engine::debugCamera(delta_time);
+    Engine::debugCamera();
     
     // let the gizmo do things
     gizmo->trackObject(Engine::getDebugSelection(), scene->getCamera(0));
 }
 
-static void imGuiAshaScene(Ref<Scene> scene, float delta_time)
+static void imGuiAshaScene(Ref<Scene> scene)
 {
     {
         // draw the colour correction controls
@@ -140,7 +137,7 @@ static void imGuiAshaScene(Ref<Scene> scene, float delta_time)
         ImGui::End();
     }
     
-    Engine::drawImGuiDebug(delta_time);
+    Engine::drawImGuiDebug();
 }
 
 SceneFuncSet getAshaScene()

@@ -29,7 +29,7 @@ void Engine::destroy()
 void Engine::stop()
 { engine->stop_requested = true; }
 
-void Engine::setup(void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>, float))
+void Engine::setup(void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>))
 {
     RenderServer::waitIdle();
 
@@ -46,6 +46,10 @@ void Engine::mainLoop()
         auto this_frame = chrono::steady_clock::now();
         chrono::duration<float> delta = this_frame - last_frame;
         last_frame = this_frame;
+        engine->delta_time = delta.count();
+        chrono::duration<float> since_start = this_frame - engine->engine_start_timestamp;
+        engine->total_time = since_start.count();
+
         Input::pollInput();
         auto imgui_start = chrono::steady_clock::now();
         if (engine->imgui_func)
@@ -55,7 +59,7 @@ void Engine::mainLoop()
             ImGui::NewFrame();
 
             RenderServer::waitIdle();
-            engine->imgui_func(engine->scene, delta.count());
+            engine->imgui_func(engine->scene);
 
             ImGui::Render();
         }
@@ -63,7 +67,7 @@ void Engine::mainLoop()
         FrameStats stats = RenderServer::draw();
         auto update_start = chrono::steady_clock::now();
         if (engine->update_func)
-            engine->update_func(engine->scene, delta.count());
+            engine->update_func(engine->scene, getDeltaTime());
         chrono::duration<float> update_duration = chrono::steady_clock::now() - update_start;
         stats.imgui_time = imgui_duration.count();
         stats.update_time = update_duration.count();
@@ -118,6 +122,12 @@ void HopEngine::unregisterCountedRef(const void* ptr)
 
 FrameStats Engine::getFrameStats()
 { return engine->last_frame_stats; }
+
+float Engine::getDeltaTime()
+{ return engine->delta_time; }
+
+float Engine::getEngineTime()
+{ return engine->total_time; }
 
 float Engine::getSmoothedDeltaTime()
 { return engine->smoothed_delta_time; }
@@ -265,14 +275,17 @@ size_t Engine::pruneUnusedResources()
     return pruned_refs;
 }
 
-void Engine::drawImGuiDebug(float delta_time)
+void Engine::drawImGuiDebug()
 {
-    engine->_drawImGuiDebug(delta_time);
+    engine->_drawImGuiDebug(getDeltaTime());
 }
 
 Engine::Engine()
 {
     engine = this;
+
+    engine->engine_start_timestamp = chrono::steady_clock::now();
+
     Debug::init(DEBUG_FAULT);
     Package::init();
 

@@ -2,6 +2,7 @@
 
 #include <map>
 #include <vector>
+#include <chrono>
 
 #include "common.h"
 #include "sampler.h"
@@ -15,7 +16,7 @@ class Engine
 private:
 	Ref<Scene> scene;
 	void(* update_func)(Ref<Scene>, float) = nullptr;
-	void(* imgui_func)(Ref<Scene>, float) = nullptr;
+	void(* imgui_func)(Ref<Scene>) = nullptr;
 
 	std::multimap<const char*, WeakRef<void>> allocated_refs;
 	std::map<std::string, Ref<Shader>> loaded_shaders;
@@ -26,6 +27,9 @@ private:
 	std::vector<Ref<Destructible>> keep_loaded_refs;
 
 	FrameStats last_frame_stats;
+	std::chrono::steady_clock::time_point engine_start_timestamp;
+	float delta_time = 0.0f;
+	float total_time = 0.0f;
 	float smoothed_delta_time = 0.0f;
 	float smoothed_fps = 0.0f;
 	float delta_time_history[512];
@@ -41,16 +45,20 @@ public:
 
 	static void init();
 	static void destroy();
+	
+	static void setup(void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>));
 	static void stop();
-
-	static void setup(void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>, float));
 	static void mainLoop();
 	static Ref<Scene> getScene();
 	static void setScene(const Ref<Scene>& new_scene);
 	static void summariseTrackedObjects();
 	static FrameStats getFrameStats();
+	
+	static float getDeltaTime();
+	static float getEngineTime();
 	static float getSmoothedDeltaTime();
 	static float getSmoothedFPS();
+	
 	static bool isWireframeMode();
 	template <class T> static std::vector<WeakRef<T>> getAllRefs();
 	static void setForceWireframe(bool value);
@@ -59,7 +67,7 @@ public:
 	template <class T> static Ref<T> keepLoaded(Ref<T> ref);
 	template <class T> static Ref<T> keepLoaded(T* ref) { return keepLoaded(Ref<T>(ref)); }
 
-	static void debugCamera(float delta_time);
+	static void debugCamera();
 	static void debugSelect(const WeakRef<Object>& object);
 	static void debugClearSelection(const WeakRef<Object>& object = WeakRef<Object>(), const WeakRef<Material>& material = WeakRef<Material>(), WeakRef<Camera> camera = WeakRef<Camera>());
 	static WeakRef<Object> getDebugSelection();
@@ -71,7 +79,7 @@ public:
 	static Ref<Mesh> loadMesh(const std::string& path);
 	static Ref<Sampler> makeSampler(const SamplerBuilder& builder);
 	static size_t pruneUnusedResources();
-	static void drawImGuiDebug(float delta_time);
+	static void drawImGuiDebug();
 	
 private:
 	Engine();

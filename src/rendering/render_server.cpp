@@ -249,10 +249,7 @@ FrameStats RenderServer::drawFrame()
     ++frame_index;
     DBG_BABBLE("drawing frame " + ::to_string(frame_index));
 
-    static auto start_time = chrono::steady_clock::now();
     FrameStats stats;
-    const auto now_time = chrono::steady_clock::now();
-    const chrono::duration<float> since_start = now_time - start_time;
 
     vkWaitForFences(device, 1, &in_flight_fences[frame_index % frames_in_flight], VK_TRUE, UINT64_MAX);
     vkResetFences(device, 1, &in_flight_fences[frame_index % frames_in_flight]);
@@ -262,7 +259,7 @@ FrameStats RenderServer::drawFrame()
     DBG_BABBLE("acquired image " + ::to_string(image_index));
 
     const auto build_start = chrono::steady_clock::now();
-    updateUniforms(image_index, since_start.count(), stats);
+    updateUniforms(image_index, stats);
     const chrono::duration<float> build_duration = chrono::steady_clock::now() - build_start;
     stats.build_time = build_duration.count();
 
@@ -333,12 +330,12 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
     command_buffer->end();
 }
 
-void RenderServer::updateUniforms(uint32_t image_index, float time_since_start, FrameStats& stats)
+void RenderServer::updateUniforms(uint32_t image_index, FrameStats& stats)
 {
     size_t valid_scenes = 0;
         
     SceneUniforms scene_uniforms;
-    scene_uniforms.time = time_since_start;
+    scene_uniforms.time = Engine::getEngineTime();
     scene_uniforms.eye_position = { 0, 0, 0 };
     scene_uniforms.viewport_size = swapchain->getExtent();
     scene_uniforms.world_to_view = glm::mat4(1);
@@ -353,7 +350,7 @@ void RenderServer::updateUniforms(uint32_t image_index, float time_since_start, 
     {
         if (!scene.scene)
             continue;
-        scene.scene->updateUniforms(image_index, time_since_start, glm::vec2(swapchain->getExtent()) * scene.size_uv, stats);
+        scene.scene->updateUniforms(image_index, glm::vec2(swapchain->getExtent()) * scene.size_uv, stats);
         ++valid_scenes;
     }
     if (valid_scenes == 0)

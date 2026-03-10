@@ -2,12 +2,15 @@
 
 ## v0.52
 - refactor init/destroy/construct/destruct
-- abstract timing (total and delta)
+- make frame index accessible
 - make sure everything has WaitIdle where appropriate
 - get debug builds working again (release mode, but with optimisation disabled)
 ---
 ## v0.53
 - separate vulkan code from generic code e.g. OBJ loading
+- multi-scene mode in the engine
+- refactor the way engine loop/setup works
+- don't make post-process shaders go into wireframe mode
 - refactor swapchain code
 - overhaul some interfaces (ref project placeholder) (uniform creation into renderserver, pipeline creation into shader, draw calls, uniform updating happens during command buffer build)
 - simplify texture to be in one of several 'modes/types' (fix the way view aspects behave), overhaul initialisation
@@ -18,7 +21,7 @@
 - fix crashing with renderdoc
 - fix multi-pass rendering not working
 - make the behaviour of cameras and scene drawing more sensible (draw calls)
-- change the way refs work, and the way `new`ing works
+- change the way refs work, and the way `new`ing works (classes only construct via ::create, remove keepLoaded)
 ---
 # v0.6
 - interactive node editor
