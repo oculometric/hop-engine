@@ -111,8 +111,6 @@ static void updateAshaScene(Ref<Scene> scene, float delta_time)
     
     // let the gizmo do things
     gizmo->trackObject(Engine::getDebugSelection(), scene->getCamera(0));
-    
-    Input::resetMouseDelta();
 }
 
 static void imGuiAshaScene(Ref<Scene> scene, float delta_time)

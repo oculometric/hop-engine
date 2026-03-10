@@ -1,11 +1,11 @@
 # TODO
 
 ## v0.52
-- fix weird mouse delta behaviour in small window
-- get debug builds working again (release mode, but with optimisation disabled)
-- abstract timing (total and delta)
 - refactor init/destroy/construct/destruct
+- abstract timing (total and delta)
 - make sure everything has WaitIdle where appropriate
+- get debug builds working again (release mode, but with optimisation disabled)
+---
 ## v0.53
 - separate vulkan code from generic code e.g. OBJ loading
 - refactor swapchain code

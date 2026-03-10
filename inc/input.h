@@ -142,6 +142,8 @@ private:
 	std::set<int> pressed_since_checked;
 	std::set<MouseButton> pressed_since_checked_mouse;
 	std::map<int, GamepadState> gamepad_states;
+	glm::vec2 mouse_delta;
+	glm::vec2 mouse_position;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Input);
@@ -159,7 +161,6 @@ public:
 	static void pollInput();
 	static bool isGamepadButtonDown(GamepadButton button, int controller = 0);
 	static float getGamepadAxis(GamepadAxis axis, int controller = 0);
-	static void resetMouseDelta();
 	static void setCursorVisible(bool visible);
 
 private:

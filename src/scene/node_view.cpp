@@ -317,7 +317,6 @@ void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
     // TODO: resize
     if (needs_update)
         updateMesh();
-    Input::resetMouseDelta();
     //DBG_INFO("pos: " + ::to_string(node_space_pos.x) + ", " + ::to_string(node_space_pos.y));
 }
 
