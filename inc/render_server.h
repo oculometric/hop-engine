@@ -106,8 +106,9 @@ public:
 	static VkQueue getGraphicsQueue();
 	static VkCommandPool getCommandPool();
 	static VkDescriptorPool getDescriptorPool();
-	static VkDescriptorSetLayout getSceneDescriptorSetLayout();
-	static VkDescriptorSetLayout getObjectDescriptorSetLayout();
+	static Ref<UniformBlock> createSceneUniforms();
+	static Ref<UniformBlock> createObjectUniforms();
+	static VkPipelineLayout createPipelineLayout(VkDescriptorSetLayout set_2);
 	
 	static Ref<RenderPass> getMainRenderPass();
 	static Ref<RenderPass> getFinalRenderPass();

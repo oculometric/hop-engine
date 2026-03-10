@@ -69,7 +69,7 @@ RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader
         step.render_pass = new RenderPass(custom_extent.x ? custom_extent.x : static_cast<uint32_t>(size.x), custom_extent.y ? custom_extent.y : static_cast<uint32_t>(size.y), render_pass_config);
     step.material = new Material(shader, PipelineBuilder().cullMode(CULL_NONE).depthTest(VK_FALSE).depthWrite(VK_FALSE), step.render_pass);
     step.texture_bindings = texture_bindings;
-    step.scene_uniforms = new UniformBlock(ShaderLayout{ RenderServer::getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
+    step.scene_uniforms = RenderServer::createSceneUniforms();
     execution_steps.push_back(step);
     return *this;
 }

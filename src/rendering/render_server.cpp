@@ -46,13 +46,6 @@ void RenderServer::destroy()
     }
 }
 
-
-VkDescriptorSetLayout RenderServer::getSceneDescriptorSetLayout()
-{ return server->scene_descriptor_set_layout; }
-
-VkDescriptorSetLayout RenderServer::getObjectDescriptorSetLayout()
-{ return server->object_descriptor_set_layout; }
-
 RenderServer::RenderServer()
 {
     server = this;
@@ -81,10 +74,7 @@ RenderServer::RenderServer()
     skybox_cube = new Mesh("res://engine/meshes/skybox.obj");
 
     default_material = new Material(new Shader("res://engine/shaders/default_shader.glsl"));
-    final_pass_uniforms = new UniformBlock(ShaderLayout{
-                    server->scene_descriptor_set_layout, 
-                    {{ 0, UNIFORM, sizeof(SceneUniforms) } }
-                });
+    final_pass_uniforms = createSceneUniforms();
     initImGui();
 
     DBG_VERBOSE("graphics server initialised");
@@ -193,6 +183,42 @@ bool RenderServer::getVsyncEnabled()
 
 VkDescriptorPool RenderServer::getDescriptorPool()
 { return server->descriptor_pool; }
+
+Ref<UniformBlock> RenderServer::createSceneUniforms()
+{
+    return new UniformBlock(ShaderLayout{
+        server->scene_descriptor_set_layout, 
+        {{ 0, UNIFORM, sizeof(SceneUniforms) } }
+    });
+}
+
+Ref<UniformBlock> RenderServer::createObjectUniforms()
+{
+    return new UniformBlock(ShaderLayout{
+        server->object_descriptor_set_layout, 
+        {{ 0, UNIFORM, sizeof(ObjectUniforms) } }
+    });
+}
+
+VkPipelineLayout RenderServer::createPipelineLayout(VkDescriptorSetLayout set_2)
+{
+    VkPipelineLayoutCreateInfo layout_create_info{ };
+	layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	layout_create_info.setLayoutCount = 3;
+	const VkDescriptorSetLayout layouts[3] =
+	{
+		server->scene_descriptor_set_layout,
+		server->object_descriptor_set_layout,
+		set_2
+	};
+	layout_create_info.pSetLayouts = layouts;
+
+    VkPipelineLayout pipeline_layout;
+	if (vkCreatePipelineLayout(RenderServer::getDevice(), &layout_create_info, nullptr, &pipeline_layout) != VK_SUCCESS)
+		DBG_FAULT("vkCreatePipelineLayout failed");
+
+    return pipeline_layout;
+}
 
 pair<Ref<Texture>, Ref<Sampler>> RenderServer::getDefaultTextureSampler()
 { return { server->default_image, server->default_sampler }; }

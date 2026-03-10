@@ -1,7 +1,8 @@
 # TODO
 
 ## v0.52
-- overhaul some interfaces (ref project placeholder) (uniform creation into renderserver, pipeline creation into shader)
+- overhaul some interfaces (pipeline creation into shader)
+- fix stats
 - refactor swapchain code
 - make the behaviour of cameras and scene drawing more sensible (draw calls), render graph etc (weirdly jank and disorganised), reduce the aggressive draw call sorting, lots of 'viewport size' passthroughs (should just call scene-draw() which returns a texture)
 - cameras should have a slot index within them, rather than the scene, deprecate setCameraSlot

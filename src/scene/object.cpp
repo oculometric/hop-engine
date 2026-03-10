@@ -151,7 +151,7 @@ void Object::addChild(Ref<Object> object)
 Object::Object()
 {
 	transform = Transform();
-	uniforms = new UniformBlock(ShaderLayout{ RenderServer::getObjectDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(ObjectUniforms) }} });
+	uniforms = RenderServer::createObjectUniforms();
 	name = "object";
 
 	DBG_VERBOSE("created object");
@@ -212,7 +212,7 @@ glm::mat4 Camera::getWorldToScreenMatrix()
 
 Camera::Camera() : Object()
 {
-	uniforms = new UniformBlock(ShaderLayout{ RenderServer::getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
+	uniforms = RenderServer::createSceneUniforms();
 	name = "camera";
 }
 

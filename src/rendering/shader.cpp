@@ -55,19 +55,7 @@ Shader::Shader(const string& base_path)
 	if (vkCreateDescriptorSetLayout(RenderServer::getDevice(), &set_layout_create_info, nullptr, &descriptor_set_layout) != VK_SUCCESS)
 		DBG_FAULT("vkCreateDescriptorSetLayout failed");
 
-	VkPipelineLayoutCreateInfo layout_create_info{ };
-	layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	layout_create_info.setLayoutCount = 3;
-	const VkDescriptorSetLayout layouts[3] =
-	{
-		RenderServer::getSceneDescriptorSetLayout(),
-		RenderServer::getObjectDescriptorSetLayout(),
-		descriptor_set_layout
-	};
-	layout_create_info.pSetLayouts = layouts;
-
-	if (vkCreatePipelineLayout(RenderServer::getDevice(), &layout_create_info, nullptr, &pipeline_layout) != VK_SUCCESS)
-		DBG_FAULT("vkCreatePipelineLayout failed");
+	pipeline_layout = RenderServer::createPipelineLayout(descriptor_set_layout);
 
 	DBG_VERBOSE("created shader from " + base_path);
 }
