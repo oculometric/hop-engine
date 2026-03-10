@@ -43,7 +43,6 @@ class Sampler : public Destructible
 {	
 private:
 	VkSampler sampler = VK_NULL_HANDLE;
-	SamplerBuilder builder;
 
 public:
 	DELETE_CONSTRUCTORS(Sampler);
@@ -51,10 +50,6 @@ public:
 	~Sampler() override;
 	
 	VkSampler getSampler() const { return sampler; }
-	SamplerBuilder getBuilder() const { return builder; }
-	void reconfigure(const SamplerBuilder& config);
-	
-	bool drawImGuiDebug();
 };
 
 }

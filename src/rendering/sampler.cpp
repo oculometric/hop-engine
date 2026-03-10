@@ -26,24 +26,6 @@ TO_STRING_DEF(SamplerAddress, 3, VARGS("REPEAT", "MIRRORED", "CLAMP_EDGE"));
 
 Sampler::Sampler(const SamplerBuilder& config)
 {
-	reconfigure(config);
-	DBG_VERBOSE("created sampler for " + to_string(config.filtering_mode) + ", " + to_string(config.address_mode));
-}
-
-Sampler::~Sampler()
-{
-	DBG_VERBOSE("destroying sampler " + PTR(this));
-    RenderServer::waitIdle();
-	vkDestroySampler(RenderServer::getDevice(), sampler, nullptr);
-}
-
-void Sampler::reconfigure(const SamplerBuilder& config)
-{
-    RenderServer::waitIdle();
-	if (sampler)
-		vkDestroySampler(RenderServer::getDevice(), sampler, nullptr);
-	
-	builder = config;
 	VkSamplerCreateInfo create_info{ };
 	create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 	create_info.magFilter = vulkan_filter[config.filtering_mode];
@@ -65,4 +47,13 @@ void Sampler::reconfigure(const SamplerBuilder& config)
 	create_info.maxLod = 0.0f;
 	if (vkCreateSampler(RenderServer::getDevice(), &create_info, nullptr, &sampler) != VK_SUCCESS)
 		DBG_FAULT("vkCreateSampler failed");
+
+	DBG_VERBOSE("created sampler for " + to_string(config.filtering_mode) + ", " + to_string(config.address_mode));
+}
+
+Sampler::~Sampler()
+{
+	DBG_VERBOSE("destroying sampler " + PTR(this));
+    RenderServer::waitIdle();
+	vkDestroySampler(RenderServer::getDevice(), sampler, nullptr);
 }

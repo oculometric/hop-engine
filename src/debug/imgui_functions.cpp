@@ -307,26 +307,6 @@ void Material::drawImGuiDebug()
 	ImGui::Button("reload shader");
 }
 
-bool Sampler::drawImGuiDebug()
-{
-	ImGui::PushID(this);
-	static std::string filter_names[2] = 
-	{
-		"NEAREST",
-		"LINEAR"
-	};
-	static std::string address_names[3] = 
-	{
-		"REPEAT",
-		"MIRRORED",
-		"CLAMP TO EDGE"
-	};
-	ImGui::LabelText("filter", "%s", filter_names[builder.filtering_mode].c_str());
-	ImGui::LabelText("address", "%s", address_names[builder.address_mode].c_str());
-	ImGui::PopID();
-	return false;
-}
-
 void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_binding)
 {
 	map<uint32_t, string> binding_to_texture_name;
@@ -343,11 +323,6 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 			auto result = texturePicker(tex_bind.texture, "texture");
 			if (result != tex_bind.texture)
 				setTexture(tex_id, result);
-			if (tex_bind.sampler->drawImGuiDebug())
-			{
-				setSampler(tex_id, nullptr);
-				setSampler(tex_id, tex_bind.sampler);
-			}
 			ImGui::PopID();
 		}
 	}
