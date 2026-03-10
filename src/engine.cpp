@@ -387,7 +387,6 @@ void Engine::updateStats(const FrameStats& stats)
     smoothed_delta_time = (smoothed_delta_time * 0.9f) + (delta_time * 0.1f);
     smoothed_fps = 1.0f / smoothed_delta_time;
 
-    delta_time_history[history_offset] = delta_time;
-    fps_history[history_offset] = 1.0f / delta_time;
-    history_offset = (history_offset + 1) % 512;
+    delta_time_history[history_offset] = delta_time * 1000.0f;
+    history_offset = (history_offset + 1) % 200;
 }

@@ -131,6 +131,8 @@ static Ref<Scene> initMuseumScene()
     normal_demo_2->transform.setPosition(glm::vec3{ 0, -8, 2 });
     normal_demo_2->transform.setLocalScale(glm::vec3{ 3, 3, 3 });
     
+    RenderServer::setTitle("Demo Scene - Museum");
+    
     return scene;
 }
 

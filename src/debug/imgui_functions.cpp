@@ -453,8 +453,10 @@ void Engine::_drawImGuiDebug(float delta_time) const
 			RenderServer::setVsyncEnabled(!RenderServer::getVsyncEnabled());
 		ImGui::EndMenu();
 	}
-	ImGui::BeginMenu(format("{:>6.2f}ms - {:<6.1f} fps", smoothed_delta_time * 1000.0f, smoothed_fps).c_str(), false);
-	ImGui::EndMainMenuBar();	
+
+	string signature_text = format("hop-engine @ {:>5.1f}fps, {:>6.2f}ms", smoothed_fps, smoothed_delta_time * 1000.0f).c_str();
+	ImGui::TextAligned(1.0f, -FLT_MIN, signature_text.c_str());
+	ImGui::EndMainMenuBar();
 	
 	if (!show_imgui)
 		return;
@@ -509,7 +511,7 @@ void Engine::_drawImGuiDebug(float delta_time) const
 			ImGui::LabelText("camera rendering", "%zu", last_frame_stats.cameras);
 		}
 		ImGui::Spacing();
-		ImGui::PlotLines("##xx", delta_time_history, 512, history_offset, "delta time", 0.0001f, 0.2f, ImVec2{0, 160}, 4);
+		ImGui::PlotLines("##xx", delta_time_history, 200, history_offset, "delta time", 0.01f, 100.0f, ImVec2{200, 80}, 4);
 		const auto size = ImGui::GetWindowSize();
 		if (align_windows)
 			ImGui::SetWindowPos({ ImGui::GetIO().DisplaySize.x - size.x - 10.0f, 30 });

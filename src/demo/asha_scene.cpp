@@ -96,6 +96,7 @@ static Ref<Scene> initAshaScene()
     
     Engine::setScene(scene);
     Engine::debugClearSelection(asha.cast<Object>(), asha->material, scene->getCamera(0));
+    RenderServer::setTitle("Demo Scene - Asha");
     
     return scene;
 }

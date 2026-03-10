@@ -74,6 +74,8 @@ static Ref<Scene> initNodeScene()
     scene->getCamera(0)->transform.lookAt({ 0, 0, 6 }, { 0, 0, 0 }, { 0, 1, 0 });
     
     Engine::setScene(scene);
+    RenderServer::setTitle("Demo Scene - Nodes");
+
     return scene;
 }
 

@@ -36,8 +36,7 @@ private:
 	float smoothed_delta_time = 0.0f;
 	float smoothed_fps = 0.0f;
 	size_t frame_index = 0;
-	float delta_time_history[512];
-	float fps_history[512];
+	float delta_time_history[200];
 	int history_offset = 0;
 	
 	bool wireframe_view = false;

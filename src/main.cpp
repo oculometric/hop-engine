@@ -101,6 +101,8 @@ int main()
         });
 
     Engine::setImGuiFunc(funcs.imgui_func);
+    RenderServer::setTitle("Demo Scene - Main");
+
     Engine::start(&updateFunc);
 
     node_scene = nullptr;
