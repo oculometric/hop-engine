@@ -122,6 +122,9 @@ public:
 	static void setVisible(bool visible);
 	static void setIcon(const std::string& path);
 
+	static void setVsyncEnabled(bool enabled);
+	static bool getVsyncEnabled();
+
 	static FrameStats draw();
 	
 	static void setSingleScene(const Ref<Scene>& scene);

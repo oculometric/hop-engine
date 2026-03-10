@@ -472,6 +472,8 @@ void Engine::_drawImGuiDebug(float delta_time) const
 			align_windows = 1;
 		if (ImGui::MenuItem("toggle wireframe"))
 			Engine::setForceWireframe(!Engine::isWireframeMode());
+		if (ImGui::MenuItem("toggle V-sync"))
+			RenderServer::setVsyncEnabled(!RenderServer::getVsyncEnabled());
 		ImGui::EndMenu();
 	}
 	ImGui::EndMainMenuBar();	

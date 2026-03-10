@@ -179,6 +179,17 @@ void RenderServer::setIcon(const string &path)
     stbi_image_free(image.pixels);
 }
 
+void RenderServer::setVsyncEnabled(bool enabled)
+{
+    server->swapchain->setVsync(enabled);
+    server->final_render_pass->resize();
+}
+
+bool RenderServer::getVsyncEnabled()
+{
+    return server->swapchain->getVsync();
+}
+
 VkDescriptorPool RenderServer::getDescriptorPool()
 { return server->descriptor_pool; }
 

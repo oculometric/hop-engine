@@ -20,7 +20,7 @@ private:
 	std::vector<VkImageView> image_views;
 	VkSurfaceKHR surface;
 	uint32_t queue_families[2];
-	std::vector<VkSwapchainCreateInfoKHR> create_info; // just... don't worry about it
+	VkSwapchainCreateInfoKHR* create_info;
 
 public:
 	DELETE_CONSTRUCTORS(Swapchain);
@@ -33,6 +33,8 @@ public:
 	ImageFormat getFormat() const { return format; }
 	glm::u32vec2 getExtent() const { return extent; }
 	void resize(uint32_t width, uint32_t height);
+	void setVsync(bool enabled);
+	bool getVsync();
 
 private:
 	void createImageViews();

@@ -47,9 +47,6 @@ VkSurfaceFormatKHR HopEngine::getIdealSurfaceFormat(const SwapchainSupportInfo& 
     return info.surface_formats[0];
 }
 
-VkPresentModeKHR HopEngine::getIdealPresentMode(const SwapchainSupportInfo& info)
-{ return VK_PRESENT_MODE_FIFO_KHR; }
-
 glm::u32vec2 HopEngine::getIdealExtent(const SwapchainSupportInfo& info, const uint32_t window_width, const uint32_t window_height)
 {
     if (info.surface_capabilities.currentExtent.width != numeric_limits<uint32_t>::max())
@@ -72,7 +69,7 @@ glm::u32vec2 HopEngine::getIdealExtent(const SwapchainSupportInfo& info, const u
 Swapchain::Swapchain(const uint32_t width, const uint32_t height, const VkSurfaceKHR _surface)
 {
     surface = _surface;
-    create_info.resize(1);
+    create_info = new VkSwapchainCreateInfoKHR{ };
 
     // calculate actual swapchain parameters
     const SwapchainSupportInfo support_info = getSwapchainSupportInfo(RenderServer::getPhysicalDevice(), surface);
@@ -111,12 +108,12 @@ Swapchain::Swapchain(const uint32_t width, const uint32_t height, const VkSurfac
 
     create_info[0].preTransform = support_info.surface_capabilities.currentTransform;
     create_info[0].compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    create_info[0].presentMode = getIdealPresentMode(support_info);
+    create_info[0].presentMode = VK_PRESENT_MODE_FIFO_KHR;
     create_info[0].clipped = VK_TRUE;
     create_info[0].oldSwapchain = VK_NULL_HANDLE;
 
     // create the swapchain
-    if (vkCreateSwapchainKHR(RenderServer::getDevice(), create_info.data(), nullptr, &swapchain) != VK_SUCCESS)
+    if (vkCreateSwapchainKHR(RenderServer::getDevice(), create_info, nullptr, &swapchain) != VK_SUCCESS)
         DBG_FAULT("vkCreateSwapchainKHR failed");
     createImageViews();
 
@@ -138,9 +135,29 @@ void Swapchain::resize(const uint32_t width, const uint32_t height)
     extent = getIdealExtent(support_info, width, height);
     create_info[0].imageExtent = { extent.x, extent.y };
 
-    if (vkCreateSwapchainKHR(RenderServer::getDevice(), create_info.data(), nullptr, &swapchain) != VK_SUCCESS)
+    if (vkCreateSwapchainKHR(RenderServer::getDevice(), create_info, nullptr, &swapchain) != VK_SUCCESS)
         DBG_FAULT("vkCreateSwapchainKHR failed");
     createImageViews();
+}
+
+void Swapchain::setVsync(bool enabled)
+{
+    if ((create_info[0].presentMode == VK_PRESENT_MODE_FIFO_KHR) == enabled)
+        return;
+
+    destroyResources();
+
+    create_info[0].presentMode = enabled ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR;
+    
+    if (vkCreateSwapchainKHR(RenderServer::getDevice(), create_info, nullptr, &swapchain) != VK_SUCCESS)
+        DBG_FAULT("vkCreateSwapchainKHR failed");
+    createImageViews(); 
+}
+
+
+bool Swapchain::getVsync()
+{
+    return create_info[0].presentMode == VK_PRESENT_MODE_FIFO_KHR;
 }
 
 void Swapchain::createImageViews()
