@@ -143,6 +143,7 @@ Pipeline::Pipeline(const Ref<Shader>& shader, const PipelineBuilder& config, con
 Pipeline::~Pipeline()
 {
     DBG_VERBOSE("destroying pipeline " + PTR(this));
+    RenderServer::waitIdle();
     vkDestroyPipeline(RenderServer::getDevice(), pipeline, nullptr);
 }
 

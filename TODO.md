@@ -3,8 +3,8 @@
 ## v0.52
 - refactor init/destroy/construct/destruct
 - make frame index accessible
-- make sure everything has WaitIdle where appropriate
 - get debug builds working again (release mode, but with optimisation disabled)
+- get build time down!
 ---
 ## v0.53
 - separate vulkan code from generic code e.g. OBJ loading

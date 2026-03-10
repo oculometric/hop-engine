@@ -58,8 +58,6 @@ Mesh::Mesh(const vector<Vertex>& vertices, const vector<uint16_t>& indices, cons
 Mesh::~Mesh()
 {
     DBG_VERBOSE("destroying mesh '" + getOrigin() + '\'');
-    vertex_buffer = nullptr;
-    index_buffer = nullptr;
 }
 
 VkVertexInputBindingDescription Mesh::getBindingDescription()
@@ -149,8 +147,6 @@ void Mesh::updateData(const vector<Vertex>& vertices, const vector<uint16_t>& in
         DBG_WARNING("attempted to update mesh '" + getOrigin() + "' which is not accessible to CPU memory");
         return;
     }
-
-    RenderServer::waitIdle();
 
     vertex_alloc = max(vertex_alloc, vertices.size());
     if (vertex_alloc != vertex_space)

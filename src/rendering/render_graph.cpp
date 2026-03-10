@@ -94,8 +94,6 @@ RenderGraph::RenderGraph(const RenderGraphBuilder& config)
 RenderGraph::~RenderGraph()
 {
     DBG_VERBOSE("destroying render graph " + PTR(this));
-    execution_steps.clear();
-    passthrough = nullptr;
 }
 
 Ref<Material> RenderGraph::getMaterialForStep(const size_t step)

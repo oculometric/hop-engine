@@ -98,6 +98,7 @@ Texture::Texture(const string& file, const TextureBuilder& builder)
 Texture::~Texture()
 {
     DBG_VERBOSE("destroying image '" + getOrigin() + '\'');
+    RenderServer::waitIdle();
     if (view != VK_NULL_HANDLE)
         vkDestroyImageView(RenderServer::getDevice(), view, nullptr);
     if (stencil_view != VK_NULL_HANDLE)

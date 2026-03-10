@@ -61,10 +61,6 @@ UniformBlock::~UniformBlock()
     DBG_VERBOSE("destroying uniform block " + PTR(this));
     RenderServer::waitIdle();
     vkFreeDescriptorSets(RenderServer::getDevice(), RenderServer::getDescriptorPool(), static_cast<uint32_t>(descriptor_sets.size()), descriptor_sets.data());
-    textures_in_use.clear();
-    descriptor_sets.clear();
-    uniform_buffers.clear();
-    live_uniform_buffer.clear();
 }
 
 void UniformBlock::bind(Ref<DrawCommandBuffer> command_buffer, size_t set) const

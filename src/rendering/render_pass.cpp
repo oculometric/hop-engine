@@ -35,6 +35,7 @@ RenderPass::~RenderPass()
 {
     DBG_VERBOSE("destroying render pass " + PTR(this));
     destroyResources();
+    RenderServer::waitIdle();
     vkDestroyRenderPass(RenderServer::getDevice(), render_pass, nullptr);
 }
 
@@ -274,6 +275,7 @@ void RenderPass::createResources(const ImageFormat main_colour_format, const uin
 
 void RenderPass::destroyResources()
 {
+    RenderServer::waitIdle();
     for (const VkFramebuffer framebuffer : framebuffers)
         vkDestroyFramebuffer(RenderServer::getDevice(), framebuffer, nullptr);
     depth_texture = nullptr;

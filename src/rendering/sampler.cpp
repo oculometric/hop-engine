@@ -33,11 +33,13 @@ Sampler::Sampler(const SamplerBuilder& config)
 Sampler::~Sampler()
 {
 	DBG_VERBOSE("destroying sampler " + PTR(this));
+    RenderServer::waitIdle();
 	vkDestroySampler(RenderServer::getDevice(), sampler, nullptr);
 }
 
 void Sampler::reconfigure(const SamplerBuilder& config)
 {
+    RenderServer::waitIdle();
 	if (sampler)
 		vkDestroySampler(RenderServer::getDevice(), sampler, nullptr);
 	

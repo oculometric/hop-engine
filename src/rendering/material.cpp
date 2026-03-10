@@ -42,9 +42,6 @@ Material::Material(const Ref<Shader>& _shader, const PipelineBuilder& config, co
 Material::~Material()
 {
 	DBG_VERBOSE("destroying material '" + getOrigin() + '\'');
-	uniforms = nullptr;
-	pipeline = nullptr;
-	shader = nullptr;
 }
 
 Ref<Shader> Material::getShader() const

@@ -129,6 +129,7 @@ Swapchain::~Swapchain()
 void Swapchain::resize(const uint32_t width, const uint32_t height)
 {
     DBG_VERBOSE("resizing swapchain to " + ::to_string(width) + "x" + ::to_string(height));
+    
     destroyResources();
 
     const SwapchainSupportInfo support_info = getSwapchainSupportInfo(RenderServer::getPhysicalDevice(), surface);
@@ -194,6 +195,7 @@ void Swapchain::createImageViews()
 
 void Swapchain::destroyResources() const
 {
+    RenderServer::waitIdle();
     for (const auto image_view : image_views)
         vkDestroyImageView(RenderServer::getDevice(), image_view, nullptr);
     vkDestroySwapchainKHR(RenderServer::getDevice(), swapchain, nullptr);

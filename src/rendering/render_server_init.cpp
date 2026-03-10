@@ -77,7 +77,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
 
 RenderServer::~RenderServer()
 {
-    vkDeviceWaitIdle(device);
+    RenderServer::waitIdle();
 
     DBG_VERBOSE("\033[31mkilling imgui with a gun\033[0m");
     ImGui_ImplVulkan_Shutdown();

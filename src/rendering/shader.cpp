@@ -76,6 +76,7 @@ Shader::~Shader()
 {
 	DBG_VERBOSE("destroyed shader '" + getOrigin() + '\'');
 
+    RenderServer::waitIdle();
 	vkDestroyPipelineLayout(RenderServer::getDevice(), pipeline_layout, nullptr);
 	vkDestroyDescriptorSetLayout(RenderServer::getDevice(), descriptor_set_layout, nullptr);
 
