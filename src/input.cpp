@@ -1,19 +1,21 @@
 #include "input.h"
 
 #include <imgui/imgui.h>
+#include <imgui/backends/imgui_impl_glfw.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+
+#include "render_server.h"
 
 using namespace HopEngine;
 using namespace std;
 
 static Input* application_instance = nullptr;
 
-void Input::init(const Ref<Window>& window)
+void Input::init()
 {
-	DBG_INFO("initialising input for window " + PTR(window.get()));
 	if (application_instance == nullptr)
-		application_instance = new Input(window);
+		application_instance = new Input();
 }
 
 void Input::destroy()
@@ -30,7 +32,7 @@ bool Input::isKeyDown(const int key)
 {
 	if (ImGui::GetIO().WantTextInput)
 		return false;
-	return glfwGetKey(application_instance->window->getWindow(), key) == GLFW_PRESS;
+	return glfwGetKey(application_instance->window, key) == GLFW_PRESS;
 }
 
 bool Input::wasKeyPressed(const int key)
@@ -58,7 +60,7 @@ bool Input::isMouseDown(const MouseButton button)
 {
 	if (ImGui::GetIO().WantCaptureMouse)
 		return false;
-	return glfwGetMouseButton(application_instance->window->getWindow(), button) == GLFW_PRESS;
+	return glfwGetMouseButton(application_instance->window, button) == GLFW_PRESS;
 }
 
 bool Input::wasMousePressed(const MouseButton button)
@@ -73,7 +75,7 @@ bool Input::wasMousePressed(const MouseButton button)
 glm::vec2 Input::getMouseDelta()
 {
 	double new_x, new_y;
-	glfwGetCursorPos(application_instance->window->getWindow(), &new_x, &new_y);
+	glfwGetCursorPos(application_instance->window, &new_x, &new_y);
 	const glm::vec2 difference = { new_x - last_x, new_y - last_y };
 	return difference;
 }
@@ -81,12 +83,14 @@ glm::vec2 Input::getMouseDelta()
 glm::vec2 Input::getMousePosition()
 {
 	double new_x, new_y;
-	glfwGetCursorPos(application_instance->window->getWindow(), &new_x, &new_y);
+	glfwGetCursorPos(application_instance->window, &new_x, &new_y);
 	return glm::vec2{ static_cast<float>(new_x), static_cast<float>(new_y) };
 }
 
-void Input::pollGamepads()
+void Input::pollInput()
 {
+    glfwPollEvents();
+
 	for (int i = 0; i <= GLFW_JOYSTICK_LAST; ++i)
 	{
 		GLFWgamepadstate state;
@@ -135,12 +139,12 @@ float Input::getGamepadAxis(const GamepadAxis axis, const int controller)
 
 void Input::resetMouseDelta()
 {
-	glfwGetCursorPos(application_instance->window->getWindow(), &last_x, &last_y);
+	glfwGetCursorPos(application_instance->window, &last_x, &last_y);
 }
 
 void Input::setCursorVisible(const bool visible)
 {
-	glfwSetInputMode(application_instance->window->getWindow(), GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(application_instance->window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 }
 
 void Input::keyCallback(GLFWwindow* window, const int key, const int scancode, const int action, const int mods)
@@ -159,11 +163,12 @@ void Input::mouseButtonCallback(GLFWwindow* window, const int button, const int 
 		application_instance->pressed_since_checked_mouse.insert(static_cast<MouseButton>(button));
 }
 
-Input::Input(const Ref<Window>& _window)
+Input::Input()
 {
-	window = _window;
-	glfwSetKeyCallback(window->getWindow(), Input::keyCallback);
-	glfwSetMouseButtonCallback(window->getWindow(), Input::mouseButtonCallback);
+	window = RenderServer::getWindow();
+	glfwSetKeyCallback(window, Input::keyCallback);
+	glfwSetMouseButtonCallback(window, Input::mouseButtonCallback);
+	ImGui_ImplGlfw_InstallCallbacks(window);
 }
 
 Input::~Input()

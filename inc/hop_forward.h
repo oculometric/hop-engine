@@ -3,7 +3,6 @@
 namespace HopEngine
 {
 
-class Window;
 class RenderServer;
 class TransientCommandBuffer;
 class DrawCommandBuffer;

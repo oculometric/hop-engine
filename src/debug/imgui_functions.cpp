@@ -271,7 +271,7 @@ void Scene::drawImGuiDebug()
 		}
 		if (ImGui::Button("static mesh"))
 		{
-			selected_object->addChild(StaticMesh::create(RenderServer::getQuad(), RenderServer::getDefaultMaterial()));
+			selected_object->addChild(StaticMesh::create(RenderServer::getQuad(), nullptr));
 			ImGui::CloseCurrentPopup();
 		}
 		if (ImGui::Button("light"))

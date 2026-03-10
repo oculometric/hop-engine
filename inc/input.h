@@ -5,7 +5,6 @@
 #include <map>
 
 #include "common.h"
-#include "window.h"
 
 struct GLFWwindow;
 
@@ -139,7 +138,7 @@ public:
 	};
 	
 private:
-	Ref<Window> window;
+	GLFWwindow* window;
 	std::set<int> pressed_since_checked;
 	std::set<MouseButton> pressed_since_checked_mouse;
 	std::map<int, GamepadState> gamepad_states;
@@ -147,7 +146,7 @@ private:
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Input);
 
-	static void init(const Ref<Window>& window);
+	static void init();
 	static void destroy();
 
 	static bool isKeyDown(int key);
@@ -157,14 +156,14 @@ public:
 	static bool wasMousePressed(MouseButton button);
 	static glm::vec2 getMouseDelta();
 	static glm::vec2 getMousePosition();
-	static void pollGamepads();
+	static void pollInput();
 	static bool isGamepadButtonDown(GamepadButton button, int controller = 0);
 	static float getGamepadAxis(GamepadAxis axis, int controller = 0);
 	static void resetMouseDelta();
 	static void setCursorVisible(bool visible);
 
 private:
-	Input(const Ref<Window>& _window);
+	Input();
 	~Input();
 	
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);

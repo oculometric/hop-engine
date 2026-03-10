@@ -28,7 +28,6 @@
 #include "node_view.h"
 #include "gizmo.h"
 
-#include "window.h"
 #include "package.h"
 #include "input.h"
 #include "debug.h"

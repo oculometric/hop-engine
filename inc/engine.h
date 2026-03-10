@@ -14,7 +14,6 @@ class Engine
 {
 private:
 	Ref<Scene> scene;
-	Ref<Window> window;
 	void(* update_func)(Ref<Scene>, float) = nullptr;
 	void(* imgui_func)(Ref<Scene>, float) = nullptr;
 

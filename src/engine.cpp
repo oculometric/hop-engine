@@ -41,17 +41,12 @@ void Engine::mainLoop()
 {
     auto last_frame = chrono::steady_clock::now();
 
-    while (!engine->window->getShouldClose() && !engine->stop_requested)
+    while (!RenderServer::getWindowShouldClose() && !engine->stop_requested)
     {
         auto this_frame = chrono::steady_clock::now();
         chrono::duration<float> delta = this_frame - last_frame;
         last_frame = this_frame;
-        Window::pollEvents();
-        Input::pollGamepads();
-        if (engine->window->isMinified())
-            continue;
-        if (engine->window->isResized())
-            RenderServer::resize();
+        Input::pollInput();
         auto imgui_start = chrono::steady_clock::now();
         if (engine->imgui_func)
         {
@@ -292,11 +287,9 @@ Engine::Engine()
 // #else
     Package::loadPackage("engine.hop");
 // #endif
-    window = new Window(1024, 1024, "STARTING HOP-ENGINE");
-    window->setIcon("res://engine/icon.png");
-    Input::init(window);
-    RenderServer::init(window);
-    RenderServer::draw();
+    RenderServer::init();
+    RenderServer::setIcon("res://engine/icon.png");
+    Input::init();
     
     SamplerBuilder builders[6] =
     {
@@ -310,7 +303,6 @@ Engine::Engine()
     for (SamplerBuilder s : builders)
         premade_samplers[s] = new Sampler(s);
     
-    window->setVisible(true);
     debugClearSelection();
 }
 
@@ -325,10 +317,9 @@ Engine::~Engine()
     loaded_meshes.clear();
     premade_samplers.clear();
 
-    RenderServer::destroy();
     Package::destroy();
     Input::destroy();
-    window = nullptr;
+    RenderServer::destroy();
     if (!allocated_refs.empty())
     {
         DBG_ERROR("uh oh! there are objects still allocated! prepare for vulkan errors and possibly crashes! see below:");
@@ -336,7 +327,6 @@ Engine::~Engine()
     }
     else
         DBG_INFO("good girl for cleaning up!");
-    Window::terminateEnvironment();
     Debug::close();
 
     engine = nullptr;
@@ -372,5 +362,5 @@ void Engine::updateStats(const FrameStats& stats)
     fps_history[history_offset] = 1.0f / stats.delta_time;
     history_offset = (history_offset + 1) % 512;
 
-    engine->window->setTitle(format("hop-engine   -   {:>4.2f}ms   -   {:>6.2f} fps", smoothed_delta_time * 1000.0f, smoothed_fps));
+    RenderServer::setTitle(format("hop-engine   -   {:>4.2f}ms   -   {:>6.2f} fps", smoothed_delta_time * 1000.0f, smoothed_fps));
 }

@@ -10,7 +10,9 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <stb_image.h>
 
+#include "package.h"
 #include "pipeline.h"
 #include "material.h"
 #include "uniform_block.h"
@@ -18,7 +20,6 @@
 #include "swapchain.h"
 #include "engine.h"
 #include "mesh.h"
-#include "window.h"
 #include "pbr.h"
 #include "scene.h"
 #include "command_buffer.h"
@@ -28,11 +29,11 @@ using namespace std;
 
 static RenderServer* server = nullptr;
 
-void RenderServer::init(const Ref<Window>& main_window)
+void RenderServer::init()
 {
     DBG_INFO("initialising graphics server");
     if (server == nullptr)
-        server = new RenderServer(main_window);
+        server = new RenderServer();
 }
 
 void RenderServer::destroy()
@@ -45,24 +46,23 @@ void RenderServer::destroy()
     }
 }
 
-RenderServer::RenderServer(const Ref<Window>& main_window)
+VkDescriptorSetLayout RenderServer::getSceneDescriptorSetLayout()
+{ return server->scene_descriptor_set_layout; }
+
+VkDescriptorSetLayout RenderServer::getObjectDescriptorSetLayout()
+{ return server->object_descriptor_set_layout; }
+
+RenderServer::RenderServer()
 {
     server = this;
-    window = main_window;
 
-    createInstance();
-    if (glfwCreateWindowSurface(instance, window->getWindow(), nullptr, &surface) != VK_SUCCESS)
-        DBG_FAULT("glfwCreateWindowSurface failed");
-    createDevice();
+    createWindow();
 
-    const auto framebuffer_size = window->getSize();
-    swapchain = new Swapchain(framebuffer_size.x, framebuffer_size.y, surface);
-    MAX_FRAMES_IN_FLIGHT = static_cast<int>(swapchain->getImageCount());
-    DBG_VERBOSE("adjusted frames in flight to " + ::to_string(MAX_FRAMES_IN_FLIGHT));
+    createVulkan();
 
-    createDescriptorPoolAndSets();
-    createCommandPool();
-    createSyncObjects();
+    swapchain = new Swapchain(window_size.x, window_size.y, surface);
+    frames_in_flight = static_cast<int>(swapchain->getImageCount());
+    DBG_VERBOSE("adjusted frames in flight to " + ::to_string(frames_in_flight));
 
     final_render_pass = new RenderPass(swapchain, { 0, true });
     offscreen_pass = new RenderPass(1, 1, { 3, true });
@@ -87,10 +87,13 @@ RenderServer::RenderServer(const Ref<Window>& main_window)
     initImGui();
 
     DBG_VERBOSE("graphics server initialised");
+
+    draw();
+    setVisible(true);
 }
 
 size_t RenderServer::getFramesInFlight()
-{ return server->MAX_FRAMES_IN_FLIGHT; }
+{ return server->frames_in_flight; }
 
 VkDevice RenderServer::getDevice()
 { return server->device; }
@@ -134,26 +137,53 @@ Ref<RenderPass> RenderServer::getMainRenderPass()
 Ref<RenderPass> RenderServer::getFinalRenderPass()
 { return server->final_render_pass; }
 
+GLFWwindow* RenderServer::getWindow()
+{
+    return server->window;
+}
+
 glm::vec2 RenderServer::getFramebufferSize()
 {
     const auto ext = server->swapchain->getExtent();
     return glm::vec2{ static_cast<float>(ext.x), static_cast<float>(ext.y) };
 }
 
+bool RenderServer::getWindowShouldClose()
+{
+    return glfwWindowShouldClose(server->window);
+}
+
+void RenderServer::setTitle(const string &title)
+{
+    glfwSetWindowTitle(server->window, title.c_str());
+}
+
+void RenderServer::setVisible(bool visible)
+{
+    if (visible)
+        glfwShowWindow(server->window);
+    else
+        glfwHideWindow(server->window);
+}
+
+void RenderServer::setIcon(const string &path)
+{
+    GLFWimage image;
+
+    // grab a png image from the package and read it
+    const auto image_data = Package::tryLoadFile(path);
+    int img_channels;
+    image.pixels = stbi_load_from_memory(image_data.data(), static_cast<int>(image_data.size()), &image.width, &image.height, &img_channels, STBI_rgb_alpha);
+
+    glfwSetWindowIcon(server->window, 1, &image);
+    stbi_image_free(image.pixels);
+}
+
 VkDescriptorPool RenderServer::getDescriptorPool()
 { return server->descriptor_pool; }
 
-VkDescriptorSetLayout RenderServer::getSceneDescriptorSetLayout()
-{ return server->scene_descriptor_set_layout; }
-
-VkDescriptorSetLayout RenderServer::getObjectDescriptorSetLayout()
-{ return server->object_descriptor_set_layout; }
-
 pair<Ref<Texture>, Ref<Sampler>> RenderServer::getDefaultTextureSampler()
 { return { server->default_image, server->default_sampler }; }
-
-Ref<Material> RenderServer::getDefaultMaterial()
-{ return server->default_material; }
 
 Ref<Mesh> RenderServer::getSkyboxCube()
 { return server->skybox_cube; }
@@ -167,10 +197,19 @@ void RenderServer::waitIdle()
 FrameStats RenderServer::draw()
 { return server->drawFrame(); }
 
-void RenderServer::resize()
+bool RenderServer::resize()
 {
+    int width; int height;
+    glfwGetFramebufferSize(window, &width, &height);
+    glm::u32vec2 new_size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
+    if (new_size == window_size)
+        return false;
+    
     RenderServer::waitIdle();
-    server->resizeSwapchain();
+    window_size = new_size;
+    swapchain->resize(window_size.x, window_size.y);
+    final_render_pass->resize();
+    return true;
 }
 
 void RenderServer::setSingleScene(const Ref<Scene>& scene)
@@ -189,6 +228,13 @@ void RenderServer::setMultiScene(const vector<MultiSceneRenderSpec>& multi_scene
 FrameStats RenderServer::drawFrame()
 {
     static size_t frame_index = 0;
+
+    if (glfwGetWindowAttrib(window, GLFW_ICONIFIED))
+        return { };
+
+    if (resize())
+        return { };
+
     ++frame_index;
     DBG_BABBLE("drawing frame " + ::to_string(frame_index));
 
@@ -197,11 +243,11 @@ FrameStats RenderServer::drawFrame()
     const auto now_time = chrono::steady_clock::now();
     const chrono::duration<float> since_start = now_time - start_time;
 
-    vkWaitForFences(device, 1, &in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT], VK_TRUE, UINT64_MAX);
-    vkResetFences(device, 1, &in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT]);
+    vkWaitForFences(device, 1, &in_flight_fences[frame_index % frames_in_flight], VK_TRUE, UINT64_MAX);
+    vkResetFences(device, 1, &in_flight_fences[frame_index % frames_in_flight]);
 
     uint32_t image_index;
-    vkAcquireNextImageKHR(device, swapchain->getSwapchain(), UINT64_MAX, image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT], VK_NULL_HANDLE, &image_index);
+    vkAcquireNextImageKHR(device, swapchain->getSwapchain(), UINT64_MAX, image_available_semaphores[frame_index % frames_in_flight], VK_NULL_HANDLE, &image_index);
     DBG_BABBLE("acquired image " + ::to_string(image_index));
 
     const auto build_start = chrono::steady_clock::now();
@@ -216,7 +262,7 @@ FrameStats RenderServer::drawFrame()
     
     VkSubmitInfo submit_info{ };
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    const VkSemaphore wait_semaphores[] = { image_available_semaphores[frame_index % MAX_FRAMES_IN_FLIGHT] };
+    const VkSemaphore wait_semaphores[] = { image_available_semaphores[frame_index % frames_in_flight] };
     constexpr VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
     submit_info.waitSemaphoreCount = 1;
     submit_info.pWaitSemaphores = wait_semaphores;
@@ -228,7 +274,7 @@ FrameStats RenderServer::drawFrame()
     submit_info.signalSemaphoreCount = 1;
     submit_info.pSignalSemaphores = signal_semaphores;
     DBG_BABBLE("submitting command buffer");
-    if (vkQueueSubmit(graphics_queue, 1, &submit_info, in_flight_fences[frame_index % MAX_FRAMES_IN_FLIGHT]) != VK_SUCCESS)
+    if (vkQueueSubmit(graphics_queue, 1, &submit_info, in_flight_fences[frame_index % frames_in_flight]) != VK_SUCCESS)
         DBG_FAULT("vkQueueSubmit failed");
 
     VkPresentInfoKHR present_info{ };
@@ -244,16 +290,6 @@ FrameStats RenderServer::drawFrame()
     
     command_buffers[image_index]->extractTiming();
     return stats;
-}
-
-void RenderServer::resizeSwapchain()
-{
-    vkDeviceWaitIdle(device);
-
-    const auto new_size = window->getSize();
-    swapchain->resize(new_size.x, new_size.y);
-    
-    final_render_pass->resize();
 }
 
 void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
