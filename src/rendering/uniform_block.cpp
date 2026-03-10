@@ -65,6 +65,7 @@ UniformBlock::~UniformBlock()
 
 void UniformBlock::bind(Ref<DrawCommandBuffer> command_buffer, size_t set) const
 {
+    memcpy(uniform_buffers[command_buffer->getImageIndex()]->mapMemory(), live_uniform_buffer.data(), live_uniform_buffer.size());
     command_buffer->bindDescriptorSetInternal(set, descriptor_sets[command_buffer->getImageIndex()]);
 }
 
@@ -89,11 +90,6 @@ void UniformBlock::setSampler(const uint32_t binding, const Ref<Sampler>& sample
     if (!sampler)
         textures_in_use[binding].sampler = RenderServer::getDefaultTextureSampler().second;
     applyDescriptorBindings();
-}
-
-void UniformBlock::pushToDescriptorSet(const size_t index)
-{
-    memcpy(uniform_buffers[index]->mapMemory(), live_uniform_buffer.data(), live_uniform_buffer.size());
 }
 
 void UniformBlock::applyDescriptorBindings()

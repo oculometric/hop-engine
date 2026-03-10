@@ -45,10 +45,9 @@ public:
 	glm::u32vec2 getViewportSize() const { return last_viewport_size; }
 	Ref<Camera> getCamera(size_t slot) const;
 	std::vector<LightParams> getLightParams() const;
-	std::vector<DrawCommand> getDrawCommands() const;
+	std::vector<DrawCommand> getDrawCommands(glm::u32vec2 viewport_size);
 	WeakRef<Object> raycast(glm::vec3 position, glm::vec3 direction) const;
 	void setCameraSlot(const Ref<Camera>& camera, size_t slot);
-	void updateUniforms(uint32_t image_index, glm::u32vec2 viewport_size, FrameStats& stats);
 	
 	static Ref<Scene> deserialise(const std::string& name);
 	

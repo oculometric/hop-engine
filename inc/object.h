@@ -32,9 +32,8 @@ public:
 	static Ref<Object> create();
 	~Object() override;
 	
-	virtual std::vector<DrawCommand> getDrawCommands() const;
+	virtual std::vector<DrawCommand> getDrawCommands();
 	virtual BoundingBox getLocalBounds() const;
-	virtual void pushToDescriptorSet(size_t index);
 	
 	WeakRef<Scene> getScene();
 	void setScene(WeakRef<Scene> new_scene);
@@ -50,6 +49,8 @@ public:
 	
 protected:
 	Object();
+
+	void updateObjectUniforms();
 };
 
 template <class T>
@@ -71,11 +72,9 @@ public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Camera);
 	static Ref<Camera> create();
 
-	void bind(const Ref<DrawCommandBuffer>& command_buffer);
+	void bind(const Ref<DrawCommandBuffer>& command_buffer, glm::ivec2 viewport_size, const std::vector<LightParams>& lights, glm::vec4 ambient);
 	SceneUniforms getSceneUniforms(glm::ivec2 viewport_size, const std::vector<LightParams>& lights, glm::vec4 ambient);
 	glm::mat4 getWorldToScreenMatrix();
-	void pushToDescriptorSet(size_t index) override;
-	void pushToCameraDescriptorSet(size_t index, glm::ivec2 viewport_size, const std::vector<LightParams>& lights, glm::vec4 ambient);
 	
 	void drawImGuiDebug() override;
 	
@@ -94,9 +93,8 @@ public:
 	DELETE_CONSTRUCTORS(StaticMesh);
 	static Ref<StaticMesh> create(const Ref<Mesh>& _mesh, const Ref<Material>& _material);
 
-	std::vector<DrawCommand> getDrawCommands() const override;
+	std::vector<DrawCommand> getDrawCommands() override;
 	BoundingBox getLocalBounds() const override;
-	void pushToDescriptorSet(size_t index) override;
 	
 	void drawImGuiDebug() override;
 	

@@ -54,12 +54,6 @@ Ref<RenderPass> Material::getRenderPass() const
 	return render_pass;
 }
 
-void Material::pushToDescriptorSet(const size_t index)
-{
-	DBG_BABBLE("material '" + getOrigin() + "' pushing to descriptor set " + ::to_string(index));
-	uniforms->pushToDescriptorSet(index);
-}
-
 Ref<Material> Material::duplicate() const
 {
 	return new Material(shader, pipeline->getConfig(), render_pass);

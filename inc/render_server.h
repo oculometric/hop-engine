@@ -142,7 +142,6 @@ private:
 	FrameStats drawFrame();
 
 	void recordRenderCommands(uint32_t image_index, FrameStats& stats);
-	void updateUniforms(uint32_t image_index, FrameStats& stats);
 };
 
 }

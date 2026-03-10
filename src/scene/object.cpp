@@ -26,24 +26,15 @@ Object::~Object()
 	DBG_VERBOSE("destroying object '" + name + "' (" + PTR(this) + ')');
 }
 
-vector<DrawCommand> Object::getDrawCommands() const
+vector<DrawCommand> Object::getDrawCommands()
 {
+	updateObjectUniforms();
 	return { };
 }
 
 BoundingBox Object::getLocalBounds() const
 {
 	return BoundingBox{ { 0, 0, 0 }, { 0.25f, 0.25f, 0.25f } };
-}
-
-void Object::pushToDescriptorSet(const size_t index)
-{
-	ObjectUniforms* object_uniforms = static_cast<ObjectUniforms*>(uniforms->getBuffer());
-
-	object_uniforms->id = static_cast<int>(reinterpret_cast<size_t>(this));
-	object_uniforms->model_to_world = transform.getMatrix();
-
-	uniforms->pushToDescriptorSet(index);
 }
 
 WeakRef<Scene> Object::getScene()
@@ -166,6 +157,14 @@ Object::Object()
 	DBG_VERBOSE("created object");
 }
 
+void Object::updateObjectUniforms()
+{
+	ObjectUniforms* object_uniforms = static_cast<ObjectUniforms*>(uniforms->getBuffer());
+
+	object_uniforms->id = static_cast<int>(reinterpret_cast<size_t>(this));
+	object_uniforms->model_to_world = transform.getMatrix();
+}
+
 Ref<Camera> Camera::create()
 {
 	Ref obj = new Camera();
@@ -173,8 +172,11 @@ Ref<Camera> Camera::create()
 	return obj;
 }
 
-void Camera::bind(const Ref<DrawCommandBuffer>& command_buffer)
+void Camera::bind(const Ref<DrawCommandBuffer>& command_buffer, const glm::ivec2 viewport_size, const vector<LightParams>& lights, const glm::vec4 ambient)
 {
+	SceneUniforms scene_uniforms = getSceneUniforms(viewport_size, lights, ambient);
+
+	memcpy(uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
 	uniforms->bind(command_buffer, 0);
 }
 
@@ -208,16 +210,6 @@ glm::mat4 Camera::getWorldToScreenMatrix()
 	return view_to_clip * world_to_view;
 }
 
-void Camera::pushToDescriptorSet(size_t index) { }
-
-void Camera::pushToCameraDescriptorSet(const size_t index, const glm::ivec2 viewport_size, const vector<LightParams>& lights, const glm::vec4 ambient)
-{
-	SceneUniforms scene_uniforms = getSceneUniforms(viewport_size, lights, ambient);
-
-	memcpy(uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
-	uniforms->pushToDescriptorSet(index);
-}
-
 Camera::Camera() : Object()
 {
 	uniforms = new UniformBlock(ShaderLayout{ RenderServer::getSceneDescriptorSetLayout(), {{ 0, UNIFORM, sizeof(SceneUniforms) }} });
@@ -231,8 +223,9 @@ Ref<StaticMesh> StaticMesh::create(const Ref<Mesh>& _mesh, const Ref<Material>& 
 	return obj;
 }
 
-vector<DrawCommand> StaticMesh::getDrawCommands() const
+vector<DrawCommand> StaticMesh::getDrawCommands()
 {
+	updateObjectUniforms();
 	vector<DrawCommand> commands;
 	if (material && mesh && uniforms)
 		commands.push_back(DrawCommand(material, mesh, uniforms).mask(camera_mask));
@@ -242,13 +235,6 @@ vector<DrawCommand> StaticMesh::getDrawCommands() const
 BoundingBox StaticMesh::getLocalBounds() const
 {
 	return mesh->getBoundingBox();
-}
-
-void StaticMesh::pushToDescriptorSet(const size_t index)
-{
-	Object::pushToDescriptorSet(index);
-	if (material)
-		material->pushToDescriptorSet(index);
 }
 
 StaticMesh::StaticMesh(const Ref<Mesh>& _mesh, const Ref<Material>& _material) : Object()

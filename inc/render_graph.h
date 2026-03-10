@@ -12,6 +12,7 @@
 #include "draw_command.h"
 #include "engine.h"
 #include "uniform_block.h"
+#include "pbr.h"
 
 namespace HopEngine
 {
@@ -91,8 +92,7 @@ public:
 	void setSkipStep(size_t step, bool skip);
 	void setSkipStep(const std::string& name, bool skip);
 	void resizeBuffers(uint32_t width, uint32_t height);
-	void updateUniforms(uint32_t image_index, WeakRef<Scene> scene);
-	void recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, WeakRef<Scene> scene, FrameStats& stats) const;
+	void recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, WeakRef<Scene> scene, FrameStats& stats, glm::u32vec2 viewport_size);
 	void bind(Ref<DrawCommandBuffer> command_buffer);
 	
 	void drawImGuiDebug();
@@ -101,7 +101,7 @@ public:
 private:
 	size_t findStep(const std::string& name) const;
 	void rebuildBindings();
-	static void recordCameraStep(Ref<DrawCommandBuffer> command_buffer, const Ref<Camera>& camera, const Ref<RenderPass>& pass, const std::multiset<DrawCommand, DrawCommand>& commands);
+	static void recordCameraStep(Ref<DrawCommandBuffer> command_buffer, const Ref<Camera>& camera, const Ref<RenderPass>& pass, const std::multiset<DrawCommand, DrawCommand>& commands, const std::vector<LightParams>& lights, glm::vec4 ambient_colour);
 	static void recordPostProcessStep(Ref<DrawCommandBuffer> command_buffer, const Ref<Material>& material, const Ref<UniformBlock>& scene_descriptor_set);
 };
 

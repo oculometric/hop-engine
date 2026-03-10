@@ -258,7 +258,29 @@ FrameStats RenderServer::drawFrame()
     DBG_BABBLE("acquired image " + ::to_string(image_index));
 
     const auto build_start = chrono::steady_clock::now();
-    updateUniforms(image_index, stats);
+
+    size_t valid_scenes = 0;
+        
+    SceneUniforms scene_uniforms;
+    scene_uniforms.time = Engine::getEngineTime();
+    scene_uniforms.eye_position = { 0, 0, 0 };
+    scene_uniforms.viewport_size = swapchain->getExtent();
+    scene_uniforms.world_to_view = glm::mat4(1);
+    scene_uniforms.view_to_clip = glm::mat4(1);
+    scene_uniforms.clip_to_view = glm::mat4(1);
+    scene_uniforms.view_to_world = glm::mat4(1);
+    scene_uniforms.near_far = { -1, 1 };
+    memcpy(final_pass_uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
+    
+    for (auto& scene : scenes)
+    {
+        if (!scene.scene)
+            continue;
+        ++valid_scenes;
+    }
+    if (valid_scenes == 0)
+        DBG_WARNING("no scene attached to server");
+
     const chrono::duration<float> build_duration = chrono::steady_clock::now() - build_start;
     stats.build_time = build_duration.count();
 
@@ -307,7 +329,10 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
     for (auto& scene : scenes)
     {
         if (scene.scene && scene.scene->render_graph)
-            scene.scene->render_graph->recordCommandBuffer(command_buffer, scene.scene, stats);
+        {
+            glm::u32vec2 viewport_size = glm::u32vec2(scene.size_uv * glm::vec2(swapchain->getExtent()));
+            scene.scene->render_graph->recordCommandBuffer(command_buffer, scene.scene, stats, viewport_size);
+        }
     }
     
     final_render_pass->begin(command_buffer, glm::vec3{ 0.02f, 0.02f, 0.02f });
@@ -327,33 +352,6 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
     command_buffer->drawImGui();
 
     command_buffer->end();
-}
-
-void RenderServer::updateUniforms(uint32_t image_index, FrameStats& stats)
-{
-    size_t valid_scenes = 0;
-        
-    SceneUniforms scene_uniforms;
-    scene_uniforms.time = Engine::getEngineTime();
-    scene_uniforms.eye_position = { 0, 0, 0 };
-    scene_uniforms.viewport_size = swapchain->getExtent();
-    scene_uniforms.world_to_view = glm::mat4(1);
-    scene_uniforms.view_to_clip = glm::mat4(1);
-    scene_uniforms.clip_to_view = glm::mat4(1);
-    scene_uniforms.view_to_world = glm::mat4(1);
-    scene_uniforms.near_far = { -1, 1 };
-    memcpy(final_pass_uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
-    final_pass_uniforms->pushToDescriptorSet(image_index);
-    
-    for (auto& scene : scenes)
-    {
-        if (!scene.scene)
-            continue;
-        scene.scene->updateUniforms(image_index, glm::vec2(swapchain->getExtent()) * scene.size_uv, stats);
-        ++valid_scenes;
-    }
-    if (valid_scenes == 0)
-        DBG_WARNING("no scene attached to server");
 }
 
 bool DrawCommand::operator()(const DrawCommand& a, const DrawCommand& b) const

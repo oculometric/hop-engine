@@ -111,8 +111,16 @@ vector<LightParams> Scene::getLightParams() const
 	return lights_params;
 }
 
-vector<DrawCommand> Scene::getDrawCommands() const
+vector<DrawCommand> Scene::getDrawCommands(glm::u32vec2 viewport_size)
 {
+	last_viewport_size = viewport_size;
+	if (!render_graph)
+		return { };
+	
+	const glm::u32vec2 graph_extent = render_graph->getExpectedExtent();
+	if (graph_extent.x != viewport_size.x || graph_extent.y != viewport_size.y)
+		render_graph->resizeBuffers(viewport_size.x, viewport_size.y);
+
 	vector<DrawCommand> commands;
 	for (const Ref<Object>& object : objects)
 	{
@@ -142,22 +150,6 @@ WeakRef<Object> Scene::raycast(const glm::vec3 position, const glm::vec3 directi
 
 void Scene::setCameraSlot(const Ref<Camera>& camera, const size_t slot)
 { cameras[slot] = camera; }
-
-void Scene::updateUniforms(uint32_t image_index, glm::u32vec2 viewport_size, FrameStats& stats)
-{
-	last_viewport_size = viewport_size;
-	if (!render_graph)
-		return;
-	
-	stats.lights = getLightParams().size();
-	const glm::u32vec2 graph_extent = render_graph->getExpectedExtent();
-	if (graph_extent.x != viewport_size.x || graph_extent.y != viewport_size.y)
-		render_graph->resizeBuffers(viewport_size.x, viewport_size.y);
-	render_graph->updateUniforms(image_index, WeakRef<Scene>(this));
-
-	for (auto& object : objects)
-		object->pushToDescriptorSet(image_index);
-}
 
 Scene::Scene(const string& name)
 {

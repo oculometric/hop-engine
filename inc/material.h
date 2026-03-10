@@ -31,7 +31,6 @@ public:
 	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 	Ref<Shader> getShader() const;
 	Ref<RenderPass> getRenderPass() const;
-	void pushToDescriptorSet(size_t index);
 	Ref<Material> duplicate() const;
 	
 	void bind(Ref<DrawCommandBuffer> command_buffer, bool wireframe_allowed = true);

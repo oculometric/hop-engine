@@ -60,12 +60,6 @@ public:
 	 * @param sampler sampler to bind. if this sampler is already bound, nothing will change.
 	 */
 	void setSampler(uint32_t binding, const Ref<Sampler>& sampler);
-	/**
-	 * @brief updates a given GPU uniform buffer corresponding to a specified descriptor
-	 * set. prevents us from updating uniforms in the middle of a frame.
-	 * @param index index of the descriptor set to update the uniform buffer of.
-	 */
-	void pushToDescriptorSet(size_t index);
 	
 	void drawImGuiDebug(const std::map<std::string, uint32_t>& texture_name_to_binding);
 

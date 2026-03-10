@@ -187,23 +187,22 @@ void RenderGraph::resizeBuffers(const uint32_t width, const uint32_t height)
     expected_extent = { width, height };
 }
 
-void RenderGraph::updateUniforms(uint32_t image_index, WeakRef<Scene> scene)
+
+void RenderGraph::recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, WeakRef<Scene> scene, FrameStats& stats, glm::u32vec2 viewport_size)
 {
     for (const RenderStep& step : execution_steps)
     {
         if (step.is_camera)
         {
             glm::u32vec2 extent = step.render_pass->getExtent();
-            scene->getCamera(step.camera_slot)->pushToCameraDescriptorSet(image_index, { extent.x, extent.y }, scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
         }
         else
         {
             glm::u32vec2 extent = execution_steps[0].render_pass->getExtent();
-            step.material->pushToDescriptorSet(image_index);
+            // FIXME: what the hell is happening here
             SceneUniforms uniforms = scene->getCamera(execution_steps[0].camera_slot)->getSceneUniforms({ extent.x, extent.y }, scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
             uniforms.viewport_size = { step.render_pass->getExtent().x, step.render_pass->getExtent().y };
             memcpy(step.scene_uniforms->getBuffer(), &uniforms, sizeof(SceneUniforms));
-            step.scene_uniforms->pushToDescriptorSet(image_index);
         }
     }
     
@@ -230,13 +229,9 @@ void RenderGraph::updateUniforms(uint32_t image_index, WeakRef<Scene> scene)
         else
             passthrough->setIntUniform("display_depth", 0);
     }
-    passthrough->pushToDescriptorSet(image_index);
-}
 
-void RenderGraph::recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, WeakRef<Scene> scene, FrameStats& stats) const
-{
     vector<multiset<DrawCommand, DrawCommand>> step_commands(execution_steps.size());
-    auto scene_commands = scene->getDrawCommands();
+    auto scene_commands = scene->getDrawCommands(viewport_size);
     for (const auto& cmd : scene_commands)
     {
         for (size_t i = 0; i < execution_steps.size(); ++i)
@@ -265,7 +260,8 @@ void RenderGraph::recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, Wea
             continue;
         if (execution_steps[i].is_camera)
         {
-            recordCameraStep(command_buffer, scene->getCamera(execution_steps[i].camera_slot), execution_steps[i].render_pass, step_commands[i]);
+            recordCameraStep(command_buffer, scene->getCamera(execution_steps[i].camera_slot), execution_steps[i].render_pass, step_commands[i],
+                scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
             ++stats.cameras;
         }
         else
@@ -321,7 +317,7 @@ void RenderGraph::rebuildBindings()
     }
 }
 
-void RenderGraph::recordCameraStep(const Ref<DrawCommandBuffer> command_buffer, const Ref<Camera>& camera, const Ref<RenderPass>& pass, const multiset<DrawCommand, DrawCommand>& commands)
+void RenderGraph::recordCameraStep(const Ref<DrawCommandBuffer> command_buffer, const Ref<Camera>& camera, const Ref<RenderPass>& pass, const multiset<DrawCommand, DrawCommand>& commands, const vector<LightParams>& lights, glm::vec4 ambient_colour)
 {
     pass->begin(command_buffer, camera->clear_colour);
 
@@ -334,7 +330,8 @@ void RenderGraph::recordCameraStep(const Ref<DrawCommandBuffer> command_buffer, 
         }
         
         command.material->bind(command_buffer);
-        camera->bind(command_buffer);
+
+        camera->bind(command_buffer, pass->getExtent(), lights, ambient_colour);
         if (command.uniforms)
             command.uniforms->bind(command_buffer, 1);
         command.mesh->draw(command_buffer);
