@@ -19,9 +19,8 @@ static Ref<Scene> initAshaScene()
     const Ref<Shader> shader = Engine::loadShader("res://engine/samples/psx.glsl");
     asha = scene->insertObject<StaticMesh>(StaticMesh::create(
         Engine::loadMesh("res://engine/samples/asha.obj"),
-        Engine::keepLoaded(new Material(
-            shader, PipelineBuilder().cullMode(CULL_NONE).stencilWrite(1)
-        ))));
+        new Material(shader, PipelineBuilder().cullMode(CULL_NONE).stencilWrite(1))
+    ));
     asha->material->setTexture("albedo", Engine::loadTexture("res://engine/samples/asha.png"));
     const Ref<Sampler> sampler = Engine::makeSampler(SamplerBuilder().filter(FILTER_NEAREST));
     asha->material->setSampler("albedo", sampler);
@@ -30,8 +29,8 @@ static Ref<Scene> initAshaScene()
     // create the bunny
     Ref<StaticMesh> bunny = scene->insertObject<StaticMesh>(StaticMesh::create(
         Engine::loadMesh("res://engine/samples/bunny.obj"),
-        Engine::keepLoaded(new Material(shader, PipelineBuilder().cullMode(CULL_NONE).stencilWrite(2)
-        ))));
+        new Material(shader, PipelineBuilder().cullMode(CULL_NONE).stencilWrite(2))
+    ));
     bunny->material->setTexture("albedo", Engine::loadTexture("res://engine/samples/bunny.png"));
     bunny->material->setSampler("albedo", sampler);
     asha->addChild(bunny);
@@ -41,7 +40,7 @@ static Ref<Scene> initAshaScene()
     // create tux
     Ref<StaticMesh> tux = scene->insertObject<StaticMesh>(StaticMesh::create(
         Engine::loadMesh("res://tux.obj"),
-        Engine::keepLoaded(new Material(shader, PipelineBuilder().cullMode(CULL_NONE)))
+        new Material(shader, PipelineBuilder().cullMode(CULL_NONE))
     ));
     tux->material->setTexture("albedo", Engine::loadTexture("res://tux.png"));
     tux->material->setSampler("albedo", sampler);
@@ -101,16 +100,16 @@ static Ref<Scene> initAshaScene()
     return scene;
 }
 
-static void updateAshaScene(Ref<Scene> scene, float delta_time)
+static void updateAshaScene(float delta_time)
 {
     // tick the debug camera
     Engine::debugCamera();
     
     // let the gizmo do things
-    gizmo->trackObject(Engine::getDebugSelection(), scene->getCamera(0));
+    gizmo->trackObject(Engine::getDebugSelection(), Engine::getScene()->getCamera(0));
 }
 
-static void imGuiAshaScene(Ref<Scene> scene)
+static void imGuiAshaScene()
 {
     {
         // draw the colour correction controls

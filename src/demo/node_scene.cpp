@@ -77,13 +77,12 @@ static Ref<Scene> initNodeScene()
     return scene;
 }
 
-static void updateNodeScene(Ref<Scene> scene, float delta_time)
+static void updateNodeScene(float delta_time)
 {
-    // FIXME: input  mouse delta is weird on non-fullscreen window?
-    node_view->checkInput({ 0, 0 }, scene->getViewportSize());
+    node_view->checkInput({ 0, 0 }, Engine::getScene()->getViewportSize());
 }
 
-void imguiNodeScene(Ref<Scene> scene)
+void imguiNodeScene()
 {
     ImGui::Begin("style controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     {

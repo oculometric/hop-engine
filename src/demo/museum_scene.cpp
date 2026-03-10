@@ -134,9 +134,10 @@ static Ref<Scene> initMuseumScene()
     return scene;
 }
 
-static void updateMuseumScene(Ref<Scene> scene, const float delta_time)
+static void updateMuseumScene(const float delta_time)
 {
     Engine::debugCamera();
+    auto scene = Engine::getScene();
 
     if (Input::isMouseDown(Input::MOUSE_LEFT))
     {
@@ -168,7 +169,7 @@ static void updateMuseumScene(Ref<Scene> scene, const float delta_time)
     normal_demo_2->transform.rotate(glm::vec3{ delta_time * 80.0f, 0, delta_time * 40.0f });
 }
 
-static void imGuiMuseumScene(Ref<Scene> scene)
+static void imGuiMuseumScene()
 {
     ImGui::Begin("colour correction", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::Text("this controls the final post processing step");
@@ -198,7 +199,7 @@ static void imGuiMuseumScene(Ref<Scene> scene)
         camera_flythrough_time = 0.0f;
     if (camera_flythrough)
     {
-        WeakRef<Camera> camera = scene->getCamera(0);
+        WeakRef<Camera> camera = Engine::getScene()->getCamera(0);
         if (camera_flythrough_time >= 0.999f)
         {
             camera_flythrough = false;

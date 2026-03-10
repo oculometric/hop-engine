@@ -10,11 +10,11 @@ WeakRef<NodeView> node_view;
 Ref<Scene> node_scene;
 Ref<Scene> main_scene;
 
-void updateFunc(Ref<Scene> scene, float delta)
+void updateFunc(float delta)
 {
     node_view->checkInput({ 0, node_scene->getViewportSize().y * 3.0f }, node_scene->getViewportSize());
     if (Input::getMousePosition().y < node_scene->getViewportSize().y * 3.0f)
-        funcs.update_func(scene, delta);
+        funcs.update_func(delta);
 };
 
 int main()
@@ -100,9 +100,8 @@ int main()
             { node_scene, { 0, 0.75f }, { 1, 0.25f } }
         });
 
-    Engine::setup(&updateFunc, funcs.imgui_func);
-
-    Engine::mainLoop();
+    Engine::setImGuiFunc(funcs.imgui_func);
+    Engine::start(&updateFunc);
 
     node_scene = nullptr;
     main_scene = nullptr;

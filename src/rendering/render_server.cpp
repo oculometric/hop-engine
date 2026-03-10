@@ -239,15 +239,13 @@ void RenderServer::setMultiScene(const vector<MultiSceneRenderSpec>& multi_scene
 
 FrameStats RenderServer::drawFrame()
 {
-    static size_t frame_index = 0;
-
     if (glfwGetWindowAttrib(window, GLFW_ICONIFIED))
         return { };
 
     if (resize())
         return { };
 
-    ++frame_index;
+    size_t frame_index = Engine::getFrameCount();
     DBG_BABBLE("drawing frame " + ::to_string(frame_index));
 
     FrameStats stats;

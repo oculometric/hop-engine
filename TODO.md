@@ -1,9 +1,7 @@
 # TODO
 
 ## v0.52
-- make frame index accessible
 - get build time down!
-- refactor the way engine loop/setup works
 ---
 ## v0.53
 - separate vulkan code from generic code e.g. OBJ loading
@@ -12,7 +10,7 @@
 - refactor swapchain code
 - overhaul some interfaces (ref project placeholder) (uniform creation into renderserver, pipeline creation into shader, draw calls, uniform updating happens during command buffer build)
 - simplify texture to be in one of several 'modes/types' (fix the way view aspects behave), overhaul initialisation
-- simplify sampler
+- simplify sampler (remove rebuilding)
 ---
 ## v0.54
 - create image view on image create
@@ -20,6 +18,7 @@
 - fix multi-pass rendering not working
 - make the behaviour of cameras and scene drawing more sensible (draw calls)
 - change the way refs work, and the way `new`ing works (classes only construct via ::create, remove keepLoaded)
+- Application class which contains game update loop, etc, which users override
 ---
 # v0.6
 - interactive node editor

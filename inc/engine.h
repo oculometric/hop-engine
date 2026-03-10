@@ -11,12 +11,15 @@
 namespace HopEngine
 {
 
+typedef void(* ImGuiDrawFunc)();
+typedef void(* UpdateFunc)(float);
+
 class Engine
 {
 private:
 	Ref<Scene> scene;
-	void(* update_func)(Ref<Scene>, float) = nullptr;
-	void(* imgui_func)(Ref<Scene>) = nullptr;
+	UpdateFunc update_func = nullptr;
+	ImGuiDrawFunc imgui_func = nullptr;
 
 	std::multimap<const char*, WeakRef<void>> allocated_refs;
 	std::map<std::string, Ref<Shader>> loaded_shaders;
@@ -32,6 +35,7 @@ private:
 	float total_time = 0.0f;
 	float smoothed_delta_time = 0.0f;
 	float smoothed_fps = 0.0f;
+	size_t frame_index = 0;
 	float delta_time_history[512];
 	float fps_history[512];
 	int history_offset = 0;
@@ -39,6 +43,7 @@ private:
 	bool wireframe_view = false;
 	
 	bool stop_requested = false;
+	bool start_called = false;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Engine);
@@ -46,26 +51,23 @@ public:
 	static void init();
 	static void destroy();
 	
-	static void setup(void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>));
-	static void stop();
-	static void mainLoop();
-	static Ref<Scene> getScene();
+	static void start(UpdateFunc _update_func);
+	static void setUpdateFunc(UpdateFunc func);
+	static void setImGuiFunc(ImGuiDrawFunc func);
 	static void setScene(const Ref<Scene>& new_scene);
-	static void summariseTrackedObjects();
+	static void stop();
+
+	static Ref<Scene> getScene();
+
 	static FrameStats getFrameStats();
-	
 	static float getDeltaTime();
 	static float getEngineTime();
 	static float getSmoothedDeltaTime();
 	static float getSmoothedFPS();
+	static size_t getFrameCount();
 	
 	static bool isWireframeMode();
-	template <class T> static std::vector<WeakRef<T>> getAllRefs();
 	static void setForceWireframe(bool value);
-	static void registerCountedRef(const char* type_name, const WeakRef<void>& reference);
-	static void unregisterCountedRef(const void* ptr);
-	template <class T> static Ref<T> keepLoaded(Ref<T> ref);
-	template <class T> static Ref<T> keepLoaded(T* ref) { return keepLoaded(Ref<T>(ref)); }
 
 	static void debugCamera();
 	static void debugSelect(const WeakRef<Object>& object);
@@ -79,6 +81,10 @@ public:
 	static Ref<Mesh> loadMesh(const std::string& path);
 	static Ref<Sampler> makeSampler(const SamplerBuilder& builder);
 	static size_t pruneUnusedResources();
+	template <class T> static std::vector<WeakRef<T>> getAllRefs();
+	static void registerCountedRef(const char* type_name, const WeakRef<void>& reference);
+	static void unregisterCountedRef(const void* ptr);
+
 	static void drawImGuiDebug();
 	
 private:
@@ -89,6 +95,7 @@ private:
 	static std::vector<WeakRef<void>> getRefsWithType(const char* type_name);
 	static void _keepLoaded(const Ref<Destructible>& ref);
 	void updateStats(const FrameStats& stats);
+	static void summariseTrackedObjects();
 	
 	void _drawImGuiDebug(float delta_time) const;
 };
@@ -101,14 +108,6 @@ std::vector<WeakRef<T>> Engine::getAllRefs()
 	for (auto& r : refs)
 		cast_refs.push_back(r.cast<T>());
 	return cast_refs;
-}
-
-template<class T>
-Ref<T> Engine::keepLoaded(Ref<T> ref)
-{
-	static_assert(std::is_convertible_v<T*, Destructible*>, "reference must be a HopEngine::Destructible subclass");
-	_keepLoaded(ref.template cast<Destructible>());
-	return ref;
 }
 
 }

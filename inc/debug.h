@@ -90,7 +90,7 @@ private:
 	DebugLevel log_level = DEBUG_INFO;
 	// minimum severity for a debug command to trigger a program crash.
 	DebugLevel crash_level = DEBUG_FAULT;
-	ofstream file_output;
+	std::ofstream file_output;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Debug);

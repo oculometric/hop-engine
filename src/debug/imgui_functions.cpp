@@ -449,14 +449,16 @@ void Engine::_drawImGuiDebug(float delta_time) const
 				const auto scn = getAshaScene();
 				debugClearSelection();
 				scn.init_func();
-				Engine::setup(scn.update_func, scn.imgui_func);
+				Engine::setUpdateFunc(scn.update_func);
+				Engine::setImGuiFunc(scn.imgui_func);
 			}
 			if (ImGui::MenuItem("museum"))
 			{
 				const auto scn = getMuseumScene();
 				debugClearSelection();
 				scn.init_func();
-				Engine::setup(scn.update_func, scn.imgui_func);
+				Engine::setUpdateFunc(scn.update_func);
+				Engine::setImGuiFunc(scn.imgui_func);
 			}
 			ImGui::EndMenu();
 		}

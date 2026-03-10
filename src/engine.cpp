@@ -32,20 +32,17 @@ void Engine::destroy()
     }
 }
 
-
-void Engine::stop()
-{ engine->stop_requested = true; }
-
-void Engine::setup(void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>))
+void Engine::start(UpdateFunc _update_func)
 {
-    RenderServer::waitIdle();
+    if (engine->start_called)
+    {
+        DBG_WARNING("attempt to start the engine mainloop when the mainloop is already running. don't do that!");
+        return;
+    }
+    engine->start_called = true;
+    
+    Engine::setUpdateFunc(_update_func);
 
-    engine->imgui_func = _imgui_func;
-    engine->update_func = _update_func;
-}
-
-void Engine::mainLoop()
-{
     auto last_frame = chrono::steady_clock::now();
 
     while (!RenderServer::getWindowShouldClose() && !engine->stop_requested)
@@ -66,7 +63,7 @@ void Engine::mainLoop()
             ImGui::NewFrame();
 
             RenderServer::waitIdle();
-            engine->imgui_func(engine->scene);
+            engine->imgui_func();
 
             ImGui::Render();
         }
@@ -74,7 +71,7 @@ void Engine::mainLoop()
         FrameStats stats = RenderServer::draw();
         auto update_start = chrono::steady_clock::now();
         if (engine->update_func)
-            engine->update_func(engine->scene, getDeltaTime());
+            engine->update_func(getDeltaTime());
         chrono::duration<float> update_duration = chrono::steady_clock::now() - update_start;
         stats.imgui_time = imgui_duration.count();
         stats.update_time = update_duration.count();
@@ -83,12 +80,18 @@ void Engine::mainLoop()
         last_frame_end = chrono::steady_clock::now();
         stats.delta_time = frame_delta.count();
         engine->updateStats(stats);
+        ++(engine->frame_index);
     }
 }
 
-Ref<Scene> Engine::getScene()
+void Engine::setUpdateFunc(UpdateFunc func)
 {
-    return engine->scene;
+    engine->update_func = func;
+}
+
+void Engine::setImGuiFunc(ImGuiDrawFunc func)
+{
+    engine->imgui_func = func;
 }
 
 void Engine::setScene(const Ref<Scene>& new_scene)
@@ -96,6 +99,14 @@ void Engine::setScene(const Ref<Scene>& new_scene)
     Engine::debugClearSelection();
     engine->scene = new_scene;
     RenderServer::setSingleScene(new_scene);
+}
+
+void Engine::stop()
+{ engine->stop_requested = true; }
+
+Ref<Scene> Engine::getScene()
+{
+    return engine->scene;
 }
 
 void Engine::summariseTrackedObjects()
@@ -141,6 +152,9 @@ float Engine::getSmoothedDeltaTime()
 
 float Engine::getSmoothedFPS()
 { return engine->smoothed_fps; }
+
+size_t Engine::getFrameCount()
+{ return engine->frame_index; }
 
 bool Engine::isWireframeMode()
 { return engine->wireframe_view; }
