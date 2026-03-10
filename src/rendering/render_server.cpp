@@ -274,7 +274,7 @@ FrameStats RenderServer::drawFrame()
     size_t frame_index = Engine::getFrameCount();
     DBG_BABBLE("drawing frame " + ::to_string(frame_index));
 
-    FrameStats stats;
+    FrameStats stats{ };
 
     vkWaitForFences(device, 1, &in_flight_fences[frame_index % frames_in_flight], VK_TRUE, UINT64_MAX);
     vkResetFences(device, 1, &in_flight_fences[frame_index % frames_in_flight]);
@@ -283,10 +283,6 @@ FrameStats RenderServer::drawFrame()
     vkAcquireNextImageKHR(device, swapchain->getSwapchain(), UINT64_MAX, image_available_semaphores[frame_index % frames_in_flight], VK_NULL_HANDLE, &image_index);
     DBG_BABBLE("acquired image " + ::to_string(image_index));
 
-    const auto build_start = chrono::steady_clock::now();
-
-    size_t valid_scenes = 0;
-        
     SceneUniforms scene_uniforms;
     scene_uniforms.time = Engine::getEngineTime();
     scene_uniforms.eye_position = { 0, 0, 0 };
@@ -298,6 +294,7 @@ FrameStats RenderServer::drawFrame()
     scene_uniforms.near_far = { -1, 1 };
     memcpy(final_pass_uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
     
+    size_t valid_scenes = 0;
     for (auto& scene : scenes)
     {
         if (!scene.scene)
@@ -306,9 +303,6 @@ FrameStats RenderServer::drawFrame()
     }
     if (valid_scenes == 0)
         DBG_WARNING("no scene attached to server");
-
-    const chrono::duration<float> build_duration = chrono::steady_clock::now() - build_start;
-    stats.build_time = build_duration.count();
 
     const auto record_start = chrono::steady_clock::now();
     recordRenderCommands(image_index, stats);

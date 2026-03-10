@@ -453,6 +453,7 @@ void Engine::_drawImGuiDebug(float delta_time) const
 			RenderServer::setVsyncEnabled(!RenderServer::getVsyncEnabled());
 		ImGui::EndMenu();
 	}
+	ImGui::BeginMenu(format("{:>6.2f}ms - {:<6.1f} fps", smoothed_delta_time * 1000.0f, smoothed_fps).c_str(), false);
 	ImGui::EndMainMenuBar();	
 	
 	if (!show_imgui)
@@ -485,12 +486,10 @@ void Engine::_drawImGuiDebug(float delta_time) const
 	float rightmost_window_width = 0;
 	{
 		ImGui::Begin("performance", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-		ImGui::LabelText("delta time", "%fms", last_frame_stats.delta_time * 1000.0f);
-		ImGui::LabelText("smoothed FPS", "%f", smoothed_fps);
+		ImGui::LabelText("delta time", "%fms", smoothed_delta_time * 1000.0f);
+		ImGui::LabelText("FPS", "%f", smoothed_fps);
 		if (ImGui::CollapsingHeader("time details", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			ImGui::LabelText("render imgui", "%fms", last_frame_stats.imgui_time * 1000.0f);
-			ImGui::LabelText("build buffers", "%fms", last_frame_stats.build_time * 1000.0f);
 			ImGui::LabelText("record commands", "%fms", last_frame_stats.record_time * 1000.0f);
 			ImGui::LabelText("render time", "%fms", last_frame_stats.render_time * 1000.0f);
 			ImGui::LabelText("update scene", "%fms", last_frame_stats.update_time * 1000.0f);
@@ -500,7 +499,6 @@ void Engine::_drawImGuiDebug(float delta_time) const
 			ImGui::LabelText("draw calls", "%zu", last_frame_stats.draw_calls);
 			ImGui::LabelText("pipeline rebinds", "%zu", last_frame_stats.pipeline_rebinds);
 			ImGui::LabelText("triangles", "%zu", last_frame_stats.triangles);
-			ImGui::LabelText("vertices", "%zu", last_frame_stats.vertices);
 			ImGui::LabelText("render passes", "%zu", last_frame_stats.passes);
 			if (ImGui::CollapsingHeader("pass durations"))
 			{
@@ -509,7 +507,6 @@ void Engine::_drawImGuiDebug(float delta_time) const
 					ImGui::LabelText(("pass " + ::to_string(i++)).c_str(), "%fms", dur * 1000.0f);
 			}
 			ImGui::LabelText("camera rendering", "%zu", last_frame_stats.cameras);
-			ImGui::LabelText("lights rendering", "%zu", last_frame_stats.lights);
 		}
 		ImGui::Spacing();
 		ImGui::PlotLines("##xx", delta_time_history, 512, history_offset, "delta time", 0.0001f, 0.2f, ImVec2{0, 160}, 4);

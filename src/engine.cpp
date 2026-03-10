@@ -55,7 +55,7 @@ void Engine::start(UpdateFunc _update_func)
         engine->total_time = since_start.count();
 
         Input::pollInput();
-        auto imgui_start = chrono::steady_clock::now();
+
         if (engine->imgui_func)
         {
             ImGui_ImplVulkan_NewFrame();
@@ -67,19 +67,17 @@ void Engine::start(UpdateFunc _update_func)
 
             ImGui::Render();
         }
-        chrono::duration<float> imgui_duration = chrono::steady_clock::now() - imgui_start;
+        
         FrameStats stats = RenderServer::draw();
+        
         auto update_start = chrono::steady_clock::now();
         if (engine->update_func)
             engine->update_func(getDeltaTime());
         chrono::duration<float> update_duration = chrono::steady_clock::now() - update_start;
-        stats.imgui_time = imgui_duration.count();
         stats.update_time = update_duration.count();
-        static auto last_frame_end = chrono::steady_clock::now();
-        chrono::duration<float> frame_delta = chrono::steady_clock::now() - last_frame_end;
-        last_frame_end = chrono::steady_clock::now();
-        stats.delta_time = frame_delta.count();
+
         engine->updateStats(stats);
+        
         ++(engine->frame_index);
     }
 }
@@ -386,13 +384,10 @@ void Engine::updateStats(const FrameStats& stats)
 {
     last_frame_stats = stats;
 
-    smoothed_delta_time = (smoothed_delta_time * 0.5f) + (stats.delta_time * 0.5f);
-    const float fps = 1.0f / stats.delta_time;
-    smoothed_fps = (smoothed_fps * 0.5f) + (fps * 0.5f);
+    smoothed_delta_time = (smoothed_delta_time * 0.9f) + (delta_time * 0.1f);
+    smoothed_fps = 1.0f / smoothed_delta_time;
 
-    delta_time_history[history_offset] = stats.delta_time;
-    fps_history[history_offset] = 1.0f / stats.delta_time;
+    delta_time_history[history_offset] = delta_time;
+    fps_history[history_offset] = 1.0f / delta_time;
     history_offset = (history_offset + 1) % 512;
-
-    RenderServer::setTitle(format("hop-engine   -   {:>4.2f}ms   -   {:>6.2f} fps", smoothed_delta_time * 1000.0f, smoothed_fps));
 }
