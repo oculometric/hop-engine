@@ -24,8 +24,12 @@ UniformBlock::UniformBlock(const Shader::Layout& layout_info)
             size += binding.buffer_size;
         else if (binding.type == Shader::TEXTURE)
         {
-            const auto [texture, sampler] = RenderServer::getDefaultTextureSampler();
-            textures_in_use[binding.binding] = { nullptr, sampler, false };
+            textures_in_use[binding.binding] =
+            {
+                binding.texture_is_3d ? RenderServer::getDefault3DTexture() : RenderServer::getDefaultTexture(),
+                RenderServer::getDefaultSampler(),
+                false
+            };
         }
     }
 
@@ -74,8 +78,16 @@ void UniformBlock::setTexture(const uint32_t binding, const Ref<Texture>& image,
     if (textures_in_use[binding].texture == image && textures_in_use[binding].use_stencil == use_stencil)
         return;
     // update the binding
-    textures_in_use[binding].texture = image;
-    textures_in_use[binding].use_stencil = use_stencil;
+    if (!image)
+    {
+        textures_in_use[binding].texture = layout.bindings[binding].texture_is_3d ? RenderServer::getDefault3DTexture() : RenderServer::getDefaultTexture();
+        textures_in_use[binding].use_stencil = false;
+    }
+    else
+    {
+        textures_in_use[binding].texture = image;
+        textures_in_use[binding].use_stencil = use_stencil;
+    }
     applyDescriptorBindings();
 }
 
@@ -85,9 +97,10 @@ void UniformBlock::setSampler(const uint32_t binding, const Ref<Sampler>& sample
     if (textures_in_use[binding].sampler == sampler)
         return;
     // update sampler binding; use default engine sampler if null
-    textures_in_use[binding].sampler = sampler;
     if (!sampler)
-        textures_in_use[binding].sampler = RenderServer::getDefaultTextureSampler().second;
+        textures_in_use[binding].sampler = RenderServer::getDefaultSampler();
+    else
+        textures_in_use[binding].sampler = sampler;
     applyDescriptorBindings();
 }
 
@@ -130,10 +143,14 @@ void UniformBlock::applyDescriptorBindings()
                 // if the binding is a texture-sampler, give it the image view
                 // and sampler specified in the texture map
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                if (textures_in_use[binding.binding].texture)
-                    image_info.imageView = textures_in_use[binding.binding].texture->getView(textures_in_use[binding.binding].use_stencil);
-                else
-                    image_info.imageView = nullptr;
+                auto& texture = textures_in_use[binding.binding].texture;
+                if (texture->is3D() != binding.texture_is_3d)
+                {
+                    DBG_ERROR("uniform attempted to bind an incompatible texture dimension. texture will be reset to default.");
+                    textures_in_use[binding.binding].texture = binding.texture_is_3d ? RenderServer::getDefault3DTexture() : RenderServer::getDefaultTexture();
+                    texture = textures_in_use[binding.binding].texture;
+                }
+                image_info.imageView = texture->getView(textures_in_use[binding.binding].use_stencil);
                 image_info.sampler = textures_in_use[binding.binding].sampler->getSampler();
                 descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 descriptor_write.pImageInfo = &image_info;

@@ -83,6 +83,7 @@ private:
 	VkDescriptorSetLayout object_descriptor_set_layout = VK_NULL_HANDLE;
 
 	Ref<Texture> default_image;		// default image used when none is specified
+	Ref<Texture> default_3d_image;
 	Ref<Sampler> default_sampler;	// default sampler used when none is specified
 	Ref<Material> default_material;	// default material used when none is specified
 
@@ -112,7 +113,9 @@ public:
 	
 	static Ref<RenderPass> getMainRenderPass();
 	static Ref<RenderPass> getFinalRenderPass();
-	static std::pair<Ref<Texture>, Ref<Sampler>> getDefaultTextureSampler();
+	static Ref<Texture> getDefaultTexture();
+	static Ref<Texture> getDefault3DTexture();
+	static Ref<Sampler> getDefaultSampler();
 	static Ref<Mesh> getSkyboxCube();
 	static Ref<Mesh> getQuad();
 	

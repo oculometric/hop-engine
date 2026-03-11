@@ -68,6 +68,10 @@ vector<Shader::DescriptorBinding> Shader::getReflectedBindings(const vector<uint
 			DescriptorBinding db;
 			db.type = TEXTURE;
 			db.binding = binding->binding;
+			if (binding->image.dim == SpvDim::SpvDim3D)
+				db.texture_is_3d = true;
+			else if (binding->image.dim != SpvDim::SpvDim2D)
+				DBG_WARNING("shader contains an unsupported image sampler dimension.");
 			db.name = binding->name;
 			bindings.push_back(db);
 		}

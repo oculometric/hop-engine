@@ -80,6 +80,7 @@ public:
 		VkDeviceSize buffer_size = 0;
 		std::string name;
 		std::vector<UniformVariable> variables;
+		bool texture_is_3d = false;
 	};
 
 	struct Layout

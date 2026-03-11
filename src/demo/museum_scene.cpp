@@ -117,7 +117,7 @@ static Ref<Scene> initMuseumScene()
         Engine::loadMesh("res://engine/samples/plane.obj"),
         new Material(Engine::loadShader("res://engine/shaders/deferred.glsl"))));
     normal_demo_1->transform.setPosition(glm::vec3{ 0, -8, 0.8 });
-    normal_demo_1->material->setTexture(0, RenderServer::getDefaultTextureSampler().first);
+    normal_demo_1->material->setTexture(0, RenderServer::getDefaultTexture());
     normal_demo_1->material->setTexture(1, Engine::loadTexture("res://demo_normal.png"));
     normal_demo_1->material->setVec4Uniform("base_colour", glm::vec4{ 1, 1, 1, 1 });
     normal_demo_1->material->setVec4Uniform("specular_colour", glm::vec4{ 1, 1, 1, 1 });

@@ -210,7 +210,7 @@ void RenderGraph::recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, Wea
     auto final_image_info = getFinalImage();
     WeakRef<Texture> new_passthrough_tex = final_image_info.first;
     if (!new_passthrough_tex)
-        new_passthrough_tex = RenderServer::getDefaultTextureSampler().first;
+        new_passthrough_tex = RenderServer::getDefaultTexture();
     static bool in_stencil_mode = false;
     if (new_passthrough_tex != passthrough_texture || final_image_info.second != in_stencil_mode)
     {
@@ -300,7 +300,7 @@ void RenderGraph::rebuildBindings()
             {
                 if (binding_step.is_camera || binding_step.texture_bindings.empty())
                 {
-                    texture = RenderServer::getDefaultTextureSampler().first;
+                    texture = RenderServer::getDefaultTexture();
                     break;                    
                 }
                 binding_step = execution_steps[binding_step.texture_bindings[0].step_index];

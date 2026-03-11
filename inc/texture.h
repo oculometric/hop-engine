@@ -120,6 +120,7 @@ public:
 	
 	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 	glm::ivec2 getSize() const { return { extent.x, extent.y }; }
+	bool is3D() const { return { extent.z != 1 }; }
 	Format getFormat() const { return format; }
 	VkImageView getView(bool stencil = false);
 	void transitionLayout(Layout new_layout);

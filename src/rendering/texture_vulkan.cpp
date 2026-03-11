@@ -96,9 +96,16 @@ void Texture::transitionLayout(const Layout new_layout)
         memory_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
         dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
     }
+    else if (current_layout == LAYOUT_UNDEFINED && new_layout == LAYOUT_SHADER_READ_ONLY)
+    {
+        memory_barrier.srcAccessMask = 0;
+        src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        memory_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    }
     else
     {
-        DBG_ERROR("unsupported layout transition!");
+        DBG_ERROR("unsupported layout transition: " + to_string(current_layout) + " -> " + to_string(new_layout));
         return;
     }
 

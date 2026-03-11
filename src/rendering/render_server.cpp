@@ -53,8 +53,14 @@ Ref<RenderPass> RenderServer::getMainRenderPass()
 Ref<RenderPass> RenderServer::getFinalRenderPass()
 { return server->final_render_pass; }
 
-pair<Ref<Texture>, Ref<Sampler>> RenderServer::getDefaultTextureSampler()
-{ return { server->default_image, server->default_sampler }; }
+Ref<Texture> RenderServer::getDefaultTexture()
+{ return server->default_image; }
+
+Ref<Texture> RenderServer::getDefault3DTexture()
+{ return server->default_3d_image; }
+
+Ref<Sampler> RenderServer::getDefaultSampler()
+{ return server->default_sampler; }
 
 Ref<Mesh> RenderServer::getSkyboxCube()
 { return server->skybox_cube; }
@@ -102,6 +108,8 @@ RenderServer::RenderServer()
 
     uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
     default_image = new Texture(1, 1, Texture::FORMAT_R8G8B8A8_SRGB, Texture::Builder().data(default_image_data));
+    uint8_t default_3d_image_data[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+    default_3d_image = new Texture(2, 1, Texture::FORMAT_R8G8B8A8_SRGB, Texture::Builder().layers({ 2, 1 }).data(default_3d_image_data));
     default_sampler = new Sampler(Sampler::Builder());
 
     quad = new Mesh({
@@ -135,6 +143,7 @@ RenderServer::~RenderServer()
     default_material = nullptr;
     quad = nullptr;
     default_image = nullptr;
+    default_3d_image = nullptr;
     default_sampler = nullptr;
 
     offscreen_pass = nullptr;

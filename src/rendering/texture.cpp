@@ -27,7 +27,7 @@ Texture::Texture(const size_t _width, const size_t _height, const Texture::Forma
         builder.layer_arrangement.x * builder.layer_arrangement.y 
     };
 
-    if (builder.data_ptr != nullptr || extent.x == 0 || extent.y == 0)
+    if (builder.data_ptr != nullptr && extent.x != 0 && extent.y != 0)
     {
         loadFromMemory(builder.data_ptr, builder.layer_arrangement);
         DBG_VERBOSE("created image from memory with size " + ::to_string(extent.x) + "x" + ::to_string(extent.y) + " and format " + to_string(format));
