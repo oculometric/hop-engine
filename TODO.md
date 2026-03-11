@@ -5,14 +5,13 @@
 - make the behaviour of cameras and scene drawing more sensible (draw calls), render graph etc (weirdly jank and disorganised), reduce the aggressive draw call sorting, lots of 'viewport size' passthroughs (should just call scene-draw() which returns a texture)
 - cameras should have a slot index within them, rather than the scene, deprecate setCameraSlot
 
-- fix crashing with renderdoc
-
 - simplify texture to be in one of several 'modes/types' (fix the way view aspects behave), overhaul initialisation, overhaul renderpass accordingly
 - create image view on image create
 
 - scene window-to-viewport function for mouse position etc
 - multi-scene mode in the engine
 - fix multi-pass rendering not working
+- overhaul package manager
 
 - change the way refs work, and the way `new`ing works (classes only construct via ::create, remove keepLoaded)
 - Application class which contains game update loop, etc, which users override

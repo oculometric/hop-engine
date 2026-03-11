@@ -382,7 +382,13 @@ vector<uint8_t> Package::loadCompressedPackage(const vector<uint8_t>& data)
 	if (!instance)
 		Package::init();
 
-	PackageHeader header = *reinterpret_cast<const PackageHeader*>(data.data());
+	if (data.size() < sizeof(PackageHeader))
+	{
+		DBG_ERROR("failed to load compressed package; invalid size");
+		return { };
+	}
+
+	PackageHeader header = *reinterpret_cast<PackageHeader*>(const_cast<uint8_t*>(data.data()));
 	DBG_VERBOSE("loading compressed package");
 
 	if (header.signature != SIGNATURE)

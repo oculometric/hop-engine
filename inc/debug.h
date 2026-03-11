@@ -7,11 +7,7 @@
 #pragma warning(disable: 4005)
 #endif
 
-#if defined(NDEBUG)
 #define DEBUG_LEVEL 2
-#else
-#define DEBUG_LEVEL 1
-#endif
 #define DEBUG_ENABLED
 
 // these macros simplify the process of reporting to the debugger, but also allow
@@ -25,33 +21,33 @@
 #define DBG_ERROR(str)
 #define DBG_FAULT(str) std::cout << str << std::endl; exit(-1)
 
-#define PTR(ptr) Debug::pointerToString(ptr)
+#define PTR(ptr) HopEngine::Debug::pointerToString(ptr)
 
 #if defined (DEBUG_ENABLED)
 
 #if DEBUG_LEVEL == 0
 #undef DBG_BABBLE
-#define DBG_BABBLE(str) Debug::write(str, DEBUG_BABBLE)
+#define DBG_BABBLE(str) HopEngine::Debug::write(str, HopEngine::DEBUG_BABBLE)
 #endif
 #if DEBUG_LEVEL <= 1
 #undef DBG_VERBOSE
-#define DBG_VERBOSE(str) Debug::write(str, DEBUG_VERBOSE)
+#define DBG_VERBOSE(str) HopEngine::Debug::write(str, HopEngine::DEBUG_VERBOSE)
 #endif
 #if DEBUG_LEVEL <= 2
 #undef DBG_INFO
-#define DBG_INFO(str) Debug::write(str, DEBUG_INFO)
+#define DBG_INFO(str) HopEngine::Debug::write(str, HopEngine::DEBUG_INFO)
 #endif
 #if DEBUG_LEVEL <= 3
 #undef DBG_WARNING
-#define DBG_WARNING(str) Debug::write(str, DEBUG_WARNING)
+#define DBG_WARNING(str) HopEngine::Debug::write(str, HopEngine::DEBUG_WARNING)
 #endif
 #if DEBUG_LEVEL <= 4
 #undef DBG_ERROR
-#define DBG_ERROR(str) Debug::write(str, DEBUG_ERROR)
+#define DBG_ERROR(str) HopEngine::Debug::write(str, HopEngine::DEBUG_ERROR)
 #endif
 #if DEBUG_LEVEL <= 5
 #undef DBG_FAULT
-#define DBG_FAULT(str) Debug::write(str, DEBUG_FAULT)
+#define DBG_FAULT(str) HopEngine::Debug::write(str, HopEngine::DEBUG_FAULT)
 #endif
 
 #endif
