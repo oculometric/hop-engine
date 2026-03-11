@@ -5,7 +5,7 @@
 
 #include "common.h"
 #include "transform.h"
-#include "pbr.h"
+#include "material.h"
 #include "draw_command.h"
 #include "math_helpers.h"
 

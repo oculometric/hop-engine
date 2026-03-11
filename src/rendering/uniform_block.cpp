@@ -6,12 +6,11 @@
 #include "buffer.h"
 #include "command_buffer.h"
 #include "texture.h"
-#include "sampler.h"
 
 using namespace HopEngine;
 using namespace std;
 
-UniformBlock::UniformBlock(const ShaderLayout& layout_info)
+UniformBlock::UniformBlock(const Shader::Layout& layout_info)
 {
     layout = layout_info;
     // calculate the total size of the required buffer for the uniforms
@@ -21,9 +20,9 @@ UniformBlock::UniformBlock(const ShaderLayout& layout_info)
     size = 0;
     for (const auto& binding : layout_info.bindings)
     {
-        if (binding.type == UNIFORM)
+        if (binding.type == Shader::UNIFORM)
             size += binding.buffer_size;
-        else if (binding.type == TEXTURE)
+        else if (binding.type == Shader::TEXTURE)
         {
             const auto [texture, sampler] = RenderServer::getDefaultTextureSampler();
             textures_in_use[binding.binding] = { nullptr, sampler, false };
@@ -101,7 +100,7 @@ void UniformBlock::applyDescriptorBindings()
     for (size_t i = 0; i < descriptor_sets.size(); ++i)
     {
         VkDeviceSize offset = 0;
-        for (const DescriptorBinding& binding : layout.bindings)
+        for (const Shader::DescriptorBinding& binding : layout.bindings)
         {
             // standard write command for our specified descriptor set and binding
             VkWriteDescriptorSet descriptor_write{ };
@@ -113,7 +112,7 @@ void UniformBlock::applyDescriptorBindings()
 
             VkDescriptorBufferInfo buffer_info{ };
             VkDescriptorImageInfo image_info{ };
-            if (binding.type == UNIFORM)
+            if (binding.type == Shader::UNIFORM)
             {
                 // if the binding is a uniform buffer, point it to a section
                 // of the corresponding GPU buffer. offset is incremented
@@ -126,7 +125,7 @@ void UniformBlock::applyDescriptorBindings()
                 descriptor_write.pBufferInfo = &buffer_info;
                 offset += binding.buffer_size;
             }
-            else if (binding.type == TEXTURE)
+            else if (binding.type == Shader::TEXTURE)
             {
                 // if the binding is a texture-sampler, give it the image view
                 // and sampler specified in the texture map

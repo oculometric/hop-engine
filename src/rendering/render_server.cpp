@@ -1,26 +1,11 @@
 #include "render_server.h"
 
-#include <vector>
-#include <array>
-#include <chrono>
-#include <filesystem>
-#include <vulkan/vulkan.hpp>
-#define GLFW_INCLUDE_NONE
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <stb_image.h>
-
-#include "package.h"
-#include "pipeline.h"
 #include "material.h"
 #include "uniform_block.h"
 #include "render_graph.h"
 #include "swapchain.h"
 #include "engine.h"
 #include "mesh.h"
-#include "pbr.h"
 #include "scene.h"
 #include "command_buffer.h"
 
@@ -46,6 +31,62 @@ void RenderServer::destroy()
     }
 }
 
+Ref<UniformBlock> RenderServer::createSceneUniforms()
+{
+    return new UniformBlock(Shader::Layout{
+        server->scene_descriptor_set_layout, 
+        {{ 0, Shader::UNIFORM, sizeof(SceneUniforms) } }
+    });
+}
+
+Ref<UniformBlock> RenderServer::createObjectUniforms()
+{
+    return new UniformBlock(Shader::Layout{
+        server->object_descriptor_set_layout, 
+        {{ 0, Shader::UNIFORM, sizeof(ObjectUniforms) } }
+    });
+}
+
+Ref<RenderPass> RenderServer::getMainRenderPass()
+{ return server->offscreen_pass; }
+
+Ref<RenderPass> RenderServer::getFinalRenderPass()
+{ return server->final_render_pass; }
+
+pair<Ref<Texture>, Ref<Sampler>> RenderServer::getDefaultTextureSampler()
+{ return { server->default_image, server->default_sampler }; }
+
+Ref<Mesh> RenderServer::getSkyboxCube()
+{ return server->skybox_cube; }
+
+Ref<Mesh> RenderServer::getQuad()
+{ return server->quad; }
+
+glm::vec2 RenderServer::getFramebufferSize()
+{ return glm::vec2(server->swapchain->getExtent()); }
+
+void RenderServer::setVsyncEnabled(bool enabled)
+{
+    server->swapchain->setVsync(enabled);
+    server->final_render_pass->resize();
+}
+
+bool RenderServer::getVsyncEnabled()
+{ return server->swapchain->getVsync(); }
+
+void RenderServer::setSingleScene(const Ref<Scene>& scene)
+{
+    setMultiScene({ { scene, glm::vec2{ 0, 0 }, glm::vec2{ 1, 1 } } });
+}
+
+void RenderServer::setMultiScene(const vector<MultiSceneRenderSpec>& multi_scenes)
+{
+    RenderServer::waitIdle();
+    server->scenes.clear();
+    for (auto& scene : multi_scenes)
+        server->scenes.emplace_back(scene);
+}
+
 RenderServer::RenderServer()
 {
     server = this;
@@ -60,8 +101,8 @@ RenderServer::RenderServer()
     offscreen_pass = new RenderPass(1, 1, { 3, true });
 
     uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
-    default_image = new Texture(1, 1, FORMAT_R8G8B8A8_SRGB, TextureBuilder().data(default_image_data));
-    default_sampler = new Sampler(SamplerBuilder());
+    default_image = new Texture(1, 1, Texture::FORMAT_R8G8B8A8_SRGB, Texture::Builder().data(default_image_data));
+    default_sampler = new Sampler(Sampler::Builder());
 
     quad = new Mesh({
                         { { -1, -1, 0, 1 }, {}, {}, {}, { 0, 0 } },
@@ -81,263 +122,32 @@ RenderServer::RenderServer()
     setVisible(true);
 }
 
-size_t RenderServer::getFramesInFlight()
-{ return server->frames_in_flight; }
-
-VkDevice RenderServer::getDevice()
-{ return server->device; }
-
-VkPhysicalDevice RenderServer::getPhysicalDevice()
-{ return server->physical_device; }
-
-RenderServer::QueueFamilies RenderServer::getQueueFamilies(const VkPhysicalDevice device)
-{
-    QueueFamilies families;
-
-    uint32_t queue_family_count = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
-    vector<VkQueueFamilyProperties> queue_families(queue_family_count);
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
-    int i = 0;
-    for (const auto& queueFamily : queue_families)
-    {
-        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-            families.graphics_family = i;
-        VkBool32 queue_has_present_support = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, server->surface, &queue_has_present_support);
-        if (queue_has_present_support)
-            families.present_family = i;
-
-        ++i;
-    }
-
-    return families;
-}
-
-VkQueue RenderServer::getGraphicsQueue()
-{ return server->graphics_queue; }
-
-VkCommandPool RenderServer::getCommandPool()
-{ return server->command_pool; }
-
-Ref<RenderPass> RenderServer::getMainRenderPass()
-{ return server->offscreen_pass; }
-
-Ref<RenderPass> RenderServer::getFinalRenderPass()
-{ return server->final_render_pass; }
-
-GLFWwindow* RenderServer::getWindow()
-{
-    return server->window;
-}
-
-glm::vec2 RenderServer::getFramebufferSize()
-{
-    const auto ext = server->swapchain->getExtent();
-    return glm::vec2{ static_cast<float>(ext.x), static_cast<float>(ext.y) };
-}
-
-bool RenderServer::getWindowShouldClose()
-{
-    return glfwWindowShouldClose(server->window);
-}
-
-void RenderServer::setTitle(const string &title)
-{
-    glfwSetWindowTitle(server->window, title.c_str());
-}
-
-void RenderServer::setVisible(bool visible)
-{
-    if (visible)
-        glfwShowWindow(server->window);
-    else
-        glfwHideWindow(server->window);
-}
-
-void RenderServer::setIcon(const string &path)
-{
-    GLFWimage image;
-
-    // grab a png image from the package and read it
-    const auto image_data = Package::tryLoadFile(path);
-    int img_channels;
-    image.pixels = stbi_load_from_memory(image_data.data(), static_cast<int>(image_data.size()), &image.width, &image.height, &img_channels, STBI_rgb_alpha);
-
-    glfwSetWindowIcon(server->window, 1, &image);
-    stbi_image_free(image.pixels);
-}
-
-void RenderServer::setVsyncEnabled(bool enabled)
-{
-    server->swapchain->setVsync(enabled);
-    server->final_render_pass->resize();
-}
-
-bool RenderServer::getVsyncEnabled()
-{
-    return server->swapchain->getVsync();
-}
-
-VkDescriptorPool RenderServer::getDescriptorPool()
-{ return server->descriptor_pool; }
-
-Ref<UniformBlock> RenderServer::createSceneUniforms()
-{
-    return new UniformBlock(ShaderLayout{
-        server->scene_descriptor_set_layout, 
-        {{ 0, UNIFORM, sizeof(SceneUniforms) } }
-    });
-}
-
-Ref<UniformBlock> RenderServer::createObjectUniforms()
-{
-    return new UniformBlock(ShaderLayout{
-        server->object_descriptor_set_layout, 
-        {{ 0, UNIFORM, sizeof(ObjectUniforms) } }
-    });
-}
-
-VkPipelineLayout RenderServer::createPipelineLayout(VkDescriptorSetLayout set_2)
-{
-    VkPipelineLayoutCreateInfo layout_create_info{ };
-	layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	layout_create_info.setLayoutCount = 3;
-	const VkDescriptorSetLayout layouts[3] =
-	{
-		server->scene_descriptor_set_layout,
-		server->object_descriptor_set_layout,
-		set_2
-	};
-	layout_create_info.pSetLayouts = layouts;
-
-    VkPipelineLayout pipeline_layout;
-	if (vkCreatePipelineLayout(RenderServer::getDevice(), &layout_create_info, nullptr, &pipeline_layout) != VK_SUCCESS)
-		DBG_FAULT("vkCreatePipelineLayout failed");
-
-    return pipeline_layout;
-}
-
-pair<Ref<Texture>, Ref<Sampler>> RenderServer::getDefaultTextureSampler()
-{ return { server->default_image, server->default_sampler }; }
-
-Ref<Mesh> RenderServer::getSkyboxCube()
-{ return server->skybox_cube; }
-
-Ref<Mesh> RenderServer::getQuad()
-{ return server->quad; }
-
-void RenderServer::waitIdle()
-{ vkDeviceWaitIdle(server->device); }
-
-FrameStats RenderServer::draw()
-{ return server->drawFrame(); }
-
-bool RenderServer::resize()
-{
-    int width; int height;
-    glfwGetFramebufferSize(window, &width, &height);
-    glm::u32vec2 new_size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
-    if (new_size == window_size)
-        return false;
-    
-    RenderServer::waitIdle();
-    window_size = new_size;
-    swapchain->resize(window_size.x, window_size.y);
-    final_render_pass->resize();
-    return true;
-}
-
-void RenderServer::setSingleScene(const Ref<Scene>& scene)
-{
-    setMultiScene({ { scene, glm::vec2{ 0, 0 }, glm::vec2{ 1, 1 } } });
-}
-
-void RenderServer::setMultiScene(const vector<MultiSceneRenderSpec>& multi_scenes)
+RenderServer::~RenderServer()
 {
     RenderServer::waitIdle();
-    server->scenes.clear();
-    for (auto& scene : multi_scenes)
-        server->scenes.emplace_back(scene);
+
+    RenderServer::destroyImGui();
+
+    command_buffers.clear();
+    scenes.clear();
+    final_pass_uniforms = nullptr;
+    skybox_cube = nullptr;
+    default_material = nullptr;
+    quad = nullptr;
+    default_image = nullptr;
+    default_sampler = nullptr;
+
+    offscreen_pass = nullptr;
+    final_render_pass = nullptr;
+    swapchain = nullptr;
+
+    destroyVulkan();
+
+    destroyWindow();
 }
 
-FrameStats RenderServer::drawFrame()
-{
-    if (glfwGetWindowAttrib(window, GLFW_ICONIFIED))
-        return { };
-
-    if (resize())
-        return { };
-
-    size_t frame_index = Engine::getFrameCount();
-    DBG_BABBLE("drawing frame " + ::to_string(frame_index));
-
-    FrameStats stats{ };
-
-    vkWaitForFences(device, 1, &in_flight_fences[frame_index % frames_in_flight], VK_TRUE, UINT64_MAX);
-    vkResetFences(device, 1, &in_flight_fences[frame_index % frames_in_flight]);
-
-    uint32_t image_index;
-    vkAcquireNextImageKHR(device, swapchain->getHandle(), UINT64_MAX, image_available_semaphores[frame_index % frames_in_flight], VK_NULL_HANDLE, &image_index);
-    DBG_BABBLE("acquired image " + ::to_string(image_index));
-
-    SceneUniforms scene_uniforms;
-    scene_uniforms.time = Engine::getEngineTime();
-    scene_uniforms.eye_position = { 0, 0, 0 };
-    scene_uniforms.viewport_size = swapchain->getExtent();
-    scene_uniforms.world_to_view = glm::mat4(1);
-    scene_uniforms.view_to_clip = glm::mat4(1);
-    scene_uniforms.clip_to_view = glm::mat4(1);
-    scene_uniforms.view_to_world = glm::mat4(1);
-    scene_uniforms.near_far = { -1, 1 };
-    memcpy(final_pass_uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
-    
-    size_t valid_scenes = 0;
-    for (auto& scene : scenes)
-    {
-        if (!scene.scene)
-            continue;
-        ++valid_scenes;
-    }
-    if (valid_scenes == 0)
-        DBG_WARNING("no scene attached to server");
-
-    const auto record_start = chrono::steady_clock::now();
-    recordRenderCommands(image_index, stats);
-    const chrono::duration<float> record_duration = chrono::steady_clock::now() - record_start;
-    stats.record_time = record_duration.count();
-    
-    VkSubmitInfo submit_info{ };
-    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    const VkSemaphore wait_semaphores[] = { image_available_semaphores[frame_index % frames_in_flight] };
-    constexpr VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    submit_info.waitSemaphoreCount = 1;
-    submit_info.pWaitSemaphores = wait_semaphores;
-    submit_info.pWaitDstStageMask = wait_stages;
-    submit_info.commandBufferCount = 1;
-    VkCommandBuffer cmd_buf = command_buffers[image_index]->getCommandBuffer();
-    submit_info.pCommandBuffers = &cmd_buf;
-    const VkSemaphore signal_semaphores[] = { render_finished_semaphores[image_index] };
-    submit_info.signalSemaphoreCount = 1;
-    submit_info.pSignalSemaphores = signal_semaphores;
-    DBG_BABBLE("submitting command buffer");
-    if (vkQueueSubmit(graphics_queue, 1, &submit_info, in_flight_fences[frame_index % frames_in_flight]) != VK_SUCCESS)
-        DBG_FAULT("vkQueueSubmit failed");
-
-    VkPresentInfoKHR present_info{ };
-    present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-    present_info.waitSemaphoreCount = 1;
-    present_info.pWaitSemaphores = signal_semaphores;
-    const VkSwapchainKHR swapchains[] = { swapchain->getHandle() };
-    present_info.swapchainCount = 1;
-    present_info.pSwapchains = swapchains;
-    present_info.pImageIndices = &image_index;
-    DBG_BABBLE("submitting present");
-    vkQueuePresentKHR(present_queue, &present_info);
-    
-    command_buffers[image_index]->extractTiming();
-    return stats;
-}
+RenderServer* RenderServer::getInstance()
+{ return server; }
 
 void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
 {

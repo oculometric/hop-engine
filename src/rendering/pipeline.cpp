@@ -5,20 +5,20 @@
 
 #include "command_buffer.h"
 #include "render_server.h"
-#include "shader.h"
+#include "material.h"
 #include "mesh.h"
 #include "render_pass.h"
 
 using namespace HopEngine;
 using namespace std;
 
-TO_STRING_DEF(CullMode, 4, VARGS("NONE", "FRONT", "BACK", "BOTH"));
+TO_STRING_DEF(Pipeline::CullMode, 4, VARGS("NONE", "FRONT", "BACK", "BOTH"));
 
-TO_STRING_DEF(PolygonMode, 3, VARGS("FILL", "LINE", "BACK"));
+TO_STRING_DEF(Pipeline::PolygonMode, 3, VARGS("FILL", "LINE", "BACK"));
 
-TO_STRING_DEF(CompareOp, 8, VARGS("NEVER", "LESS", "EQUAL", "LESS_EQUAL", "GREATER", "NOT_EQUAL", "GREATER_EQUAL", "ALWAYS"));
+TO_STRING_DEF(Pipeline::CompareOp, 8, VARGS("NEVER", "LESS", "EQUAL", "LESS_EQUAL", "GREATER", "NOT_EQUAL", "GREATER_EQUAL", "ALWAYS"));
 
-Pipeline::Pipeline(const Ref<Shader>& shader, const PipelineBuilder& config, const Ref<RenderPass>& render_pass)
+Pipeline::Pipeline(const Ref<Shader>& shader, const Builder& config, const Ref<RenderPass>& render_pass)
 {
     pipeline_config = config;
     array<VkDynamicState, 2> dynamic_states =

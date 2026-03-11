@@ -204,7 +204,7 @@ Ref<Texture> Engine::loadTexture3D(const string& path, const int layers_wide, co
     const auto it = engine->loaded_textures.find(path);
     if (it == engine->loaded_textures.end())
     {
-        Ref<Texture> thing = new Texture(path, TextureBuilder().layers({ static_cast<uint32_t>(layers_wide), static_cast<uint32_t>(layers_high) }));
+        Ref<Texture> thing = new Texture(path, Texture::Builder().layers({ static_cast<uint32_t>(layers_wide), static_cast<uint32_t>(layers_high) }));
         engine->loaded_textures[path] = thing;
         return thing;
     }
@@ -225,7 +225,7 @@ Ref<Mesh> Engine::loadMesh(const string& path)
     return it->second;
 }
 
-Ref<Sampler> Engine::makeSampler(const SamplerBuilder& builder)
+Ref<Sampler> Engine::makeSampler(const Sampler::Builder& builder)
 {
     return engine->premade_samplers[builder];
 }
@@ -323,16 +323,16 @@ Engine::Engine()
     RenderServer::setIcon("res://engine/icon.png");
     Input::init();
     
-    SamplerBuilder builders[6] =
+    Sampler::Builder builders[6] =
     {
-        { FILTER_LINEAR, ADDRESS_REPEAT },
-        { FILTER_NEAREST, ADDRESS_REPEAT },
-        { FILTER_LINEAR, ADDRESS_MIRRORED },
-        { FILTER_NEAREST, ADDRESS_MIRRORED },
-        { FILTER_LINEAR, ADDRESS_CLAMP_EDGE },
-        { FILTER_NEAREST, ADDRESS_CLAMP_EDGE },
+        { Sampler::FILTER_LINEAR,  Sampler::ADDRESS_REPEAT },
+        { Sampler::FILTER_NEAREST, Sampler::ADDRESS_REPEAT },
+        { Sampler::FILTER_LINEAR,  Sampler::ADDRESS_MIRRORED },
+        { Sampler::FILTER_NEAREST, Sampler::ADDRESS_MIRRORED },
+        { Sampler::FILTER_LINEAR,  Sampler::ADDRESS_CLAMP_EDGE },
+        { Sampler::FILTER_NEAREST, Sampler::ADDRESS_CLAMP_EDGE },
     };
-    for (SamplerBuilder s : builders)
+    for (Sampler::Builder s : builders)
         premade_samplers[s] = new Sampler(s);
     
     debugClearSelection();

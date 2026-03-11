@@ -2,10 +2,8 @@
 
 #include "material.h"
 #include "texture.h"
-#include "shader.h"
 #include "token_file.h"
 #include "package.h"
-#include "sampler.h"
 #include "render_graph.h"
 #include "engine.h"
 #include "scene.h"
@@ -73,22 +71,22 @@ static bool getAnonArgument(const size_t index, float& result, const vector<pair
 	return false;
 }
 
-static CompareOp getCompareOp(const string& str)
+static Pipeline::CompareOp getCompareOp(const string& str)
 {
-	static map<string, CompareOp> op_map =
+	static map<string, Pipeline::CompareOp> op_map =
 	{
-		{ "ALWAYS", COMPARE_ALWAYS },
-		{ "EQUAL", COMPARE_EQUAL },
-		{ "GREATER", COMPARE_GREATER },
-		{ "GREATER_EQUAL", COMPARE_GREATER_OR_EQUAL },
-		{ "LESS", COMPARE_LESS },
-		{ "LESS_EQUAL", COMPARE_LESS_OR_EQUAL },
-		{ "NEVER", COMPARE_NEVER },
-		{ "NOT_EQUAL", COMPARE_NOT_EQUAL }
+		{ "ALWAYS", Pipeline::COMPARE_ALWAYS },
+		{ "EQUAL", Pipeline::COMPARE_EQUAL },
+		{ "GREATER", Pipeline::COMPARE_GREATER },
+		{ "GREATER_EQUAL", Pipeline::COMPARE_GREATER_OR_EQUAL },
+		{ "LESS", Pipeline::COMPARE_LESS },
+		{ "LESS_EQUAL", Pipeline::COMPARE_LESS_OR_EQUAL },
+		{ "NEVER", Pipeline::COMPARE_NEVER },
+		{ "NOT_EQUAL", Pipeline::COMPARE_NOT_EQUAL }
 	};
 	const auto it = op_map.find(str);
 	if (it == op_map.end())
-		return static_cast<CompareOp>(-1);
+		return static_cast<Pipeline::CompareOp>(-1);
 	return it->second;
 }
 
@@ -105,58 +103,58 @@ static int getBool(const string& str)
 	return it->second;
 }
 
-static CullMode getCullMode(const string& str)
+static Pipeline::CullMode getCullMode(const string& str)
 {
-	static map<string, CullMode> cull_map =
+	static map<string, Pipeline::CullMode> cull_map =
 	{
-		{ "NONE", CULL_NONE },
-		{ "FRONT", CULL_FRONT },
-		{ "BACK", CULL_BACK }
+		{ "NONE", Pipeline::CULL_NONE },
+		{ "FRONT", Pipeline::CULL_FRONT },
+		{ "BACK", Pipeline::CULL_BACK }
 	};
 	const auto it = cull_map.find(str);
 	if (it == cull_map.end())
-		return static_cast<CullMode>(-1);
+		return static_cast<Pipeline::CullMode>(-1);
 	return it->second;
 }
 
-static PolygonMode getPolygonMode(const string& str)
+static Pipeline::PolygonMode getPolygonMode(const string& str)
 {
-	static map<string, PolygonMode> polygon_map =
+	static map<string, Pipeline::PolygonMode> polygon_map =
 	{
-		{ "FILL", POLYGON_FILL },
-		{ "LINE", POLYGON_LINE },
-		{ "POINT", POLYGON_POINT }
+		{ "FILL", Pipeline::POLYGON_FILL },
+		{ "LINE", Pipeline::POLYGON_LINE },
+		{ "POINT", Pipeline::POLYGON_POINT }
 	};
 	const auto it = polygon_map.find(str);
 	if (it == polygon_map.end())
-		return static_cast<PolygonMode>(-1);
+		return static_cast<Pipeline::PolygonMode>(-1);
 	return it->second;
 }
 
-static SamplerFilter getFilter(const string& str)
+static Sampler::Filter getFilter(const string& str)
 {
-	static map<string, SamplerFilter> filter_map =
+	static map<string, Sampler::Filter> filter_map =
 	{
-		{ "LINEAR", FILTER_LINEAR },
-		{ "NEAREST", FILTER_NEAREST },
+		{ "LINEAR", Sampler::FILTER_LINEAR },
+		{ "NEAREST", Sampler::FILTER_NEAREST },
 	};
 	const auto it = filter_map.find(str);
 	if (it == filter_map.end())
-		return static_cast<SamplerFilter>(-1);
+		return static_cast<Sampler::Filter>(-1);
 	return it->second;
 }
 
-static SamplerAddress getAddressMode(const string& str)
+static Sampler::Address getAddressMode(const string& str)
 {
-	static map<string, SamplerAddress> address_map =
+	static map<string, Sampler::Address> address_map =
 	{
-		{ "REPEAT", ADDRESS_REPEAT },
-		{ "MIRROR", ADDRESS_MIRRORED },
-		{ "CLAMP", ADDRESS_CLAMP_EDGE }
+		{ "REPEAT", Sampler::ADDRESS_REPEAT },
+		{ "MIRROR", Sampler::ADDRESS_MIRRORED },
+		{ "CLAMP", Sampler::ADDRESS_CLAMP_EDGE }
 	};
 	const auto it = address_map.find(str);
 	if (it == address_map.end())
-		return static_cast<SamplerAddress>(-1);
+		return static_cast<Sampler::Address>(-1);
 	return it->second;
 }
 
@@ -178,7 +176,7 @@ Ref<Material> Material::deserialise(const string& name)
 	map<string, Ref<Shader>> shaders;
 	map<string, Ref<Texture>> textures;
 
-	PipelineBuilder pipeline_builder;
+	Pipeline::Builder pipeline_builder;
 	Ref<Shader> main_shader;
 
 	vector<TokenReader::Statement> uniforms;
@@ -218,8 +216,8 @@ Ref<Material> Material::deserialise(const string& name)
 			auto it = args.find("operation");
 			if (it != args.end())
 			{
-				CompareOp operation = getCompareOp(it->second.s_value);
-				if (operation == static_cast<CompareOp>(-1))
+				Pipeline::CompareOp operation = getCompareOp(it->second.s_value);
+				if (operation == static_cast<Pipeline::CompareOp>(-1))
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid depth operation value");
 					return nullptr;
@@ -260,8 +258,8 @@ Ref<Material> Material::deserialise(const string& name)
 			auto it = args.find("mode");
 			if (it != args.end())
 			{
-				CullMode cull = getCullMode(it->second.s_value);
-				if (cull == static_cast<CullMode>(-1))
+				Pipeline::CullMode cull = getCullMode(it->second.s_value);
+				if (cull == static_cast<Pipeline::CullMode>(-1))
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid culling mode value");
 					return nullptr;
@@ -280,8 +278,8 @@ Ref<Material> Material::deserialise(const string& name)
 			auto it = args.find("mode");
 			if (it != args.end())
 			{
-				PolygonMode polygon = getPolygonMode(it->second.s_value);
-				if (polygon == static_cast<PolygonMode>(-1))
+				Pipeline::PolygonMode polygon = getPolygonMode(it->second.s_value);
+				if (polygon == static_cast<Pipeline::PolygonMode>(-1))
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid polygon mode value");
 					return nullptr;
@@ -300,8 +298,8 @@ Ref<Material> Material::deserialise(const string& name)
 					{ "write_mask", { TokenReader::INT, false } },
 				}, args, "error deserialising material '" + name + "'"))
 				return nullptr;
-			CompareOp compare = getCompareOp(args["compare"].s_value);
-			if (compare == static_cast<CompareOp>(-1))
+			Pipeline::CompareOp compare = getCompareOp(args["compare"].s_value);
+			if (compare == static_cast<Pipeline::CompareOp>(-1))
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid stencil compare op value");
 				return nullptr;
@@ -378,12 +376,12 @@ Ref<Material> Material::deserialise(const string& name)
 		}
 		string binding;
 		binding = args.find("binding")->second.s_value;
-		SamplerBuilder sampler_builder;
+		Sampler::Builder sampler_builder;
 		it = args.find("filter");
 		if (it != args.end())
 		{
-			SamplerFilter filter = getFilter(it->second.s_value);
-			if (filter == static_cast<SamplerFilter>(-1))
+			Sampler::Filter filter = getFilter(it->second.s_value);
+			if (filter == static_cast<Sampler::Filter>(-1))
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor filter value");
 				return nullptr;
@@ -393,8 +391,8 @@ Ref<Material> Material::deserialise(const string& name)
 		it = args.find("address");
 		if (it != args.end())
 		{
-			SamplerAddress address = getAddressMode(it->second.s_value);
-			if (address == static_cast<SamplerAddress>(-1))
+			Sampler::Address address = getAddressMode(it->second.s_value);
+			if (address == static_cast<Sampler::Address>(-1))
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor address value");
 				return nullptr;
@@ -619,8 +617,8 @@ Ref<RenderGraph> RenderGraph::deserialise(const string& name)
 				auto filter_it = args2.find("filter");
 				if (filter_it != args2.end())
 				{
-					SamplerFilter filter = getFilter(filter_it->second.s_value);
-					if (filter == static_cast<SamplerFilter>(-1))
+					Sampler::Filter filter = getFilter(filter_it->second.s_value);
+					if (filter == static_cast<Sampler::Filter>(-1))
 					{
 						DBG_ERROR("error deserialising render graph '" + name + "': invalid post-process input filter value");
 						return nullptr;
@@ -630,8 +628,8 @@ Ref<RenderGraph> RenderGraph::deserialise(const string& name)
 				filter_it = args2.find("address");
 				if (filter_it != args2.end())
 				{
-					SamplerAddress address = getAddressMode(filter_it->second.s_value);
-					if (address == static_cast<SamplerAddress>(-1))
+					Sampler::Address address = getAddressMode(filter_it->second.s_value);
+					if (address == static_cast<Sampler::Address>(-1))
 					{
 						DBG_ERROR("error deserialising render graph '" + name + "': invalid post-process input address mode value");
 						return nullptr;

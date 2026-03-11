@@ -10,8 +10,6 @@
 #include "buffer.h"
 #include "mesh.h"
 #include "material.h"
-#include "shader.h"
-#include "sampler.h"
 #include "texture.h"
 #include "uniform_block.h"
 #include "render_graph.h"

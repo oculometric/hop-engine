@@ -6,7 +6,6 @@
 #include "material.h"
 #include "uniform_block.h"
 #include "render_server.h"
-#include "pbr.h"
 #include "command_buffer.h"
 #include "scene.h"
 #include "engine.h"

@@ -4,7 +4,6 @@
 #include "mesh.h"
 #include "font.h"
 #include "material.h"
-#include "sampler.h"
 #include "texture.h"
 
 using namespace HopEngine;
@@ -23,7 +22,7 @@ TextBlock::TextBlock(const string& _text) : StaticMesh(nullptr, nullptr)
     font = new Font("res://engine/font.bmp", glm::ivec2{ 10, 18 });
     material = new Material(Engine::loadShader("res://engine/shaders/text.glsl"));
     material->setTexture(0, font->getAtlas());
-    material->setSampler(0, Engine::makeSampler(SamplerBuilder().filter(FILTER_NEAREST)));
+    material->setSampler(0, Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST)));
     
     setText(_text);
 }

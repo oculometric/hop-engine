@@ -1,10 +1,6 @@
 #include "render_server.h"
 
-#include <vector>
-#include <array>
-#include <map>
 #include <chrono>
-#include <filesystem>
 #include <vulkan/vulkan.hpp>
 #include <imgui/imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
@@ -12,17 +8,13 @@
 #define GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
 
-#include "pipeline.h"
-#include "material.h"
 #include "uniform_block.h"
-#include "render_graph.h"
+#include "render_pass.h"
 #include "swapchain.h"
 #include "engine.h"
-#include "mesh.h"
+#include "material.h"
 #include "command_buffer.h"
-#include "scene.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -45,7 +37,6 @@ static const vector<const char*> required_extensions =
 {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
-
 
 #if defined(VK_DEBUG)
 static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
@@ -74,70 +65,51 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
 }
 #endif
 
-RenderServer::~RenderServer()
+void RenderServer::waitIdle()
+{ vkDeviceWaitIdle(getInstance()->device); }
+
+RenderServer::QueueFamilies RenderServer::getQueueFamilies(const VkPhysicalDevice device)
 {
-    RenderServer::waitIdle();
+    QueueFamilies families;
 
-    DBG_VERBOSE("\033[31mkilling imgui with a gun\033[0m");
-    ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
-    DBG_VERBOSE("destroying sync resources");
-    for (size_t i = 0; i < image_available_semaphores.size(); ++i)
+    uint32_t queue_family_count = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
+    vector<VkQueueFamilyProperties> queue_families(queue_family_count);
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
+    int i = 0;
+    for (const auto& queueFamily : queue_families)
     {
-        vkDestroySemaphore(device, image_available_semaphores[i], nullptr);
-        vkDestroySemaphore(device, render_finished_semaphores[i], nullptr);
-        vkDestroyFence(device, in_flight_fences[i], nullptr);
+        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+            families.graphics_family = i;
+        VkBool32 queue_has_present_support = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, getInstance()->surface, &queue_has_present_support);
+        if (queue_has_present_support)
+            families.present_family = i;
+
+        ++i;
     }
 
-    DBG_VERBOSE("destroying command pool");
-    command_buffers.clear();
-    vkDestroyCommandPool(device, command_pool, nullptr);
-    
-    scenes.clear();
-    final_pass_uniforms = nullptr;
-    skybox_cube = nullptr;
-    default_material = nullptr;
-    quad = nullptr;
-    default_image = nullptr;
-    default_sampler = nullptr;
-
-    DBG_VERBOSE("destroying descriptors");
-    vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
-    vkDestroyDescriptorSetLayout(device, scene_descriptor_set_layout, nullptr);
-    vkDestroyDescriptorSetLayout(device, object_descriptor_set_layout, nullptr);
-
-    offscreen_pass = nullptr;
-    final_render_pass = nullptr;
-    swapchain = nullptr;
-
-#if defined(VK_DEBUG)
-    DBG_VERBOSE("\033[31mkilling the (debug) messenger\033[0m");
-    const auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
-        vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
-    func(instance, debug_messenger, nullptr);
-#endif
-
-    DBG_VERBOSE("destroying device");
-    vkDestroyDevice(device, nullptr);
-    vkDestroySurfaceKHR(instance, surface, nullptr);
-    vkDestroyInstance(instance, nullptr);
-
-    glfwDestroyWindow(window);
-    glfwTerminate();
+    return families;
 }
 
-void RenderServer::createWindow()
+VkPipelineLayout RenderServer::createPipelineLayout(VkDescriptorSetLayout set_2)
 {
-    glfwInit();
-    // appropriate hints for vulkan
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    // keep window invisible until vulkan is ready to draw. prevents a flashbang
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-    window = glfwCreateWindow(window_size.x, window_size.y, "hop-engine", nullptr, nullptr);
-    DBG_INFO("created window at " + ::to_string(window_size.x) + "x" + ::to_string(window_size.y));
+    VkPipelineLayoutCreateInfo layout_create_info{ };
+	layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	layout_create_info.setLayoutCount = 3;
+	const VkDescriptorSetLayout layouts[3] =
+	{
+		getInstance()->scene_descriptor_set_layout,
+		getInstance()->object_descriptor_set_layout,
+		set_2
+	};
+	layout_create_info.pSetLayouts = layouts;
+
+    VkPipelineLayout pipeline_layout;
+	if (vkCreatePipelineLayout(RenderServer::getDevice(), &layout_create_info, nullptr, &pipeline_layout) != VK_SUCCESS)
+		DBG_FAULT("vkCreatePipelineLayout failed");
+
+    return pipeline_layout;
 }
 
 void RenderServer::createVulkan()
@@ -433,4 +405,121 @@ void RenderServer::initImGui()
     init_info.PipelineInfoMain.Subpass = 0;
     init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     ImGui_ImplVulkan_Init(&init_info);
+}
+
+FrameStats RenderServer::drawFrame()
+{
+    if (glfwGetWindowAttrib(window, GLFW_ICONIFIED))
+        return { };
+
+    if (resize())
+        return { };
+
+    size_t frame_index = Engine::getFrameCount();
+    DBG_BABBLE("drawing frame " + ::to_string(frame_index));
+
+    FrameStats stats{ };
+
+    vkWaitForFences(device, 1, &in_flight_fences[frame_index % frames_in_flight], VK_TRUE, UINT64_MAX);
+    vkResetFences(device, 1, &in_flight_fences[frame_index % frames_in_flight]);
+
+    uint32_t image_index;
+    vkAcquireNextImageKHR(device, swapchain->getHandle(), UINT64_MAX, image_available_semaphores[frame_index % frames_in_flight], VK_NULL_HANDLE, &image_index);
+    DBG_BABBLE("acquired image " + ::to_string(image_index));
+
+    SceneUniforms scene_uniforms;
+    scene_uniforms.time = Engine::getEngineTime();
+    scene_uniforms.eye_position = { 0, 0, 0 };
+    scene_uniforms.viewport_size = swapchain->getExtent();
+    scene_uniforms.world_to_view = glm::mat4(1);
+    scene_uniforms.view_to_clip = glm::mat4(1);
+    scene_uniforms.clip_to_view = glm::mat4(1);
+    scene_uniforms.view_to_world = glm::mat4(1);
+    scene_uniforms.near_far = { -1, 1 };
+    memcpy(final_pass_uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
+    
+    size_t valid_scenes = 0;
+    for (auto& scene : scenes)
+    {
+        if (!scene.scene)
+            continue;
+        ++valid_scenes;
+    }
+    if (valid_scenes == 0)
+        DBG_WARNING("no scene attached to server");
+
+    const auto record_start = chrono::steady_clock::now();
+    recordRenderCommands(image_index, stats);
+    const chrono::duration<float> record_duration = chrono::steady_clock::now() - record_start;
+    stats.record_time = record_duration.count();
+    
+    VkSubmitInfo submit_info{ };
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    const VkSemaphore wait_semaphores[] = { image_available_semaphores[frame_index % frames_in_flight] };
+    constexpr VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    submit_info.waitSemaphoreCount = 1;
+    submit_info.pWaitSemaphores = wait_semaphores;
+    submit_info.pWaitDstStageMask = wait_stages;
+    submit_info.commandBufferCount = 1;
+    VkCommandBuffer cmd_buf = command_buffers[image_index]->getCommandBuffer();
+    submit_info.pCommandBuffers = &cmd_buf;
+    const VkSemaphore signal_semaphores[] = { render_finished_semaphores[image_index] };
+    submit_info.signalSemaphoreCount = 1;
+    submit_info.pSignalSemaphores = signal_semaphores;
+    DBG_BABBLE("submitting command buffer");
+    if (vkQueueSubmit(graphics_queue, 1, &submit_info, in_flight_fences[frame_index % frames_in_flight]) != VK_SUCCESS)
+        DBG_FAULT("vkQueueSubmit failed");
+
+    VkPresentInfoKHR present_info{ };
+    present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    present_info.waitSemaphoreCount = 1;
+    present_info.pWaitSemaphores = signal_semaphores;
+    const VkSwapchainKHR swapchains[] = { swapchain->getHandle() };
+    present_info.swapchainCount = 1;
+    present_info.pSwapchains = swapchains;
+    present_info.pImageIndices = &image_index;
+    DBG_BABBLE("submitting present");
+    vkQueuePresentKHR(present_queue, &present_info);
+    
+    command_buffers[image_index]->extractTiming();
+    return stats;
+}
+
+void RenderServer::destroyImGui()
+{
+    DBG_VERBOSE("\033[31mkilling imgui with a gun\033[0m");
+    ImGui_ImplVulkan_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+}
+
+void RenderServer::destroyVulkan()
+{
+    DBG_VERBOSE("destroying sync resources");
+    for (size_t i = 0; i < image_available_semaphores.size(); ++i)
+    {
+        vkDestroySemaphore(device, image_available_semaphores[i], nullptr);
+        vkDestroySemaphore(device, render_finished_semaphores[i], nullptr);
+        vkDestroyFence(device, in_flight_fences[i], nullptr);
+    }
+
+    DBG_VERBOSE("destroying command pool");
+    vkDestroyCommandPool(device, command_pool, nullptr);
+    
+    DBG_VERBOSE("destroying descriptors");
+    vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
+    vkDestroyDescriptorSetLayout(device, scene_descriptor_set_layout, nullptr);
+    vkDestroyDescriptorSetLayout(device, object_descriptor_set_layout, nullptr);
+
+#if defined(VK_DEBUG)
+    DBG_VERBOSE("\033[31mkilling the (debug) messenger\033[0m");
+    const auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
+        vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
+    func(instance, debug_messenger, nullptr);
+#endif
+
+    DBG_VERBOSE("destroying device");
+    vkDestroyDevice(device, nullptr);
+    vkDestroySurfaceKHR(instance, surface, nullptr);
+    vkDestroyInstance(instance, nullptr);
 }

@@ -1,38 +1,34 @@
 #include "material.h"
 
-#include <vulkan/vulkan.hpp>
-
 #include "command_buffer.h"
 #include "engine.h"
 #include "render_server.h"
 #include "render_pass.h"
 #include "pipeline.h"
-#include "shader.h"
 #include "uniform_block.h"
-#include "sampler.h"
 #include "texture.h"
 
 using namespace HopEngine;
 using namespace std;
 
-Material::Material(const Ref<Shader>& _shader, const PipelineBuilder& config, const Ref<RenderPass>& _render_pass)
+Material::Material(const Ref<Shader>& _shader, const Pipeline::Builder& config, const Ref<RenderPass>& _render_pass)
 {
 	render_pass = _render_pass.isValid() ? _render_pass : RenderServer::getMainRenderPass();
 	shader = _shader;
 	pipeline = new Pipeline(shader, config, render_pass);
-	debug_pipeline = new Pipeline(shader, PipelineBuilder().polygonMode(POLYGON_LINE), render_pass);
+	debug_pipeline = new Pipeline(shader, Pipeline::Builder().polygonMode(Pipeline::POLYGON_LINE), render_pass);
 
 	const auto layout = shader->getShaderLayout();
 	uniforms = new UniformBlock(layout);
 	
 	for (const auto& binding : layout.bindings)
 	{
-		if (binding.type == UNIFORM)
+		if (binding.type == Shader::UNIFORM)
 		{
 			for (const auto& variable : binding.variables)
 				variable_name_to_binding[variable.name] = variable;
 		}
-		else if (binding.type == TEXTURE)
+		else if (binding.type == Shader::TEXTURE)
 			texture_name_to_binding[binding.name] = binding.binding;
 	}
 
@@ -113,7 +109,7 @@ void Material::setUniform(const string& name, const void* data, size_t size)
 		DBG_WARNING("material '" + getOrigin() + "' has no such uniform '" + name + '\'');
 		return;
 	}
-	UniformVariable var = it->second;
+	Shader::UniformVariable var = it->second;
 	if (size != var.size)
 		DBG_WARNING("material '" + getOrigin() + "' uniform '" + name + "' size mismatch (given " + ::to_string(size) + ", expected " + ::to_string(var.size) + ")");
 	const size_t clamped_size = min(size, var.size);

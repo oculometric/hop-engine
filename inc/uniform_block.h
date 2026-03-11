@@ -5,23 +5,24 @@
 
 #include "common.h"
 #include "vulkan_typedefs.h"
-#include "shader.h"
+#include "material.h"
 
 namespace HopEngine
 {
-
-/**
- * @brief holds information about a combined texture-sampler descriptor binding.
- */
-struct TextureBinding
-{
-	Ref<Texture> texture;		// texture reference to be bound
-	Ref<Sampler> sampler;		// sampler reference to be bound
-	bool use_stencil = false;	// whether the imageview should be used in stencil mode
-};
 	
 class UniformBlock : public Destructible
 {
+public:
+	/**
+	 * @brief holds information about a combined texture-sampler descriptor binding.
+	 */
+	struct TextureBinding
+	{
+		Ref<Texture> texture;		// texture reference to be bound
+		Ref<Sampler> sampler;		// sampler reference to be bound
+		bool use_stencil = false;	// whether the imageview should be used in stencil mode
+	};
+
 private:
 	// array of descriptor sets, one per frame-in-flight
 	std::vector<VkDescriptorSet> descriptor_sets;
@@ -32,7 +33,7 @@ private:
 	// CPU-accessible block of data which the program can write to
 	std::vector<uint8_t> live_uniform_buffer;
 	VkDeviceSize size;		// size of the uniform buffer
-	ShaderLayout layout;	// information about the size and offset of uniform variables
+	Shader::Layout layout;	// information about the size and offset of uniform variables
 
 public:
 	DELETE_CONSTRUCTORS(UniformBlock);
@@ -40,7 +41,7 @@ public:
 	 * @brief creates a uniform block from a corresponding shader layout.
 	 * @param layout_info layout information listing the descriptor bindings.
 	 */
-	UniformBlock(const ShaderLayout& layout_info);
+	UniformBlock(const Shader::Layout& layout_info);
 	~UniformBlock() override;
 	
 	void bind(Ref<DrawCommandBuffer> command_buffer, size_t set) const;

@@ -98,14 +98,14 @@ public:
 	static void init();
 	static void destroy();
 
-	static size_t getFramesInFlight();
-	static VkDevice getDevice();
+	static size_t getFramesInFlight() { return getInstance()->frames_in_flight; }
+	static VkDevice getDevice() { return getInstance()->device; }
 	static void waitIdle();
-	static VkPhysicalDevice getPhysicalDevice();
+	static VkPhysicalDevice getPhysicalDevice() { return getInstance()->physical_device; }
 	static QueueFamilies getQueueFamilies(VkPhysicalDevice device);
-	static VkQueue getGraphicsQueue();
-	static VkCommandPool getCommandPool();
-	static VkDescriptorPool getDescriptorPool();
+	static VkQueue getGraphicsQueue() { return getInstance()->graphics_queue; }
+	static VkCommandPool getCommandPool() { return getInstance()->command_pool; }
+	static VkDescriptorPool getDescriptorPool() { return getInstance()->descriptor_pool; }
 	static Ref<UniformBlock> createSceneUniforms();
 	static Ref<UniformBlock> createObjectUniforms();
 	static VkPipelineLayout createPipelineLayout(VkDescriptorSetLayout set_2);
@@ -116,7 +116,7 @@ public:
 	static Ref<Mesh> getSkyboxCube();
 	static Ref<Mesh> getQuad();
 	
-	static GLFWwindow* getWindow();
+	static GLFWwindow* getWindow() { return getInstance()->window; }
 	static glm::vec2 getFramebufferSize();
 	static bool getWindowShouldClose();
 	static void setTitle(const std::string& title);
@@ -126,21 +126,25 @@ public:
 	static void setVsyncEnabled(bool enabled);
 	static bool getVsyncEnabled();
 
-	static FrameStats draw();
-	
 	static void setSingleScene(const Ref<Scene>& scene);
 	static void setMultiScene(const std::vector<MultiSceneRenderSpec>& multi_scenes);
+	
+	static FrameStats draw() { return getInstance()->drawFrame(); }
 	
 private:
 	RenderServer();
 	~RenderServer();
+
+	static RenderServer* getInstance();
 	
 	void createWindow();
 	void createVulkan();
 	void initImGui();
 	bool resize();
-
 	FrameStats drawFrame();
+	void destroyImGui();
+	void destroyVulkan();
+	void destroyWindow();
 
 	void recordRenderCommands(uint32_t image_index, FrameStats& stats);
 };

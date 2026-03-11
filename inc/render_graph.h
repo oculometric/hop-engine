@@ -7,12 +7,12 @@
 #include <glm/vec2.hpp>
 
 #include "common.h"
-#include "sampler.h"
+#include "texture.h"
 #include "render_pass.h"
 #include "draw_command.h"
 #include "engine.h"
 #include "uniform_block.h"
-#include "pbr.h"
+#include "material.h"
 
 namespace HopEngine
 {
@@ -21,13 +21,13 @@ struct RenderTextureBinding
 {
 	size_t step_index = 0;
 	size_t output_index = 0;
-	SamplerFilter filter_mode = FILTER_LINEAR;
-	SamplerAddress address_mode = ADDRESS_CLAMP_EDGE;
+	Sampler::Filter filter_mode = Sampler::FILTER_LINEAR;
+	Sampler::Address address_mode = Sampler::ADDRESS_CLAMP_EDGE;
 	
 	RenderTextureBinding() = default;
 	RenderTextureBinding(const size_t step, const size_t output) : step_index(step), output_index(output) { }
-	RenderTextureBinding& filter(const SamplerFilter value) { filter_mode = value; return *this; }
-	RenderTextureBinding& address(const SamplerAddress value) { address_mode = value; return *this; }
+	RenderTextureBinding& filter(const Sampler::Filter value) { filter_mode = value; return *this; }
+	RenderTextureBinding& address(const Sampler::Address value) { address_mode = value; return *this; }
 };
 
 struct RenderStep
@@ -51,7 +51,7 @@ struct RenderStep
 struct RenderGraphBuilder
 {
 	std::vector<RenderStep> execution_steps;
-	SamplerFilter screen_filtering = FILTER_LINEAR;
+	Sampler::Filter screen_filtering = Sampler::FILTER_LINEAR;
 
 	RenderGraphBuilder& addCamera(size_t slot);
 	RenderGraphBuilder& addCamera(size_t slot, const RenderOutput& render_pass_config, float size_factor = 1.0f, glm::u32vec2 custom_extent = { 128, 128 });
@@ -59,7 +59,7 @@ struct RenderGraphBuilder
 	RenderGraphBuilder& addPostProcess(const Ref<Shader>& shader, const std::map<uint32_t, RenderTextureBinding>& texture_bindings);
 	RenderGraphBuilder& addPostProcess(const Ref<Shader>& shader, const std::map<uint32_t, RenderTextureBinding>& texture_bindings, const RenderOutput& render_pass_config, float size_factor = 1.0f, glm::u32vec2 custom_extent = { 128, 128 });
 	RenderGraphBuilder& addPostProcess(const Ref<Shader>& shader, const std::map<uint32_t, RenderTextureBinding>& texture_bindings, float size_factor, glm::u32vec2 custom_extent = { 128, 128 });
-	RenderGraphBuilder& filtering(const SamplerFilter value) { screen_filtering = value; return *this; }
+	RenderGraphBuilder& filtering(const Sampler::Filter value) { screen_filtering = value; return *this; }
 };
 
 class RenderGraph : public Destructible

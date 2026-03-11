@@ -44,9 +44,9 @@ public:
 	void begin(Ref<DrawCommandBuffer> command_buffer, glm::vec3 clear_colour);
 	
 private:
-	void createRenderPass(ImageFormat main_colour_format, ImageLayout final_main_colour_layout, bool make_readable);
+	void createRenderPass(Texture::Format main_colour_format, Texture::Layout final_main_colour_layout, bool make_readable);
 	void createResources();
-	void createResources(ImageFormat main_colour_format, uint32_t width, uint32_t height);
+	void createResources(Texture::Format main_colour_format, uint32_t width, uint32_t height);
 	void destroyResources();
 };
 

@@ -322,8 +322,8 @@ void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
 
 NodeView::NodeView() : StaticMesh(nullptr, nullptr)
 {
-    material = new Material(new Shader("res://engine/shaders/node_shader.glsl"), PipelineBuilder().cullMode(CULL_NONE).depthTest(false).depthWrite(false));
-    Ref<Sampler> sampler = Engine::makeSampler(SamplerBuilder().filter(FILTER_NEAREST));
+    material = new Material(new Shader("res://engine/shaders/node_shader.glsl"), Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthWrite(false));
+    Ref<Sampler> sampler = Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST));
     material->setSampler("node_atlas", sampler);
     material->setSampler("text_atlas", sampler);
     material->setSampler("extra_atlas", sampler);

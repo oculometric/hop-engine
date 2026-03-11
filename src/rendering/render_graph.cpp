@@ -1,20 +1,15 @@
 #include "render_graph.h"
 
 #include <execution>
-#include <imgui/imgui.h>
-#include <imgui/backends/imgui_impl_vulkan.h>
-#include <vulkan/vulkan.hpp>
 
 #include "render_server.h"
 #include "render_pass.h"
 #include "material.h"
 #include "uniform_block.h"
-#include "pbr.h"
 #include "engine.h"
 #include "scene.h"
 #include "mesh.h"
 #include "texture.h"
-#include "sampler.h"
 #include "command_buffer.h"
 
 using namespace HopEngine;
@@ -67,7 +62,7 @@ RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader
         step.render_pass = new RenderPass(static_cast<uint32_t>(size.x * size_factor), static_cast<uint32_t>(size.y * size_factor), render_pass_config);
     else
         step.render_pass = new RenderPass(custom_extent.x ? custom_extent.x : static_cast<uint32_t>(size.x), custom_extent.y ? custom_extent.y : static_cast<uint32_t>(size.y), render_pass_config);
-    step.material = new Material(shader, PipelineBuilder().cullMode(CULL_NONE).depthTest(VK_FALSE).depthWrite(VK_FALSE), step.render_pass);
+    step.material = new Material(shader, Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthWrite(false), step.render_pass);
     step.texture_bindings = texture_bindings;
     step.scene_uniforms = RenderServer::createSceneUniforms();
     execution_steps.push_back(step);
@@ -81,9 +76,9 @@ RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader
 
 RenderGraph::RenderGraph(const RenderGraphBuilder& config)
 {
-    skybox_material = new Material(new Shader("res://engine/shaders/skybox.glsl"), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE));
-    passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough.glsl"), PipelineBuilder().cullMode(CULL_NONE).depthWrite(VK_FALSE).depthTest(VK_FALSE), RenderServer::getFinalRenderPass());
-    passthrough->setSampler(0, Engine::makeSampler(SamplerBuilder().filter(config.screen_filtering).address(ADDRESS_CLAMP_EDGE)));
+    skybox_material = new Material(new Shader("res://engine/shaders/skybox.glsl"), Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false));
+    passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough.glsl"), Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false), RenderServer::getFinalRenderPass());
+    passthrough->setSampler(0, Engine::makeSampler(Sampler::Builder().filter(config.screen_filtering).address(Sampler::ADDRESS_CLAMP_EDGE)));
     execution_steps = config.execution_steps;
     if (!config.execution_steps.empty())
         expected_extent = config.execution_steps[0].render_pass->getExtent();
@@ -312,7 +307,7 @@ void RenderGraph::rebuildBindings()
                 texture = binding_step.render_pass->getImage(0);
             }
             step.material->setTexture(texture_index, texture);
-            step.material->setSampler(texture_index, Engine::makeSampler(SamplerBuilder().filter(binding.filter_mode).address(binding.address_mode)));
+            step.material->setSampler(texture_index, Engine::makeSampler(Sampler::Builder().filter(binding.filter_mode).address(binding.address_mode)));
         }
     }
 }

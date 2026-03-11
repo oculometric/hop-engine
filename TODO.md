@@ -1,17 +1,19 @@
 # TODO
 
 ## v0.52
+- switch to entity/component system
 - make the behaviour of cameras and scene drawing more sensible (draw calls), render graph etc (weirdly jank and disorganised), reduce the aggressive draw call sorting, lots of 'viewport size' passthroughs (should just call scene-draw() which returns a texture)
 - cameras should have a slot index within them, rather than the scene, deprecate setCameraSlot
 
-- consolidate header files, split cpp files
-- separate vulkan code from generic code e.g. OBJ loading
-- multi-scene mode in the engine
 - simplify texture to be in one of several 'modes/types' (fix the way view aspects behave), overhaul initialisation
 - create image view on image create
 - fix null texture validation errors
-- fix crashing with renderdoc
+
+- scene window-to-viewport function for mouse position etc
+- multi-scene mode in the engine
 - fix multi-pass rendering not working
+
+- fix crashing with renderdoc
 - change the way refs work, and the way `new`ing works (classes only construct via ::create, remove keepLoaded)
 - Application class which contains game update loop, etc, which users override
 ---

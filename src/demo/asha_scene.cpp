@@ -19,17 +19,17 @@ static Ref<Scene> initAshaScene()
     const Ref<Shader> shader = Engine::loadShader("res://engine/samples/psx.glsl");
     asha = scene->insertObject<StaticMesh>(StaticMesh::create(
         Engine::loadMesh("res://engine/samples/asha.obj"),
-        new Material(shader, PipelineBuilder().cullMode(CULL_NONE).stencilWrite(1))
+        new Material(shader, Pipeline::Builder().cullMode(Pipeline::CULL_NONE).stencilWrite(1))
     ));
     asha->material->setTexture("albedo", Engine::loadTexture("res://engine/samples/asha.png"));
-    const Ref<Sampler> sampler = Engine::makeSampler(SamplerBuilder().filter(FILTER_NEAREST));
+    const Ref<Sampler> sampler = Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST));
     asha->material->setSampler("albedo", sampler);
     asha->transform.setLocalPosition({ 0, 0, -0.9f });
 
     // create the bunny
     Ref<StaticMesh> bunny = scene->insertObject<StaticMesh>(StaticMesh::create(
         Engine::loadMesh("res://engine/samples/bunny.obj"),
-        new Material(shader, PipelineBuilder().cullMode(CULL_NONE).stencilWrite(2))
+        new Material(shader, Pipeline::Builder().cullMode(Pipeline::CULL_NONE).stencilWrite(2))
     ));
     bunny->material->setTexture("albedo", Engine::loadTexture("res://engine/samples/bunny.png"));
     bunny->material->setSampler("albedo", sampler);
@@ -40,7 +40,7 @@ static Ref<Scene> initAshaScene()
     // create tux
     Ref<StaticMesh> tux = scene->insertObject<StaticMesh>(StaticMesh::create(
         Engine::loadMesh("res://tux.obj"),
-        new Material(shader, PipelineBuilder().cullMode(CULL_NONE))
+        new Material(shader, Pipeline::Builder().cullMode(Pipeline::CULL_NONE))
     ));
     tux->material->setTexture("albedo", Engine::loadTexture("res://tux.png"));
     tux->material->setSampler("albedo", sampler);

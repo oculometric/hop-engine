@@ -5,7 +5,7 @@
 #include <chrono>
 
 #include "common.h"
-#include "sampler.h"
+#include "texture.h"
 #include "frame_stats.h"
 
 namespace HopEngine
@@ -26,7 +26,7 @@ private:
 	std::map<std::string, Ref<Material>> loaded_materials;
 	std::map<std::string, Ref<Texture>> loaded_textures;
 	std::map<std::string, Ref<Mesh>> loaded_meshes;
-	std::map<SamplerBuilder, Ref<Sampler>> premade_samplers;
+	std::map<Sampler::Builder, Ref<Sampler>> premade_samplers;
 	std::vector<Ref<Destructible>> keep_loaded_refs;
 
 	FrameStats last_frame_stats;
@@ -78,7 +78,7 @@ public:
 	static Ref<Texture> loadTexture(const std::string& path);
 	static Ref<Texture> loadTexture3D(const std::string& path, int layers_wide, int layers_high);
 	static Ref<Mesh> loadMesh(const std::string& path);
-	static Ref<Sampler> makeSampler(const SamplerBuilder& builder);
+	static Ref<Sampler> makeSampler(const Sampler::Builder& builder);
 	static size_t pruneUnusedResources();
 	template <class T> static std::vector<WeakRef<T>> getAllRefs();
 	static void registerCountedRef(const char* type_name, const WeakRef<void>& reference);

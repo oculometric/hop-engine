@@ -12,7 +12,6 @@
 #include "material.h"
 #include "input.h"
 #include "uniform_block.h"
-#include "sampler.h"
 #include "render_graph.h"
 #include "render_server.h"
 #include "package.h"
@@ -330,7 +329,7 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 	{
 		for (const auto& block : layout.bindings)
 		{
-			if (block.type != UNIFORM)
+			if (block.type != Shader::UNIFORM)
 				continue;
 			ImGui::LabelText("binding", "%u", block.binding);
 			ImGui::LabelText("block name", "%s", block.name.c_str());

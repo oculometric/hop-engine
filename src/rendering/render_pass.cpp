@@ -17,7 +17,7 @@ RenderPass::RenderPass(const Ref<Swapchain>& _swapchain, const RenderOutput& con
     output_config = config;
     swapchain = _swapchain;
 
-    createRenderPass(swapchain->getFormat(), LAYOUT_PRESENT_SRC, false);
+    createRenderPass(swapchain->getFormat(), Texture::LAYOUT_PRESENT_SRC, false);
     createResources();
 
     DBG_VERBOSE(string("created render pass with colour buffer, ") + (config.has_depth_attachment ? "depth buffer, " : "") + "and " + ::to_string(config.additional_attachments) + " data attachments");
@@ -27,8 +27,8 @@ RenderPass::RenderPass(const uint32_t width, const uint32_t height, const Render
 {
     output_config = config;
 
-    createRenderPass(FORMAT_R8G8B8A8_SRGB, LAYOUT_SHADER_READ_ONLY, true);
-    createResources(FORMAT_R8G8B8A8_SRGB, width, height);
+    createRenderPass(Texture::FORMAT_R8G8B8A8_SRGB, Texture::LAYOUT_SHADER_READ_ONLY, true);
+    createResources(Texture::FORMAT_R8G8B8A8_SRGB, width, height);
 }
 
 RenderPass::~RenderPass()
@@ -84,7 +84,7 @@ void RenderPass::resize(const uint32_t width, const uint32_t height)
     if (swapchain)
         createResources();
     else
-        createResources(FORMAT_R8G8B8A8_SRGB, width, height);
+        createResources(Texture::FORMAT_R8G8B8A8_SRGB, width, height);
 }
 
 void RenderPass::begin(Ref<DrawCommandBuffer> command_buffer, glm::vec3 clear_colour)
@@ -92,7 +92,7 @@ void RenderPass::begin(Ref<DrawCommandBuffer> command_buffer, glm::vec3 clear_co
     command_buffer->startRenderPassInternal(render_pass, framebuffers[command_buffer->getImageIndex() % framebuffers.size()], extent, getClearValues(), clear_colour);
 }
 
-void RenderPass::createRenderPass(const ImageFormat main_colour_format, const ImageLayout final_main_colour_layout, const bool make_readable)
+void RenderPass::createRenderPass(const Texture::Format main_colour_format, const Texture::Layout final_main_colour_layout, const bool make_readable)
 {
     vector<VkAttachmentDescription> attachments;
     VkAttachmentDescription colour_attachment{ };
@@ -239,18 +239,18 @@ void RenderPass::createResources()
     }
 }
 
-void RenderPass::createResources(const ImageFormat main_colour_format, const uint32_t width, const uint32_t height)
+void RenderPass::createResources(const Texture::Format main_colour_format, const uint32_t width, const uint32_t height)
 {
     extent = { width, height };
     // create texture buffers to back everything
     additional_textures.push_back(new Texture(width, height, main_colour_format,
-                                              TextureBuilder().usage(IMAGE_USAGE_COLOR_ATTACHMENT | IMAGE_USAGE_SAMPLED)));
+        Texture::Builder().usage(Texture::IMAGE_USAGE_COLOR_ATTACHMENT | Texture::IMAGE_USAGE_SAMPLED)));
     if (output_config.has_depth_attachment)
         depth_texture = new Texture(width, height, Texture::getDepthFormat(),
-                                    TextureBuilder().usage(IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT | IMAGE_USAGE_SAMPLED));
+                Texture::Builder().usage(Texture::IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT | Texture::IMAGE_USAGE_SAMPLED));
     for (size_t i = 0; i < output_config.additional_attachments; ++i)
         additional_textures.push_back(new Texture(width, height, Texture::getDataFormat(),
-                                                  TextureBuilder().usage(IMAGE_USAGE_COLOR_ATTACHMENT | IMAGE_USAGE_SAMPLED)));
+                                                  Texture::Builder().usage(Texture::IMAGE_USAGE_COLOR_ATTACHMENT | Texture::IMAGE_USAGE_SAMPLED)));
 
     // create framebuffers to actually render into
     framebuffers.resize(1);

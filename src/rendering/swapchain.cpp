@@ -63,7 +63,7 @@ Swapchain::Swapchain(const uint32_t width, const uint32_t height, const VkSurfac
 
     // calculate actual swapchain parameters
     const SupportInfo support_info = getSwapchainSupportInfo(RenderServer::getPhysicalDevice(), surface);
-    format = FORMAT_B8G8R8A8_SRGB; // uhh.... yeah anyway
+    format = Texture::FORMAT_B8G8R8A8_SRGB; // uhh.... yeah anyway
     extent = computeExtent(width, height);
 
     create_info[0] = VkSwapchainCreateInfoKHR{ };

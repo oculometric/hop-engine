@@ -1,4 +1,4 @@
-#include "sampler.h"
+#include "texture.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -13,7 +13,7 @@ static constexpr VkFilter vulkan_filter[2] =
 	VK_FILTER_LINEAR
 };
 
-TO_STRING_DEF(SamplerFilter, 2, VARGS("NEAREST", "LINEAR"));
+TO_STRING_DEF(Sampler::Filter, 2, VARGS("NEAREST", "LINEAR"));
 
 static constexpr VkSamplerAddressMode vulkan_address[3] = 
 {
@@ -22,9 +22,9 @@ static constexpr VkSamplerAddressMode vulkan_address[3] =
 	VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE
 };
 
-TO_STRING_DEF(SamplerAddress, 3, VARGS("REPEAT", "MIRRORED", "CLAMP_EDGE"));
+TO_STRING_DEF(Sampler::Address, 3, VARGS("REPEAT", "MIRRORED", "CLAMP_EDGE"));
 
-Sampler::Sampler(const SamplerBuilder& config)
+Sampler::Sampler(const Sampler::Builder& config)
 {
 	VkSamplerCreateInfo create_info{ };
 	create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;

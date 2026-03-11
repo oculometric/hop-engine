@@ -7,7 +7,7 @@
 namespace HopEngine
 {
 
-VkFormat toVulkanFormat(ImageFormat format);
-VkImageLayout toVulkanLayout(ImageLayout layout);
+VkFormat toVulkanFormat(Texture::Format format);
+VkImageLayout toVulkanLayout(Texture::Layout layout);
 
 }
