@@ -52,7 +52,7 @@ Texture::Texture(const size_t _width, const size_t _height, const Texture::Forma
 Texture::Texture(const string& file, const Texture::Builder& builder)
 {
     origin = file;
-    const auto file_data = Package::tryLoadFile(file);
+    const auto file_data = Package::load(file);
     int img_width, img_height, img_channels;
     stbi_uc* pixels = stbi_load_from_memory(file_data.data(), static_cast<int>(file_data.size()), &img_width, &img_height, &img_channels, STBI_rgb_alpha);
     format = FORMAT_R8G8B8A8_SRGB;

@@ -97,7 +97,7 @@ VkShaderModule Shader::createShaderModule(const vector<uint32_t>& blob)
 
 bool Shader::compileShaders(const string& path, vector<uint32_t>& vert_blob, vector<uint32_t>& frag_blob)
 {
-	auto shader_data = Package::tryLoadFile(path);
+	auto shader_data = Package::load(path);
 	
 	if (shader_data.empty())
 	{

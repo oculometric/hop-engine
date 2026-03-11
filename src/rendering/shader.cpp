@@ -129,7 +129,7 @@ void Shader::fixIncludes(string& source_code_text, const string& path_prefix, co
 			if (res_relative)
 				real_path = "res://" + real_path;
 		}
-		auto include_data = Package::tryLoadFile(real_path);
+		auto include_data = Package::load(real_path);
 		if (include_data.empty())
 		{
 			DBG_WARNING("included file " + real_path + " did not exist, or contained no data!");

@@ -160,7 +160,7 @@ static Sampler::Address getAddressMode(const string& str)
 
 Ref<Material> Material::deserialise(const string& name)
 {
-	auto raw_data = Package::tryLoadFile(name);
+	auto raw_data = Package::load(name);
 	if (raw_data.empty())
 		return nullptr;
 
@@ -450,7 +450,7 @@ Ref<Material> Material::deserialise(const string& name)
 
 Ref<RenderGraph> RenderGraph::deserialise(const string& name)
 {
-	auto raw_data = Package::tryLoadFile(name);
+	auto raw_data = Package::load(name);
 	if (raw_data.empty())
 		return nullptr;
 
@@ -872,7 +872,7 @@ static bool deserialiseObject(const TokenReader::Statement& statement, const Ref
 
 Ref<Scene> Scene::deserialise(const string& name)
 {
-	auto raw_data = Package::tryLoadFile(name);
+	auto raw_data = Package::load(name);
 	if (raw_data.empty())
 		return nullptr;
 

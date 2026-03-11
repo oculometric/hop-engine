@@ -31,7 +31,7 @@ void RenderServer::setIcon(const string &path)
     GLFWimage image;
 
     // grab a png image from the package and read it
-    const auto image_data = Package::tryLoadFile(path);
+    const auto image_data = Package::load(path);
     int img_channels;
     image.pixels = stbi_load_from_memory(image_data.data(), static_cast<int>(image_data.size()), &image.width, &image.height, &img_channels, STBI_rgb_alpha);
 

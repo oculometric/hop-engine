@@ -317,7 +317,7 @@ Engine::Engine()
 //     memcpy(engine_package.data(), data, size);
 //     Package::loadPackageFromMemory(engine_package, "engine.hop (internal)");
 // #else
-    Package::loadPackage("engine.hop");
+    Package::importPackage("engine.hop");
 // #endif
     RenderServer::init();
     RenderServer::setIcon("res://engine/icon.png");

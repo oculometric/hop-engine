@@ -11,7 +11,6 @@
 - scene window-to-viewport function for mouse position etc
 - multi-scene mode in the engine
 - fix multi-pass rendering not working
-- overhaul package manager
 
 - change the way refs work, and the way `new`ing works (classes only construct via ::create, remove keepLoaded)
 - Application class which contains game update loop, etc, which users override
@@ -31,6 +30,7 @@
 - shadows
 - textures should be loadable in linear mode?
 - a proper procedural shading art workflow
+- data blocks should know which package they came from
 ---
 - more scene control using ImGui (modify the render graph, material uniforms) [M]
 - improved gizmo, better control, rotation and scale support [M]

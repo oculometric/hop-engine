@@ -21,7 +21,7 @@ int main()
 {
     Engine::init();
 
-    Package::loadPackage("resources.hop");
+    Package::importPackage("resources.hop");
     funcs = getAshaScene();
     main_scene = funcs.init_func();
 

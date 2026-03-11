@@ -10,6 +10,8 @@
 namespace HopEngine
 {
 
+typedef std::vector<uint8_t> DataBlock;
+
 class Package
 {
 private:
@@ -22,28 +24,31 @@ public:
 	static void init();
 	static void destroy();
 
+	static DataBlock load(const std::string& path);
+	static DataBlock loadFromDisk(const std::string& path);
+	static bool store(const std::string& path, const DataBlock& data);
+	static bool storeToDisk(const std::string& path, const DataBlock& data);
+
+	static bool exportPackage(const std::string& path, bool compressed = false);
+	static bool importPackage(const std::string& path);
+	static DataBlock exportPackage(bool compressed = false);
+	static bool importPackage(const DataBlock& data);
+
+	static std::vector<std::string> listLoadedEntries();
+	static void setAlias(const std::string& a, const std::string& b);
+	static void clearAlias(const std::string& a);
+
 #if defined(_WIN32)
 	static inline std::string getTempPath() { return "C:/tmp/"; }
 #else
 	static inline std::string getTempPath() { return "/tmp/"; }
 #endif
-	static bool loadPackageFromMemory(std::vector<uint8_t>& content, const std::string& load_path);
-	static bool loadPackage(const std::string& load_path);
-	static std::vector<std::string> listLoadedEntries();
-	static std::vector<uint8_t> loadData(const std::string& identifier);
-	static std::vector<uint8_t> tryLoadFile(const std::string& path_or_identifier);
-	static bool storePackage(const std::string& store_path);
-	static bool storeCompressedPackage(const std::string& store_path);
-	static void storeData(const std::string& identifier, const std::vector<uint8_t>& data);
-	static void tryWriteFile(const std::string& path, const std::vector<uint8_t>& data);
-	static void setAlias(const std::string& a, const std::string& b);
-	static void clearAlias(const std::string& a);
 
 private:
 	Package() = default;
-	~Package();
+	~Package() = default;
 	
-	static std::vector<uint8_t> loadCompressedPackage(const std::vector<uint8_t>& data);
+	static bool isResPath(const std::string& path, std::string& trimmed);
 };
 
 }
