@@ -55,8 +55,6 @@ RenderServer::RenderServer()
     createVulkan();
 
     swapchain = new Swapchain(window_size.x, window_size.y, surface);
-    frames_in_flight = static_cast<int>(swapchain->getImageCount());
-    DBG_VERBOSE("adjusted frames in flight to " + ::to_string(frames_in_flight));
 
     final_render_pass = new RenderPass(swapchain, { 0, true });
     offscreen_pass = new RenderPass(1, 1, { 3, true });
@@ -280,7 +278,7 @@ FrameStats RenderServer::drawFrame()
     vkResetFences(device, 1, &in_flight_fences[frame_index % frames_in_flight]);
 
     uint32_t image_index;
-    vkAcquireNextImageKHR(device, swapchain->getSwapchain(), UINT64_MAX, image_available_semaphores[frame_index % frames_in_flight], VK_NULL_HANDLE, &image_index);
+    vkAcquireNextImageKHR(device, swapchain->getHandle(), UINT64_MAX, image_available_semaphores[frame_index % frames_in_flight], VK_NULL_HANDLE, &image_index);
     DBG_BABBLE("acquired image " + ::to_string(image_index));
 
     SceneUniforms scene_uniforms;
@@ -330,7 +328,7 @@ FrameStats RenderServer::drawFrame()
     present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     present_info.waitSemaphoreCount = 1;
     present_info.pWaitSemaphores = signal_semaphores;
-    const VkSwapchainKHR swapchains[] = { swapchain->getSwapchain() };
+    const VkSwapchainKHR swapchains[] = { swapchain->getHandle() };
     present_info.swapchainCount = 1;
     present_info.pSwapchains = swapchains;
     present_info.pImageIndices = &image_index;

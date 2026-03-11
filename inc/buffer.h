@@ -68,7 +68,7 @@ public:
 	 */
 	static uint32_t findMemoryType(uint32_t type_bits, MemoryProperties _properties);
 
-	VkBuffer getBuffer() const { return buffer; }
+	VkBuffer getHandle() const { return buffer; }
 	VkDeviceSize getSize() const { return buffer_size; }
 	/**
 	 * @brief requests for the buffer to be mapped into CPU-accessible memory. will fail

@@ -135,10 +135,10 @@ vector<uint8_t> Mesh::encodeBinaryMesh(const string& path)
 }
 //
 // VkBuffer Mesh::getVertexBuffer() const
-// { return vertex_buffer->getBuffer(); }
+// { return vertex_buffer->getHandle(); }
 //
 // VkBuffer Mesh::getIndexBuffer() const
-// { return index_buffer->getBuffer(); }
+// { return index_buffer->getHandle(); }
 
 void Mesh::updateData(const vector<Vertex>& vertices, const vector<uint16_t>& indices, size_t vertex_alloc, size_t index_alloc)
 {

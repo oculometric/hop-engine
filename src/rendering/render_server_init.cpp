@@ -23,7 +23,6 @@
 #include "mesh.h"
 #include "command_buffer.h"
 #include "scene.h"
-#include "swapchain_vulkan.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -274,8 +273,8 @@ void RenderServer::createVulkan()
 
             if (score != 0)
             {
-                auto swapchain_info = getSwapchainSupportInfo(test_device, surface);
-                if (swapchain_info.surface_formats.empty() || swapchain_info.present_modes.empty())
+                auto swapchain_info = Swapchain::getSwapchainSupportInfo(test_device, surface);
+                if (swapchain_info.surface_formats.empty())
                     score = 0;
             }
 
@@ -330,6 +329,10 @@ void RenderServer::createVulkan()
         DBG_VERBOSE("extracting queues");
         vkGetDeviceQueue(device, queue_family_indices.graphics_family.value(), 0, &graphics_queue);
         vkGetDeviceQueue(device, queue_family_indices.present_family.value(), 0, &present_queue);
+
+        Swapchain::getSwapchainSupportInfo(physical_device, surface);
+        frames_in_flight = static_cast<int>(Swapchain::computeImageCount());
+        DBG_VERBOSE("adjusted frames in flight to " + ::to_string(frames_in_flight));
     }
 
     {

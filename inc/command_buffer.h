@@ -24,7 +24,7 @@ public:
 	TransientCommandBuffer();
 	~TransientCommandBuffer() override;
 	
-	VkCommandBuffer getBuffer() const { return buffer; }
+	VkCommandBuffer getHandle() const { return buffer; }
 	/**
 	 * @brief causes the command buffer to be submitted to the graphics queue, and waits
 	 * for completion before returning.
