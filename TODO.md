@@ -1,13 +1,21 @@
 # TODO
 
+call draw on scene with a viewport size, it should return a passthrough material
+scene resizes render graph
+scene collects draw commands and camera infos and calls draw on render graph (doesn't need to know about scene)
+
+
 ## v0.52
 - switch to entity/component system
 - make the behaviour of cameras and scene drawing more sensible (draw calls), render graph etc (weirdly jank and disorganised), reduce the aggressive draw call sorting, lots of 'viewport size' passthroughs (should just call scene-draw() which returns a texture)
 - cameras should have a slot index within them, rather than the scene, deprecate setCameraSlot
 
 - simplify texture to be in one of several 'modes/types' (fix the way view aspects behave), overhaul initialisation, overhaul renderpass accordingly
+- refactor mesh loading as well
 - create image view on image create
+- uniforms should know what set they bind to
 
+- overhaul engine debug interfaces
 - scene window-to-viewport function for mouse position etc
 - multi-scene mode in the engine
 - fix multi-pass rendering not working

@@ -99,7 +99,7 @@ bool Package::storeToDisk(const string& path, const DataBlock& data)
 	}
 	file.write(reinterpret_cast<const char*>(data.data()), static_cast<streamsize>(data.size()));
 	file.close();
-	true;
+	return true;
 }
 
 bool Package::exportPackage(const string& path, bool compressed)
@@ -149,9 +149,9 @@ DataBlock Package::exportPackage(bool compressed)
 	header.alias_entries = static_cast<uint32_t>(instance->alias_table.size());
 	header.file_size = sizeof(PackageHeader);
 	for (const auto& alias : instance->alias_table)
-		header.file_size += sizeof(AliasEntry) + alias.first.size() + alias.second.size();
+		header.file_size += static_cast<uint32_t>(sizeof(AliasEntry) + alias.first.size() + alias.second.size());
 	for (const auto& block : instance->database)
-		header.file_size += sizeof(DataBlockEntry) + block.first.size() + block.second.size();
+		header.file_size += static_cast<uint32_t>(sizeof(DataBlockEntry) + block.first.size() + block.second.size());
 
 	DataBlock data; data.resize(header.file_size);
 	uint8_t* write_point = data.data();

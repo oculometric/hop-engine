@@ -8,8 +8,7 @@
 #include "engine.h"
 #include "scene.h"
 #include "mesh.h"
-#include "object.h"
-#include "text_block.h"
+#include "basic_components.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -675,7 +674,7 @@ struct SceneResources
 
 static Ref<Object> deserialiseStaticMesh(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<StaticMesh> obj = StaticMesh::create(nullptr, nullptr);
+	Ref<StaticMeshComponent> obj = StaticMeshComponent::create(nullptr, nullptr);
 	auto it = args.find("mesh");
 	if (it != args.end())
 	{
@@ -709,16 +708,16 @@ static Ref<Object> deserialiseStaticMesh(const map<string, TokenReader::Token>& 
 
 static Ref<Object> deserialiseLight(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<Light> obj = Light::create(Light::DIRECTIONAL);
+	Ref<LightComponent> obj = LightComponent::create(LightComponent::DIRECTIONAL);
 	auto it = args.find("type");
 	if (it != args.end())
 	{
 		if (it->second.s_value == "DIRECTIONAL")
-			obj->type = Light::DIRECTIONAL;
+			obj->type = LightComponent::DIRECTIONAL;
 		else if (it->second.s_value == "POINT")
-			obj->type = Light::POINT;
+			obj->type = LightComponent::POINT;
 		else if (it->second.s_value == "SPOT")
-			obj->type = Light::SPOT;
+			obj->type = LightComponent::SPOT;
 		else
 		{
 			DBG_ERROR("error deserialising light, invalid light type '" + it->second.s_value + "'");
@@ -741,7 +740,7 @@ static Ref<Object> deserialiseLight(const map<string, TokenReader::Token>& args,
 
 static Ref<Object> deserialiseCamera(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<Camera> obj = Camera::create();
+	Ref<CameraComponent> obj = CameraComponent::create();
 	auto it = args.find("slot");
 	if (it != args.end())
 		scene->setCameraSlot(obj, it->second.i_value);
@@ -765,7 +764,7 @@ static Ref<Object> deserialiseCamera(const map<string, TokenReader::Token>& args
 
 static Ref<Object> deserialiseTextBlock(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<TextBlock> obj = TextBlock::create("Text");
+	Ref<TextComponent> obj = TextComponent::create("Text");
 	auto it = args.find("text");
 	if (it != args.end())
 		obj->setText(it->second.s_value);
@@ -782,7 +781,7 @@ struct ObjectDeserialiseConfig
 };
 
 static map<string, ObjectDeserialiseConfig> object_deserialisers = {
-	{ "StaticMesh", { deserialiseStaticMesh, {
+	{ "StaticMeshComponent", { deserialiseStaticMesh, {
 						{ "mesh", TokenReader::IDENTIFIER },
 						{ "material", TokenReader::IDENTIFIER },
                         { "camera_mask", TokenReader::INT }
@@ -799,7 +798,7 @@ static map<string, ObjectDeserialiseConfig> object_deserialisers = {
 						{ "far_clip", TokenReader::FLOAT },
 						{ "fov", TokenReader::FLOAT },
 	} } },
-	{ "TextBlock", { deserialiseTextBlock, {
+	{ "TextComponent", { deserialiseTextBlock, {
 							{ "text", TokenReader::STRING },
 							{ "tint", TokenReader::VECTOR }
 	} } }

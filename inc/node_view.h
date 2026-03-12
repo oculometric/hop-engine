@@ -3,16 +3,15 @@
 #include <vector>
 #include <glm/vec2.hpp>
 
-#include "command_buffer.h"
-#include "command_buffer.h"
 #include "common.h"
-#include "object.h"
+#include "command_buffer.h"
+#include "scene.h"
 #include "mesh.h"
 
 namespace HopEngine
 {
 
-class NodeView : public StaticMesh
+class NodeView : public StaticMeshComponent
 {
 public:
 	enum NodeElementType : uint8_t
@@ -110,16 +109,14 @@ private:
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(NodeView);
-	static Ref<NodeView> create();
 	~NodeView() override;
 	
+	void awake() override;
+
 	Ref<Style> getStyle() { return style; }
 	void setStyle(Ref<Style> new_style);
 	void updateMesh();
 	void checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size);
-	
-protected:
-	NodeView();
 
 private:
 	void addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode, glm::vec3 extra = { 0.0f, 0.0f, 0.0f }, glm::vec2 fake_size = { 0, 0 });

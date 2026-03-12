@@ -2,10 +2,9 @@
 #include <imgui/imgui_internal.h>
 #include <map>
 #include <string>
-#include <vulkan/vulkan.hpp>
 
 #include "engine.h"
-#include "object.h"
+#include "basic_components.h"
 #include "scene.h"
 #include "mesh.h"
 #include "texture.h"
@@ -18,14 +17,13 @@
 #if !defined(STANDALONE)
 #include "../main.h"
 #endif
-#include "text_block.h"
 
 using namespace HopEngine;
 using namespace std;
 
 static WeakRef<Object> selected_object;
 static WeakRef<Material> selected_material;
-static Camera* selected_camera;
+static WeakRef<Object> selected_camera;
 
 static Ref<Texture> texturePicker(const Ref<Texture>& current, const char* str)
 {
@@ -97,26 +95,36 @@ void Object::drawImGuiDebug()
 		ImGui::DragFloat3("scale", reinterpret_cast<float*>(&vec), 0.05f);
 		transform.setLocalScale(vec);
 	}
+	for (const auto& comp : components)
+	{
+		ImGui::PushID(comp.get());
+		comp->drawImGuiDebug();
+		ImGui::PopID();
+	}
 }
 
-void Camera::drawImGuiDebug()
+void Component::drawImGuiDebug()
 {
-	Object::drawImGuiDebug();
-	if (ImGui::CollapsingHeader("camera params", ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader("component", ImGuiTreeNodeFlags_DefaultOpen))
+	{ }
+}
+
+void CameraComponent::drawImGuiDebug()
+{
+	if (ImGui::CollapsingHeader("camera component", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::DragFloat("near clip", &near_clip, 0.1f, 0.001f, far_clip, "%.3f", ImGuiSliderFlags_Logarithmic);
 		ImGui::DragFloat("far clip", &far_clip, 1.0f, near_clip, 1000.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
 		ImGui::DragFloat("fov", &fov, 1.0f, 1.0f, 179.0f);
 		ImGui::ColorEdit3("clear colour", reinterpret_cast<float*>(&clear_colour));
 		if (ImGui::Button("take control"))
-			selected_camera = this;
+			selected_camera = getOwner();
 	}
 }
 
-void StaticMesh::drawImGuiDebug()
+void StaticMeshComponent::drawImGuiDebug()
 {
-	Object::drawImGuiDebug();
-	if (ImGui::CollapsingHeader("static mesh params", ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader("static mesh component", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		mesh = meshPicker(mesh, "mesh data");
 		if (mesh)
@@ -124,7 +132,6 @@ void StaticMesh::drawImGuiDebug()
 			ImGui::LabelText("vertices", "%zu", mesh->getVertexCount());
 			ImGui::LabelText("triangles", "%zu", mesh->getIndexCount() / 3);
 			ImGui::LabelText("vertex size", "%llu", sizeof(Vertex));
-			ImGui::LabelText("vertex attributes", "%zu", Mesh::getAttributeDescriptions().size());
 		}
 		material = materialPicker(material, "material");
 		if (material)
@@ -156,10 +163,9 @@ void StaticMesh::drawImGuiDebug()
 	}
 }
 
-void TextBlock::drawImGuiDebug()
+void TextComponent::drawImGuiDebug()
 {
-	Object::drawImGuiDebug();
-	if (ImGui::CollapsingHeader("text block params", ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader("text block component", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		static char tmp[513] = { };
 		memcpy(tmp, text.data(), std::min(512ull, text.size()));
@@ -172,12 +178,11 @@ void TextBlock::drawImGuiDebug()
 	}
 }
 
-void Light::drawImGuiDebug()
+void LightComponent::drawImGuiDebug()
 {
-	Object::drawImGuiDebug();
-	if (ImGui::CollapsingHeader("light params", ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader("light component", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		const char* types = "POINT\0SPOT\0DIRECTIONAL";
+		const char* types = "POINT\0SPOT\0DIRECTIONAL\0";
 		ImGui::Combo("type", reinterpret_cast<int*>(&type), types);
 		ImGui::ColorEdit3("colour", reinterpret_cast<float*>(&colour));
 		if (type == SPOT)
@@ -204,17 +209,6 @@ static void drawImGuiSceneTreeItem(WeakRef<Object> parent)
 		}
 	}
 }
-//
-// static void collectDescendents(multimap<Object*, WeakRef<Object>>& parent_map, Object* parent, vector<Object*>& descendents)
-// {
-// 	auto [range_start, range_end] = parent_map.equal_range(parent);
-// 	while (range_start != range_end)
-// 	{
-// 		descendents.push_back(range_start->second.get());
-// 		collectDescendents(parent_map, range_start->second.get(), descendents);
-// 		++range_start;
-// 	}
-// }
 
 void Scene::drawImGuiDebug()
 {
@@ -226,67 +220,6 @@ void Scene::drawImGuiDebug()
 	if (ImGui::CollapsingHeader("object heirarchy", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
 		drawImGuiSceneTreeItem(root);
 	ImGui::Text("selected: %s", selected_object ? (selected_object->name + " - " + PTR(selected_object.get())).c_str() : "none");
-	const bool disabled = !selected_object;
-	if (disabled)
-		ImGui::BeginDisabled();
-	if (selected_object != root && ImGui::Button("remove from tree"))
-	{
-		selected_object->removeFromScene();
-		selected_object = nullptr;
-	}
-	if (selected_object != root && ImGui::Button("reparent"))
-	{
-		ImGui::OpenPopup("new parent");
-	}
-	if (selected_object != root && ImGui::BeginPopup("new parent", ImGuiWindowFlags_AlwaysAutoResize))
-	{
-		if (ImGui::SmallButton((root->name + " - " + PTR(root.get())).c_str()))
-		{
-			selected_object->removeFromParent();
-			ImGui::CloseCurrentPopup();
-		}
-		for (const auto& object : objects)
-		{
-			if (object == selected_object)
-				continue;
-			if (ImGui::SmallButton((object->name + " - " + PTR(object.get())).c_str()))
-			{
-				object->addChild(selected_object.strong());
-				ImGui::CloseCurrentPopup();
-			}
-		}
-		ImGui::EndPopup();
-	}
-	if (ImGui::Button("add child"))
-	{
-		ImGui::OpenPopup("child type");
-	}
-	if (ImGui::BeginPopup("child type", ImGuiWindowFlags_AlwaysAutoResize))
-	{
-		if (ImGui::Button("object"))
-		{
-			selected_object->addChild(Object::create());
-			ImGui::CloseCurrentPopup();
-		}
-		if (ImGui::Button("static mesh"))
-		{
-			selected_object->addChild(StaticMesh::create(RenderServer::getQuad(), nullptr));
-			ImGui::CloseCurrentPopup();
-		}
-		if (ImGui::Button("light"))
-		{
-			selected_object->addChild(Light::create(Light::DIRECTIONAL));
-			ImGui::CloseCurrentPopup();
-		}
-		if (ImGui::Button("text"))
-		{
-			selected_object->addChild(TextBlock::create("Text goes here"));
-			ImGui::CloseCurrentPopup();
-		}
-		ImGui::EndPopup();
-	}
-	if (disabled)
-		ImGui::EndDisabled();
 }
 
 void Material::drawImGuiDebug()
@@ -395,11 +328,12 @@ void Engine::debugSelect(const WeakRef<Object>& object)
 	selected_object = object;
 }
 
-void Engine::debugClearSelection(const WeakRef<Object>& object, const WeakRef<Material>& material, WeakRef<Camera> camera)
+// TODO: deprecate this
+void Engine::debugClearSelection(const WeakRef<Object>& object, const WeakRef<Material>& material, WeakRef<CameraComponent> camera)
 {
 	selected_object = object;
 	selected_material = material;
-	selected_camera = camera.get();
+	selected_camera = camera->getOwner();
 }
 
 WeakRef<Object> Engine::getDebugSelection()

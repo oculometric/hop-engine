@@ -164,14 +164,16 @@ void RenderGraph::setSkipStep(const string& name, const bool skip)
     setSkipStep(findStep(name), skip);
 }
 
-void RenderGraph::resizeBuffers(const uint32_t width, const uint32_t height)
+void RenderGraph::resizeBuffers(glm::u32vec2 new_extent)
 {
+    if (expected_extent == new_extent)
+        return;
     for (RenderStep& step : execution_steps)
     {
         if (step.resolution_scale > 0.0f)
-            step.render_pass->resize(static_cast<uint32_t>(static_cast<float>(width) * step.resolution_scale), static_cast<uint32_t>(static_cast<float>(height) * step.resolution_scale));
+            step.render_pass->resize(static_cast<uint32_t>(static_cast<float>(new_extent.x) * step.resolution_scale), static_cast<uint32_t>(static_cast<float>(new_extent.y) * step.resolution_scale));
         else
-            step.render_pass->resize(step.custom_extent.x ? step.custom_extent.x : width, step.custom_extent.y ? step.custom_extent.y : height);
+            step.render_pass->resize(step.custom_extent.x ? step.custom_extent.x : new_extent.x, step.custom_extent.y ? step.custom_extent.y : new_extent.y);
 
         if (step.is_camera)
             continue;
@@ -179,7 +181,7 @@ void RenderGraph::resizeBuffers(const uint32_t width, const uint32_t height)
         for (const auto& [texture_index, binding] : step.texture_bindings)
             step.material->setTexture(texture_index, execution_steps[binding.step_index].render_pass->getImage(binding.output_index));
     }
-    expected_extent = { width, height };
+    expected_extent = new_extent;
 }
 
 
@@ -264,7 +266,7 @@ void RenderGraph::recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, Wea
     }
 }
 
-void RenderGraph::bind(Ref<DrawCommandBuffer> command_buffer)
+void RenderGraph::bindOutputMaterial(Ref<DrawCommandBuffer> command_buffer)
 {
     passthrough->bind(command_buffer, false);
 }
@@ -312,7 +314,7 @@ void RenderGraph::rebuildBindings()
     }
 }
 
-void RenderGraph::recordCameraStep(const Ref<DrawCommandBuffer> command_buffer, const Ref<Camera>& camera, const Ref<RenderPass>& pass, const multiset<DrawCommand, DrawCommand>& commands, const vector<LightParams>& lights, glm::vec4 ambient_colour)
+void RenderGraph::recordCameraStep(const Ref<DrawCommandBuffer> command_buffer, const Ref<CameraComponent>& camera, const Ref<RenderPass>& pass, const multiset<DrawCommand, DrawCommand>& commands, const vector<LightParams>& lights, glm::vec4 ambient_colour)
 {
     pass->begin(command_buffer, camera->clear_colour);
 

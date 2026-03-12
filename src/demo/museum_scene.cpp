@@ -10,17 +10,17 @@ using namespace HopEngine;
 
 static WeakRef<Material> cc_material;
 
-static WeakRef<StaticMesh> crt;
+static WeakRef<StaticMeshComponent> crt;
 
-static WeakRef<StaticMesh> obj;
-static WeakRef<StaticMesh> obj2;
-static WeakRef<StaticMesh> obj3;
-static WeakRef<StaticMesh> obj4;
+static WeakRef<StaticMeshComponent> obj;
+static WeakRef<StaticMeshComponent> obj2;
+static WeakRef<StaticMeshComponent> obj3;
+static WeakRef<StaticMeshComponent> obj4;
 
-static WeakRef<StaticMesh> normal_demo_1;
-static WeakRef<StaticMesh> normal_demo_2;
+static WeakRef<StaticMeshComponent> normal_demo_1;
+static WeakRef<StaticMeshComponent> normal_demo_2;
 
-static WeakRef<StaticMesh> spline_obj;
+static WeakRef<StaticMeshComponent> spline_obj;
 static Spline spline;
 static float spline_progress = 0.0f;
 static bool spline_tracked = false;
@@ -59,13 +59,13 @@ static Ref<Scene> initMuseumScene()
     if (!scene) return nullptr;
     Engine::setScene(scene);
     
-    obj = scene->findObject<StaticMesh>("orrery_core");
-    obj2 = scene->findObject<StaticMesh>("orrery_mid");
-    obj3 = scene->findObject<StaticMesh>("orrery_orbit_a");
-    obj4 = scene->findObject<StaticMesh>("orrery_orbit_b");
+    obj = scene->findObject<StaticMeshComponent>("orrery_core");
+    obj2 = scene->findObject<StaticMeshComponent>("orrery_mid");
+    obj3 = scene->findObject<StaticMeshComponent>("orrery_orbit_a");
+    obj4 = scene->findObject<StaticMeshComponent>("orrery_orbit_b");
     
-    spline_obj = scene->insertObject<StaticMesh>(
-        StaticMesh::create(
+    spline_obj = scene->insertObject<StaticMeshComponent>(
+        StaticMeshComponent::create(
             Engine::loadMesh("res://museum/IcePlanet.obj"), 
             Engine::loadMaterial("res://museum/IcePlanet.hmat")));
     spline_obj->transform.setLocalScale({ 0.3f, 0.3f, 0.3f });
@@ -78,7 +78,7 @@ static Ref<Scene> initMuseumScene()
         { 14, -8, 1.5 }
     };
     
-    crt = scene->findObject<StaticMesh>("crt_screen");
+    crt = scene->findObject<StaticMeshComponent>("crt_screen");
     
     auto fog_mat = scene->render_graph->getMaterialForStep("fog");
     fog_mat->setFloatUniform("fog_start", 4.0f);
@@ -113,7 +113,7 @@ static Ref<Scene> initMuseumScene()
     cc_material->setFloatUniform("use_lut", 1);
     Engine::debugClearSelection(WeakRef<Object>(), WeakRef<Material>(), scene->getCamera(0));
 
-    normal_demo_1 = scene->insertObject<StaticMesh>(StaticMesh::create(
+    normal_demo_1 = scene->insertObject<StaticMeshComponent>(StaticMeshComponent::create(
         Engine::loadMesh("res://engine/samples/plane.obj"),
         new Material(Engine::loadShader("res://engine/shaders/deferred.glsl"))));
     normal_demo_1->transform.setPosition(glm::vec3{ 0, -8, 0.8 });
@@ -124,7 +124,7 @@ static Ref<Scene> initMuseumScene()
     normal_demo_1->material->setFloatUniform("roughness_factor_add", 0.5f);
     normal_demo_1->material->setFloatUniform("normal_strength", 1.0f);
     
-    normal_demo_2 = scene->insertObject<StaticMesh>(StaticMesh::create(
+    normal_demo_2 = scene->insertObject<StaticMeshComponent>(StaticMeshComponent::create(
         Engine::loadMesh("res://museum/PipeL.obj"),
         Engine::loadMaterial("res://museum/ShinyPipes.hmat")
         ));
@@ -161,7 +161,7 @@ static void updateMuseumScene(const float delta_time)
     spline_obj->transform.lookAt(spline[spline_progress], spline[spline_progress - 0.01f], { 0, 0, 1 });
     if (spline_tracked)
     {
-        WeakRef<Camera> camera = scene->getCamera(0);
+        WeakRef<CameraComponent> camera = scene->getCamera(0);
         camera->transform.lookAt(camera->transform.getLocalPosition(), spline[spline_progress], { 0, 0, 1 });
     }
     
@@ -201,7 +201,7 @@ static void imGuiMuseumScene()
         camera_flythrough_time = 0.0f;
     if (camera_flythrough)
     {
-        WeakRef<Camera> camera = Engine::getScene()->getCamera(0);
+        WeakRef<CameraComponent> camera = Engine::getScene()->getCamera(0);
         if (camera_flythrough_time >= 0.999f)
         {
             camera_flythrough = false;

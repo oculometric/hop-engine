@@ -20,11 +20,9 @@
 
 #include "scene.h"
 #include "transform.h"
-#include "object.h"
-#include "text_block.h"
+#include "basic_components.h"
 #include "font.h"
 #include "node_view.h"
-#include "gizmo.h"
 
 #include "package.h"
 #include "input.h"

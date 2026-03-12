@@ -1,4 +1,4 @@
-#include "text_block.h"
+#include "basic_components.h"
 
 #include "engine.h"
 #include "mesh.h"
@@ -9,22 +9,14 @@
 using namespace HopEngine;
 using namespace std;
 
-Ref<TextBlock> TextBlock::create(const std::string& _text)
+void TextComponent::awake()
 {
-    Ref obj = new TextBlock(_text);
-    obj->self = obj.cast<Object>();
-    return obj;
-}
-
-TextBlock::TextBlock(const string& _text) : StaticMesh(nullptr, nullptr)
-{
-    name = "text block";
     font = new Font("res://engine/font.bmp", glm::ivec2{ 10, 18 });
     material = new Material(Engine::loadShader("res://engine/shaders/text.glsl"));
     material->setTexture(0, font->getAtlas());
     material->setSampler(0, Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST)));
     
-    setText(_text);
+    setText("Sample text");
 }
 
 static glm::vec2 flipUV(glm::vec2 v)
@@ -32,7 +24,7 @@ static glm::vec2 flipUV(glm::vec2 v)
     return { v.x, 1.0f - v.y };
 }
 
-void TextBlock::updateGeometry()
+void TextComponent::updateGeometry()
 {
     if (!mesh)
         mesh = new Mesh({ Vertex() }, { 0 }, true);

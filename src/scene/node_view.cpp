@@ -19,13 +19,6 @@ static glm::vec2 flipUV(glm::vec2 v)
     return { v.x, 1.0f - v.y };
 }
 
-Ref<NodeView> NodeView::create()
-{
-    Ref obj = new NodeView();
-    obj->self = obj.cast<Object>();
-    return obj;
-}
-
 void NodeView::setStyle(Ref<Style> new_style)
 {
     material->setTexture("text_atlas", new_style->font->getAtlas());
@@ -320,7 +313,7 @@ void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
     //DBG_INFO("pos: " + ::to_string(node_space_pos.x) + ", " + ::to_string(node_space_pos.y));
 }
 
-NodeView::NodeView() : StaticMesh(nullptr, nullptr)
+void NodeView::awake()
 {
     material = new Material(new Shader("res://engine/shaders/node_shader.glsl"), Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthWrite(false));
     Ref<Sampler> sampler = Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST));

@@ -12,7 +12,7 @@ namespace HopEngine
 {
 
 /**
- * @brief describes a 3D scene light. see the \code Light\endcode class.
+ * @brief describes a 3D scene light. see the \code LightComponent\endcode class.
  */
 struct LightParams
 {
