@@ -142,6 +142,8 @@ Ref<Texture> Texture::loadImage3D(const string& path, glm::u32vec2 segments)
     t->origin = path;
     DBG_VERBOSE("created image from " + path + " with size " + ::to_string(extent.x) + "x" + ::to_string(extent.y) + "x" + ::to_string(extent.z) + " and format " + to_string(format));
     stbi_image_free(pixels);
+
+    return t;
 }
 
 void Texture::uploadData(void* data)
