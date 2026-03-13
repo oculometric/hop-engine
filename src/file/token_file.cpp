@@ -564,9 +564,9 @@ glm::vec4 TokenReader::deserialiseVectorToken(const string& str, const size_t of
             values.push_back(stof(str.substr(last_comma, next_comma - last_comma)));
         } while (next_comma != string::npos);
     }
-    catch (invalid_argument& _)
+    catch (invalid_argument& e)
     {
-        reportError("invalid vector literal", offset, original_content);
+        reportError("invalid vector literal: " + string(e.what()), offset, original_content);
         return { 0, 0, 0, 0 };
     }
 

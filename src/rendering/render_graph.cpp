@@ -34,9 +34,9 @@ RenderGraph::Builder& RenderGraph::Builder::addCamera(const size_t slot, const R
     step.custom_extent = custom_extent;
     const glm::vec2 size = RenderServer::getFramebufferSize();
     if (size_factor > 0.0f)
-        step.render_pass = new RenderPass(static_cast<uint32_t>(size.x * size_factor), static_cast<uint32_t>(size.y * size_factor), render_pass_config);
+        step.render_pass = new RenderPass({ static_cast<uint32_t>(size.x * size_factor), static_cast<uint32_t>(size.y * size_factor) }, render_pass_config);
     else
-        step.render_pass = new RenderPass(custom_extent.x ? custom_extent.x : static_cast<uint32_t>(size.x), custom_extent.y ? custom_extent.y : static_cast<uint32_t>(size.y), render_pass_config);
+        step.render_pass = new RenderPass({ custom_extent.x ? custom_extent.x : static_cast<uint32_t>(size.x), custom_extent.y ? custom_extent.y : static_cast<uint32_t>(size.y) }, render_pass_config);
     execution_steps.push_back(step);
     return *this;
 }
@@ -59,9 +59,9 @@ RenderGraph::Builder& RenderGraph::Builder::addPostProcess(const Ref<Shader>& sh
     step.custom_extent = custom_extent;
     const glm::vec2 size = RenderServer::getFramebufferSize();
     if (size_factor > 0.0f)
-        step.render_pass = new RenderPass(static_cast<uint32_t>(size.x * size_factor), static_cast<uint32_t>(size.y * size_factor), render_pass_config);
+        step.render_pass = new RenderPass({ static_cast<uint32_t>(size.x * size_factor), static_cast<uint32_t>(size.y * size_factor) }, render_pass_config);
     else
-        step.render_pass = new RenderPass(custom_extent.x ? custom_extent.x : static_cast<uint32_t>(size.x), custom_extent.y ? custom_extent.y : static_cast<uint32_t>(size.y), render_pass_config);
+        step.render_pass = new RenderPass({ custom_extent.x ? custom_extent.x : static_cast<uint32_t>(size.x), custom_extent.y ? custom_extent.y : static_cast<uint32_t>(size.y) }, render_pass_config);
     step.material = new Material(shader, Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthWrite(false), step.render_pass);
     step.texture_bindings = texture_bindings;
     step.scene_uniforms = RenderServer::createSceneUniforms();
@@ -165,9 +165,9 @@ void RenderGraph::resizeBuffers(glm::u32vec2 new_extent)
     for (Step& step : execution_steps)
     {
         if (step.resolution_scale > 0.0f)
-            step.render_pass->resize(static_cast<uint32_t>(static_cast<float>(new_extent.x) * step.resolution_scale), static_cast<uint32_t>(static_cast<float>(new_extent.y) * step.resolution_scale));
+            step.render_pass->resize({ static_cast<uint32_t>(static_cast<float>(new_extent.x) * step.resolution_scale), static_cast<uint32_t>(static_cast<float>(new_extent.y) * step.resolution_scale) });
         else
-            step.render_pass->resize(step.custom_extent.x ? step.custom_extent.x : new_extent.x, step.custom_extent.y ? step.custom_extent.y : new_extent.y);
+            step.render_pass->resize({ step.custom_extent.x ? step.custom_extent.x : new_extent.x, step.custom_extent.y ? step.custom_extent.y : new_extent.y });
 
         if (step.is_camera)
             continue;

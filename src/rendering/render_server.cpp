@@ -106,7 +106,7 @@ RenderServer::RenderServer()
     swapchain = new Swapchain(window_size.x, window_size.y, surface);
 
     final_render_pass = new RenderPass(swapchain, { 0, true });
-    offscreen_pass = new RenderPass(1, 1, { 3, true });
+    offscreen_pass = new RenderPass({ 1, 1 }, { 3, true });
 
     uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
     default_image = new Texture({ 1, 1, 1 }, Texture::FORMAT_SRGB_8X4, default_image_data);
