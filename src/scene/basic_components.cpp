@@ -55,6 +55,11 @@ void StaticMeshComponent::awake()
 
 vector<DrawCommand> StaticMeshComponent::getDrawCommands()
 {
+	if (!uniforms)
+	{
+		DBG_WARNING("static mesh component had no uniforms! creating them now...");
+		uniforms = RenderServer::createObjectUniforms();
+	}
 	ObjectUniforms* object_uniforms = reinterpret_cast<ObjectUniforms*>(uniforms->getBuffer());
 	object_uniforms->id = static_cast<int>(reinterpret_cast<size_t>(this));
 	object_uniforms->model_to_world = getTransform().getMatrix();

@@ -2,7 +2,6 @@
 
 ## v0.52
 - fullscreen support
-- fix multi-pass rendering not working
 ---
 # v0.6
 - interactive node editor

@@ -23,6 +23,15 @@ AshaApp::AshaApp()
     sm_comp->material->setSampler("albedo", sampler);
     asha->transform.setLocalPosition({ 0, 0, -0.9f });
 
+    // add some text
+    auto text = scene->addObject("text");
+    auto text_comp = text->addComponent<TextComponent>();
+    text_comp->setText("bunny party!!");
+    text_comp->setTint({ 0, 1, 0 });
+    text->transform.setLocalPosition({ -1.2f, 0.5f, 1.4f });
+    text->transform.setLocalEuler({ 90, 0, 0 });
+    text_comp->camera_mask = 0b110;
+
     // create the bunny
     auto bunny = scene->addObject("bunny");
     sm_comp = bunny->addComponent<StaticMeshComponent>();
