@@ -6,6 +6,8 @@
 #include "render_graph.h"
 #include "math_helpers.h"
 #include "command_buffer.h"
+#include "basic_components.h"
+#include "render_server.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -155,7 +157,7 @@ WeakRef<Object> Scene::insertObject(WeakRef<Object> obj)
 
 WeakRef<Object> Scene::addObject(const string& name)
 {
-	Ref obj = new Object();
+	Ref obj = Object::create();
 	obj->name = name;
 	obj->scene = self;
 	objects.emplace_back(obj);
@@ -204,51 +206,6 @@ void Scene::removeObject(WeakRef<Object> obj)
 	DBG_WARNING("object " + obj->name + " claims to be a member of scene " + getOrigin() + ", but is not known to the scene. scene hierarchy is corrupt.");
 }
 
-
-
-// Ref<CameraComponent> Scene::getCamera(const size_t slot) const
-// {
-// 	const auto it = cameras.find(slot);
-// 	if (it != cameras.end())
-// 		return it->second;
-// 	return backup_camera;
-// }
-
-// vector<LightParams> Scene::getLightParams() const
-// {
-// 	vector<LightParams> lights_params(8);
-	
-// 	size_t index = 0;
-// 	for (const auto& light : lights)
-// 	{
-// 		lights_params[index] = light->getParamsStructure();
-// 		++index;
-// 		if (index >= 8)
-// 			break;
-// 	}
-
-// 	return lights_params;
-// }
-
-// vector<DrawCommand> Scene::getDrawCommands(glm::u32vec2 viewport_size)
-// {
-// 	last_viewport_size = viewport_size;
-// 	if (!render_graph)
-// 		return { };
-	
-// 	const glm::u32vec2 graph_extent = render_graph->getExpectedExtent();
-// 	if (graph_extent.x != viewport_size.x || graph_extent.y != viewport_size.y)
-// 		render_graph->resizeBuffers(viewport_size.x, viewport_size.y);
-
-// 	vector<DrawCommand> commands;
-// 	for (const Ref<Object>& object : objects)
-// 	{
-// 		auto obj_commands = object->getDrawCommands();
-// 		commands.insert(commands.begin(), obj_commands.begin(), obj_commands.end());
-// 	}
-// 	return commands;
-// }
-
 WeakRef<Object> Scene::raycast(const glm::vec3 position, const glm::vec3 direction) const
 {
 	float min_dist = INFINITY;
@@ -284,15 +241,48 @@ void Scene::draw(Ref<DrawCommandBuffer> command_buffer, glm::u32vec2 viewport_si
 {
 	if (!render_graph)
 		return;
+
 	// resize render graph
 	render_graph->resizeBuffers(viewport_size);
-	// check the size of each camera slot
-	assert(false);
-	// TODO HERE
-	// find the first camera for each slot, and update its uniforms to be correct (and store)
+
 	// collect all lights from the scene
+	vector<LightParams> lights(8);
+	
+	size_t index = 0;
+	for (const auto& light : objects)
+	{
+		auto light_comp = light->getComponent<LightComponent>();
+		if (!light_comp)
+			continue;
+		lights[index] = light_comp->getParamsStructure();
+		++index;
+		if (index >= 8)
+			break;
+	}
+
+	// check the size of each camera slot
+	map<size_t, pair<WeakRef<UniformBlock>, glm::vec4>> cameras;
+	auto camera_sizes = render_graph->getCameraSlots();
+	for (const auto& object : objects)
+	{
+		auto camera_comp = object->getComponent<CameraComponent>();
+		if (!camera_comp)
+			continue;
+		// find the first camera for each slot, and update its uniforms to be correct (and store)
+		cameras[camera_comp->camera_slot] = { camera_comp->getUniforms(camera_sizes[camera_comp->camera_slot], lights, glm::vec4(ambient_colour, 0)), glm::vec4(camera_comp->clear_colour, 1) };
+	}
+
 	// collect all draw calls from the scene (plus the skybox!)
+	vector<DrawCommand> draw_commands;
+	draw_commands.push_back(DrawCommand(skybox_material, RenderServer::getSkyboxCube(), skybox_uniforms).priority(1000));
+	for (const auto& object : objects)
+	{
+		auto temp = object->getDrawCommands();
+		draw_commands.insert(draw_commands.end(), temp.begin(), temp.end());
+	}
+
 	// call render graph draw with the cameras and draw calls
+	render_graph->draw(command_buffer, draw_commands, cameras);
 }
 
 void Scene::bindOutputMaterial(Ref<DrawCommandBuffer> command_buffer)
@@ -307,6 +297,7 @@ Scene::Scene(const string& name)
 	render_graph = new RenderGraph(RenderGraphBuilder().addCamera(0));
 	root = Object::create();
     skybox_material = new Material(new Shader("res://engine/shaders/skybox.glsl"), Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false));
+	skybox_uniforms = RenderServer::createObjectUniforms();
 	root->name = "scene root";
 
 	DBG_INFO("created new scene " + getOrigin());

@@ -184,9 +184,8 @@ void RenderGraph::resizeBuffers(glm::u32vec2 new_extent)
 }
 
 
-void RenderGraph::draw(WeakRef<DrawCommandBuffer> command_buffer, const std::vector<DrawCommand>& draw_commands, const std::vector<std::pair<WeakRef<UniformBlock>, glm::vec4>>& cameras)
+void RenderGraph::draw(WeakRef<DrawCommandBuffer> command_buffer, const std::vector<DrawCommand>& draw_commands, const std::map<size_t, std::pair<WeakRef<UniformBlock>, glm::vec4>>& cameras)
 {
-    // TODO: here....
     for (const RenderStep& step : execution_steps)
     {
         if (!step.is_camera)
@@ -234,7 +233,12 @@ void RenderGraph::draw(WeakRef<DrawCommandBuffer> command_buffer, const std::vec
         if (execution_steps[i].skipped)
             continue;
         if (execution_steps[i].is_camera)
-            recordCameraStep(command_buffer, cameras[i].first, cameras[i].second, execution_steps[i].render_pass, step_commands[i]);
+        {
+            if (!cameras.contains(execution_steps[i].camera_slot))
+                continue;
+            auto camera = cameras.at(execution_steps[i].camera_slot);
+            recordCameraStep(command_buffer, camera.first, camera.second, execution_steps[i].render_pass, step_commands[i]);
+        }
         else
             recordPostProcessStep(command_buffer, execution_steps[i].material, execution_steps[i].scene_uniforms);
     }
@@ -243,6 +247,17 @@ void RenderGraph::draw(WeakRef<DrawCommandBuffer> command_buffer, const std::vec
 void RenderGraph::bindOutputMaterial(WeakRef<DrawCommandBuffer> command_buffer)
 {
     passthrough->bind(command_buffer, false);
+}
+
+map<size_t, glm::u32vec2> RenderGraph::getCameraSlots()
+{
+    map<size_t, glm::u32vec2> slots;
+    for (const auto& step : execution_steps)
+    {
+        if (step.is_camera)
+            slots[step.camera_slot] = step.render_pass->getExtent();
+    }
+    return slots;
 }
 
 size_t RenderGraph::findStep(const string& name) const

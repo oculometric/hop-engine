@@ -90,8 +90,10 @@ public:
 	void setSkipStep(const std::string& name, bool skip);
 	
 	void resizeBuffers(glm::u32vec2 new_extent);
-	void draw(WeakRef<DrawCommandBuffer> command_buffer, const std::vector<DrawCommand>& draw_commands, const std::vector<std::pair<WeakRef<UniformBlock>, glm::vec4>>& cameras);
+	void draw(WeakRef<DrawCommandBuffer> command_buffer, const std::vector<DrawCommand>& draw_commands, const std::map<size_t, std::pair<WeakRef<UniformBlock>, glm::vec4>>& cameras);
 	void bindOutputMaterial(WeakRef<DrawCommandBuffer> command_buffer);
+
+	std::map<size_t, glm::u32vec2> getCameraSlots();
 	
 	void drawImGuiDebug();
 	static Ref<RenderGraph> deserialise(const std::string& name);

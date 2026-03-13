@@ -312,6 +312,7 @@ void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
 
 void NodeView::awake()
 {
+    StaticMeshComponent::awake();
     material = new Material(new Shader("res://engine/shaders/node_shader.glsl"), Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthWrite(false));
     Ref<Sampler> sampler = Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST));
     material->setSampler("node_atlas", sampler);

@@ -72,6 +72,7 @@ public:
 	{
 		static_assert(std::is_convertible_v<T*, Component*>, "component must be a HopEngine::Component subclass");
 		Ref<T> comp = new T();
+		comp->owner = self;
 		components.push_back(comp.cast<Component>());
 		comp->awake();
 		return comp.weak();
@@ -127,7 +128,8 @@ private:
 	Ref<Object> root;
 	std::vector<Ref<Object>> objects;
 	glm::u32vec2 last_viewport_size;
-	Ref<Material> skybox_material; // TODO
+	Ref<Material> skybox_material;
+	Ref<UniformBlock> skybox_uniforms;
 	WeakRef<Texture> skybox;
 
 public:

@@ -2,6 +2,9 @@
 
 #include "common.h"
 
+#include "mesh.h"
+#include "material.h"
+
 namespace HopEngine
 {
 

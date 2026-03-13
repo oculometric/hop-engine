@@ -6,25 +6,22 @@ scene collects draw commands and camera infos and lights and calls draw on rende
 
 
 ## v0.52
-- switch to entity/component system
-    - get camera resolution FROM THE RENDER GRAPH REMEMBER
-    - scene drawing function
 - make most classes `final`
 - overhaul engine debug interfaces
 - shortcut function to make object/component creation easier (creates an object and gives it a component)
+
 - fullscreen support
+- fix skybox side being flipped
+- make fullscreen quad into a fullscreen tri
+- scene window-to-viewport function for mouse position etc
+- change the way refs work, and the way `new`ing works (classes only construct via ::create, remove keepLoaded)
 
 - simplify texture to be in one of several 'modes/types' (fix the way view aspects behave), overhaul initialisation, overhaul renderpass accordingly
 - refactor mesh loading as well
 - create image view on image create
 
-- scene window-to-viewport function for mouse position etc
 - fix multi-pass rendering not working
 - multi-scene mode in the engine
-- fix skybox side being flipped
-- make fullscreen quad into a fullscreen tri
-
-- change the way refs work, and the way `new`ing works (classes only construct via ::create, remove keepLoaded)
 ---
 # v0.6
 - interactive node editor
@@ -47,3 +44,5 @@ scene collects draw commands and camera infos and lights and calls draw on rende
 - improved gizmo, better control, rotation and scale support [M]
 - bytecode node language
 - VR interfaces
+- Steamworks integration
+- 3D editor

@@ -20,6 +20,8 @@ public:
         main_scene = Engine::getScene();
 
         node_scene = Scene::create();
+        auto camera_obj = node_scene->addObject("camera");
+        camera_obj->addComponent<CameraComponent>();
         auto node_obj = node_scene->addObject("node view");
         node_view = node_obj->addComponent<NodeView>();
         node_view->nodes.push_back(new NodeView::Node
