@@ -13,7 +13,7 @@
 // if uncommented, specifies that the vulkan debug and validation systems should
 // be enabled. should be disabled in release builds since the target machine is 
 // unlikely to have the vulkan SDK installed
-#define VK_DEBUG
+//#define VK_DEBUG
 
 struct GLFWwindow;
 
