@@ -239,6 +239,7 @@ void Scene::update(float delta_time)
 
 void Scene::draw(Ref<DrawCommandBuffer> command_buffer, glm::u32vec2 viewport_size)
 {
+	last_viewport_size = viewport_size;
 	if (!render_graph)
 		return;
 
