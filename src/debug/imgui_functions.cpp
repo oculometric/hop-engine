@@ -23,7 +23,6 @@ using namespace std;
 
 static WeakRef<Object> selected_object;
 static WeakRef<Material> selected_material;
-static WeakRef<Object> selected_camera;
 
 static WeakRef<Texture> texturePicker(const WeakRef<Texture>& current, const char* str)
 {
@@ -117,8 +116,6 @@ void CameraComponent::drawImGuiDebug()
 		ImGui::DragFloat("far clip", &far_clip, 1.0f, near_clip, 1000.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
 		ImGui::DragFloat("fov", &fov, 1.0f, 1.0f, 179.0f);
 		ImGui::ColorEdit3("clear colour", reinterpret_cast<float*>(&clear_colour));
-		if (ImGui::Button("take control"))
-			selected_camera = getOwner();
 	}
 }
 
@@ -288,7 +285,7 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 	}
 }
 
-void Engine::debugCamera()
+void Engine::debugCamera(const WeakRef<Object>& selected_camera)
 {
 	if (!selected_camera)
 		return;
@@ -327,14 +324,6 @@ void Engine::debugSelect(const WeakRef<Object>& object)
 {
 	selected_object = object;
 }
-
-// TODO: deprecate this
-// void Engine::debugClearSelection(const WeakRef<Object>& object, const WeakRef<Material>& material, WeakRef<CameraComponent> camera)
-// {
-// 	selected_object = object;
-// 	selected_material = material;
-// 	selected_camera = camera->getOwner();
-// }
 
 WeakRef<Object> Engine::getDebugSelection()
 {

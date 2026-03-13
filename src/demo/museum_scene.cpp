@@ -92,8 +92,8 @@ MuseumApp::MuseumApp()
 
 void MuseumApp::update(float delta_time)
 {
-    Engine::debugCamera();
     auto scene = Engine::getScene();
+    Engine::debugCamera(scene->findObject("camera"));
 
     // if (Input::isMouseDown(Input::MOUSE_LEFT))
     // {

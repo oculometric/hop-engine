@@ -65,12 +65,10 @@ public:
 	
 	static bool isWireframeMode();
 	static void setForceWireframe(bool value);
-
-	static void debugCamera();
 	static void debugSelect(const WeakRef<Object>& object);
-	// static void debugClearSelection(const WeakRef<Object>& object = WeakRef<Object>(), const WeakRef<Material>& material = WeakRef<Material>(), WeakRef<CameraComponent> camera = WeakRef<CameraComponent>());
 	static WeakRef<Object> getDebugSelection();
-	
+	static void debugCamera(const WeakRef<Object>& selected_camera);
+
 	static Ref<Shader> loadShader(const std::string& path);
 	static Ref<Material> loadMaterial(const std::string& path);
 	static Ref<Texture> loadTexture(const std::string& path);

@@ -93,7 +93,7 @@ AshaApp::AshaApp()
 
 void AshaApp::update(float delta_time)
 {
-    Engine::debugCamera();
+    Engine::debugCamera(Engine::getScene()->findObject("camera"));
 }
 
 void AshaApp::drawImGui()

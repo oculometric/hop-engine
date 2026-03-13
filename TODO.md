@@ -6,14 +6,12 @@ scene collects draw commands and camera infos and lights and calls draw on rende
 
 
 ## v0.52
-- overhaul engine debug interfaces
-- shortcut function to make object/component creation easier (creates an object and gives it a component)
-
-- fullscreen support
-- fix skybox side being flipped
 - make fullscreen quad into a fullscreen tri
+- fix skybox side being flipped
+- fullscreen support
+
 - scene window-to-viewport function for mouse position etc
-- change the way refs work, and the way `new`ing works (classes only construct via ::create, remove keepLoaded)
+- remove keepLoaded
 
 - simplify texture to be in one of several 'modes/types' (fix the way view aspects behave), overhaul initialisation, overhaul renderpass accordingly
 - refactor mesh loading as well
@@ -26,6 +24,7 @@ scene collects draw commands and camera infos and lights and calls draw on rende
 - interactive node editor
 - audio loading and output
 - actual editor (separate project)
+- shortcut function to make object/component creation easier (creates an object and gives it a component)
 - shader & other resource reloading at runtime [H]
 - frustrum culling [M]
 - improved text block rendering with wrapping, alignment, font, etc

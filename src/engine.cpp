@@ -88,7 +88,7 @@ void Engine::start()
 
 void Engine::setScene(const Ref<Scene> &new_scene)
 {
-    // Engine::debugClearSelection();
+    Engine::debugSelect(WeakRef<Object>());
     engine->scene = new_scene;
     RenderServer::setSingleScene(new_scene);
 }
@@ -328,13 +328,11 @@ Engine::Engine()
     };
     for (Sampler::Builder s : builders)
         premade_samplers[s] = new Sampler(s);
-    
-    // debugClearSelection();
 }
 
 Engine::~Engine()
 {
-    // debugClearSelection();
+    Engine::debugSelect(WeakRef<Object>());
     scene = nullptr;
     application = nullptr;
     next_application = nullptr;
