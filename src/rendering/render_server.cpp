@@ -75,12 +75,21 @@ glm::vec2 RenderServer::getFramebufferSize()
 
 void RenderServer::setVsyncEnabled(bool enabled)
 {
-    server->swapchain->setVsync(enabled);
-    server->final_render_pass->resize();
+    server->vsync = enabled;
+    server->wants_vsync_update = true;
 }
 
 bool RenderServer::getVsyncEnabled()
-{ return server->swapchain->getVsync(); }
+{ return server->vsync; }
+
+void RenderServer::setFullscreenEnabled(bool enabled)
+{
+    server->fullscreen = enabled;
+    server->wants_fullscreen_update = true;
+}
+
+bool RenderServer::getFullscreenEnabled()
+{ return server->fullscreen; }
 
 void RenderServer::setSingleScene(const Ref<Scene>& scene)
 {

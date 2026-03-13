@@ -48,6 +48,8 @@ private:
 	// main window that the render server will create a surface for
 	GLFWwindow* window;
 	glm::u32vec2 window_size = { 1024, 1024 };
+    glm::u32vec2 size_before_fullscreen = { 1024, 1024 };
+
 	// surface for rendering into the attached window
 	VkSurfaceKHR surface = VK_NULL_HANDLE;
 
@@ -93,6 +95,11 @@ private:
 	Ref<UniformBlock> final_pass_uniforms;
 	std::vector<SceneRender> scenes;
 
+	bool fullscreen = false;
+	bool wants_fullscreen_update = false;
+	bool vsync = true;
+	bool wants_vsync_update = false;
+
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(RenderServer);
 	
@@ -128,6 +135,8 @@ public:
 
 	static void setVsyncEnabled(bool enabled);
 	static bool getVsyncEnabled();
+	static void setFullscreenEnabled(bool enabled);
+	static bool getFullscreenEnabled();
 
 	static void setSingleScene(const Ref<Scene>& scene);
 	static void setMultiScene(const std::vector<SceneRender>& multi_scenes);

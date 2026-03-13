@@ -162,10 +162,11 @@ public:
 	static bool isGamepadButtonDown(GamepadButton button, int controller = 0);
 	static float getGamepadAxis(GamepadAxis axis, int controller = 0);
 	static void setCursorVisible(bool visible);
+	static void applyCallbackBindings();
 
 private:
 	Input();
-	~Input();
+	~Input() = default;
 	
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);

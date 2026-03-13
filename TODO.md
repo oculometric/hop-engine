@@ -1,8 +1,5 @@
 # TODO
 
-## v0.52
-- fullscreen support
----
 # v0.6
 - interactive node editor
 - audio loading and output

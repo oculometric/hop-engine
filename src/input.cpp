@@ -28,7 +28,6 @@ void Input::destroy()
 	}
 }
 
-
 bool Input::isKeyDown(const int key)
 {
 	if (ImGui::GetIO().WantTextInput)
@@ -146,6 +145,14 @@ void Input::setCursorVisible(const bool visible)
 	glfwSetInputMode(instance->window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 }
 
+void Input::applyCallbackBindings()
+{
+	instance->window = RenderServer::getWindow();
+	glfwSetKeyCallback(instance->window, Input::keyCallback);
+	glfwSetMouseButtonCallback(instance->window, Input::mouseButtonCallback);
+	ImGui_ImplGlfw_InstallCallbacks(instance->window);
+}
+
 void Input::keyCallback(GLFWwindow* window, const int key, const int scancode, const int action, const int mods)
 {
 	if (ImGui::GetIO().WantTextInput)
@@ -164,12 +171,6 @@ void Input::mouseButtonCallback(GLFWwindow* window, const int button, const int 
 
 Input::Input()
 {
-	window = RenderServer::getWindow();
-	glfwSetKeyCallback(window, Input::keyCallback);
-	glfwSetMouseButtonCallback(window, Input::mouseButtonCallback);
-	ImGui_ImplGlfw_InstallCallbacks(window);
-}
-
-Input::~Input()
-{
+	instance = this;
+	applyCallbackBindings();
 }

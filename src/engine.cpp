@@ -60,6 +60,9 @@ void Engine::start()
 
         Input::pollInput();
 
+        if (Input::wasKeyPressed(Input::KEY_F11))
+            RenderServer::setFullscreenEnabled(!RenderServer::getFullscreenEnabled());
+
         if (engine->application)
         {
             ImGui_ImplVulkan_NewFrame();

@@ -361,6 +361,8 @@ void Engine::_drawImGuiDebug(float delta_time) const
 			Engine::setForceWireframe(!Engine::isWireframeMode());
 		if (ImGui::MenuItem("toggle V-sync"))
 			RenderServer::setVsyncEnabled(!RenderServer::getVsyncEnabled());
+		if (ImGui::MenuItem("toggle fullscreen"))
+			RenderServer::setFullscreenEnabled(!RenderServer::getFullscreenEnabled());
 		ImGui::EndMenu();
 	}
 
