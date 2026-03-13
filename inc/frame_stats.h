@@ -5,7 +5,7 @@
 namespace HopEngine
 {
 
-struct FrameStats
+struct FrameStats final
 {
     float record_time = 0.0f;
     float render_time = 0.0f;

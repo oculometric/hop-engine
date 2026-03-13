@@ -10,7 +10,7 @@
 namespace HopEngine
 {
 
-class CameraComponent : public Component
+class CameraComponent final : public Component
 {
 private:
 	Ref<UniformBlock> uniforms;
@@ -58,7 +58,7 @@ public:
 	void drawImGuiDebug() override;
 };
 
-class LightComponent : public Component
+class LightComponent final : public Component
 {
 public:
 	enum LightType
@@ -84,7 +84,7 @@ public:
 	void drawImGuiDebug() override;
 };
 
-class TextComponent : public StaticMeshComponent
+class TextComponent final : public StaticMeshComponent
 {
 private:
     std::string text;

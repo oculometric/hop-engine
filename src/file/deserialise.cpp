@@ -463,9 +463,9 @@ Ref<RenderGraph> RenderGraph::deserialise(const string& name)
 		return nullptr;
 
 	map<string, Ref<Shader>> shaders;
-	map<string, RenderOutput> render_passes;
+	map<string, RenderPass::Config> render_passes;
 	map<string, int> step_identifiers;
-	RenderGraphBuilder builder;
+	Builder builder;
 	
 	for (const TokenReader::Statement& statement : syntax_tree)
 	{
@@ -502,7 +502,7 @@ Ref<RenderGraph> RenderGraph::deserialise(const string& name)
 				return nullptr;
 			}
 			size_t extra_buffers = glm::clamp(args[1].i_value, 0, 6);
-			render_passes[statement.identifier] = RenderOutput{ extra_buffers, static_cast<bool>(has_depth) };
+			render_passes[statement.identifier] = RenderPass::Config{ extra_buffers, static_cast<bool>(has_depth) };
 		}
 		else if (statement.keyword == "Camera")
 		{
@@ -576,7 +576,7 @@ Ref<RenderGraph> RenderGraph::deserialise(const string& name)
 				scale = 0.0f;
 				custom_size = glm::max(it->second.c_value, 1.0f);
 			}
-			map<uint32_t, RenderTextureBinding> bindings;
+			map<uint32_t, AttachmentBinding> bindings;
 			for (const TokenReader::Statement& sub_statement : statement.children)
 			{
 				if (sub_statement.keyword != "Input")
@@ -612,7 +612,7 @@ Ref<RenderGraph> RenderGraph::deserialise(const string& name)
 					DBG_ERROR("error deserialising render graph '" + name + "': post-process input attachment must be positive");
 					return nullptr;
 				}
-				RenderTextureBinding texture_binding(step_it->second, attachment);
+				AttachmentBinding texture_binding(step_it->second, attachment);
 				auto filter_it = args2.find("filter");
 				if (filter_it != args2.end())
 				{

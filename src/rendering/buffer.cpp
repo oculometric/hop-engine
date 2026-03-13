@@ -18,7 +18,7 @@ static constexpr VkBufferUsageFlagBits vulkan_buffer_usage[5] =
     VK_BUFFER_USAGE_INDEX_BUFFER_BIT
 };
 
-TO_STRING_DEF_BITFLAGS(BufferUsage, 5, VARGS("TRANSFER_SRC", "TRANSFER_DST", "UNIFORM", "VERTEX", "INDEX"));
+TO_STRING_DEF_BITFLAGS(Buffer::Usage, 5, VARGS("TRANSFER_SRC", "TRANSFER_DST", "UNIFORM", "VERTEX", "INDEX"));
 
 static constexpr VkMemoryPropertyFlagBits vulkan_memory_props[4] = 
 {
@@ -30,7 +30,7 @@ static constexpr VkMemoryPropertyFlagBits vulkan_memory_props[4] =
 
 TO_STRING_DEF_BITFLAGS(MemoryProperties, 4, VARGS("DEVICE_LOCAL", "HOST_VISIBLE", "HOST_COHERENT", "HOST_CACHED"));
 
-Buffer::Buffer(VkDeviceSize size, const BufferUsage usage, const MemoryProperties properties)
+Buffer::Buffer(VkDeviceSize size, const Usage usage, const MemoryProperties properties)
 {
     if (size == 0)
     {
@@ -42,7 +42,7 @@ Buffer::Buffer(VkDeviceSize size, const BufferUsage usage, const MemoryPropertie
     VkBufferCreateInfo buffer_create_info{ };
     buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     buffer_create_info.size = size;
-    buffer_create_info.usage = convertFlags<VkBufferUsageFlagBits, BufferUsage, 5>(usage, vulkan_buffer_usage);
+    buffer_create_info.usage = convertFlags<VkBufferUsageFlagBits, Usage, 5>(usage, vulkan_buffer_usage);
     buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
     if (vkCreateBuffer(RenderServer::getDevice(), &buffer_create_info, nullptr, &buffer) != VK_SUCCESS)

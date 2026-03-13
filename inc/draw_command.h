@@ -4,11 +4,12 @@
 
 #include "mesh.h"
 #include "material.h"
+#include "uniform_block.h"
 
 namespace HopEngine
 {
 
-struct DrawCommand
+struct DrawCommand final
 {
 	// material to be used in the draw command. contains the shader and material
 	// uniforms (descriptor set 2) in use

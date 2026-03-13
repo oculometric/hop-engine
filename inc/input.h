@@ -11,7 +11,7 @@ struct GLFWwindow;
 namespace HopEngine
 {
 	
-class Input
+class Input final
 {
 public:
 	enum GamepadButton
@@ -131,7 +131,7 @@ public:
 		KEY_MENU          = 348
 	};
 	
-	struct GamepadState
+	struct GamepadState final
 	{
 		bool buttons[14] = { false };
 		float axes[9] = { 0.0f };

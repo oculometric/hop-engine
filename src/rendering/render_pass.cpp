@@ -12,7 +12,7 @@
 using namespace HopEngine;
 using namespace std;
 
-RenderPass::RenderPass(const Ref<Swapchain>& _swapchain, const RenderOutput& config)
+RenderPass::RenderPass(const Ref<Swapchain>& _swapchain, const Config& config)
 {
     output_config = config;
     swapchain = _swapchain;
@@ -23,7 +23,7 @@ RenderPass::RenderPass(const Ref<Swapchain>& _swapchain, const RenderOutput& con
     DBG_VERBOSE(string("created render pass with colour buffer, ") + (config.has_depth_attachment ? "depth buffer, " : "") + "and " + ::to_string(config.additional_attachments) + " data attachments");
 }
 
-RenderPass::RenderPass(const uint32_t width, const uint32_t height, const RenderOutput& config)
+RenderPass::RenderPass(const uint32_t width, const uint32_t height, const Config& config)
 {
     output_config = config;
 

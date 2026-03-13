@@ -12,7 +12,7 @@ namespace HopEngine
 
 typedef std::vector<uint8_t> DataBlock;
 
-class Package
+class Package final
 {
 private:
 	std::map<std::string, std::vector<uint8_t>> database;

@@ -35,12 +35,12 @@ Mesh::Mesh(const vector<Vertex>& vertices, const vector<uint16_t>& indices, cons
         createFromArrays(vertices, indices);
     else
     {
-        vertex_buffer = new Buffer(sizeof(Vertex) * vertices.size(), BUFFER_USAGE_VERTEX,
+        vertex_buffer = new Buffer(sizeof(Vertex) * vertices.size(), Buffer::BUFFER_USAGE_VERTEX,
                                    MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
         memcpy(vertex_buffer->mapMemory(), vertices.data(), vertex_buffer->getSize());
         vertex_buffer->unmapMemory();
 
-        index_buffer = new Buffer(sizeof(uint16_t) * indices.size(), BUFFER_USAGE_INDEX,
+        index_buffer = new Buffer(sizeof(uint16_t) * indices.size(), Buffer::BUFFER_USAGE_INDEX,
                                   MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
         memcpy(index_buffer->mapMemory(), indices.data(), index_buffer->getSize());
         index_buffer->unmapMemory();
@@ -103,7 +103,7 @@ void Mesh::updateData(const vector<Vertex>& vertices, const vector<uint16_t>& in
     vertex_alloc = max(vertex_alloc, vertices.size());
     if (vertex_alloc != vertex_space)
     {
-        vertex_buffer = new Buffer(sizeof(Vertex) * vertex_alloc, BUFFER_USAGE_VERTEX,
+        vertex_buffer = new Buffer(sizeof(Vertex) * vertex_alloc, Buffer::BUFFER_USAGE_VERTEX,
                                    MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
     }
 
@@ -115,7 +115,7 @@ void Mesh::updateData(const vector<Vertex>& vertices, const vector<uint16_t>& in
     index_alloc = max(index_alloc, indices.size());
     if (index_alloc != index_space)
     {
-        index_buffer = new Buffer(sizeof(uint16_t) * index_alloc, BUFFER_USAGE_INDEX,
+        index_buffer = new Buffer(sizeof(uint16_t) * index_alloc, Buffer::BUFFER_USAGE_INDEX,
                                   MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
     }
 
@@ -390,20 +390,20 @@ bool Mesh::readFileToArrays(const string& path, vector<Vertex>& verts, vector<ui
 
 void Mesh::createFromArrays(const vector<Vertex>& verts, const vector<uint16_t>& inds)
 {
-    Ref<Buffer> staging_buffer = new Buffer(sizeof(Vertex) * verts.size(), BUFFER_USAGE_TRANSFER_SRC,
+    Ref<Buffer> staging_buffer = new Buffer(sizeof(Vertex) * verts.size(), Buffer::BUFFER_USAGE_TRANSFER_SRC,
         MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
     memcpy(staging_buffer->mapMemory(), verts.data(), staging_buffer->getSize());
     staging_buffer->unmapMemory();
     vertex_buffer = new Buffer(staging_buffer->getSize(),
-        BUFFER_USAGE_VERTEX | BUFFER_USAGE_TRANSFER_DST, MEMORY_PROPERTY_DEVICE_LOCAL);
+        Buffer::BUFFER_USAGE_VERTEX | Buffer::BUFFER_USAGE_TRANSFER_DST, MEMORY_PROPERTY_DEVICE_LOCAL);
     staging_buffer->copyToBuffer(vertex_buffer);
 
-    staging_buffer = new Buffer(sizeof(uint16_t) * inds.size(), BUFFER_USAGE_TRANSFER_SRC,
+    staging_buffer = new Buffer(sizeof(uint16_t) * inds.size(), Buffer::BUFFER_USAGE_TRANSFER_SRC,
         MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
     memcpy(staging_buffer->mapMemory(), inds.data(), staging_buffer->getSize());
     staging_buffer->unmapMemory();
     index_buffer = new Buffer(staging_buffer->getSize(),
-        BUFFER_USAGE_INDEX | BUFFER_USAGE_TRANSFER_DST, MEMORY_PROPERTY_DEVICE_LOCAL);
+        Buffer::BUFFER_USAGE_INDEX | Buffer::BUFFER_USAGE_TRANSFER_DST, MEMORY_PROPERTY_DEVICE_LOCAL);
     staging_buffer->copyToBuffer(index_buffer);
 
     vertex_space = verts.size();

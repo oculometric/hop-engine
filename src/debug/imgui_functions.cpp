@@ -131,7 +131,7 @@ void StaticMeshComponent::drawImGuiDebug()
 		{
 			ImGui::LabelText("vertices", "%zu", mesh->getVertexCount());
 			ImGui::LabelText("triangles", "%zu", mesh->getIndexCount() / 3);
-			ImGui::LabelText("vertex size", "%llu", sizeof(Vertex));
+			ImGui::LabelText("vertex size", "%llu", sizeof(Mesh::Vertex));
 		}
 		material = materialPicker(material, "material").strong();
 		if (material)

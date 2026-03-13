@@ -14,7 +14,7 @@ using namespace std;
 
 static Debug* instance = nullptr;
 
-void Debug::init(const DebugLevel crash_level)
+void Debug::init(const Level crash_level)
 {
 	if (instance == nullptr)
 		instance = new Debug(crash_level);
@@ -31,7 +31,7 @@ void Debug::close()
 	}
 }
 
-void Debug::setLogLevel(const DebugLevel severity)
+void Debug::setLogLevel(const Level severity)
 {
 	instance->log_level = severity;
 }
@@ -47,7 +47,7 @@ string Debug::pointerToString(const void* ptr)
 	return format("0x{:x}", reinterpret_cast<size_t>(ptr));
 }
 
-void Debug::write(const string& description, DebugLevel severity)
+void Debug::write(const string& description, Level severity)
 {
 	if (instance == nullptr)
 	{
@@ -131,11 +131,11 @@ void Debug::flush()
 	DEBUG_TERMINAL.flush();
 }
 
-Debug::Debug(DebugLevel crash)
+Debug::Debug(Level crash)
 {
 	instance = this;
 
-	log_level = static_cast<DebugLevel>(DEBUG_LEVEL);
+	log_level = static_cast<Level>(DEBUG_LEVEL);
 	crash_level = crash;
 
 	const auto time_now = std::time(nullptr);

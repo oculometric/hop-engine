@@ -6,7 +6,6 @@ scene collects draw commands and camera infos and lights and calls draw on rende
 
 
 ## v0.52
-- make most classes `final`
 - overhaul engine debug interfaces
 - shortcut function to make object/component creation easier (creates an object and gives it a component)
 

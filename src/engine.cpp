@@ -299,7 +299,7 @@ Engine::Engine()
 
     engine->engine_start_timestamp = chrono::steady_clock::now();
 
-    Debug::init(DEBUG_FAULT);
+    Debug::init(Debug::DEBUG_FAULT);
     Package::init();
 
 // #if defined(_WIN32)

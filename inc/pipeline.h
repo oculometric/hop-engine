@@ -6,7 +6,7 @@
 namespace HopEngine
 {
 
-class Pipeline : public Destructible
+class Pipeline final : public Destructible
 {
 public:
 	/**

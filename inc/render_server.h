@@ -20,21 +20,21 @@ struct GLFWwindow;
 namespace HopEngine
 {
 
-struct MultiSceneRenderSpec
-{
-	Ref<Scene> scene;
-	glm::vec2 start_uv;
-	glm::vec2 size_uv;
-};
-
 /**
  * @brief encapsulates all the behaviour of actually initialising and running the
  * rendering environment.
  */
-class RenderServer
+class RenderServer final
 {
 public:
-	struct QueueFamilies
+	struct SceneRender final
+	{
+		Ref<Scene> scene;
+		glm::vec2 start_uv;
+		glm::vec2 size_uv;
+	};
+	
+	struct QueueFamilies final
 	{
 		std::optional<uint32_t> graphics_family;
 		std::optional<uint32_t> present_family;
@@ -91,7 +91,7 @@ private:
 	Ref<Mesh> quad;					// full screen quad mesh
 	
 	Ref<UniformBlock> final_pass_uniforms;
-	std::vector<MultiSceneRenderSpec> scenes;
+	std::vector<SceneRender> scenes;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(RenderServer);
@@ -130,7 +130,7 @@ public:
 	static bool getVsyncEnabled();
 
 	static void setSingleScene(const Ref<Scene>& scene);
-	static void setMultiScene(const std::vector<MultiSceneRenderSpec>& multi_scenes);
+	static void setMultiScene(const std::vector<SceneRender>& multi_scenes);
 	
 	static FrameStats draw() { return getInstance()->drawFrame(); }
 	

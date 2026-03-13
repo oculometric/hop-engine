@@ -87,7 +87,7 @@ void RenderServer::setSingleScene(const Ref<Scene>& scene)
     setMultiScene({ { scene, glm::vec2{ 0, 0 }, glm::vec2{ 1, 1 } } });
 }
 
-void RenderServer::setMultiScene(const vector<MultiSceneRenderSpec>& multi_scenes)
+void RenderServer::setMultiScene(const vector<SceneRender>& multi_scenes)
 {
     RenderServer::waitIdle();
     server->scenes.clear();

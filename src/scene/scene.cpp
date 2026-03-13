@@ -295,7 +295,7 @@ void Scene::bindOutputMaterial(Ref<DrawCommandBuffer> command_buffer)
 Scene::Scene(const string& name)
 {
 	origin = name;
-	render_graph = new RenderGraph(RenderGraphBuilder().addCamera(0));
+	render_graph = new RenderGraph(RenderGraph::Builder().addCamera(0));
 	root = Object::create();
     skybox_material = new Material(new Shader("res://engine/shaders/skybox.glsl"), Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false));
 	skybox_uniforms = RenderServer::createObjectUniforms();

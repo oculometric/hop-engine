@@ -9,7 +9,7 @@
 namespace HopEngine
 {
 
-struct Transform
+struct Transform final
 {
 	friend class Object;
 private:

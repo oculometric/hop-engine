@@ -18,7 +18,7 @@ void registerCountedRef(const char* type_name, const WeakRef<void>& reference);
 void unregisterCountedRef(const void* ptr);
 
 template<typename T>
-class Ref
+class Ref final
 {
 	friend class WeakRef<T>;
 private:
@@ -157,7 +157,7 @@ private:
 };
 
 template <typename T>
-class WeakRef
+class WeakRef final
 {
 	friend class Ref<T>;
 private:

@@ -10,7 +10,7 @@
 namespace HopEngine
 {
 
-class Sampler : public Destructible
+class Sampler final : public Destructible
 {
 public:
 	enum Filter
@@ -26,7 +26,7 @@ public:
 		ADDRESS_CLAMP_EDGE
 	};
 
-	struct Builder
+	struct Builder final
 	{
 		Filter filtering_mode = FILTER_LINEAR;
 		Address address_mode = ADDRESS_REPEAT;
@@ -54,7 +54,7 @@ inline bool operator<(const Sampler::Builder& a, const Sampler::Builder& b)
 	return false;
 }
 
-class Texture : public Destructible
+class Texture final : public Destructible
 {
 public:
 	enum Usage
@@ -87,7 +87,7 @@ public:
 		LAYOUT_TRANSFER_DST,
 	};
 
-	struct Builder
+	struct Builder final
 	{
 		void* data_ptr = nullptr;
 		Usage usage_flags = IMAGE_USAGE_DEFAULT;

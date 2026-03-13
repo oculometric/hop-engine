@@ -10,13 +10,13 @@
 namespace HopEngine
 {
 	
-class UniformBlock : public Destructible
+class UniformBlock final : public Destructible
 {
 public:
 	/**
 	 * @brief holds information about a combined texture-sampler descriptor binding.
 	 */
-	struct TextureBinding
+	struct TextureBinding final
 	{
 		Ref<Texture> texture;		// texture reference to be bound
 		Ref<Sampler> sampler;		// sampler reference to be bound

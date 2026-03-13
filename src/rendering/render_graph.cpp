@@ -15,19 +15,19 @@
 using namespace HopEngine;
 using namespace std;
 
-RenderStep::~RenderStep()
+RenderGraph::Step::~Step()
 {
     DBG_BABBLE("destroying render step " + PTR(this));
 }
 
-RenderGraphBuilder& RenderGraphBuilder::addCamera(const size_t slot)
+RenderGraph::Builder& RenderGraph::Builder::addCamera(const size_t slot)
 {
     return addCamera(slot, RenderServer::getMainRenderPass()->getOutputConfig());
 }
 
-RenderGraphBuilder& RenderGraphBuilder::addCamera(const size_t slot, const RenderOutput& render_pass_config, float size_factor, glm::u32vec2 custom_extent)
+RenderGraph::Builder& RenderGraph::Builder::addCamera(const size_t slot, const RenderPass::Config& render_pass_config, float size_factor, glm::u32vec2 custom_extent)
 {
-    RenderStep step;
+    Step step;
     step.is_camera = true;
     step.camera_slot = slot;
     step.resolution_scale = size_factor;
@@ -41,19 +41,19 @@ RenderGraphBuilder& RenderGraphBuilder::addCamera(const size_t slot, const Rende
     return *this;
 }
 
-RenderGraphBuilder& RenderGraphBuilder::addCamera(const size_t slot, const float size_factor, const glm::u32vec2 custom_extent)
+RenderGraph::Builder& RenderGraph::Builder::addCamera(const size_t slot, const float size_factor, const glm::u32vec2 custom_extent)
 {
     return addCamera(slot, RenderServer::getMainRenderPass()->getOutputConfig(), size_factor, custom_extent);
 }
 
-RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings)
+RenderGraph::Builder& RenderGraph::Builder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, AttachmentBinding>& texture_bindings)
 {
-    return addPostProcess(shader, texture_bindings, RenderOutput{ 0, false });
+    return addPostProcess(shader, texture_bindings, RenderPass::Config{ 0, false });
 }
 
-RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings, const RenderOutput& render_pass_config, const float size_factor, const glm::u32vec2 custom_extent)
+RenderGraph::Builder& RenderGraph::Builder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, AttachmentBinding>& texture_bindings, const RenderPass::Config& render_pass_config, const float size_factor, const glm::u32vec2 custom_extent)
 {
-    RenderStep step;
+    Step step;
     step.is_camera = false;
     step.resolution_scale = size_factor;
     step.custom_extent = custom_extent;
@@ -69,12 +69,12 @@ RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader
     return *this;
 }
 
-RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, RenderTextureBinding>& texture_bindings, const float size_factor, const glm::u32vec2 custom_extent)
+RenderGraph::Builder& RenderGraph::Builder::addPostProcess(const Ref<Shader>& shader, const map<uint32_t, AttachmentBinding>& texture_bindings, const float size_factor, const glm::u32vec2 custom_extent)
 {
-    return addPostProcess(shader, texture_bindings, RenderOutput{ 0, false }, size_factor, custom_extent);
+    return addPostProcess(shader, texture_bindings, RenderPass::Config{ 0, false }, size_factor, custom_extent);
 }
 
-RenderGraph::RenderGraph(const RenderGraphBuilder& config)
+RenderGraph::RenderGraph(const Builder& config)
 {
     passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough.glsl"), Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false), RenderServer::getFinalRenderPass());
     passthrough->setSampler(0, Engine::makeSampler(Sampler::Builder().filter(config.screen_filtering).address(Sampler::ADDRESS_CLAMP_EDGE)));
@@ -167,7 +167,7 @@ void RenderGraph::resizeBuffers(glm::u32vec2 new_extent)
 {
     if (expected_extent == new_extent)
         return;
-    for (RenderStep& step : execution_steps)
+    for (Step& step : execution_steps)
     {
         if (step.resolution_scale > 0.0f)
             step.render_pass->resize(static_cast<uint32_t>(static_cast<float>(new_extent.x) * step.resolution_scale), static_cast<uint32_t>(static_cast<float>(new_extent.y) * step.resolution_scale));
@@ -186,7 +186,7 @@ void RenderGraph::resizeBuffers(glm::u32vec2 new_extent)
 
 void RenderGraph::draw(WeakRef<DrawCommandBuffer> command_buffer, const std::vector<DrawCommand>& draw_commands, const std::map<size_t, std::pair<WeakRef<UniformBlock>, glm::vec4>>& cameras)
 {
-    for (const RenderStep& step : execution_steps)
+    for (const Step& step : execution_steps)
     {
         if (!step.is_camera)
         {
@@ -220,7 +220,7 @@ void RenderGraph::draw(WeakRef<DrawCommandBuffer> command_buffer, const std::vec
     {
         for (size_t i = 0; i < execution_steps.size(); ++i)
         {
-            const RenderStep& step = execution_steps[i];
+            const Step& step = execution_steps[i];
             if (!step.is_camera)
                 continue;
             if (cmd.material->getRenderPass()->isCompatible(step.render_pass) && (cmd.camera_mask & (1 << step.camera_slot)))
@@ -276,7 +276,7 @@ size_t RenderGraph::findStep(const string& name) const
 
 void RenderGraph::rebuildBindings()
 {
-    for (RenderStep& step : execution_steps)
+    for (Step& step : execution_steps)
     {
         if (step.skipped)
             continue;
@@ -285,7 +285,7 @@ void RenderGraph::rebuildBindings()
 
         for (const auto& [texture_index, binding] : step.texture_bindings)
         {
-            RenderStep binding_step = execution_steps[binding.step_index];
+            Step binding_step = execution_steps[binding.step_index];
             Ref<Texture> texture = binding_step.render_pass->getImage(binding.output_index);
             while (binding_step.skipped)
             {

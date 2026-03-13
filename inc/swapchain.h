@@ -10,10 +10,10 @@
 namespace HopEngine
 {
 
-class Swapchain : public Destructible
+class Swapchain final : public Destructible
 {
 public:
-	struct SupportInfo
+	struct SupportInfo final
 	{
 		std::vector<VkSurfaceCapabilitiesKHR> surface_capabilities;
 		std::vector<VkSurfaceFormatKHR> surface_formats;

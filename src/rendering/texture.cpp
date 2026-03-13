@@ -106,7 +106,7 @@ Texture::Format Texture::getDataFormat()
 void Texture::loadFromMemory(void* data, glm::u32vec2 layers)
 {
     const VkDeviceSize image_length = static_cast<VkDeviceSize>(extent.x) * extent.y * extent.z * 4;
-    Ref<Buffer> staging_buffer = new Buffer(image_length, BUFFER_USAGE_TRANSFER_SRC, MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
+    Ref<Buffer> staging_buffer = new Buffer(image_length, Buffer::BUFFER_USAGE_TRANSFER_SRC, MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
     
     if (layers.x != 1 || layers.y != 1)
     {

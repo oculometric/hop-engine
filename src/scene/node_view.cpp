@@ -342,22 +342,22 @@ void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm:
     glm::vec4 colour_value = glm::vec4{ colour, 1 };
 
     // top left
-    vertices.push_back(Vertex{
+    vertices.push_back(Mesh::Vertex{
         { position.x, -position.y, 0, 1 },
         colour_value, normal_value, tangent_value,
         uv_tl });
     // top right
-    vertices.push_back(Vertex{
+    vertices.push_back(Mesh::Vertex{
         { position.x + size.x, -position.y, 0, 1 },
         colour_value, normal_value, tangent_value,
         glm::vec2{ uv_br.x, uv_tl.y } });
     // bottom left
-    vertices.push_back(Vertex{
+    vertices.push_back(Mesh::Vertex{
         { position.x, -position.y - size.y, 0, 1 },
         colour_value, normal_value, tangent_value,
         glm::vec2{ uv_tl.x, uv_br.y } });
     // bottom right
-    vertices.push_back(Vertex{
+    vertices.push_back(Mesh::Vertex{
         { position.x + size.x, -position.y - size.y, 0, 1 },
         colour_value, normal_value, tangent_value,
         uv_br });

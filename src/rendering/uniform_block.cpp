@@ -38,7 +38,7 @@ UniformBlock::UniformBlock(const Shader::Layout& layout_info)
     // a buffer currently being used by the GPU
     uniform_buffers.resize(RenderServer::getFramesInFlight());
     for (auto& uniform_buffer : uniform_buffers)
-        uniform_buffer = new Buffer(size + 4, BUFFER_USAGE_UNIFORM, MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
+        uniform_buffer = new Buffer(size + 4, Buffer::BUFFER_USAGE_UNIFORM, MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
 
     // allocate descriptor sets from the pool
     const vector<VkDescriptorSetLayout> set_layouts(uniform_buffers.size(), layout_info.layout);

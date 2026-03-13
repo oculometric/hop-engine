@@ -12,7 +12,7 @@
 namespace HopEngine
 {
 
-class NodeView : public StaticMeshComponent
+class NodeView final : public StaticMeshComponent
 {
 public:
 	enum NodeElementType : uint8_t
@@ -23,7 +23,7 @@ public:
 		ELEMENT_SPACE
 	};
 	
-	struct NodeElement
+	struct NodeElement final
 	{
 		std::string text;
 		NodeElementType type;
@@ -36,7 +36,7 @@ public:
 			: text("text"), type(ELEMENT_INPUT), pin_type(0), pin_solid(true) { }
 	};
 
-	struct Node
+	struct Node final
 	{
 		std::string title = "node";
 		std::vector<NodeElement> elements;
@@ -56,7 +56,7 @@ public:
 		MODULATE_NODE_COLOUR
 	};
 
-	struct Style
+	struct Style final
 	{
 		Ref<Font> font = nullptr;
 		
@@ -104,7 +104,7 @@ public:
 	std::vector<Ref<Node>> nodes;
 
 private:
-	std::vector<Vertex> vertices;
+	std::vector<Mesh::Vertex> vertices;
 	std::vector<uint16_t> indices;
 	Ref<Style> style;
 

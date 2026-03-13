@@ -14,7 +14,7 @@ namespace HopEngine
 /**
  * @brief describes a 3D scene light. see the \code LightComponent\endcode class.
  */
-struct LightParams
+struct LightParams final
 {
     glm::vec4 position = { 2, 0, 2, 0 };
     glm::vec4 direction = { -1, 0, -1, 0 };
@@ -29,7 +29,7 @@ struct LightParams
  * @brief structure which mirrors the standard object uniform
  * buffer (i.e. descriptor set 1).
  */
-struct ObjectUniforms
+struct ObjectUniforms final
 {
     glm::mat4 model_to_world;
     int id;
@@ -39,7 +39,7 @@ struct ObjectUniforms
  * @brief structure which mirrors the standard scene uniform
  * buffer (i.e. descriptor set 0).
  */
-struct SceneUniforms
+struct SceneUniforms final
 {
     glm::mat4 world_to_view;
     glm::mat4 view_to_clip;
@@ -55,7 +55,7 @@ struct SceneUniforms
     glm::vec4 ambient_light = { 0, 0.05f, 0.05f, 0 };
 };
 
-class Shader : public Destructible
+class Shader final : public Destructible
 {
 public:
 	static const char* compiler_path;
@@ -66,14 +66,14 @@ public:
 		TEXTURE
 	};
 
-	struct UniformVariable
+	struct UniformVariable final
 	{
 		std::string name;
 		size_t size = 0;
 		size_t offset = 0;
 	};
 
-	struct DescriptorBinding
+	struct DescriptorBinding final
 	{
 		uint32_t binding = 0;
 		DescriptorBindingType type = UNIFORM;
@@ -83,7 +83,7 @@ public:
 		bool texture_is_3d = false;
 	};
 
-	struct Layout
+	struct Layout final
 	{
 		VkDescriptorSetLayout layout = VK_NULL_HANDLE;
 		std::vector<DescriptorBinding> bindings;
@@ -127,7 +127,7 @@ private:
 	void destroyResources();
 };
 
-class Material : public Destructible
+class Material final : public Destructible
 {
 private:
 	std::string origin;

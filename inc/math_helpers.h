@@ -8,7 +8,7 @@ namespace HopEngine
 /**
  * @brief encapsulates a 3D bounding box defined by center and half-extent
  */
-struct BoundingBox
+struct BoundingBox final
 {
     glm::vec3 center;
     glm::vec3 half_extent;

@@ -12,17 +12,18 @@
 namespace HopEngine
 {
 
-struct Vertex
+class Mesh final : public Destructible
 {
-	glm::vec4 position;
-	glm::vec4 colour;
-	glm::vec4 normal;
-	glm::vec4 tangent;
-	glm::vec2 uv;
-};
-
-class Mesh : public Destructible
-{
+public:
+	struct Vertex final
+	{
+		glm::vec4 position;
+		glm::vec4 colour;
+		glm::vec4 normal;
+		glm::vec4 tangent;
+		glm::vec2 uv;
+	};
+	
 private:
 	std::string origin;
 	Ref<Buffer> vertex_buffer;
