@@ -3,8 +3,6 @@
 ## v0.52
 - fullscreen support
 
-- remove keepLoaded
-
 - simplify texture to be in one of several 'modes/types' (fix the way view aspects behave), overhaul initialisation, overhaul renderpass accordingly
 - refactor mesh loading as well
 - create image view on image create

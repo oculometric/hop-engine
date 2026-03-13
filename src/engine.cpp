@@ -336,7 +336,6 @@ Engine::~Engine()
     scene = nullptr;
     application = nullptr;
     next_application = nullptr;
-    keep_loaded_refs.clear();
     loaded_shaders.clear();
     loaded_materials.clear();
     loaded_textures.clear();
@@ -370,9 +369,6 @@ vector<WeakRef<void>> Engine::getRefsWithType(const char* type_name)
     }
     return refs;
 }
-
-void Engine::_keepLoaded(const Ref<Destructible>& ref)
-{ engine->keep_loaded_refs.push_back(ref); }
 
 void Engine::updateStats(const FrameStats& stats)
 {

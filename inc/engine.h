@@ -26,7 +26,6 @@ private:
 	std::map<std::string, Ref<Texture>> loaded_textures;
 	std::map<std::string, Ref<Mesh>> loaded_meshes;
 	std::map<Sampler::Builder, Ref<Sampler>> premade_samplers;
-	std::vector<Ref<Destructible>> keep_loaded_refs;
 
 	FrameStats last_frame_stats;
 	std::chrono::steady_clock::time_point engine_start_timestamp;
@@ -89,7 +88,6 @@ private:
 	static void start();
 	static Engine* getEngine();
 	static std::vector<WeakRef<void>> getRefsWithType(const char* type_name);
-	static void _keepLoaded(const Ref<Destructible>& ref);
 	void updateStats(const FrameStats& stats);
 	static void summariseTrackedObjects();
 	
