@@ -5,7 +5,7 @@
 #include "buffer.h"
 #include "render_server.h"
 #include "command_buffer.h"
-#include "texture_vulkan.h"
+#include "vulkan_converters.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -34,35 +34,6 @@ constexpr VkImageLayout vulkan_image_layout[8] =
 
 VkImageLayout HopEngine::toVulkanLayout(Texture::Layout layout) { return vulkan_image_layout[layout]; }
 
-VkImageView Texture::getView(const bool stencil)
-{
-    if (!stencil && view != VK_NULL_HANDLE)
-        return view;
-    if (stencil && stencil_view != VK_NULL_HANDLE)
-        return stencil_view;
-
-    DBG_BABBLE("creating image view for image '" + getOrigin() + '\'');
-
-    VkImageViewCreateInfo view_create_info{ };
-    view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    view_create_info.image = image;
-    view_create_info.viewType = extent.z == 1 ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_3D;
-    view_create_info.format = toVulkanFormat(format);
-    if (format == FORMAT_D32_SFLOAT_S8_UINT)
-        view_create_info.subresourceRange.aspectMask = stencil ? VK_IMAGE_ASPECT_STENCIL_BIT : VK_IMAGE_ASPECT_DEPTH_BIT;
-    else
-        view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    view_create_info.subresourceRange.baseMipLevel = 0;
-    view_create_info.subresourceRange.levelCount = 1;
-    view_create_info.subresourceRange.baseArrayLayer = 0;
-    view_create_info.subresourceRange.layerCount = 1;
-
-    if (vkCreateImageView(RenderServer::getDevice(), &view_create_info, nullptr, stencil ? &stencil_view : &view) != VK_SUCCESS)
-        DBG_ERROR("vkCreateImageView failed");
-
-    return stencil ? stencil_view : view;
-}
-
 void Texture::transitionLayout(const Layout new_layout)
 {
     DBG_BABBLE("transitioning image '" + getOrigin() + "' layout from " + vk::to_string((vk::ImageLayout)current_layout) + " to " + vk::to_string((vk::ImageLayout)new_layout));
@@ -74,7 +45,7 @@ void Texture::transitionLayout(const Layout new_layout)
     memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     memory_barrier.image = image;
-    memory_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    memory_barrier.subresourceRange.aspectMask = format == FORMAT_DEPTH ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
     memory_barrier.subresourceRange.baseMipLevel = 0;
     memory_barrier.subresourceRange.levelCount = 1;
     memory_barrier.subresourceRange.baseArrayLayer = 0;
@@ -84,6 +55,8 @@ void Texture::transitionLayout(const Layout new_layout)
     VkPipelineStageFlags src_stage;
     if (current_layout == LAYOUT_UNDEFINED && new_layout == LAYOUT_TRANSFER_DST)
     {
+        if (!(usage & IMAGE_USAGE_TRANSFER_DST))
+            DBG_WARNING("attempt to transition an image to transfer destination layout, but it does not support being a transfer destination");
         memory_barrier.srcAccessMask = 0;
         src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
         memory_barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -91,6 +64,8 @@ void Texture::transitionLayout(const Layout new_layout)
     }
     else if (current_layout == LAYOUT_TRANSFER_DST && new_layout == LAYOUT_SHADER_READ_ONLY)
     {
+        if (!(usage & IMAGE_USAGE_SAMPLED))
+            DBG_WARNING("attempt to transition an image to shader read only layout, but it does not support being sampled");
         memory_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
         memory_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
@@ -98,6 +73,8 @@ void Texture::transitionLayout(const Layout new_layout)
     }
     else if (current_layout == LAYOUT_UNDEFINED && new_layout == LAYOUT_SHADER_READ_ONLY)
     {
+        if (!(usage & IMAGE_USAGE_SAMPLED))
+            DBG_WARNING("attempt to transition an image to shader read only layout, but it does not support being sampled");
         memory_barrier.srcAccessMask = 0;
         src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
         memory_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
@@ -120,6 +97,9 @@ void Texture::transitionLayout(const Layout new_layout)
 void Texture::copyBufferToImage(Ref<Buffer> buffer) const
 {
     DBG_BABBLE("copying buffer " + PTR(buffer.get()) + " to image '" + getOrigin() + '\'');
+
+    if (!(usage & IMAGE_USAGE_TRANSFER_DST))
+        DBG_WARNING("attempt to copy to an image which does not support being a transfer destination");
 
     VkBufferImageCopy image_copy{ };
     image_copy.bufferOffset = 0;
@@ -161,15 +141,6 @@ void Texture::createImage()
     image_create_info.format = toVulkanFormat(format);
     image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
     image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    if (usage == IMAGE_USAGE_DEFAULT)
-    {
-        if (format == Texture::getDepthFormat())
-            usage = IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT;
-        else if (format == Texture::getDataFormat())
-            usage = IMAGE_USAGE_COLOR_ATTACHMENT;
-        else
-            usage = IMAGE_USAGE_TRANSFER_DST | IMAGE_USAGE_SAMPLED;
-    }
     image_create_info.usage = convertFlags<VkImageUsageFlagBits, Usage, 5>(usage, vulkan_image_usage);
     image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -189,13 +160,27 @@ void Texture::createImage()
     vkBindImageMemory(RenderServer::getDevice(), image, memory, 0);
 }
 
+void Texture::createView()
+{
+    VkImageViewCreateInfo view_create_info{ };
+    view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    view_create_info.image = image;
+    view_create_info.viewType = extent.z == 1 ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_3D;
+    view_create_info.format = toVulkanFormat(format);
+    view_create_info.subresourceRange.aspectMask = format == FORMAT_DEPTH ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+    view_create_info.subresourceRange.baseMipLevel = 0;
+    view_create_info.subresourceRange.levelCount = 1;
+    view_create_info.subresourceRange.baseArrayLayer = 0;
+    view_create_info.subresourceRange.layerCount = 1;
+
+    if (vkCreateImageView(RenderServer::getDevice(), &view_create_info, nullptr, &view) != VK_SUCCESS)
+        DBG_ERROR("vkCreateImageView failed");
+}
+
 void Texture::destroyResources()
 {
     RenderServer::waitIdle();
-    if (view != VK_NULL_HANDLE)
-        vkDestroyImageView(RenderServer::getDevice(), view, nullptr);
-    if (stencil_view != VK_NULL_HANDLE)
-        vkDestroyImageView(RenderServer::getDevice(), stencil_view, nullptr);
+    vkDestroyImageView(RenderServer::getDevice(), view, nullptr);
     vkDestroyImage(RenderServer::getDevice(), image, nullptr);
     vkFreeMemory(RenderServer::getDevice(), memory, nullptr);
 }

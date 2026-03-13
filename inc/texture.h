@@ -1,8 +1,7 @@
 #pragma once
 
 #include <string>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
+#include <glm/glm.hpp>
 
 #include "common.h"
 #include "vulkan_typedefs.h"
@@ -69,10 +68,10 @@ public:
 
 	enum Format
 	{
-		FORMAT_R8G8B8A8_SRGB,
-		FORMAT_D32_SFLOAT_S8_UINT,
-		FORMAT_R16G16B16A16_SFLOAT,
-		FORMAT_B8G8R8A8_SRGB,
+		FORMAT_SRGB_8X4,
+		FORMAT_DEPTH,
+		FORMAT_FLOAT_16X4,
+		FORMAT_SWAPCHAIN,
 	};
 
 	enum Layout
@@ -87,17 +86,6 @@ public:
 		LAYOUT_TRANSFER_DST,
 	};
 
-	struct Builder final
-	{
-		void* data_ptr = nullptr;
-		Usage usage_flags = IMAGE_USAGE_DEFAULT;
-		glm::u32vec2 layer_arrangement = { 1, 1 };
-		
-		Builder& data(void* value) { data_ptr = value; return *this; }
-		Builder& usage(const Usage value) { usage_flags = value; return *this; }
-		Builder& layers(const glm::u32vec2 arrangement) { layer_arrangement = arrangement; return *this; }
-	};
-
 private:
 	std::string origin;
 	glm::u32vec3 extent;
@@ -107,28 +95,28 @@ private:
 	VkImage image = VK_NULL_HANDLE;
 	VkDeviceMemory memory = VK_NULL_HANDLE;
 	VkImageView view = VK_NULL_HANDLE;
-	VkImageView stencil_view = VK_NULL_HANDLE;
 
 public:
 	DELETE_CONSTRUCTORS(Texture);
-	Texture(size_t _width, size_t _height, Format _format, const Builder& builder = Builder());
-	Texture(const std::string& file, const Builder& builder = Builder());
+	Texture(glm::u32vec3 image_extent, Format image_format, void* data_ptr = nullptr);
 	~Texture() override;
-	
-	static Format getDepthFormat();
-	static Format getDataFormat();
-	
+
+	static Ref<Texture> loadImage(const std::string& path);
+	static Ref<Texture> loadImage3D(const std::string& path, glm::u32vec2 segments);
+
 	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
-	glm::ivec2 getSize() const { return { extent.x, extent.y }; }
+	glm::u32vec3 getSize() const { return extent; }
 	bool is3D() const { return { extent.z != 1 }; }
 	Format getFormat() const { return format; }
-	VkImageView getView(bool stencil = false);
+	VkImageView getView() const { return view; }
 	void transitionLayout(Layout new_layout);
-	void copyBufferToImage(Ref<Buffer> buffer) const;
+	// TODO: upload and download data from the texture
 
 private:
 	void createImage();
-	void loadFromMemory(void* data, glm::u32vec2 layers);
+	void createView();
+	void uploadData(void* data_ptr);
+	void copyBufferToImage(Ref<Buffer> buffer) const;
 	void destroyResources();
 };
 

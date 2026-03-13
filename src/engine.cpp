@@ -185,7 +185,7 @@ Ref<Texture> Engine::loadTexture(const string& path)
     const auto it = engine->loaded_textures.find(path);
     if (it == engine->loaded_textures.end())
     {
-        Ref<Texture> thing = new Texture(path);
+        Ref<Texture> thing = Texture::loadImage(path);
         engine->loaded_textures[path] = thing;
         return thing;
     }
@@ -198,7 +198,7 @@ Ref<Texture> Engine::loadTexture3D(const string& path, const int layers_wide, co
     const auto it = engine->loaded_textures.find(path);
     if (it == engine->loaded_textures.end())
     {
-        Ref<Texture> thing = new Texture(path, Texture::Builder().layers({ static_cast<uint32_t>(layers_wide), static_cast<uint32_t>(layers_high) }));
+        Ref<Texture> thing = Texture::loadImage3D(path, { static_cast<uint32_t>(layers_wide), static_cast<uint32_t>(layers_high) });
         engine->loaded_textures[path] = thing;
         return thing;
     }

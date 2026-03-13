@@ -83,9 +83,9 @@ public:
 	~RenderGraph() override;
 	
 	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
-	Ref<Material> getMaterialForStep(size_t step);
-	Ref<Material> getMaterialForStep(const std::string& name);
-	std::pair<Ref<Texture>, bool> getFinalImage() const;
+	WeakRef<Material> getMaterialForStep(size_t step);
+	WeakRef<Material> getMaterialForStep(const std::string& name);
+	WeakRef<Texture> getFinalImage() const;
 	bool getSkipStep(size_t step) const;
 	bool getSkipStep(const std::string& name) const;
 	void setSkipStep(size_t step, bool skip);

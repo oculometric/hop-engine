@@ -109,9 +109,9 @@ RenderServer::RenderServer()
     offscreen_pass = new RenderPass(1, 1, { 3, true });
 
     uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
-    default_image = new Texture(1, 1, Texture::FORMAT_R8G8B8A8_SRGB, Texture::Builder().data(default_image_data));
+    default_image = new Texture({ 1, 1, 1 }, Texture::FORMAT_SRGB_8X4, default_image_data);
     uint8_t default_3d_image_data[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-    default_3d_image = new Texture(2, 1, Texture::FORMAT_R8G8B8A8_SRGB, Texture::Builder().layers({ 2, 1 }).data(default_3d_image_data));
+    default_3d_image = new Texture({ 1, 1, 2 }, Texture::FORMAT_SRGB_8X4, default_3d_image_data);
     default_sampler = new Sampler(Sampler::Builder());
 
     // quad = new Mesh({

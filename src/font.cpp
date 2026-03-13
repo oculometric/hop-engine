@@ -9,10 +9,10 @@ using namespace std;
 
 Font::Font(const string& atlas_name, const glm::ivec2 glyph_size_pixels)
 {
-    atlas = new Texture(atlas_name);
+    atlas = Texture::loadImage(atlas_name);
     glyph_size = glyph_size_pixels;
     // compute size constants
-    chars_resolution = atlas->getSize() / glyph_size;
+    chars_resolution = glm::ivec2(atlas->getSize()) / glyph_size;
     char_uv_size = 1.0f / glm::vec2(chars_resolution);
 
     DBG_VERBOSE("created font using " + atlas_name + " atlas with character size " + ::to_string(glyph_size.x) + "x" + ::to_string(glyph_size.y));

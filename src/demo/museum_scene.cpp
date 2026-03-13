@@ -120,7 +120,7 @@ void MuseumApp::update(float delta_time)
             camera->transform.lookAt(camera->transform.getLocalPosition(), spline[spline_progress], { 0, 0, 1 });
     }
     
-    crt->getComponent<StaticMeshComponent>()->material->setTexture("albedo_tex", scene->render_graph->getFinalImage().first);
+    crt->getComponent<StaticMeshComponent>()->material->setTexture("albedo_tex", scene->render_graph->getFinalImage().strong());
     
     normal_demo_1->transform.rotate(glm::vec3{ 0, 0, delta_time * 60.0f });
     normal_demo_2->transform.rotate(glm::vec3{ delta_time * 80.0f, 0, delta_time * 40.0f });

@@ -28,8 +28,7 @@ UniformBlock::UniformBlock(const Shader::Layout& layout_info)
             textures_in_use[binding.binding] =
             {
                 binding.texture_is_3d ? RenderServer::getDefault3DTexture() : RenderServer::getDefaultTexture(),
-                RenderServer::getDefaultSampler(),
-                false
+                RenderServer::getDefaultSampler()
             };
         }
     }
@@ -73,26 +72,20 @@ void UniformBlock::bind(WeakRef<DrawCommandBuffer> command_buffer) const
     command_buffer->bindDescriptorSetInternal(set_index, descriptor_sets[command_buffer->getImageIndex()]);
 }
 
-void UniformBlock::setTexture(const uint32_t binding, const Ref<Texture>& image, const bool use_stencil)
+void UniformBlock::setTexture(const uint32_t binding, WeakRef<Texture>& image)
 {
     // if the texture is already bound, skip rebinding it
-    if (textures_in_use[binding].texture == image && textures_in_use[binding].use_stencil == use_stencil)
+    if (textures_in_use[binding].texture == image)
         return;
     // update the binding
     if (!image)
-    {
         textures_in_use[binding].texture = layout.bindings[binding].texture_is_3d ? RenderServer::getDefault3DTexture() : RenderServer::getDefaultTexture();
-        textures_in_use[binding].use_stencil = false;
-    }
     else
-    {
-        textures_in_use[binding].texture = image;
-        textures_in_use[binding].use_stencil = use_stencil;
-    }
+        textures_in_use[binding].texture = image.strong();
     applyDescriptorBindings();
 }
 
-void UniformBlock::setSampler(const uint32_t binding, const Ref<Sampler>& sampler)
+void UniformBlock::setSampler(const uint32_t binding, WeakRef<Sampler>& sampler)
 {
     // if same sampler, skip rebinding
     if (textures_in_use[binding].sampler == sampler)
@@ -101,7 +94,7 @@ void UniformBlock::setSampler(const uint32_t binding, const Ref<Sampler>& sample
     if (!sampler)
         textures_in_use[binding].sampler = RenderServer::getDefaultSampler();
     else
-        textures_in_use[binding].sampler = sampler;
+        textures_in_use[binding].sampler = sampler.strong();
     applyDescriptorBindings();
 }
 
@@ -151,7 +144,7 @@ void UniformBlock::applyDescriptorBindings()
                     textures_in_use[binding.binding].texture = binding.texture_is_3d ? RenderServer::getDefault3DTexture() : RenderServer::getDefaultTexture();
                     texture = textures_in_use[binding.binding].texture;
                 }
-                image_info.imageView = texture->getView(textures_in_use[binding.binding].use_stencil);
+                image_info.imageView = texture->getView();
                 image_info.sampler = textures_in_use[binding.binding].sampler->getSampler();
                 descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 descriptor_write.pImageInfo = &image_info;

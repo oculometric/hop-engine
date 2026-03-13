@@ -7,7 +7,7 @@
 #include "render_server.h"
 #include "swapchain.h"
 #include "texture.h"
-#include "texture_vulkan.h"
+#include "vulkan_converters.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -27,8 +27,8 @@ RenderPass::RenderPass(const uint32_t width, const uint32_t height, const Config
 {
     output_config = config;
 
-    createRenderPass(Texture::FORMAT_R8G8B8A8_SRGB, Texture::LAYOUT_SHADER_READ_ONLY, true);
-    createResources(Texture::FORMAT_R8G8B8A8_SRGB, width, height);
+    createRenderPass(Texture::FORMAT_SRGB_8X4, Texture::LAYOUT_SHADER_READ_ONLY, true);
+    createResources(Texture::FORMAT_SRGB_8X4, width, height);
 }
 
 RenderPass::~RenderPass()
@@ -84,7 +84,7 @@ void RenderPass::resize(const uint32_t width, const uint32_t height)
     if (swapchain)
         createResources();
     else
-        createResources(Texture::FORMAT_R8G8B8A8_SRGB, width, height);
+        createResources(Texture::FORMAT_SRGB_8X4, width, height);
 }
 
 void RenderPass::begin(WeakRef<DrawCommandBuffer> command_buffer, glm::vec3 clear_colour)
@@ -109,7 +109,7 @@ void RenderPass::createRenderPass(const Texture::Format main_colour_format, cons
     for (size_t i = 0; i < output_config.additional_attachments; ++i)
     {
         VkAttachmentDescription attachment{ };
-        attachment.format = toVulkanFormat(Texture::getDataFormat());
+        attachment.format = toVulkanFormat(Texture::FORMAT_FLOAT_16X4);
         attachment.samples = VK_SAMPLE_COUNT_1_BIT;
         attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -123,7 +123,7 @@ void RenderPass::createRenderPass(const Texture::Format main_colour_format, cons
     if (output_config.has_depth_attachment)
     {
         VkAttachmentDescription depth_attachment{ };
-        depth_attachment.format = toVulkanFormat(Texture::getDepthFormat());
+        depth_attachment.format = toVulkanFormat(Texture::FORMAT_DEPTH);
         depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
         depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -211,9 +211,9 @@ void RenderPass::createResources()
     const auto texture_extent = swapchain->getExtent();
     extent = texture_extent;
     if (output_config.has_depth_attachment)
-        depth_texture = new Texture(texture_extent.x, texture_extent.y, Texture::getDepthFormat());
+        depth_texture = new Texture({ texture_extent.x, texture_extent.y, 1 }, Texture::FORMAT_DEPTH);
     for (size_t i = 0; i < output_config.additional_attachments; ++i)
-        additional_textures.push_back(new Texture(texture_extent.x, texture_extent.y, Texture::getDataFormat()));
+        additional_textures.push_back(new Texture({ texture_extent.x, texture_extent.y, 1 }, Texture::FORMAT_FLOAT_16X4));
 
     // create framebuffers to actually render into
     framebuffers.resize(swapchain->getImageCount());
@@ -243,14 +243,11 @@ void RenderPass::createResources(const Texture::Format main_colour_format, const
 {
     extent = { width, height };
     // create texture buffers to back everything
-    additional_textures.push_back(new Texture(width, height, main_colour_format,
-        Texture::Builder().usage(Texture::IMAGE_USAGE_COLOR_ATTACHMENT | Texture::IMAGE_USAGE_SAMPLED)));
+    additional_textures.push_back(new Texture({ width, height, 1 }, main_colour_format));
     if (output_config.has_depth_attachment)
-        depth_texture = new Texture(width, height, Texture::getDepthFormat(),
-                Texture::Builder().usage(Texture::IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT | Texture::IMAGE_USAGE_SAMPLED));
+        depth_texture = new Texture({ width, height, 1 }, Texture::FORMAT_DEPTH);
     for (size_t i = 0; i < output_config.additional_attachments; ++i)
-        additional_textures.push_back(new Texture(width, height, Texture::getDataFormat(),
-                                                  Texture::Builder().usage(Texture::IMAGE_USAGE_COLOR_ATTACHMENT | Texture::IMAGE_USAGE_SAMPLED)));
+        additional_textures.push_back(new Texture({ width, height, 1 }, Texture::FORMAT_FLOAT_16X4));
 
     // create framebuffers to actually render into
     framebuffers.resize(1);

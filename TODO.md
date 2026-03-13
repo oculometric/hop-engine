@@ -1,11 +1,9 @@
 # TODO
 
 ## v0.52
-- simplify texture to be in one of several 'modes/types' (fix the way view aspects behave), overhaul initialisation, overhaul renderpass accordingly
-- create image view on image create
+- refactor/simplify render pass setup code
 
 - fullscreen support
-
 - fix multi-pass rendering not working
 ---
 # v0.6
@@ -19,6 +17,7 @@
 - object duplicate function [L]
 - enable/disable components
 - windows 95 node style
+- texture upload/download of data
 ---
 ## v0.7
 - shader node editor

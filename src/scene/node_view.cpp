@@ -321,9 +321,9 @@ void NodeView::awake()
     material->setSampler("ui_atlas", sampler);
 
     style = new Style();
-    style->node_atlas = new Texture("res://engine/textures/node_atlas.png");
-    style->extra_atlas = new Texture("res://engine/textures/extra_atlas.png");
-    style->ui_atlas = new Texture("res://engine/textures/ui_atlas.png");
+    style->node_atlas = Texture::loadImage("res://engine/textures/node_atlas.png");
+    style->extra_atlas = Texture::loadImage("res://engine/textures/extra_atlas.png");
+    style->ui_atlas = Texture::loadImage("res://engine/textures/ui_atlas.png");
     style->font = new Font("res://engine/textures/font_IBM_XGA_AI_12x23.png", glm::ivec2{ 14, 25 });
 
     setStyle(style);
@@ -372,7 +372,7 @@ void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm:
 
 void NodeView::addPin(glm::vec2 position, glm::vec3 tint, int type, bool filled)
 {
-    glm::vec2 seg_size = style->extra_atlas->getSize() / 3;
+    glm::vec2 seg_size = glm::vec2(style->extra_atlas->getSize()) / 3.0f;
     glm::vec2 uv_size = glm::vec2{ 1.0f / 3.0f };
     glm::vec2 uv_base = glm::vec2{ uv_size.x * (type % 3), uv_size.y * (type / 3) };
     addQuad(position + glm::round((style->grid_size - seg_size) * 0.5f), seg_size, flipUV(uv_base), flipUV(uv_base + uv_size), tint, RENDER_MODE_PINS, {filled ? 1 : 0, 0, 0});

@@ -60,18 +60,17 @@ Ref<Mesh> Mesh::loadMesh(const string& path)
 
     if (strncmp(reinterpret_cast<const char*>(file_data.data()), "HBMR", 4) == 0)
     {
-        if (decodeBinaryMesh(file_data, verts, inds))
-            return new Mesh(verts, inds);
-        else
+        if (!decodeBinaryMesh(file_data, verts, inds))
             return nullptr;
     }
     else
     {
-        if (readOBJ(file_data, verts, inds))
-            return new Mesh(verts, inds);
-        else
+        if (!readOBJ(file_data, verts, inds))
             return nullptr;
     }
+    auto m = new Mesh(verts, inds);
+    m->origin = path;
+    return m;
 }
 
 DataBlock Mesh::convertToBinaryMesh(const string& obj_path)

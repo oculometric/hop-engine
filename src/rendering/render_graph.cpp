@@ -90,7 +90,7 @@ RenderGraph::~RenderGraph()
     DBG_VERBOSE("destroying render graph " + PTR(this));
 }
 
-Ref<Material> RenderGraph::getMaterialForStep(const size_t step)
+WeakRef<Material> RenderGraph::getMaterialForStep(const size_t step)
 {
     if (step >= execution_steps.size())
     {
@@ -107,13 +107,13 @@ Ref<Material> RenderGraph::getMaterialForStep(const size_t step)
     return execution_steps[step].material;
 }
 
-Ref<Material> RenderGraph::getMaterialForStep(const string& name)
+WeakRef<Material> RenderGraph::getMaterialForStep(const string& name)
 { return getMaterialForStep(findStep(name)); }
 
-pair<Ref<Texture>, bool> RenderGraph::getFinalImage() const
+WeakRef<Texture> RenderGraph::getFinalImage() const
 {
     if (execution_steps.empty())
-        return { nullptr, false };
+        return nullptr;
     size_t step_index = output_step % execution_steps.size();
     if (output_step == -1)
     {
@@ -124,12 +124,7 @@ pair<Ref<Texture>, bool> RenderGraph::getFinalImage() const
     
     auto& step = execution_steps[step_index];
     const size_t attachment = output_image;
-    const auto [additional_attachments, has_depth_attachment] = step.render_pass->getOutputConfig();
-    const size_t max_attachments = additional_attachments + (has_depth_attachment ? 2 : 1);
-    bool is_stencil = false;
-    if (attachment == max_attachments)
-        is_stencil = true;
-    return { step.render_pass->getImage(is_stencil ? attachment - 1 : attachment), is_stencil };
+    return step.render_pass->getImage(attachment);
 }
 
 bool RenderGraph::getSkipStep(const size_t step) const
@@ -198,19 +193,15 @@ void RenderGraph::draw(WeakRef<DrawCommandBuffer> command_buffer, const std::vec
     }
     
     auto final_image_info = getFinalImage();
-    WeakRef<Texture> new_passthrough_tex = final_image_info.first;
+    WeakRef<Texture> new_passthrough_tex = final_image_info;
     if (!new_passthrough_tex)
         new_passthrough_tex = RenderServer::getDefaultTexture();
-    static bool in_stencil_mode = false;
-    if (new_passthrough_tex != passthrough_texture || final_image_info.second != in_stencil_mode)
+    if (new_passthrough_tex != passthrough_texture)
     {
         passthrough->setTexture(0, new_passthrough_tex.strong());
         passthrough_texture = new_passthrough_tex;
-        in_stencil_mode = final_image_info.second;
-        if (in_stencil_mode) passthrough->setTexture(1, new_passthrough_tex.strong(), true);
-        else passthrough->setTexture(1, nullptr);
-        if (new_passthrough_tex->getFormat() == Texture::getDepthFormat())
-            passthrough->setIntUniform("display_depth", in_stencil_mode ? 2 : 1);
+        if (new_passthrough_tex->getFormat() == Texture::FORMAT_DEPTH)
+            passthrough->setIntUniform("display_depth", 1);
         else
             passthrough->setIntUniform("display_depth", 0);
     }

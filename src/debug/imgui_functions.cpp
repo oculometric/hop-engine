@@ -251,7 +251,7 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 			ImGui::LabelText("name", "%s", binding_to_texture_name[tex_id].c_str());
 			auto result = texturePicker(tex_bind.texture, "texture");
 			if (result != tex_bind.texture)
-				setTexture(tex_id, result.strong());
+				setTexture(tex_id, result);
 			ImGui::PopID();
 		}
 	}
