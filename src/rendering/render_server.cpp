@@ -125,7 +125,7 @@ RenderServer::RenderServer()
         { {  2,  1, 0, 1 }, {}, {}, {}, {  1.5f, 1.0f } },
         { {  0, -3, 0, 1 }, {}, {}, {}, {  0.5f, -1.0f } },
     }, { 0, 1, 2 });
-    skybox_cube = new Mesh("res://engine/meshes/skybox.obj");
+    skybox_cube = Mesh::loadMesh("res://engine/meshes/skybox.obj");
 
     default_material = new Material(new Shader("res://engine/shaders/default_shader.glsl"));
     final_pass_uniforms = createSceneUniforms();

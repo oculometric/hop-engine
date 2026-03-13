@@ -211,7 +211,7 @@ Ref<Mesh> Engine::loadMesh(const string& path)
     const auto it = engine->loaded_meshes.find(path);
     if (it == engine->loaded_meshes.end())
     {
-        Ref<Mesh> thing = new Mesh(path);
+        Ref<Mesh> thing = Mesh::loadMesh(path);
         engine->loaded_meshes[path] = thing;
         return thing;
     }

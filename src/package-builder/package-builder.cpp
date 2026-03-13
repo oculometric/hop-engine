@@ -69,7 +69,7 @@ int main(const int nargs, const char** vargs)
 					c = '/';
 			if (binary && p.path().extension().string() == ".obj")
 			{
-				HopEngine::Package::store("res://" + path_prefix + identifier, HopEngine::Mesh::encodeBinaryMesh(path));
+				HopEngine::Package::store("res://" + path_prefix + identifier, HopEngine::Mesh::convertToBinaryMesh(path));
 				HopEngine::Package::setAlias(base64::to_base64(path_prefix + identifier), path_prefix + identifier);
 			}
 			else

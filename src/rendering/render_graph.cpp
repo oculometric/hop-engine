@@ -309,7 +309,7 @@ void RenderGraph::recordCameraStep(WeakRef<DrawCommandBuffer> command_buffer, co
 
     for (DrawCommand command : commands)
     {
-        if (!command.material || !command.mesh || !command.mesh->isRenderable())
+        if (!command.material || !command.mesh)
         {
             DBG_WARNING("skipping draw command with invalid mesh or material");
             continue;
