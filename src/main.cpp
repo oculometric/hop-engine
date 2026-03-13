@@ -97,6 +97,8 @@ public:
                 { node_scene, { 0, 0.75f }, { 1, 0.25f } }
             });
 
+        main_scene->setSkybox(Engine::loadTexture("res://engine/samples/nasa_goddard_gaia_dr2_deep_star_map.png"));
+
         RenderServer::setTitle("Demo Scene - Main");
     }
 

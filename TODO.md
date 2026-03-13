@@ -1,7 +1,6 @@
 # TODO
 
 ## v0.52
-- fix skybox side being flipped
 - fullscreen support
 
 - remove keepLoaded
@@ -22,6 +21,7 @@
 - improved text block rendering with wrapping, alignment, font, etc
 - object duplicate function [L]
 - enable/disable components
+- windows 95 node style
 ---
 ## v0.7
 - shader node editor
