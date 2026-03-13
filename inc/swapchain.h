@@ -10,29 +10,44 @@
 namespace HopEngine
 {
 
-class Swapchain : public Destructible
+class Swapchain final : public Destructible
 {
+public:
+	struct SupportInfo final
+	{
+		std::vector<VkSurfaceCapabilitiesKHR> surface_capabilities;
+		std::vector<VkSurfaceFormatKHR> surface_formats;
+		// TODO: re-introduce checking for FIFO and IMMEDIATE present mode support
+	};
+
 private:
 	VkSwapchainKHR swapchain = VK_NULL_HANDLE;
 	std::vector<VkImage> images;
-	ImageFormat format;
+	Texture::Format format;
 	glm::u32vec2 extent;
 	std::vector<VkImageView> image_views;
 	VkSurfaceKHR surface;
 	uint32_t queue_families[2];
-	std::vector<VkSwapchainCreateInfoKHR> create_info; // just... don't worry about it
+	VkSwapchainCreateInfoKHR* create_info;
 
 public:
 	DELETE_CONSTRUCTORS(Swapchain);
 	Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR _surface);
 	~Swapchain() override;
 	
-	VkSwapchainKHR getSwapchain() const { return swapchain; }
+	static SupportInfo getSwapchainSupportInfo(VkPhysicalDevice device, VkSurfaceKHR surface);
+	static glm::u32vec2 computeExtent(uint32_t window_width, uint32_t window_height);
+	static uint32_t computeImageCount();
+	
+	VkSwapchainKHR getHandle() const { return swapchain; }
 	uint32_t getImageCount() const { return static_cast<uint32_t>(image_views.size()); }
 	VkImageView getImage(size_t i) const { return image_views[i]; }
-	ImageFormat getFormat() const { return format; }
+	Texture::Format getFormat() const { return format; }
 	glm::u32vec2 getExtent() const { return extent; }
+
 	void resize(uint32_t width, uint32_t height);
+	void setVsync(bool enabled);
+	bool getVsync();
 
 private:
 	void createImageViews();

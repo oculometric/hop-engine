@@ -8,66 +8,21 @@
 
 using namespace HopEngine;
 
-static WeakRef<Material> cc_material;
-
-static WeakRef<StaticMesh> crt;
-
-static WeakRef<StaticMesh> obj;
-static WeakRef<StaticMesh> obj2;
-static WeakRef<StaticMesh> obj3;
-static WeakRef<StaticMesh> obj4;
-
-static WeakRef<StaticMesh> normal_demo_1;
-static WeakRef<StaticMesh> normal_demo_2;
-
-static WeakRef<StaticMesh> spline_obj;
-static Spline spline;
-static float spline_progress = 0.0f;
-static bool spline_tracked = false;
-
-static bool camera_flythrough = false;
-static float camera_flythrough_time = 0.0f;
-static Spline flythrough_spline
-{
-    {
-        { 12.0f, -9.0f, 1.73f },
-        { 12.0f, -8.8f, 1.78f },
-        { 12.0f, -8.5f, 1.83f },
-        { 13.0f, -6.75f, 1.68f },
-        { 14.1f, -4.5f, 1.41f },
-        { 13.9f, -1.9f, 1.8f },
-        { 12.2f, -1.1f, 1.8f },
-        { 10.0f, -3.3f, 2.0f },
-        { 9.3f, -4.0f, 1.9f },
-        { 6.6f, -3.9f, 1.9f },
-        { 3.1f, -3.9f, 1.9f },
-        { 0.4f, -4.8f, 1.45f },
-        { -0.3f, -3.8f, 1.77f },
-        { -0.0f, 1.6f, 6.5f },
-        { 1.9f, 6.0f, 9.1f },
-        { 10.0f, 3.2f, 8.8f },
-        { 11.8f, -1.8f, 3.8f },
-        { 11.4f, -1.8f, 3.8f },
-    },
-    false
-};
-
-
-static Ref<Scene> initMuseumScene()
+MuseumApp::MuseumApp()
 {
     Ref<Scene> scene = Scene::deserialise("res://museum/Museum.hscn");
-    if (!scene) return nullptr;
+    if (!scene) return;
     Engine::setScene(scene);
+
+    obj = scene->findObject("orrery_core");
+    obj2 = scene->findObject("orrery_mid");
+    obj3 = scene->findObject("orrery_orbit_a");
+    obj4 = scene->findObject("orrery_orbit_b");
     
-    obj = scene->findObject<StaticMesh>("orrery_core");
-    obj2 = scene->findObject<StaticMesh>("orrery_mid");
-    obj3 = scene->findObject<StaticMesh>("orrery_orbit_a");
-    obj4 = scene->findObject<StaticMesh>("orrery_orbit_b");
-    
-    spline_obj = scene->insertObject<StaticMesh>(
-        StaticMesh::create(
-            Engine::loadMesh("res://museum/IcePlanet.obj"), 
-            Engine::loadMaterial("res://museum/IcePlanet.hmat")));
+    spline_obj = scene->addObject("spline obj");
+    auto sm_comp = spline_obj->addComponent<StaticMeshComponent>();
+    sm_comp->mesh = Engine::loadMesh("res://museum/IcePlanet.obj");
+    sm_comp->material = Engine::loadMaterial("res://museum/IcePlanet.hmat");
     spline_obj->transform.setLocalScale({ 0.3f, 0.3f, 0.3f });
     spline.loop = true;
     spline.points = {
@@ -78,7 +33,7 @@ static Ref<Scene> initMuseumScene()
         { 14, -8, 1.5 }
     };
     
-    crt = scene->findObject<StaticMesh>("crt_screen");
+    crt = scene->findObject("crt_screen");
     
     auto fog_mat = scene->render_graph->getMaterialForStep("fog");
     fog_mat->setFloatUniform("fog_start", 4.0f);
@@ -109,47 +64,46 @@ static Ref<Scene> initMuseumScene()
     cc_material->setFloatUniform("exposure", 1.0f);
     cc_material->setFloatUniform("offset", 0.0f);
     cc_material->setTexture("lut", Engine::loadTexture3D("res://museum/lut.png", 8, 8));
-    cc_material->setSampler("lut", Engine::makeSampler(SamplerBuilder().address(ADDRESS_CLAMP_EDGE)));
+    cc_material->setSampler("lut", Engine::makeSampler(Sampler::Builder().address(Sampler::ADDRESS_CLAMP_EDGE)));
     cc_material->setFloatUniform("use_lut", 1);
-    Engine::debugClearSelection(WeakRef<Object>(), WeakRef<Material>(), scene->getCamera(0));
+    // Engine::debugClearSelection(WeakRef<Object>(), WeakRxef<Material>(), scene->getCamera(0));
 
-    normal_demo_1 = scene->insertObject<StaticMesh>(StaticMesh::create(
-        Engine::loadMesh("res://engine/samples/plane.obj"),
-        new Material(Engine::loadShader("res://engine/shaders/deferred.glsl"))));
+    normal_demo_1 = scene->addObject("normal demo");
+    sm_comp = normal_demo_1->addComponent<StaticMeshComponent>();
+    sm_comp->mesh = Engine::loadMesh("res://engine/samples/plane.obj");
+    sm_comp->material = new Material(Engine::loadShader("res://engine/shaders/deferred.glsl"));
     normal_demo_1->transform.setPosition(glm::vec3{ 0, -8, 0.8 });
-    normal_demo_1->material->setTexture(0, RenderServer::getDefaultTextureSampler().first);
-    normal_demo_1->material->setTexture(1, Engine::loadTexture("res://demo_normal.png"));
-    normal_demo_1->material->setVec4Uniform("base_colour", glm::vec4{ 1, 1, 1, 1 });
-    normal_demo_1->material->setVec4Uniform("specular_colour", glm::vec4{ 1, 1, 1, 1 });
-    normal_demo_1->material->setFloatUniform("roughness_factor_add", 0.5f);
-    normal_demo_1->material->setFloatUniform("normal_strength", 1.0f);
+    sm_comp->material->setTexture(0, RenderServer::getDefaultTexture());
+    sm_comp->material->setTexture(1, Engine::loadTexture("res://demo_normal.png"));
+    sm_comp->material->setVec4Uniform("base_colour", glm::vec4{ 1, 1, 1, 1 });
+    sm_comp->material->setVec4Uniform("specular_colour", glm::vec4{ 1, 1, 1, 1 });
+    sm_comp->material->setFloatUniform("roughness_factor_add", 0.5f);
+    sm_comp->material->setFloatUniform("normal_strength", 1.0f);
     
-    normal_demo_2 = scene->insertObject<StaticMesh>(StaticMesh::create(
-        Engine::loadMesh("res://museum/PipeL.obj"),
-        Engine::loadMaterial("res://museum/ShinyPipes.hmat")
-        ));
+    normal_demo_2 = scene->addObject("normal demo");
+    sm_comp = normal_demo_2->addComponent<StaticMeshComponent>();
+    sm_comp->mesh = Engine::loadMesh("res://museum/PipeL.obj");
+    sm_comp->material = Engine::loadMaterial("res://museum/ShinyPipes.hmat");
     normal_demo_2->transform.setPosition(glm::vec3{ 0, -8, 2 });
     normal_demo_2->transform.setLocalScale(glm::vec3{ 3, 3, 3 });
-    
-    return scene;
+
+    RenderServer::setTitle("Demo Scene - Museum");
 }
 
-static void updateMuseumScene(Ref<Scene> scene, const float delta_time)
+void MuseumApp::update(float delta_time)
 {
-    static float total_time = 0;
-    total_time += delta_time;
+    auto scene = Engine::getScene();
+    Engine::debugCamera(scene->findObject("camera"));
 
-    Engine::debugCamera(delta_time);
-
-    if (Input::isMouseDown(Input::MOUSE_LEFT))
-    {
-        glm::vec2 mouse_clip = ((Input::getMousePosition() / RenderServer::getFramebufferSize()) * 2.0f) - 1.0f;
-        glm::mat4 screen_to_world = glm::inverse(scene->getCamera(0)->getWorldToScreenMatrix());
-        glm::vec4 mouse_transformed = screen_to_world * glm::vec4(mouse_clip, 1.0f, 1.0f);
-        mouse_transformed /= mouse_transformed.w;
-        glm::vec3 mouse_world = glm::normalize(glm::xyz(mouse_transformed) - scene->getCamera(0)->transform.getPosition());
-        Engine::debugSelect(scene->raycast(scene->getCamera(0)->transform.getPosition(), mouse_world));
-    }
+    // if (Input::isMouseDown(Input::MOUSE_LEFT))
+    // {
+    //     glm::vec2 mouse_clip = ((Input::getMousePosition() / RenderServer::getFramebufferSize()) * 2.0f) - 1.0f;
+    //     glm::mat4 screen_to_world = glm::inverse(scene->getCamera(0)->getWorldToScreenMatrix());
+    //     glm::vec4 mouse_transformed = screen_to_world * glm::vec4(mouse_clip, 1.0f, 1.0f);
+    //     mouse_transformed /= mouse_transformed.w;
+    //     glm::vec3 mouse_world = glm::normalize(glm::xyz(mouse_transformed) - scene->getCamera(0)->transform.getPosition());
+    //     Engine::debugSelect(scene->raycast(scene->getCamera(0)->transform.getPosition(), mouse_world));
+    // }
     
     obj->transform.rotateLocal({ 0, 0, 20 * delta_time });
     obj2->transform.rotateLocal({ 35 * delta_time, 0, 0 });
@@ -161,19 +115,18 @@ static void updateMuseumScene(Ref<Scene> scene, const float delta_time)
     spline_obj->transform.lookAt(spline[spline_progress], spline[spline_progress - 0.01f], { 0, 0, 1 });
     if (spline_tracked)
     {
-        WeakRef<Camera> camera = scene->getCamera(0);
-        camera->transform.lookAt(camera->transform.getLocalPosition(), spline[spline_progress], { 0, 0, 1 });
+        WeakRef<Object> camera = scene->findObject("camera");
+        if (camera)
+            camera->transform.lookAt(camera->transform.getLocalPosition(), spline[spline_progress], { 0, 0, 1 });
     }
     
-    crt->material->setTexture("albedo_tex", scene->render_graph->getFinalImage().first);
+    crt->getComponent<StaticMeshComponent>()->material->setTexture("albedo_tex", scene->render_graph->getFinalImage().strong());
     
     normal_demo_1->transform.rotate(glm::vec3{ 0, 0, delta_time * 60.0f });
     normal_demo_2->transform.rotate(glm::vec3{ delta_time * 80.0f, 0, delta_time * 40.0f });
-    
-    Input::resetMouseDelta();
 }
 
-static void imGuiMuseumScene(Ref<Scene> scene, const float delta_time)
+void MuseumApp::drawImGui()
 {
     ImGui::Begin("colour correction", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::Text("this controls the final post processing step");
@@ -203,23 +156,18 @@ static void imGuiMuseumScene(Ref<Scene> scene, const float delta_time)
         camera_flythrough_time = 0.0f;
     if (camera_flythrough)
     {
-        WeakRef<Camera> camera = scene->getCamera(0);
+        WeakRef<Object> camera = Engine::getScene()->findObject("camera");
         if (camera_flythrough_time >= 0.999f)
         {
             camera_flythrough = false;
             camera_flythrough_time = 0.0f;
         }
         camera->transform.lookAt(flythrough_spline[camera_flythrough_time], flythrough_spline[camera_flythrough_time + 0.01f], {0, 0, 1});
-        camera_flythrough_time += delta_time * 0.035f;
+        camera_flythrough_time += Engine::getDeltaTime() * 0.035f;
     }
     ImGui::End();
     
-    Engine::drawImGuiDebug(delta_time);
-}
-
-SceneFuncSet getMuseumScene()
-{
-    return { L"museum", initMuseumScene, updateMuseumScene, imGuiMuseumScene };
+    Engine::drawImGuiDebug();
 }
 
 #endif

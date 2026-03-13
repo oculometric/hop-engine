@@ -9,21 +9,6 @@
 
 using namespace std;
 
-vector<uint8_t> readFile(string path)
-{
-	ifstream file(path, ios::ate | ios::binary);
-	if (!file.is_open())
-		return { };
-
-	size_t size = (size_t)file.tellg();
-	vector<uint8_t> content(size);
-	file.seekg(0);
-	file.read((char*)(content.data()), size);
-	file.close();
-
-	return content;
-}
-
 vector<string>::iterator findArg(string s, vector<string>& v)
 {
 	auto it = v.begin();
@@ -84,21 +69,16 @@ int main(const int nargs, const char** vargs)
 					c = '/';
 			if (binary && p.path().extension().string() == ".obj")
 			{
-				HopEngine::Package::storeData(path_prefix + identifier, HopEngine::Mesh::encodeBinaryMesh(path));
+				HopEngine::Package::store("res://" + path_prefix + identifier, HopEngine::Mesh::convertToBinaryMesh(path));
 				HopEngine::Package::setAlias(base64::to_base64(path_prefix + identifier), path_prefix + identifier);
 			}
 			else
-				HopEngine::Package::storeData(path_prefix + identifier, readFile(path));
+				HopEngine::Package::store("res://" + path_prefix + identifier, HopEngine::Package::loadFromDisk(path));
 			++entries;
 		}
 	}
 
-	if (compressed)
-		HopEngine::Package::storeCompressedPackage(output_hop);
-	else
-		HopEngine::Package::storePackage(output_hop);
-
-
+	HopEngine::Package::exportPackage(output_hop, compressed);
 
 	return 0;
 }

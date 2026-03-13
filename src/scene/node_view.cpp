@@ -19,13 +19,6 @@ static glm::vec2 flipUV(glm::vec2 v)
     return { v.x, 1.0f - v.y };
 }
 
-Ref<NodeView> NodeView::create()
-{
-    Ref obj = new NodeView();
-    obj->self = obj.cast<Object>();
-    return obj;
-}
-
 void NodeView::setStyle(Ref<Style> new_style)
 {
     material->setTexture("text_atlas", new_style->font->getAtlas());
@@ -42,9 +35,6 @@ void NodeView::setStyle(Ref<Style> new_style)
     material->setFloatUniform("grid_dots_modulate", new_style->grid_dots_modulate);
     material->setIntUniform("grid_scale", new_style->grid_scale);
     material->setVec3Uniform("outline_colour_highlight", new_style->outline_colour_highlight);
-
-    if (getScene())
-        getScene()->getCamera(0)->clear_colour = style->background_colour;
 
     style = new_style;
     updateMesh();
@@ -317,23 +307,23 @@ void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
     // TODO: resize
     if (needs_update)
         updateMesh();
-    Input::resetMouseDelta();
     //DBG_INFO("pos: " + ::to_string(node_space_pos.x) + ", " + ::to_string(node_space_pos.y));
 }
 
-NodeView::NodeView() : StaticMesh(nullptr, nullptr)
+void NodeView::awake()
 {
-    material = new Material(new Shader("res://engine/shaders/node_shader.glsl"), PipelineBuilder().cullMode(CULL_NONE).depthTest(false).depthWrite(false));
-    Ref<Sampler> sampler = Engine::makeSampler(SamplerBuilder().filter(FILTER_NEAREST));
+    StaticMeshComponent::awake();
+    material = new Material(new Shader("res://engine/shaders/node_shader.glsl"), Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthWrite(false));
+    Ref<Sampler> sampler = Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST));
     material->setSampler("node_atlas", sampler);
     material->setSampler("text_atlas", sampler);
     material->setSampler("extra_atlas", sampler);
     material->setSampler("ui_atlas", sampler);
 
     style = new Style();
-    style->node_atlas = new Texture("res://engine/textures/node_atlas.png");
-    style->extra_atlas = new Texture("res://engine/textures/extra_atlas.png");
-    style->ui_atlas = new Texture("res://engine/textures/ui_atlas.png");
+    style->node_atlas = Texture::loadImage("res://engine/textures/node_atlas.png");
+    style->extra_atlas = Texture::loadImage("res://engine/textures/extra_atlas.png");
+    style->ui_atlas = Texture::loadImage("res://engine/textures/ui_atlas.png");
     style->font = new Font("res://engine/textures/font_IBM_XGA_AI_12x23.png", glm::ivec2{ 14, 25 });
 
     setStyle(style);
@@ -352,22 +342,22 @@ void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm:
     glm::vec4 colour_value = glm::vec4{ colour, 1 };
 
     // top left
-    vertices.push_back(Vertex{
+    vertices.push_back(Mesh::Vertex{
         { position.x, -position.y, 0, 1 },
         colour_value, normal_value, tangent_value,
         uv_tl });
     // top right
-    vertices.push_back(Vertex{
+    vertices.push_back(Mesh::Vertex{
         { position.x + size.x, -position.y, 0, 1 },
         colour_value, normal_value, tangent_value,
         glm::vec2{ uv_br.x, uv_tl.y } });
     // bottom left
-    vertices.push_back(Vertex{
+    vertices.push_back(Mesh::Vertex{
         { position.x, -position.y - size.y, 0, 1 },
         colour_value, normal_value, tangent_value,
         glm::vec2{ uv_tl.x, uv_br.y } });
     // bottom right
-    vertices.push_back(Vertex{
+    vertices.push_back(Mesh::Vertex{
         { position.x + size.x, -position.y - size.y, 0, 1 },
         colour_value, normal_value, tangent_value,
         uv_br });
@@ -382,7 +372,7 @@ void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm:
 
 void NodeView::addPin(glm::vec2 position, glm::vec3 tint, int type, bool filled)
 {
-    glm::vec2 seg_size = style->extra_atlas->getSize() / 3;
+    glm::vec2 seg_size = glm::vec2(style->extra_atlas->getSize()) / 3.0f;
     glm::vec2 uv_size = glm::vec2{ 1.0f / 3.0f };
     glm::vec2 uv_base = glm::vec2{ uv_size.x * (type % 3), uv_size.y * (type / 3) };
     addQuad(position + glm::round((style->grid_size - seg_size) * 0.5f), seg_size, flipUV(uv_base), flipUV(uv_base + uv_size), tint, RENDER_MODE_PINS, {filled ? 1 : 0, 0, 0});

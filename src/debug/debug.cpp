@@ -6,26 +6,34 @@
 #include <iostream>
 #include <filesystem>
 
+#define DEBUG_TERMINAL cout
+#define DEBUG_LOGFILE "log/"
+
 using namespace HopEngine;
 using namespace std;
 
-static Debug* application_debug = nullptr;
-#if defined(DEBUG_LOGFILE)
-static ofstream file_output;
-#endif
+static Debug* instance = nullptr;
 
-void Debug::init(const DebugLevel crash_level)
+void Debug::init(const Level crash_level)
 {
-	if (application_debug == nullptr)
-		application_debug = new Debug();
-	application_debug->log_level = static_cast<DebugLevel>(DEBUG_LEVEL);
-	application_debug->crash_level = crash_level;
+	if (instance == nullptr)
+		instance = new Debug(crash_level);
+
 	DBG_INFO("initialised debug");
 }
 
-void Debug::setLogLevel(const DebugLevel severity)
+void Debug::close()
 {
-	application_debug->log_level = severity;
+	if (instance != nullptr)
+	{
+		delete instance;
+		instance = nullptr;
+	}
+}
+
+void Debug::setLogLevel(const Level severity)
+{
+	instance->log_level = severity;
 }
 
 // generates an ANSI colour command from the given foreground and background colours
@@ -34,31 +42,20 @@ static string makeANSIColour(const int fgcol, const int bgcol)
 	return "\033[" + to_string(fgcol + 30) + ';' + to_string(bgcol + 40) + 'm';
 }
 
-void Debug::close()
-{
-	if (application_debug == nullptr)
-		return;
-		
-	Debug::flush();
-#if defined(DEBUG_LOGFILE)
-	file_output.close();
-#endif
-}
-
 string Debug::pointerToString(const void* ptr)
 {
 	return format("0x{:x}", reinterpret_cast<size_t>(ptr));
 }
 
-void Debug::write(const string& description, DebugLevel severity)
+void Debug::write(const string& description, Level severity)
 {
-	if (application_debug == nullptr)
+	if (instance == nullptr)
 	{
-		std::cout << description << std::endl;
+		DEBUG_TERMINAL << description << endl;
 		return;
 	}
 
-	if (severity < application_debug->log_level)
+	if (severity < instance->log_level)
 		return;
 
 	const string bracket_col = makeANSIColour(60, 0);
@@ -110,18 +107,16 @@ void Debug::write(const string& description, DebugLevel severity)
 	                          bracket_col, type_col, log_type, bracket_col, standard_col,
 	                          time_col, time.tm_hour, time.tm_min, time.tm_sec, standard_col, description);
 
-#if defined(DEBUG_LOGFILE)
-	file_output << log_line << endl;
-#endif
-#if defined(DEBUG_TERMINAL)
+	if (instance->file_output.is_open())
+		instance->file_output << log_line << endl;
 	DEBUG_TERMINAL << term_line << endl;
-#endif
 	
 	static string crash_string = "crash-severity issue occurred. stopping.";
-	if (severity >= application_debug->crash_level)
+	if (severity >= instance->crash_level)
 	{
 		// if severity is too high, stop the program
-		file_output << crash_string << endl;
+		if (instance->file_output.is_open())
+			instance->file_output << crash_string << endl;
 		DEBUG_TERMINAL << makeANSIColour(1, 0) << crash_string;
 		exit(-1);
 	}
@@ -129,19 +124,20 @@ void Debug::write(const string& description, DebugLevel severity)
 
 void Debug::flush()
 {
-	if (application_debug == nullptr)
+	if (instance == nullptr)
 		return;
-#if defined(DEBUG_LOGFILE)
-	file_output.flush();
-#endif
-#if defined(DEBUG_TERMINAL)
+	if (instance->file_output.is_open())
+		instance->file_output.flush();
 	DEBUG_TERMINAL.flush();
-#endif
 }
 
-Debug::Debug()
+Debug::Debug(Level crash)
 {
-#if defined(DEBUG_LOGFILE)
+	instance = this;
+
+	log_level = static_cast<Level>(DEBUG_LEVEL);
+	crash_level = crash;
+
 	const auto time_now = std::time(nullptr);
 	tm time;
 #if defined(_WIN32)
@@ -159,14 +155,11 @@ Debug::Debug()
 		DEBUG_TERMINAL << "FATAL ERROR: FAILED TO OPEN LOG FILE." << endl;
 		exit(-1);
 	}
-#endif
 }
 
 Debug::~Debug()
 {
 	Debug::flush();
-#if defined(DEBUG_LOGFILE)
 	if (file_output.is_open())
 		file_output.close();
-#endif
 }

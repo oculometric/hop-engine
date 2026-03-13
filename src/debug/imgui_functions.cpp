@@ -2,33 +2,29 @@
 #include <imgui/imgui_internal.h>
 #include <map>
 #include <string>
-#include <vulkan/vulkan.hpp>
 
 #include "engine.h"
-#include "object.h"
+#include "basic_components.h"
 #include "scene.h"
 #include "mesh.h"
 #include "texture.h"
 #include "material.h"
 #include "input.h"
 #include "uniform_block.h"
-#include "sampler.h"
 #include "render_graph.h"
 #include "render_server.h"
 #include "package.h"
 #if !defined(STANDALONE)
 #include "../main.h"
 #endif
-#include "text_block.h"
 
 using namespace HopEngine;
 using namespace std;
 
 static WeakRef<Object> selected_object;
 static WeakRef<Material> selected_material;
-static Camera* selected_camera;
 
-static Ref<Texture> texturePicker(const Ref<Texture>& current, const char* str)
+static WeakRef<Texture> texturePicker(const WeakRef<Texture>& current, const char* str)
 {
 	auto options = Engine::getAllRefs<Texture>();
 	options.emplace_back(nullptr);
@@ -45,7 +41,7 @@ static Ref<Texture> texturePicker(const Ref<Texture>& current, const char* str)
 	return options[selected].strong();
 }
 
-static Ref<Mesh> meshPicker(const Ref<Mesh>& current, const char* str)
+static WeakRef<Mesh> meshPicker(const WeakRef<Mesh>& current, const char* str)
 {
 	auto options = Engine::getAllRefs<Mesh>();
 	options.emplace_back(nullptr);
@@ -62,7 +58,7 @@ static Ref<Mesh> meshPicker(const Ref<Mesh>& current, const char* str)
 	return options[selected].strong();
 }
 
-static Ref<Material> materialPicker(const Ref<Material>& current, const char* str)
+static WeakRef<Material> materialPicker(const WeakRef<Material>& current, const char* str)
 {
 	auto options = Engine::getAllRefs<Material>();
 	options.emplace_back(nullptr);
@@ -98,36 +94,43 @@ void Object::drawImGuiDebug()
 		ImGui::DragFloat3("scale", reinterpret_cast<float*>(&vec), 0.05f);
 		transform.setLocalScale(vec);
 	}
+	for (const auto& comp : components)
+	{
+		ImGui::PushID(comp.get());
+		comp->drawImGuiDebug();
+		ImGui::PopID();
+	}
 }
 
-void Camera::drawImGuiDebug()
+void Component::drawImGuiDebug()
 {
-	Object::drawImGuiDebug();
-	if (ImGui::CollapsingHeader("camera params", ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader("component", ImGuiTreeNodeFlags_DefaultOpen))
+	{ }
+}
+
+void CameraComponent::drawImGuiDebug()
+{
+	if (ImGui::CollapsingHeader("camera component", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::DragFloat("near clip", &near_clip, 0.1f, 0.001f, far_clip, "%.3f", ImGuiSliderFlags_Logarithmic);
 		ImGui::DragFloat("far clip", &far_clip, 1.0f, near_clip, 1000.0f, "%.3f", ImGuiSliderFlags_Logarithmic);
 		ImGui::DragFloat("fov", &fov, 1.0f, 1.0f, 179.0f);
 		ImGui::ColorEdit3("clear colour", reinterpret_cast<float*>(&clear_colour));
-		if (ImGui::Button("take control"))
-			selected_camera = this;
 	}
 }
 
-void StaticMesh::drawImGuiDebug()
+void StaticMeshComponent::drawImGuiDebug()
 {
-	Object::drawImGuiDebug();
-	if (ImGui::CollapsingHeader("static mesh params", ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader("static mesh component", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		mesh = meshPicker(mesh, "mesh data");
+		mesh = meshPicker(mesh, "mesh data").strong();
 		if (mesh)
 		{
 			ImGui::LabelText("vertices", "%zu", mesh->getVertexCount());
 			ImGui::LabelText("triangles", "%zu", mesh->getIndexCount() / 3);
-			ImGui::LabelText("vertex size", "%llu", sizeof(Vertex));
-			ImGui::LabelText("vertex attributes", "%zu", Mesh::getAttributeDescriptions().size());
+			ImGui::LabelText("vertex size", "%llu", sizeof(Mesh::Vertex));
 		}
-		material = materialPicker(material, "material");
+		material = materialPicker(material, "material").strong();
 		if (material)
 		{
 			if (ImGui::Button("edit material"))
@@ -157,10 +160,9 @@ void StaticMesh::drawImGuiDebug()
 	}
 }
 
-void TextBlock::drawImGuiDebug()
+void TextComponent::drawImGuiDebug()
 {
-	Object::drawImGuiDebug();
-	if (ImGui::CollapsingHeader("text block params", ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader("text block component", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		static char tmp[513] = { };
 		memcpy(tmp, text.data(), std::min(512ull, text.size()));
@@ -173,12 +175,11 @@ void TextBlock::drawImGuiDebug()
 	}
 }
 
-void Light::drawImGuiDebug()
+void LightComponent::drawImGuiDebug()
 {
-	Object::drawImGuiDebug();
-	if (ImGui::CollapsingHeader("light params", ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader("light component", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		const char* types = "POINT\0SPOT\0DIRECTIONAL";
+		const char* types = "POINT\0SPOT\0DIRECTIONAL\0";
 		ImGui::Combo("type", reinterpret_cast<int*>(&type), types);
 		ImGui::ColorEdit3("colour", reinterpret_cast<float*>(&colour));
 		if (type == SPOT)
@@ -205,89 +206,17 @@ static void drawImGuiSceneTreeItem(WeakRef<Object> parent)
 		}
 	}
 }
-//
-// static void collectDescendents(multimap<Object*, WeakRef<Object>>& parent_map, Object* parent, vector<Object*>& descendents)
-// {
-// 	auto [range_start, range_end] = parent_map.equal_range(parent);
-// 	while (range_start != range_end)
-// 	{
-// 		descendents.push_back(range_start->second.get());
-// 		collectDescendents(parent_map, range_start->second.get(), descendents);
-// 		++range_start;
-// 	}
-// }
 
 void Scene::drawImGuiDebug()
 {
 	ImGui::LabelText("scene", "%s", getOrigin().c_str());
 	ImGui::ColorEdit3("ambient light", reinterpret_cast<float*>(&(ambient_colour)));
-	skybox = texturePicker(skybox, "skybox");
+	setSkybox(texturePicker(skybox, "skybox"));
 	ImGui::LabelText("total objects", "%zu", objects.size());
 
 	if (ImGui::CollapsingHeader("object heirarchy", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
 		drawImGuiSceneTreeItem(root);
 	ImGui::Text("selected: %s", selected_object ? (selected_object->name + " - " + PTR(selected_object.get())).c_str() : "none");
-	const bool disabled = !selected_object;
-	if (disabled)
-		ImGui::BeginDisabled();
-	if (selected_object != root && ImGui::Button("remove from tree"))
-	{
-		selected_object->removeFromScene();
-		selected_object = nullptr;
-	}
-	if (selected_object != root && ImGui::Button("reparent"))
-	{
-		ImGui::OpenPopup("new parent");
-	}
-	if (selected_object != root && ImGui::BeginPopup("new parent", ImGuiWindowFlags_AlwaysAutoResize))
-	{
-		if (ImGui::SmallButton((root->name + " - " + PTR(root.get())).c_str()))
-		{
-			selected_object->removeFromParent();
-			ImGui::CloseCurrentPopup();
-		}
-		for (const auto& object : objects)
-		{
-			if (object == selected_object)
-				continue;
-			if (ImGui::SmallButton((object->name + " - " + PTR(object.get())).c_str()))
-			{
-				object->addChild(selected_object.strong());
-				ImGui::CloseCurrentPopup();
-			}
-		}
-		ImGui::EndPopup();
-	}
-	if (ImGui::Button("add child"))
-	{
-		ImGui::OpenPopup("child type");
-	}
-	if (ImGui::BeginPopup("child type", ImGuiWindowFlags_AlwaysAutoResize))
-	{
-		if (ImGui::Button("object"))
-		{
-			selected_object->addChild(Object::create());
-			ImGui::CloseCurrentPopup();
-		}
-		if (ImGui::Button("static mesh"))
-		{
-			selected_object->addChild(StaticMesh::create(RenderServer::getQuad(), RenderServer::getDefaultMaterial()));
-			ImGui::CloseCurrentPopup();
-		}
-		if (ImGui::Button("light"))
-		{
-			selected_object->addChild(Light::create(Light::DIRECTIONAL));
-			ImGui::CloseCurrentPopup();
-		}
-		if (ImGui::Button("text"))
-		{
-			selected_object->addChild(TextBlock::create("Text goes here"));
-			ImGui::CloseCurrentPopup();
-		}
-		ImGui::EndPopup();
-	}
-	if (disabled)
-		ImGui::EndDisabled();
 }
 
 void Material::drawImGuiDebug()
@@ -307,26 +236,6 @@ void Material::drawImGuiDebug()
 	ImGui::Button("reload shader");
 }
 
-bool Sampler::drawImGuiDebug()
-{
-	ImGui::PushID(this);
-	static std::string filter_names[2] = 
-	{
-		"NEAREST",
-		"LINEAR"
-	};
-	static std::string address_names[3] = 
-	{
-		"REPEAT",
-		"MIRRORED",
-		"CLAMP TO EDGE"
-	};
-	ImGui::LabelText("filter", "%s", filter_names[builder.filtering_mode].c_str());
-	ImGui::LabelText("address", "%s", address_names[builder.address_mode].c_str());
-	ImGui::PopID();
-	return false;
-}
-
 void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_binding)
 {
 	map<uint32_t, string> binding_to_texture_name;
@@ -343,11 +252,6 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 			auto result = texturePicker(tex_bind.texture, "texture");
 			if (result != tex_bind.texture)
 				setTexture(tex_id, result);
-			if (tex_bind.sampler->drawImGuiDebug())
-			{
-				setSampler(tex_id, nullptr);
-				setSampler(tex_id, tex_bind.sampler);
-			}
 			ImGui::PopID();
 		}
 	}
@@ -355,7 +259,7 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 	{
 		for (const auto& block : layout.bindings)
 		{
-			if (block.type != UNIFORM)
+			if (block.type != Shader::UNIFORM)
 				continue;
 			ImGui::LabelText("binding", "%u", block.binding);
 			ImGui::LabelText("block name", "%s", block.name.c_str());
@@ -381,13 +285,13 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 	}
 }
 
-void Engine::debugCamera(float delta_time)
+void Engine::debugCamera(const WeakRef<Object>& selected_camera)
 {
 	if (!selected_camera)
 		return;
 
 	glm::vec2 mouse_delta = { 0, 0 };
-	mouse_delta += glm::vec2{ Input::getGamepadAxis(Input::GAMEPAD_RX), Input::getGamepadAxis(Input::GAMEPAD_RY) } * delta_time * 160.0f;
+	mouse_delta += glm::vec2{ Input::getGamepadAxis(Input::GAMEPAD_RX), Input::getGamepadAxis(Input::GAMEPAD_RY) } * Engine::getDeltaTime() * 160.0f;
 	static bool mouse_down = false;
 	if (Input::isMouseDown(Input::MOUSE_RIGHT))
 	{
@@ -410,7 +314,7 @@ void Engine::debugCamera(float delta_time)
 		                              Input::getAxis('A', 'D') + Input::getGamepadAxis(Input::GAMEPAD_LX),
 		                              Input::getAxis('Q', 'E') + Input::getGamepadAxis(Input::GAMEPAD_BUTTONS),
 		                              Input::getAxis('W', 'S') + Input::getGamepadAxis(Input::GAMEPAD_LY)
-	                              } * delta_time * 1.5f;
+	                              } * Engine::getDeltaTime() * 1.5f;
 	if (Input::isKeyDown(Input::KEY_LEFT_SHIFT) || Input::isGamepadButtonDown(Input::GAMEPAD_B))
 		local_move_vector *= 3.0f;
 	selected_camera->transform.translateLocal(local_move_vector);
@@ -419,13 +323,6 @@ void Engine::debugCamera(float delta_time)
 void Engine::debugSelect(const WeakRef<Object>& object)
 {
 	selected_object = object;
-}
-
-void Engine::debugClearSelection(const WeakRef<Object>& object, const WeakRef<Material>& material, WeakRef<Camera> camera)
-{
-	selected_object = object;
-	selected_material = material;
-	selected_camera = camera.get();
 }
 
 WeakRef<Object> Engine::getDebugSelection()
@@ -445,19 +342,9 @@ void Engine::_drawImGuiDebug(float delta_time) const
 		if (ImGui::BeginMenu("open scene"))
 		{
 			if (ImGui::MenuItem("bunnygirl"))
-			{
-				const auto scn = getAshaScene();
-				debugClearSelection();
-				scn.init_func();
-				Engine::setup(scn.update_func, scn.imgui_func);
-			}
+				Engine::switchApplication<AshaApp>();
 			if (ImGui::MenuItem("museum"))
-			{
-				const auto scn = getMuseumScene();
-				debugClearSelection();
-				scn.init_func();
-				Engine::setup(scn.update_func, scn.imgui_func);
-			}
+				Engine::switchApplication<MuseumApp>();
 			ImGui::EndMenu();
 		}
 #endif
@@ -472,9 +359,16 @@ void Engine::_drawImGuiDebug(float delta_time) const
 			align_windows = 1;
 		if (ImGui::MenuItem("toggle wireframe"))
 			Engine::setForceWireframe(!Engine::isWireframeMode());
+		if (ImGui::MenuItem("toggle V-sync"))
+			RenderServer::setVsyncEnabled(!RenderServer::getVsyncEnabled());
+		if (ImGui::MenuItem("toggle fullscreen"))
+			RenderServer::setFullscreenEnabled(!RenderServer::getFullscreenEnabled());
 		ImGui::EndMenu();
 	}
-	ImGui::EndMainMenuBar();	
+
+	string signature_text = format("hop-engine @ {:>5.1f}fps, {:>6.2f}ms", smoothed_fps, smoothed_delta_time * 1000.0f).c_str();
+	ImGui::TextAligned(1.0f, -FLT_MIN, signature_text.c_str());
+	ImGui::EndMainMenuBar();
 	
 	if (!show_imgui)
 		return;
@@ -506,12 +400,10 @@ void Engine::_drawImGuiDebug(float delta_time) const
 	float rightmost_window_width = 0;
 	{
 		ImGui::Begin("performance", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-		ImGui::LabelText("delta time", "%fms", last_frame_stats.delta_time * 1000.0f);
-		ImGui::LabelText("smoothed FPS", "%f", smoothed_fps);
+		ImGui::LabelText("delta time", "%fms", smoothed_delta_time * 1000.0f);
+		ImGui::LabelText("FPS", "%f", smoothed_fps);
 		if (ImGui::CollapsingHeader("time details", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			ImGui::LabelText("render imgui", "%fms", last_frame_stats.imgui_time * 1000.0f);
-			ImGui::LabelText("build buffers", "%fms", last_frame_stats.build_time * 1000.0f);
 			ImGui::LabelText("record commands", "%fms", last_frame_stats.record_time * 1000.0f);
 			ImGui::LabelText("render time", "%fms", last_frame_stats.render_time * 1000.0f);
 			ImGui::LabelText("update scene", "%fms", last_frame_stats.update_time * 1000.0f);
@@ -521,7 +413,6 @@ void Engine::_drawImGuiDebug(float delta_time) const
 			ImGui::LabelText("draw calls", "%zu", last_frame_stats.draw_calls);
 			ImGui::LabelText("pipeline rebinds", "%zu", last_frame_stats.pipeline_rebinds);
 			ImGui::LabelText("triangles", "%zu", last_frame_stats.triangles);
-			ImGui::LabelText("vertices", "%zu", last_frame_stats.vertices);
 			ImGui::LabelText("render passes", "%zu", last_frame_stats.passes);
 			if (ImGui::CollapsingHeader("pass durations"))
 			{
@@ -530,10 +421,9 @@ void Engine::_drawImGuiDebug(float delta_time) const
 					ImGui::LabelText(("pass " + ::to_string(i++)).c_str(), "%fms", dur * 1000.0f);
 			}
 			ImGui::LabelText("camera rendering", "%zu", last_frame_stats.cameras);
-			ImGui::LabelText("lights rendering", "%zu", last_frame_stats.lights);
 		}
 		ImGui::Spacing();
-		ImGui::PlotLines("##xx", delta_time_history, 512, history_offset, "delta time", 0.0001f, 0.2f, ImVec2{0, 160}, 4);
+		ImGui::PlotLines("##xx", delta_time_history, 200, history_offset, "delta time", 0.01f, 100.0f, ImVec2{200, 80}, 4);
 		const auto size = ImGui::GetWindowSize();
 		if (align_windows)
 			ImGui::SetWindowPos({ ImGui::GetIO().DisplaySize.x - size.x - 10.0f, 30 });

@@ -3,16 +3,16 @@
 #include <vector>
 #include <glm/vec2.hpp>
 
-#include "command_buffer.h"
-#include "command_buffer.h"
 #include "common.h"
-#include "object.h"
+#include "command_buffer.h"
+#include "scene.h"
+#include "basic_components.h"
 #include "mesh.h"
 
 namespace HopEngine
 {
 
-class NodeView : public StaticMesh
+class NodeView final : public StaticMeshComponent
 {
 public:
 	enum NodeElementType : uint8_t
@@ -23,7 +23,7 @@ public:
 		ELEMENT_SPACE
 	};
 	
-	struct NodeElement
+	struct NodeElement final
 	{
 		std::string text;
 		NodeElementType type;
@@ -36,7 +36,7 @@ public:
 			: text("text"), type(ELEMENT_INPUT), pin_type(0), pin_solid(true) { }
 	};
 
-	struct Node
+	struct Node final
 	{
 		std::string title = "node";
 		std::vector<NodeElement> elements;
@@ -56,7 +56,7 @@ public:
 		MODULATE_NODE_COLOUR
 	};
 
-	struct Style
+	struct Style final
 	{
 		Ref<Font> font = nullptr;
 		
@@ -104,22 +104,21 @@ public:
 	std::vector<Ref<Node>> nodes;
 
 private:
-	std::vector<Vertex> vertices;
+	std::vector<Mesh::Vertex> vertices;
 	std::vector<uint16_t> indices;
 	Ref<Style> style;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(NodeView);
-	static Ref<NodeView> create();
+	NodeView() = default;
 	~NodeView() override;
 	
+	void awake() override;
+
 	Ref<Style> getStyle() { return style; }
 	void setStyle(Ref<Style> new_style);
 	void updateMesh();
 	void checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size);
-	
-protected:
-	NodeView();
 
 private:
 	void addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode, glm::vec3 extra = { 0.0f, 0.0f, 0.0f }, glm::vec2 fake_size = { 0, 0 });

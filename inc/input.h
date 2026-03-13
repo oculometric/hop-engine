@@ -5,14 +5,13 @@
 #include <map>
 
 #include "common.h"
-#include "window.h"
 
 struct GLFWwindow;
 
 namespace HopEngine
 {
 	
-class Input
+class Input final
 {
 public:
 	enum GamepadButton
@@ -132,22 +131,24 @@ public:
 		KEY_MENU          = 348
 	};
 	
-	struct GamepadState
+	struct GamepadState final
 	{
 		bool buttons[14] = { false };
 		float axes[9] = { 0.0f };
 	};
 	
 private:
-	Ref<Window> window;
+	GLFWwindow* window;
 	std::set<int> pressed_since_checked;
 	std::set<MouseButton> pressed_since_checked_mouse;
 	std::map<int, GamepadState> gamepad_states;
+	glm::vec2 mouse_delta;
+	glm::vec2 mouse_position;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Input);
 
-	static void init(const Ref<Window>& window);
+	static void init();
 	static void destroy();
 
 	static bool isKeyDown(int key);
@@ -157,15 +158,15 @@ public:
 	static bool wasMousePressed(MouseButton button);
 	static glm::vec2 getMouseDelta();
 	static glm::vec2 getMousePosition();
-	static void pollGamepads();
+	static void pollInput();
 	static bool isGamepadButtonDown(GamepadButton button, int controller = 0);
 	static float getGamepadAxis(GamepadAxis axis, int controller = 0);
-	static void resetMouseDelta();
 	static void setCursorVisible(bool visible);
+	static void applyCallbackBindings();
 
 private:
-	Input(const Ref<Window>& _window);
-	~Input();
+	Input();
+	~Input() = default;
 	
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);

@@ -5,16 +5,100 @@
 #include "texture.h"
 #include "render_graph.h"
 #include "math_helpers.h"
+#include "command_buffer.h"
+#include "basic_components.h"
+#include "render_server.h"
 
 using namespace HopEngine;
 using namespace std;
+
+WeakRef<Scene> Component::getScene() const
+{ return owner->getScene(); }
+
+Transform& Component::getTransform() const
+{ return owner->transform; }
+
+Ref<Object> Object::create()
+{
+	Ref obj = new Object();
+	obj->self = obj;
+	return obj;
+}
+
+void Object::removeFromParent()
+{
+	if (!parent)
+		return;
+	for (auto it = parent->children.begin(); it != parent->children.end(); ++it)
+	{
+		if ((*it).get() == this)
+		{
+			parent->children.erase(it);
+			parent = nullptr;
+			if (scene)
+				scene->insertObject(self.strong());
+			return;
+		}
+	}
+	DBG_WARNING("object " + name + " claims to be a child of object " + parent->name + ", but could not be found in the parents child list.");
+}
+
+void Object::addChild(WeakRef<Object> obj)
+{
+	if (obj->scene && obj->scene != scene)
+	{
+		DBG_WARNING("object " + obj->name + " is already present in another scene hierarchy.");
+		return;
+	}
+	if (scene)
+		scene->insertObject(obj);
+	for (auto it = obj->parent->children.begin(); it != obj->parent->children.end(); ++it)
+	{
+		if ((*it).get() == obj.get())
+		{
+			obj->parent->children.erase(it);
+			obj->parent = self;
+			children.emplace_back(obj.strong());
+			return;
+		}
+	}
+	DBG_WARNING("object " + name + " claims to be a child of object " + parent->name + ", but could not be found in the parents child list.");
+}
+
+void Object::update(float delta_time)
+{
+	for (const auto& comp : components)
+		comp->update(delta_time);
+	for (const auto& child : children)
+		child->update(delta_time);
+}
+
+vector<DrawCommand> Object::getDrawCommands()
+{
+	vector<DrawCommand> commands;
+	for (const auto& comp : components)
+	{
+		auto sub_commands = comp->getDrawCommands();
+		commands.insert(commands.begin(), sub_commands.begin(), sub_commands.end());
+	}
+	return commands;
+}
+
+BoundingBox Object::getLocalBounds() const
+{
+	return BoundingBox{ { 0, 0, 0 }, { 0.1f, 0.1f, 0.1f } };
+}
+
+Object::Object()
+{
+	transform.owner = this;
+}
 
 Ref<Scene> Scene::create(const std::string& name)
 {
 	Ref scn = new Scene(name);
 	scn->self = scn;
-	scn->insertObject(scn->root);
-	scn->insertObject(scn->backup_camera.cast<Object>());
+	scn->root->scene = scn;
 	return scn;
 }
 
@@ -32,7 +116,7 @@ vector<WeakRef<Object>> Scene::getAllObjects() const
 	return objs;
 }
 
-Ref<Object> Scene::findObject(const std::string& name) const
+WeakRef<Object> Scene::findObject(const std::string& name) const
 {
 	for (auto& test_obj : objects)
 	{
@@ -42,84 +126,84 @@ Ref<Object> Scene::findObject(const std::string& name) const
 	return nullptr;
 }
 
-Ref<Object> Scene::insertObject(Ref<Object> obj)
+WeakRef<Object> Scene::insertObject(WeakRef<Object> obj)
 {
-	// if object in set, return
-	auto it = objects.begin();
-	while (it != objects.end() && it->get() != obj.get())
-		++it;
-	if (it != objects.end())
-		return obj;
-	// otherwise add object to set
-	objects.emplace_back(obj);
-	if (dynamic_cast<Light*>(obj.get()) != nullptr)
+	if (obj->scene)
 	{
-		auto ref2 = obj.template cast<Light>();
-		lights.emplace_back(ref2);
+		if (obj->scene == self)
+		{
+			if (!obj->parent)
+			{
+				obj->parent = root;
+				root->children.emplace_back(obj.strong());
+				return obj;
+			}
+			DBG_WARNING("object " + obj->name + " is already a member of scene " + getOrigin());
+			return obj;
+		}
+		obj->scene->removeObject(obj);
 	}
-	// and call object set scene
-	obj->setScene(self);
-	// if object parent is null, set parent to root
-	if (!obj->getParent())
-		root->addChild(obj);
+	objects.emplace_back(obj.strong());
+	obj->scene = self;
+	if (!obj->parent)
+	{
+		obj->parent = root;
+		root->children.emplace_back(obj.strong());
+	}
+	for (const auto& child : obj->children)
+		insertObject(child);
 	return obj;
 }
 
-void Scene::removeObject(Ref<Object> obj)
+WeakRef<Object> Scene::addObject(const string& name)
 {
-	// if object not in set, return
-	auto it = objects.begin();
-	while (it != objects.end() && it->get() != obj.get())
-		++it;
-	if (it == objects.end())
+	Ref obj = Object::create();
+	obj->name = name;
+	obj->scene = self;
+	objects.emplace_back(obj);
+	obj->parent = root;
+	root->children.emplace_back(obj);
+	return obj;
+}
+
+void Scene::removeObject(WeakRef<Object> obj)
+{
+	if (obj->scene != self)
+	{
+		DBG_WARNING("object " + obj->name + " is not a member of scene " + getOrigin());
 		return;
-	// otherwise remove object from set
-	objects.erase(it);
-	if (dynamic_cast<Light*>(obj.get()) != nullptr)
-	{
-		auto ref2 = obj.template cast<Light>();
-		auto it2 = lights.begin();
-		while (it2 != lights.end() && it2->get() != ref2.get())
-			++it2;
-		lights.erase(it2);
 	}
-	// and call object remove from scene
-	obj->removeFromScene();
-}
-
-Ref<Camera> Scene::getCamera(const size_t slot) const
-{
-	const auto it = cameras.find(slot);
-	if (it != cameras.end())
-		return it->second;
-	return backup_camera;
-}
-
-vector<LightParams> Scene::getLightParams() const
-{
-	vector<LightParams> lights_params(8);
-	
-	size_t index = 0;
-	for (const auto& light : lights)
+	for (auto it = objects.begin(); it != objects.end(); ++it)
 	{
-		lights_params[index] = light->getParamsStructure();
-		++index;
-		if (index >= 8)
+		if ((*it).get() == obj.get())
+		{
+			objects.erase(it);
+			obj->scene = nullptr;
+			if (obj->parent)
+			{
+				if (obj->parent->scene)
+				{
+					for (auto it2 = obj->parent->children.begin(); it2 != obj->parent->children.end(); ++it2)
+					{
+						if ((*it2).get() == obj.get())
+						{
+							obj->parent->children.erase(it2);
+							obj->parent = nullptr;
+							break;
+						}
+					}
+					if (obj->parent)
+						DBG_WARNING("object " + obj->name + " claims to be a child of object " + obj->parent->name + ", but could not be found in the parents child list.");
+				}
+				for (const auto& child : obj->children)
+					removeObject(child);
+			}
+			else
+				DBG_WARNING("object " + obj->name + " has no parent. this is not allowed.");
 			break;
+		}
 	}
-
-	return lights_params;
-}
-
-vector<DrawCommand> Scene::getDrawCommands() const
-{
-	vector<DrawCommand> commands;
-	for (const Ref<Object>& object : objects)
-	{
-		auto obj_commands = object->getDrawCommands();
-		commands.insert(commands.begin(), obj_commands.begin(), obj_commands.end());
-	}
-	return commands;
+	DBG_WARNING("object " + obj->name + " claims to be a member of scene " + getOrigin() + ", but is not known to the scene. scene hierarchy is corrupt.");
 }
 
 WeakRef<Object> Scene::raycast(const glm::vec3 position, const glm::vec3 direction) const
@@ -140,32 +224,82 @@ WeakRef<Object> Scene::raycast(const glm::vec3 position, const glm::vec3 directi
 	return closest_obj;
 }
 
-void Scene::setCameraSlot(const Ref<Camera>& camera, const size_t slot)
-{ cameras[slot] = camera; }
+void Scene::setSkybox(WeakRef<Texture> texture)
+{
+	if (texture == skybox)
+		return;
+	skybox = texture;
+	skybox_material->setTexture("tex", texture.strong());
+}
 
-void Scene::updateUniforms(uint32_t image_index, float time_since_start, glm::u32vec2 viewport_size, FrameStats& stats)
+void Scene::update(float delta_time)
+{
+	root->update(delta_time);
+}
+
+void Scene::draw(Ref<DrawCommandBuffer> command_buffer, glm::u32vec2 viewport_size)
 {
 	last_viewport_size = viewport_size;
 	if (!render_graph)
 		return;
-	
-	stats.lights = getLightParams().size();
-	const glm::u32vec2 graph_extent = render_graph->getExpectedExtent();
-	if (graph_extent.x != viewport_size.x || graph_extent.y != viewport_size.y)
-		render_graph->resizeBuffers(viewport_size.x, viewport_size.y);
-	render_graph->updateUniforms(image_index, time_since_start, WeakRef<Scene>(this));
 
-	for (auto& object : objects)
-		object->pushToDescriptorSet(image_index);
+	// resize render graph
+	render_graph->resizeBuffers(viewport_size);
+
+	// collect all lights from the scene
+	vector<LightParams> lights(8);
+	
+	size_t index = 0;
+	for (const auto& light : objects)
+	{
+		auto light_comp = light->getComponent<LightComponent>();
+		if (!light_comp)
+			continue;
+		lights[index] = light_comp->getParamsStructure();
+		++index;
+		if (index >= 8)
+			break;
+	}
+
+	// check the size of each camera slot
+	map<size_t, pair<WeakRef<UniformBlock>, glm::vec4>> cameras;
+	auto camera_sizes = render_graph->getCameraSlots();
+	for (const auto& object : objects)
+	{
+		auto camera_comp = object->getComponent<CameraComponent>();
+		if (!camera_comp)
+			continue;
+		// find the first camera for each slot, and update its uniforms to be correct (and store)
+		cameras[camera_comp->camera_slot] = { camera_comp->getUniforms(camera_sizes[camera_comp->camera_slot], lights, glm::vec4(ambient_colour, 0)), glm::vec4(camera_comp->clear_colour, 1) };
+	}
+
+	// collect all draw calls from the scene (plus the skybox!)
+	vector<DrawCommand> draw_commands;
+	draw_commands.push_back(DrawCommand(skybox_material, RenderServer::getSkyboxCube(), skybox_uniforms).priority(1000));
+	for (const auto& object : objects)
+	{
+		auto temp = object->getDrawCommands();
+		draw_commands.insert(draw_commands.end(), temp.begin(), temp.end());
+	}
+
+	// call render graph draw with the cameras and draw calls
+	render_graph->draw(command_buffer, draw_commands, cameras);
+}
+
+void Scene::bindOutputMaterial(Ref<DrawCommandBuffer> command_buffer)
+{
+	if (render_graph)
+		render_graph->bindOutputMaterial(command_buffer);
 }
 
 Scene::Scene(const string& name)
 {
 	origin = name;
-	render_graph = new RenderGraph(RenderGraphBuilder().addCamera(0));
+	render_graph = new RenderGraph(RenderGraph::Builder().addCamera(0));
 	root = Object::create();
+    skybox_material = new Material(new Shader("res://engine/shaders/skybox.glsl"), Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false));
+	skybox_uniforms = RenderServer::createObjectUniforms();
 	root->name = "scene root";
-	backup_camera = Camera::create();
 
 	DBG_INFO("created new scene " + getOrigin());
 }

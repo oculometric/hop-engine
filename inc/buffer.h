@@ -7,20 +7,6 @@ namespace HopEngine
 {
 
 /**
- * @brief bitflag enum which describes which tasks a buffer may be used for on the GPU.
- */
-enum BufferUsage
-{
-	BUFFER_USAGE_TRANSFER_SRC = 1,
-	BUFFER_USAGE_TRANSFER_DST = 2,
-	BUFFER_USAGE_UNIFORM = 4,
-	BUFFER_USAGE_VERTEX = 8,
-	BUFFER_USAGE_INDEX = 16
-};
-ENUM_OPERATOR(BufferUsage)
-TO_STRING_DEC(BufferUsage);
-
-/**
  * @brief bitflag enum listing the required properties of a block of memory.
  */
 enum MemoryProperties
@@ -36,8 +22,21 @@ TO_STRING_DEC(MemoryProperties);
 /**
  * @brief encapsulates a GPU buffer object and its associated memory.
  */
-class Buffer
+class Buffer final
 {
+public:
+	/**
+	 * @brief bitflag enum which describes which tasks a buffer may be used for on the GPU.
+	 */
+	enum Usage
+	{
+		BUFFER_USAGE_TRANSFER_SRC = 1,
+		BUFFER_USAGE_TRANSFER_DST = 2,
+		BUFFER_USAGE_UNIFORM = 4,
+		BUFFER_USAGE_VERTEX = 8,
+		BUFFER_USAGE_INDEX = 16
+	};
+
 private:
 	VkBuffer buffer = VK_NULL_HANDLE;	// actual GPU buffer object
 	// GPU object for the memory allocated to the buffer
@@ -56,7 +55,7 @@ public:
 	 * @param properties required properties, such as being accessible from the CPU. multiple
 	 * may be specified.
 	 */
-	Buffer(VkDeviceSize size, BufferUsage usage, MemoryProperties properties);
+	Buffer(VkDeviceSize size, Usage usage, MemoryProperties properties);
 	~Buffer();
 
 	/**
@@ -68,7 +67,7 @@ public:
 	 */
 	static uint32_t findMemoryType(uint32_t type_bits, MemoryProperties _properties);
 
-	VkBuffer getBuffer() const { return buffer; }
+	VkBuffer getHandle() const { return buffer; }
 	VkDeviceSize getSize() const { return buffer_size; }
 	/**
 	 * @brief requests for the buffer to be mapped into CPU-accessible memory. will fail
@@ -92,7 +91,10 @@ public:
 	 */
 	void copyToBuffer(const Ref<Buffer>& other) const;
 	
-	void bind(Ref<DrawCommandBuffer> command_buffer, int type);
+	void bind(WeakRef<DrawCommandBuffer> command_buffer, int type);
 };
+
+ENUM_OPERATOR(Buffer::Usage)
+TO_STRING_DEC(Buffer::Usage);
 
 }

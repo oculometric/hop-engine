@@ -15,6 +15,8 @@ struct VkVertexInputBindingDescription;
 struct VkPipelineShaderStageCreateInfo;
 struct VkSurfaceFormatKHR;
 struct VkSwapchainCreateInfoKHR;
+struct VkSurfaceCapabilitiesKHR;
+struct VkSurfaceFormatKHR;
 
 union VkClearValue;
 

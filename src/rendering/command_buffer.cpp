@@ -83,10 +83,9 @@ DrawCommandBuffer::DrawCommandBuffer()
 DrawCommandBuffer::~DrawCommandBuffer()
 {
     DBG_VERBOSE("destroying command buffer " + PTR(this));
+    RenderServer::waitIdle();
     vkFreeCommandBuffers(RenderServer::getDevice(), RenderServer::getCommandPool(), 1, &buffer);
-    buffer = nullptr;
     vkDestroyQueryPool(RenderServer::getDevice(), query_pool, nullptr);
-    query_pool = nullptr;
 }
 
 void DrawCommandBuffer::begin(uint32_t index, FrameStats* frame_stats)

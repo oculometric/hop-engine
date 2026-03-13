@@ -10,7 +10,7 @@
 namespace HopEngine
 {
 
-class TokenReader
+class TokenReader final
 {
 public:
     enum TokenType
@@ -36,7 +36,7 @@ public:
         WHITESPACE
     };
 
-    struct Token
+    struct Token final
     {
         TokenType type = INT;
         union
@@ -138,7 +138,7 @@ public:
         }
     };
 
-    struct Statement
+    struct Statement final
     {
         std::string keyword;
         std::string identifier;

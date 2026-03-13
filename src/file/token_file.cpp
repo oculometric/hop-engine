@@ -566,7 +566,7 @@ glm::vec4 TokenReader::deserialiseVectorToken(const string& str, const size_t of
     }
     catch (invalid_argument& e)
     {
-        reportError("invalid vector literal", offset, original_content);
+        reportError("invalid vector literal: " + string(e.what()), offset, original_content);
         return { 0, 0, 0, 0 };
     }
 

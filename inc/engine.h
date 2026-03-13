@@ -2,91 +2,119 @@
 
 #include <map>
 #include <vector>
+#include <chrono>
 
 #include "common.h"
-#include "sampler.h"
+#include "texture.h"
 #include "frame_stats.h"
 
 namespace HopEngine
 {
 
-class Engine
+class Application;
+
+class Engine final
 {
 private:
 	Ref<Scene> scene;
-	Ref<Window> window;
-	void(* update_func)(Ref<Scene>, float) = nullptr;
-	void(* imgui_func)(Ref<Scene>, float) = nullptr;
+	Ref<Application> application;
+	Ref<Application> next_application;
 
 	std::multimap<const char*, WeakRef<void>> allocated_refs;
 	std::map<std::string, Ref<Shader>> loaded_shaders;
 	std::map<std::string, Ref<Material>> loaded_materials;
 	std::map<std::string, Ref<Texture>> loaded_textures;
 	std::map<std::string, Ref<Mesh>> loaded_meshes;
-	std::map<SamplerBuilder, Ref<Sampler>> premade_samplers;
-	std::vector<Ref<Destructible>> keep_loaded_refs;
+	std::map<Sampler::Builder, Ref<Sampler>> premade_samplers;
 
 	FrameStats last_frame_stats;
+	std::chrono::steady_clock::time_point engine_start_timestamp;
+	float delta_time = 0.0f;
+	float total_time = 0.0f;
 	float smoothed_delta_time = 0.0f;
 	float smoothed_fps = 0.0f;
-	float delta_time_history[512];
-	float fps_history[512];
+	size_t frame_index = 0;
+	float delta_time_history[200];
 	int history_offset = 0;
 	
 	bool wireframe_view = false;
 	
 	bool stop_requested = false;
+	bool start_called = false;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Engine);
 
 	static void init();
 	static void destroy();
+	
+	template<class T> static void runApplication();
+	template<class T> static void switchApplication();
+	static void setScene(const Ref<Scene>& new_scene);
 	static void stop();
 
-	static void setup(void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>, float));
-	static void mainLoop();
 	static Ref<Scene> getScene();
-	static void setScene(const Ref<Scene>& new_scene);
-	static void summariseTrackedObjects();
+
 	static FrameStats getFrameStats();
+	static float getDeltaTime();
+	static float getEngineTime();
 	static float getSmoothedDeltaTime();
 	static float getSmoothedFPS();
-	static bool isWireframeMode();
-	template <class T> static std::vector<WeakRef<T>> getAllRefs();
-	static void setForceWireframe(bool value);
-	static void registerCountedRef(const char* type_name, const WeakRef<void>& reference);
-	static void unregisterCountedRef(const void* ptr);
-	template <class T> static Ref<T> keepLoaded(Ref<T> ref);
-	template <class T> static Ref<T> keepLoaded(T* ref) { return keepLoaded(Ref<T>(ref)); }
-
-	static void debugCamera(float delta_time);
-	static void debugSelect(const WeakRef<Object>& object);
-	static void debugClearSelection(const WeakRef<Object>& object = WeakRef<Object>(), const WeakRef<Material>& material = WeakRef<Material>(), WeakRef<Camera> camera = WeakRef<Camera>());
-	static WeakRef<Object> getDebugSelection();
+	static size_t getFrameCount();
 	
+	static bool isWireframeMode();
+	static void setForceWireframe(bool value);
+	static void debugSelect(const WeakRef<Object>& object);
+	static WeakRef<Object> getDebugSelection();
+	static void debugCamera(const WeakRef<Object>& selected_camera);
+
 	static Ref<Shader> loadShader(const std::string& path);
 	static Ref<Material> loadMaterial(const std::string& path);
 	static Ref<Texture> loadTexture(const std::string& path);
 	static Ref<Texture> loadTexture3D(const std::string& path, int layers_wide, int layers_high);
 	static Ref<Mesh> loadMesh(const std::string& path);
-	static Ref<Sampler> makeSampler(const SamplerBuilder& builder);
+	static Ref<Sampler> makeSampler(const Sampler::Builder& builder);
 	static size_t pruneUnusedResources();
-	static void drawImGuiDebug(float delta_time);
+	template <class T> static std::vector<WeakRef<T>> getAllRefs();
+	static void registerCountedRef(const char* type_name, const WeakRef<void>& reference);
+	static void unregisterCountedRef(const void* ptr);
+
+	static void drawImGuiDebug();
 	
 private:
 	Engine();
 	~Engine();
 	
+	static void start();
 	static Engine* getEngine();
 	static std::vector<WeakRef<void>> getRefsWithType(const char* type_name);
-	static void _keepLoaded(const Ref<Destructible>& ref);
 	void updateStats(const FrameStats& stats);
+	static void summariseTrackedObjects();
 	
 	void _drawImGuiDebug(float delta_time) const;
 };
 
-template<class T>
+template <class T>
+inline void Engine::runApplication()
+{
+	static_assert(std::is_convertible_v<T*, Application*>, "T must be a HopEngine::Application subclass");
+	if (getEngine()->start_called)
+	{
+		DBG_WARNING("an application is already running. did you mean to call switchApplication?");
+        return;
+	}
+	getEngine()->application = new T();
+	Engine::start();
+}
+
+template <class T>
+inline void Engine::switchApplication()
+{
+	static_assert(std::is_convertible_v<T*, Application*>, "T must be a HopEngine::Application subclass");
+	getEngine()->next_application = new T();
+}
+
+template <class T>
 std::vector<WeakRef<T>> Engine::getAllRefs()
 {
 	auto refs = getRefsWithType(typeid(T).name());
@@ -96,12 +124,15 @@ std::vector<WeakRef<T>> Engine::getAllRefs()
 	return cast_refs;
 }
 
-template<class T>
-Ref<T> Engine::keepLoaded(Ref<T> ref)
+class Application : public Destructible
 {
-	static_assert(std::is_convertible_v<T*, Destructible*>, "reference must be a HopEngine::Destructible subclass");
-	_keepLoaded(ref.template cast<Destructible>());
-	return ref;
-}
+public:
+	DELETE_NOT_ALL_CONSTRUCTORS(Application);
+	Application() = default;
+	~Application() = default;
+
+	virtual void update(float delta_time) { }
+	virtual void drawImGui() { }
+};
 
 }

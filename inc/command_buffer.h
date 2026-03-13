@@ -13,7 +13,7 @@ namespace HopEngine
 /**
  * @brief represents a transient GPU command buffer to allow immediate command execution
  */
-class TransientCommandBuffer : public Destructible
+class TransientCommandBuffer final : public Destructible
 {
 private:
 	VkCommandBuffer buffer = VK_NULL_HANDLE;	// GPU command buffer handle
@@ -24,7 +24,7 @@ public:
 	TransientCommandBuffer();
 	~TransientCommandBuffer() override;
 	
-	VkCommandBuffer getBuffer() const { return buffer; }
+	VkCommandBuffer getHandle() const { return buffer; }
 	/**
 	 * @brief causes the command buffer to be submitted to the graphics queue, and waits
 	 * for completion before returning.
@@ -35,7 +35,7 @@ public:
 typedef void* GPUHandle;
 struct FrameStats;
 
-class DrawCommandBuffer : public Destructible
+class DrawCommandBuffer final : public Destructible
 {
 private:
 	VkCommandBuffer buffer = VK_NULL_HANDLE;

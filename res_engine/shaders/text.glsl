@@ -17,5 +17,7 @@ void fragment()
         discard;
 
     out_colour = vec4(frag.colour.rgb, 1);
-    out_params.w = 0.0f;
+    out_normal = vec4(0, 0, 0, 1);
+    out_custom = vec4(0, 0, 0, 1);
+    out_params = vec4(0, 0, 0, 0);
 }

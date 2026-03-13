@@ -7,13 +7,11 @@
 
 using namespace HopEngine;
 
-static WeakRef<NodeView> node_view;
-static WeakRef<NodeView::Style> style;
-
-static Ref<Scene> initNodeScene()
+NodeApp::NodeApp()
 {
     Ref<Scene> scene = Scene::create();
-    node_view = scene->insertObject<NodeView>(NodeView::create());
+    auto node_obj = scene->addObject("node view");
+    node_view = node_obj->addComponent<NodeView>();
     style = node_view->getStyle();
     node_view->nodes.push_back(new NodeView::Node
         { "Hello, World!",
@@ -71,19 +69,20 @@ static Ref<Scene> initNodeScene()
     auto style = node_view->getStyle();
     node_view->setStyle(style);
 
-    scene->getCamera(0)->transform.lookAt({ 0, 0, 6 }, { 0, 0, 0 }, { 0, 1, 0 });
+    auto camera = scene->addObject("camera");
+    camera->addComponent<CameraComponent>();
+    camera->transform.lookAt({ 0, 0, 6 }, { 0, 0, 0 }, { 0, 1, 0 });
     
     Engine::setScene(scene);
-    return scene;
+    RenderServer::setTitle("Demo Scene - Nodes");
 }
 
-static void updateNodeScene(Ref<Scene> scene, float delta_time)
+void NodeApp::update(float delta_time)
 {
-    // FIXME: input  mouse delta is weird on non-fullscreen window?
-    node_view->checkInput({ 0, 0 }, scene->getViewportSize());
+    node_view->checkInput({ 0, 0 }, Engine::getScene()->getViewportSize());
 }
 
-void imguiNodeScene(Ref<Scene> scene, float delta_time)
+void NodeApp::drawImGui()
 {
     ImGui::Begin("style controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     {
@@ -150,11 +149,6 @@ void imguiNodeScene(Ref<Scene> scene, float delta_time)
 
         ImGui::End();
     }
-}
-
-SceneFuncSet getNodeScene()
-{
-    return { L"nodes", initNodeScene, updateNodeScene, imguiNodeScene };
 }
 
 #endif

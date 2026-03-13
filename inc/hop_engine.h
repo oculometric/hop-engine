@@ -10,8 +10,6 @@
 #include "buffer.h"
 #include "mesh.h"
 #include "material.h"
-#include "shader.h"
-#include "sampler.h"
 #include "texture.h"
 #include "uniform_block.h"
 #include "render_graph.h"
@@ -22,13 +20,10 @@
 
 #include "scene.h"
 #include "transform.h"
-#include "object.h"
-#include "text_block.h"
+#include "basic_components.h"
 #include "font.h"
 #include "node_view.h"
-#include "gizmo.h"
 
-#include "window.h"
 #include "package.h"
 #include "input.h"
 #include "debug.h"

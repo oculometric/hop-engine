@@ -4,56 +4,35 @@
 #include <algorithm>
 #include <vulkan/vulkan.hpp>
 
-#include "swapchain_vulkan.h"
 #include "render_server.h"
-#include "texture_vulkan.h"
+#include "vulkan_converters.h"
 
 using namespace HopEngine;
 using namespace std;
 
-SwapchainSupportInfo HopEngine::getSwapchainSupportInfo(const VkPhysicalDevice device, const VkSurfaceKHR surface)
-{
-    SwapchainSupportInfo info;
+static Swapchain::SupportInfo cached_info;
 
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &(info.surface_capabilities));
-   
+Swapchain::SupportInfo Swapchain::getSwapchainSupportInfo(const VkPhysicalDevice device, const VkSurfaceKHR surface)
+{
+    cached_info.surface_capabilities.resize(1);
+
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, cached_info.surface_capabilities.data());
+
     uint32_t format_count;
     vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &format_count, nullptr);
     if (format_count != 0)
     {
-        info.surface_formats.resize(format_count);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &format_count, info.surface_formats.data());
+        cached_info.surface_formats.resize(format_count);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &format_count, cached_info.surface_formats.data());
     }
 
-    uint32_t mode_count;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &mode_count, nullptr);
-    if (mode_count != 0)
-    {
-        info.present_modes.resize(mode_count);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &mode_count, info.present_modes.data());
-    }
-
-    return info;
+    return cached_info;
 }
 
-VkSurfaceFormatKHR HopEngine::getIdealSurfaceFormat(const SwapchainSupportInfo& info)
+glm::u32vec2 Swapchain::computeExtent(const uint32_t window_width, const uint32_t window_height)
 {
-    for (const VkSurfaceFormatKHR& format : info.surface_formats)
-    {
-        if (format.format == VK_FORMAT_B8G8R8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-            return format;
-    }
-
-    return info.surface_formats[0];
-}
-
-VkPresentModeKHR HopEngine::getIdealPresentMode(const SwapchainSupportInfo& info)
-{ return VK_PRESENT_MODE_FIFO_KHR; }
-
-glm::u32vec2 HopEngine::getIdealExtent(const SwapchainSupportInfo& info, const uint32_t window_width, const uint32_t window_height)
-{
-    if (info.surface_capabilities.currentExtent.width != numeric_limits<uint32_t>::max())
-        return { info.surface_capabilities.currentExtent.width, info.surface_capabilities.currentExtent.height };
+    if (cached_info.surface_capabilities[0].currentExtent.width != numeric_limits<uint32_t>::max())
+        return { cached_info.surface_capabilities[0].currentExtent.width, cached_info.surface_capabilities[0].currentExtent.height };
     else
     {
         VkExtent2D actual_extent =
@@ -62,32 +41,37 @@ glm::u32vec2 HopEngine::getIdealExtent(const SwapchainSupportInfo& info, const u
             window_height
         };
 
-        actual_extent.width = clamp(actual_extent.width, info.surface_capabilities.minImageExtent.width, info.surface_capabilities.maxImageExtent.width);
-        actual_extent.height = clamp(actual_extent.height, info.surface_capabilities.minImageExtent.height, info.surface_capabilities.maxImageExtent.height);
+        actual_extent.width = clamp(actual_extent.width, cached_info.surface_capabilities[0].minImageExtent.width, cached_info.surface_capabilities[0].maxImageExtent.width);
+        actual_extent.height = clamp(actual_extent.height, cached_info.surface_capabilities[0].minImageExtent.height, cached_info.surface_capabilities[0].maxImageExtent.height);
 
         return { actual_extent.width, actual_extent.height };
     }
 }
 
+uint32_t HopEngine::Swapchain::computeImageCount()
+{
+    uint32_t image_count = cached_info.surface_capabilities[0].minImageCount + 1;
+    if (cached_info.surface_capabilities[0].maxImageCount > 0)
+        image_count = min(image_count, cached_info.surface_capabilities[0].maxImageCount);
+    return image_count;
+}
+
 Swapchain::Swapchain(const uint32_t width, const uint32_t height, const VkSurfaceKHR _surface)
 {
     surface = _surface;
-    create_info.resize(1);
+    create_info = new VkSwapchainCreateInfoKHR{ };
 
     // calculate actual swapchain parameters
-    const SwapchainSupportInfo support_info = getSwapchainSupportInfo(RenderServer::getPhysicalDevice(), surface);
-    VkSurfaceFormatKHR surface_format = getIdealSurfaceFormat(support_info);
-    format = FORMAT_B8G8R8A8_SRGB; // uhh.... yeah anyway
-    extent = getIdealExtent(support_info, width, height);
+    const SupportInfo support_info = getSwapchainSupportInfo(RenderServer::getPhysicalDevice(), surface);
+    format = Texture::FORMAT_SWAPCHAIN;
+    extent = computeExtent(width, height);
 
     create_info[0] = VkSwapchainCreateInfoKHR{ };
     create_info[0].sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     create_info[0].surface = surface;
-    create_info[0].minImageCount = support_info.surface_capabilities.minImageCount + 1;
-    if (support_info.surface_capabilities.maxImageCount > 0)
-        create_info[0].minImageCount = min(create_info[0].minImageCount, support_info.surface_capabilities.maxImageCount);
-    create_info[0].imageFormat = surface_format.format;
-    create_info[0].imageColorSpace = surface_format.colorSpace;
+    create_info[0].minImageCount = computeImageCount();
+    create_info[0].imageFormat = VK_FORMAT_B8G8R8A8_SRGB;
+    create_info[0].imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
     create_info[0].imageExtent = { extent.x, extent.y };
     create_info[0].imageArrayLayers = 1;
     create_info[0].imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -109,14 +93,14 @@ Swapchain::Swapchain(const uint32_t width, const uint32_t height, const VkSurfac
         create_info[0].pQueueFamilyIndices = nullptr;
     }
 
-    create_info[0].preTransform = support_info.surface_capabilities.currentTransform;
+    create_info[0].preTransform = support_info.surface_capabilities[0].currentTransform;
     create_info[0].compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    create_info[0].presentMode = getIdealPresentMode(support_info);
+    create_info[0].presentMode = VK_PRESENT_MODE_FIFO_KHR;
     create_info[0].clipped = VK_TRUE;
     create_info[0].oldSwapchain = VK_NULL_HANDLE;
 
     // create the swapchain
-    if (vkCreateSwapchainKHR(RenderServer::getDevice(), create_info.data(), nullptr, &swapchain) != VK_SUCCESS)
+    if (vkCreateSwapchainKHR(RenderServer::getDevice(), create_info, nullptr, &swapchain) != VK_SUCCESS)
         DBG_FAULT("vkCreateSwapchainKHR failed");
     createImageViews();
 
@@ -132,15 +116,36 @@ Swapchain::~Swapchain()
 void Swapchain::resize(const uint32_t width, const uint32_t height)
 {
     DBG_VERBOSE("resizing swapchain to " + ::to_string(width) + "x" + ::to_string(height));
+    
     destroyResources();
 
-    const SwapchainSupportInfo support_info = getSwapchainSupportInfo(RenderServer::getPhysicalDevice(), surface);
-    extent = getIdealExtent(support_info, width, height);
+    getSwapchainSupportInfo(RenderServer::getPhysicalDevice(), surface);
+    extent = computeExtent(width, height);
     create_info[0].imageExtent = { extent.x, extent.y };
 
-    if (vkCreateSwapchainKHR(RenderServer::getDevice(), create_info.data(), nullptr, &swapchain) != VK_SUCCESS)
+    if (vkCreateSwapchainKHR(RenderServer::getDevice(), create_info, nullptr, &swapchain) != VK_SUCCESS)
         DBG_FAULT("vkCreateSwapchainKHR failed");
     createImageViews();
+}
+
+void Swapchain::setVsync(bool enabled)
+{
+    if ((create_info[0].presentMode == VK_PRESENT_MODE_FIFO_KHR) == enabled)
+        return;
+
+    destroyResources();
+
+    create_info[0].presentMode = enabled ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR;
+    
+    if (vkCreateSwapchainKHR(RenderServer::getDevice(), create_info, nullptr, &swapchain) != VK_SUCCESS)
+        DBG_FAULT("vkCreateSwapchainKHR failed");
+    createImageViews(); 
+}
+
+
+bool Swapchain::getVsync()
+{
+    return create_info[0].presentMode == VK_PRESENT_MODE_FIFO_KHR;
 }
 
 void Swapchain::createImageViews()
@@ -177,6 +182,7 @@ void Swapchain::createImageViews()
 
 void Swapchain::destroyResources() const
 {
+    RenderServer::waitIdle();
     for (const auto image_view : image_views)
         vkDestroyImageView(RenderServer::getDevice(), image_view, nullptr);
     vkDestroySwapchainKHR(RenderServer::getDevice(), swapchain, nullptr);

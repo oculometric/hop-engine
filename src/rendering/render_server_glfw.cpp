@@ -1,0 +1,128 @@
+#include "render_server.h"
+
+#define GLFW_INCLUDE_NONE
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+#include <stb_image.h>
+
+#include "package.h"
+#include "swapchain.h"
+#include "render_pass.h"
+#include "input.h"
+
+using namespace HopEngine;
+using namespace std;
+
+bool RenderServer::getWindowShouldClose()
+{ return glfwWindowShouldClose(getWindow()); }
+
+void RenderServer::setTitle(const string &title)
+{ glfwSetWindowTitle(getWindow(), title.c_str()); }
+
+void RenderServer::setVisible(bool visible)
+{
+    if (visible)
+        glfwShowWindow(getWindow());
+    else
+        glfwHideWindow(getWindow());
+}
+
+void RenderServer::setIcon(const string &path)
+{
+    GLFWimage image;
+
+    // grab a png image from the package and read it
+    const auto image_data = Package::load(path);
+    int img_channels;
+    image.pixels = stbi_load_from_memory(image_data.data(), static_cast<int>(image_data.size()), &image.width, &image.height, &img_channels, STBI_rgb_alpha);
+
+    glfwSetWindowIcon(getWindow(), 1, &image);
+    stbi_image_free(image.pixels);
+}
+
+void RenderServer::createWindow()
+{
+    glfwInit();
+    // appropriate hints for vulkan
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    // keep window invisible until vulkan is ready to draw. prevents a flashbang
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    window = glfwCreateWindow(window_size.x, window_size.y, "hop-engine", fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+    DBG_INFO("created window at " + ::to_string(window_size.x) + "x" + ::to_string(window_size.y));
+}
+
+bool RenderServer::resize()
+{
+    RenderServer::waitIdle();
+    if (wants_fullscreen_update)
+    {
+        destroyImGui();
+        swapchain = nullptr;
+        glfwDestroyWindow(window);
+        vkDestroySurfaceKHR(instance, surface, nullptr);
+
+        if (fullscreen)
+        {
+            size_before_fullscreen = window_size;
+            int width;
+            int height;
+            glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), nullptr, nullptr, &width, &height);
+            window_size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
+        }
+        else
+            window_size = size_before_fullscreen;
+
+        createWindow();
+
+        if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS)
+            DBG_FAULT("glfwCreateWindowSurface failed");
+
+        QueueFamilies queueFamilyIndices = getQueueFamilies(physical_device);
+        
+        int window_x;
+        int window_y;
+        glfwGetFramebufferSize(window, &window_x, &window_y);
+        const Swapchain::SupportInfo supportInfo = Swapchain::getSwapchainSupportInfo(physical_device, surface);
+        window_size = { static_cast<uint32_t>(window_x), static_cast<uint32_t>(window_y) };
+        swapchain = new Swapchain(window_size.x, window_size.y, surface);
+        swapchain->setVsync(vsync);
+        final_render_pass = new RenderPass(swapchain, { 0, true });
+
+        initImGui();
+
+        Input::applyCallbackBindings();
+
+        glfwShowWindow(window);
+        wants_fullscreen_update = false;
+        return true;
+    }
+    else
+    {
+        int window_x;
+        int window_y;
+        glfwGetFramebufferSize(window, &window_x, &window_y);
+        glm::u32vec2 new_size = { static_cast<uint32_t>(window_x), static_cast<uint32_t>(window_y) };
+        if (new_size == window_size && !wants_vsync_update)
+            return false;
+
+        window_size = new_size;
+        if (wants_vsync_update)
+        {
+            swapchain->setVsync(vsync);
+            wants_vsync_update = false;
+        }
+        swapchain->resize(window_size.x, window_size.y);
+        final_render_pass->resize();
+
+        return true;
+    }
+
+    return false;
+}
+
+void RenderServer::destroyWindow()
+{
+    glfwDestroyWindow(window);
+    glfwTerminate();
+}

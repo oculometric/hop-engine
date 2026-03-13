@@ -2,16 +2,13 @@
 
 #include "material.h"
 #include "texture.h"
-#include "shader.h"
 #include "token_file.h"
 #include "package.h"
-#include "sampler.h"
 #include "render_graph.h"
 #include "engine.h"
 #include "scene.h"
 #include "mesh.h"
-#include "object.h"
-#include "text_block.h"
+#include "basic_components.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -73,22 +70,22 @@ static bool getAnonArgument(const size_t index, float& result, const vector<pair
 	return false;
 }
 
-static CompareOp getCompareOp(const string& str)
+static Pipeline::CompareOp getCompareOp(const string& str)
 {
-	static map<string, CompareOp> op_map =
+	static map<string, Pipeline::CompareOp> op_map =
 	{
-		{ "ALWAYS", COMPARE_ALWAYS },
-		{ "EQUAL", COMPARE_EQUAL },
-		{ "GREATER", COMPARE_GREATER },
-		{ "GREATER_EQUAL", COMPARE_GREATER_OR_EQUAL },
-		{ "LESS", COMPARE_LESS },
-		{ "LESS_EQUAL", COMPARE_LESS_OR_EQUAL },
-		{ "NEVER", COMPARE_NEVER },
-		{ "NOT_EQUAL", COMPARE_NOT_EQUAL }
+		{ "ALWAYS", Pipeline::COMPARE_ALWAYS },
+		{ "EQUAL", Pipeline::COMPARE_EQUAL },
+		{ "GREATER", Pipeline::COMPARE_GREATER },
+		{ "GREATER_EQUAL", Pipeline::COMPARE_GREATER_OR_EQUAL },
+		{ "LESS", Pipeline::COMPARE_LESS },
+		{ "LESS_EQUAL", Pipeline::COMPARE_LESS_OR_EQUAL },
+		{ "NEVER", Pipeline::COMPARE_NEVER },
+		{ "NOT_EQUAL", Pipeline::COMPARE_NOT_EQUAL }
 	};
 	const auto it = op_map.find(str);
 	if (it == op_map.end())
-		return static_cast<CompareOp>(-1);
+		return static_cast<Pipeline::CompareOp>(-1);
 	return it->second;
 }
 
@@ -105,64 +102,64 @@ static int getBool(const string& str)
 	return it->second;
 }
 
-static CullMode getCullMode(const string& str)
+static Pipeline::CullMode getCullMode(const string& str)
 {
-	static map<string, CullMode> cull_map =
+	static map<string, Pipeline::CullMode> cull_map =
 	{
-		{ "NONE", CULL_NONE },
-		{ "FRONT", CULL_FRONT },
-		{ "BACK", CULL_BACK }
+		{ "NONE", Pipeline::CULL_NONE },
+		{ "FRONT", Pipeline::CULL_FRONT },
+		{ "BACK", Pipeline::CULL_BACK }
 	};
 	const auto it = cull_map.find(str);
 	if (it == cull_map.end())
-		return static_cast<CullMode>(-1);
+		return static_cast<Pipeline::CullMode>(-1);
 	return it->second;
 }
 
-static PolygonMode getPolygonMode(const string& str)
+static Pipeline::PolygonMode getPolygonMode(const string& str)
 {
-	static map<string, PolygonMode> polygon_map =
+	static map<string, Pipeline::PolygonMode> polygon_map =
 	{
-		{ "FILL", POLYGON_FILL },
-		{ "LINE", POLYGON_LINE },
-		{ "POINT", POLYGON_POINT }
+		{ "FILL", Pipeline::POLYGON_FILL },
+		{ "LINE", Pipeline::POLYGON_LINE },
+		{ "POINT", Pipeline::POLYGON_POINT }
 	};
 	const auto it = polygon_map.find(str);
 	if (it == polygon_map.end())
-		return static_cast<PolygonMode>(-1);
+		return static_cast<Pipeline::PolygonMode>(-1);
 	return it->second;
 }
 
-static SamplerFilter getFilter(const string& str)
+static Sampler::Filter getFilter(const string& str)
 {
-	static map<string, SamplerFilter> filter_map =
+	static map<string, Sampler::Filter> filter_map =
 	{
-		{ "LINEAR", FILTER_LINEAR },
-		{ "NEAREST", FILTER_NEAREST },
+		{ "LINEAR", Sampler::FILTER_LINEAR },
+		{ "NEAREST", Sampler::FILTER_NEAREST },
 	};
 	const auto it = filter_map.find(str);
 	if (it == filter_map.end())
-		return static_cast<SamplerFilter>(-1);
+		return static_cast<Sampler::Filter>(-1);
 	return it->second;
 }
 
-static SamplerAddress getAddressMode(const string& str)
+static Sampler::Address getAddressMode(const string& str)
 {
-	static map<string, SamplerAddress> address_map =
+	static map<string, Sampler::Address> address_map =
 	{
-		{ "REPEAT", ADDRESS_REPEAT },
-		{ "MIRROR", ADDRESS_MIRRORED },
-		{ "CLAMP", ADDRESS_CLAMP_EDGE }
+		{ "REPEAT", Sampler::ADDRESS_REPEAT },
+		{ "MIRROR", Sampler::ADDRESS_MIRRORED },
+		{ "CLAMP", Sampler::ADDRESS_CLAMP_EDGE }
 	};
 	const auto it = address_map.find(str);
 	if (it == address_map.end())
-		return static_cast<SamplerAddress>(-1);
+		return static_cast<Sampler::Address>(-1);
 	return it->second;
 }
 
 Ref<Material> Material::deserialise(const string& name)
 {
-	auto raw_data = Package::tryLoadFile(name);
+	auto raw_data = Package::load(name);
 	if (raw_data.empty())
 		return nullptr;
 
@@ -178,7 +175,7 @@ Ref<Material> Material::deserialise(const string& name)
 	map<string, Ref<Shader>> shaders;
 	map<string, Ref<Texture>> textures;
 
-	PipelineBuilder pipeline_builder;
+	Pipeline::Builder pipeline_builder;
 	Ref<Shader> main_shader;
 
 	vector<TokenReader::Statement> uniforms;
@@ -218,8 +215,8 @@ Ref<Material> Material::deserialise(const string& name)
 			auto it = args.find("operation");
 			if (it != args.end())
 			{
-				CompareOp operation = getCompareOp(it->second.s_value);
-				if (operation == static_cast<CompareOp>(-1))
+				Pipeline::CompareOp operation = getCompareOp(it->second.s_value);
+				if (operation == static_cast<Pipeline::CompareOp>(-1))
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid depth operation value");
 					return nullptr;
@@ -260,8 +257,8 @@ Ref<Material> Material::deserialise(const string& name)
 			auto it = args.find("mode");
 			if (it != args.end())
 			{
-				CullMode cull = getCullMode(it->second.s_value);
-				if (cull == static_cast<CullMode>(-1))
+				Pipeline::CullMode cull = getCullMode(it->second.s_value);
+				if (cull == static_cast<Pipeline::CullMode>(-1))
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid culling mode value");
 					return nullptr;
@@ -280,8 +277,8 @@ Ref<Material> Material::deserialise(const string& name)
 			auto it = args.find("mode");
 			if (it != args.end())
 			{
-				PolygonMode polygon = getPolygonMode(it->second.s_value);
-				if (polygon == static_cast<PolygonMode>(-1))
+				Pipeline::PolygonMode polygon = getPolygonMode(it->second.s_value);
+				if (polygon == static_cast<Pipeline::PolygonMode>(-1))
 				{
 					DBG_ERROR("error deserialising material '" + name + "': invalid polygon mode value");
 					return nullptr;
@@ -300,8 +297,8 @@ Ref<Material> Material::deserialise(const string& name)
 					{ "write_mask", { TokenReader::INT, false } },
 				}, args, "error deserialising material '" + name + "'"))
 				return nullptr;
-			CompareOp compare = getCompareOp(args["compare"].s_value);
-			if (compare == static_cast<CompareOp>(-1))
+			Pipeline::CompareOp compare = getCompareOp(args["compare"].s_value);
+			if (compare == static_cast<Pipeline::CompareOp>(-1))
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid stencil compare op value");
 				return nullptr;
@@ -378,12 +375,12 @@ Ref<Material> Material::deserialise(const string& name)
 		}
 		string binding;
 		binding = args.find("binding")->second.s_value;
-		SamplerBuilder sampler_builder;
+		Sampler::Builder sampler_builder;
 		it = args.find("filter");
 		if (it != args.end())
 		{
-			SamplerFilter filter = getFilter(it->second.s_value);
-			if (filter == static_cast<SamplerFilter>(-1))
+			Sampler::Filter filter = getFilter(it->second.s_value);
+			if (filter == static_cast<Sampler::Filter>(-1))
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor filter value");
 				return nullptr;
@@ -393,8 +390,8 @@ Ref<Material> Material::deserialise(const string& name)
 		it = args.find("address");
 		if (it != args.end())
 		{
-			SamplerAddress address = getAddressMode(it->second.s_value);
-			if (address == static_cast<SamplerAddress>(-1))
+			Sampler::Address address = getAddressMode(it->second.s_value);
+			if (address == static_cast<Sampler::Address>(-1))
 			{
 				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor address value");
 				return nullptr;
@@ -452,7 +449,7 @@ Ref<Material> Material::deserialise(const string& name)
 
 Ref<RenderGraph> RenderGraph::deserialise(const string& name)
 {
-	auto raw_data = Package::tryLoadFile(name);
+	auto raw_data = Package::load(name);
 	if (raw_data.empty())
 		return nullptr;
 
@@ -466,9 +463,9 @@ Ref<RenderGraph> RenderGraph::deserialise(const string& name)
 		return nullptr;
 
 	map<string, Ref<Shader>> shaders;
-	map<string, RenderOutput> render_passes;
+	map<string, RenderPass::Config> render_passes;
 	map<string, int> step_identifiers;
-	RenderGraphBuilder builder;
+	Builder builder;
 	
 	for (const TokenReader::Statement& statement : syntax_tree)
 	{
@@ -505,7 +502,7 @@ Ref<RenderGraph> RenderGraph::deserialise(const string& name)
 				return nullptr;
 			}
 			size_t extra_buffers = glm::clamp(args[1].i_value, 0, 6);
-			render_passes[statement.identifier] = RenderOutput{ extra_buffers, static_cast<bool>(has_depth) };
+			render_passes[statement.identifier] = RenderPass::Config{ extra_buffers, static_cast<bool>(has_depth) };
 		}
 		else if (statement.keyword == "Camera")
 		{
@@ -579,7 +576,7 @@ Ref<RenderGraph> RenderGraph::deserialise(const string& name)
 				scale = 0.0f;
 				custom_size = glm::max(it->second.c_value, 1.0f);
 			}
-			map<uint32_t, RenderTextureBinding> bindings;
+			map<uint32_t, AttachmentBinding> bindings;
 			for (const TokenReader::Statement& sub_statement : statement.children)
 			{
 				if (sub_statement.keyword != "Input")
@@ -615,12 +612,12 @@ Ref<RenderGraph> RenderGraph::deserialise(const string& name)
 					DBG_ERROR("error deserialising render graph '" + name + "': post-process input attachment must be positive");
 					return nullptr;
 				}
-				RenderTextureBinding texture_binding(step_it->second, attachment);
+				AttachmentBinding texture_binding(step_it->second, attachment);
 				auto filter_it = args2.find("filter");
 				if (filter_it != args2.end())
 				{
-					SamplerFilter filter = getFilter(filter_it->second.s_value);
-					if (filter == static_cast<SamplerFilter>(-1))
+					Sampler::Filter filter = getFilter(filter_it->second.s_value);
+					if (filter == static_cast<Sampler::Filter>(-1))
 					{
 						DBG_ERROR("error deserialising render graph '" + name + "': invalid post-process input filter value");
 						return nullptr;
@@ -630,8 +627,8 @@ Ref<RenderGraph> RenderGraph::deserialise(const string& name)
 				filter_it = args2.find("address");
 				if (filter_it != args2.end())
 				{
-					SamplerAddress address = getAddressMode(filter_it->second.s_value);
-					if (address == static_cast<SamplerAddress>(-1))
+					Sampler::Address address = getAddressMode(filter_it->second.s_value);
+					if (address == static_cast<Sampler::Address>(-1))
 					{
 						DBG_ERROR("error deserialising render graph '" + name + "': invalid post-process input address mode value");
 						return nullptr;
@@ -677,7 +674,8 @@ struct SceneResources
 
 static Ref<Object> deserialiseStaticMesh(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<StaticMesh> obj = StaticMesh::create(nullptr, nullptr);
+	Ref<Object> object = Object::create();
+	WeakRef<StaticMeshComponent> obj = object->addComponent<StaticMeshComponent>();
 	auto it = args.find("mesh");
 	if (it != args.end())
 	{
@@ -706,21 +704,22 @@ static Ref<Object> deserialiseStaticMesh(const map<string, TokenReader::Token>& 
 		obj->camera_mask = it->second.i_value;
 	}
 	
-	return obj.cast<Object>();
+	return object;
 }
 
 static Ref<Object> deserialiseLight(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<Light> obj = Light::create(Light::DIRECTIONAL);
+	Ref<Object> object = Object::create();
+	WeakRef<LightComponent> obj = object->addComponent<LightComponent>();
 	auto it = args.find("type");
 	if (it != args.end())
 	{
 		if (it->second.s_value == "DIRECTIONAL")
-			obj->type = Light::DIRECTIONAL;
+			obj->type = LightComponent::DIRECTIONAL;
 		else if (it->second.s_value == "POINT")
-			obj->type = Light::POINT;
+			obj->type = LightComponent::POINT;
 		else if (it->second.s_value == "SPOT")
-			obj->type = Light::SPOT;
+			obj->type = LightComponent::SPOT;
 		else
 		{
 			DBG_ERROR("error deserialising light, invalid light type '" + it->second.s_value + "'");
@@ -738,15 +737,16 @@ static Ref<Object> deserialiseLight(const map<string, TokenReader::Token>& args,
 		obj->spot_angle = it->second.f_value;
 	}
 	
-	return obj.cast<Object>();
+	return object;
 }
 
 static Ref<Object> deserialiseCamera(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<Camera> obj = Camera::create();
+	Ref<Object> object = Object::create();
+	WeakRef<CameraComponent> obj = object->addComponent<CameraComponent>();
 	auto it = args.find("slot");
 	if (it != args.end())
-		scene->setCameraSlot(obj, it->second.i_value);
+		obj->camera_slot = it->second.i_value;
 	else
 		DBG_WARNING("deserialising a camera object without a slot binding, this camera will not render!");
 	it = args.find("clear_colour");
@@ -762,12 +762,13 @@ static Ref<Object> deserialiseCamera(const map<string, TokenReader::Token>& args
 	if (it != args.end())
 		obj->fov = it->second.f_value;
 	
-	return obj.cast<Object>();
+	return object;
 }
 
 static Ref<Object> deserialiseTextBlock(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<TextBlock> obj = TextBlock::create("Text");
+	Ref<Object> object = Object::create();
+	WeakRef<TextComponent> obj = object->addComponent<TextComponent>();
 	auto it = args.find("text");
 	if (it != args.end())
 		obj->setText(it->second.s_value);
@@ -775,7 +776,7 @@ static Ref<Object> deserialiseTextBlock(const map<string, TokenReader::Token>& a
 	if (it != args.end())
 		obj->setTint(it->second.c_value);
 	
-	return obj.cast<Object>();
+	return object;
 }
 struct ObjectDeserialiseConfig
 {
@@ -784,7 +785,7 @@ struct ObjectDeserialiseConfig
 };
 
 static map<string, ObjectDeserialiseConfig> object_deserialisers = {
-	{ "StaticMesh", { deserialiseStaticMesh, {
+	{ "StaticMeshComponent", { deserialiseStaticMesh, {
 						{ "mesh", TokenReader::IDENTIFIER },
 						{ "material", TokenReader::IDENTIFIER },
                         { "camera_mask", TokenReader::INT }
@@ -801,7 +802,7 @@ static map<string, ObjectDeserialiseConfig> object_deserialisers = {
 						{ "far_clip", TokenReader::FLOAT },
 						{ "fov", TokenReader::FLOAT },
 	} } },
-	{ "TextBlock", { deserialiseTextBlock, {
+	{ "TextComponent", { deserialiseTextBlock, {
 							{ "text", TokenReader::STRING },
 							{ "tint", TokenReader::VECTOR }
 	} } }
@@ -874,7 +875,7 @@ static bool deserialiseObject(const TokenReader::Statement& statement, const Ref
 
 Ref<Scene> Scene::deserialise(const string& name)
 {
-	auto raw_data = Package::tryLoadFile(name);
+	auto raw_data = Package::load(name);
 	if (raw_data.empty())
 		return nullptr;
 

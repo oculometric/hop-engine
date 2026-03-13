@@ -24,72 +24,84 @@ void Engine::init()
 }
 
 void Engine::destroy()
-{ delete engine; }
-
-void Engine::stop()
-{ engine->stop_requested = true; }
-
-void Engine::setup(void(* _update_func)(Ref<Scene>, float), void(* _imgui_func)(Ref<Scene>, float))
 {
-    RenderServer::waitIdle();
-
-    engine->imgui_func = _imgui_func;
-    engine->update_func = _update_func;
+    if (engine != nullptr)
+    {
+        delete engine;
+        engine = nullptr;
+    }
 }
 
-void Engine::mainLoop()
+void Engine::start()
 {
+    if (engine->start_called)
+    {
+        DBG_WARNING("attempt to start the engine mainloop when the mainloop is already running. don't do that!");
+        return;
+    }
+    engine->start_called = true;
+    
     auto last_frame = chrono::steady_clock::now();
 
-    while (!engine->window->getShouldClose() && !engine->stop_requested)
+    while (!RenderServer::getWindowShouldClose() && !engine->stop_requested)
     {
+        if (engine->next_application)
+        {
+            engine->application = engine->next_application;
+            engine->next_application = nullptr;
+        }
+
         auto this_frame = chrono::steady_clock::now();
         chrono::duration<float> delta = this_frame - last_frame;
         last_frame = this_frame;
-        Window::pollEvents();
-        Input::pollGamepads();
-        if (engine->window->isMinified())
-            continue;
-        if (engine->window->isResized())
-            RenderServer::resize();
-        auto imgui_start = chrono::steady_clock::now();
-        if (engine->imgui_func)
+        engine->delta_time = delta.count();
+        chrono::duration<float> since_start = this_frame - engine->engine_start_timestamp;
+        engine->total_time = since_start.count();
+
+        Input::pollInput();
+
+        if (Input::wasKeyPressed(Input::KEY_F11))
+            RenderServer::setFullscreenEnabled(!RenderServer::getFullscreenEnabled());
+
+        if (engine->application)
         {
             ImGui_ImplVulkan_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            RenderServer::waitIdle();
-            engine->imgui_func(engine->scene, delta.count());
+            if (engine->application)
+                engine->application->drawImGui();
 
             ImGui::Render();
         }
-        chrono::duration<float> imgui_duration = chrono::steady_clock::now() - imgui_start;
+        
         FrameStats stats = RenderServer::draw();
+        
         auto update_start = chrono::steady_clock::now();
-        if (engine->update_func)
-            engine->update_func(engine->scene, delta.count());
+        if (engine->application)
+            engine->application->update(getDeltaTime());
         chrono::duration<float> update_duration = chrono::steady_clock::now() - update_start;
-        stats.imgui_time = imgui_duration.count();
         stats.update_time = update_duration.count();
-        static auto last_frame_end = chrono::steady_clock::now();
-        chrono::duration<float> frame_delta = chrono::steady_clock::now() - last_frame_end;
-        last_frame_end = chrono::steady_clock::now();
-        stats.delta_time = frame_delta.count();
+
         engine->updateStats(stats);
+        
+        ++(engine->frame_index);
     }
 }
+
+void Engine::setScene(const Ref<Scene> &new_scene)
+{
+    Engine::debugSelect(WeakRef<Object>());
+    engine->scene = new_scene;
+    RenderServer::setSingleScene(new_scene);
+}
+
+void Engine::stop()
+{ engine->stop_requested = true; }
 
 Ref<Scene> Engine::getScene()
 {
     return engine->scene;
-}
-
-void Engine::setScene(const Ref<Scene>& new_scene)
-{
-    Engine::debugClearSelection();
-    engine->scene = new_scene;
-    RenderServer::setSingleScene(new_scene);
 }
 
 void Engine::summariseTrackedObjects()
@@ -124,11 +136,20 @@ void HopEngine::unregisterCountedRef(const void* ptr)
 FrameStats Engine::getFrameStats()
 { return engine->last_frame_stats; }
 
+float Engine::getDeltaTime()
+{ return engine->delta_time; }
+
+float Engine::getEngineTime()
+{ return engine->total_time; }
+
 float Engine::getSmoothedDeltaTime()
 { return engine->smoothed_delta_time; }
 
 float Engine::getSmoothedFPS()
 { return engine->smoothed_fps; }
+
+size_t Engine::getFrameCount()
+{ return engine->frame_index; }
 
 bool Engine::isWireframeMode()
 { return engine->wireframe_view; }
@@ -167,7 +188,7 @@ Ref<Texture> Engine::loadTexture(const string& path)
     const auto it = engine->loaded_textures.find(path);
     if (it == engine->loaded_textures.end())
     {
-        Ref<Texture> thing = new Texture(path);
+        Ref<Texture> thing = Texture::loadImage(path);
         engine->loaded_textures[path] = thing;
         return thing;
     }
@@ -180,7 +201,7 @@ Ref<Texture> Engine::loadTexture3D(const string& path, const int layers_wide, co
     const auto it = engine->loaded_textures.find(path);
     if (it == engine->loaded_textures.end())
     {
-        Ref<Texture> thing = new Texture(path, TextureBuilder().layers({ static_cast<uint32_t>(layers_wide), static_cast<uint32_t>(layers_high) }));
+        Ref<Texture> thing = Texture::loadImage3D(path, { static_cast<uint32_t>(layers_wide), static_cast<uint32_t>(layers_high) });
         engine->loaded_textures[path] = thing;
         return thing;
     }
@@ -193,7 +214,7 @@ Ref<Mesh> Engine::loadMesh(const string& path)
     const auto it = engine->loaded_meshes.find(path);
     if (it == engine->loaded_meshes.end())
     {
-        Ref<Mesh> thing = new Mesh(path);
+        Ref<Mesh> thing = Mesh::loadMesh(path);
         engine->loaded_meshes[path] = thing;
         return thing;
     }
@@ -201,7 +222,7 @@ Ref<Mesh> Engine::loadMesh(const string& path)
     return it->second;
 }
 
-Ref<Sampler> Engine::makeSampler(const SamplerBuilder& builder)
+Ref<Sampler> Engine::makeSampler(const Sampler::Builder& builder)
 {
     return engine->premade_samplers[builder];
 }
@@ -270,15 +291,18 @@ size_t Engine::pruneUnusedResources()
     return pruned_refs;
 }
 
-void Engine::drawImGuiDebug(float delta_time)
+void Engine::drawImGuiDebug()
 {
-    engine->_drawImGuiDebug(delta_time);
+    engine->_drawImGuiDebug(getDeltaTime());
 }
 
 Engine::Engine()
 {
     engine = this;
-    Debug::init(DEBUG_FAULT);
+
+    engine->engine_start_timestamp = chrono::steady_clock::now();
+
+    Debug::init(Debug::DEBUG_FAULT);
     Package::init();
 
 // #if defined(_WIN32)
@@ -290,45 +314,40 @@ Engine::Engine()
 //     memcpy(engine_package.data(), data, size);
 //     Package::loadPackageFromMemory(engine_package, "engine.hop (internal)");
 // #else
-    Package::loadPackage("engine.hop");
+    Package::importPackage("engine.hop");
 // #endif
-    window = new Window(1024, 1024, "STARTING HOP-ENGINE");
-    window->setIcon("res://engine/icon.png");
-    Input::init(window);
-    RenderServer::init(window);
-    RenderServer::draw();
+    RenderServer::init();
+    RenderServer::setIcon("res://engine/icon.png");
+    Input::init();
     
-    SamplerBuilder builders[6] =
+    Sampler::Builder builders[6] =
     {
-        { FILTER_LINEAR, ADDRESS_REPEAT },
-        { FILTER_NEAREST, ADDRESS_REPEAT },
-        { FILTER_LINEAR, ADDRESS_MIRRORED },
-        { FILTER_NEAREST, ADDRESS_MIRRORED },
-        { FILTER_LINEAR, ADDRESS_CLAMP_EDGE },
-        { FILTER_NEAREST, ADDRESS_CLAMP_EDGE },
+        { Sampler::FILTER_LINEAR,  Sampler::ADDRESS_REPEAT },
+        { Sampler::FILTER_NEAREST, Sampler::ADDRESS_REPEAT },
+        { Sampler::FILTER_LINEAR,  Sampler::ADDRESS_MIRRORED },
+        { Sampler::FILTER_NEAREST, Sampler::ADDRESS_MIRRORED },
+        { Sampler::FILTER_LINEAR,  Sampler::ADDRESS_CLAMP_EDGE },
+        { Sampler::FILTER_NEAREST, Sampler::ADDRESS_CLAMP_EDGE },
     };
-    for (SamplerBuilder s : builders)
+    for (Sampler::Builder s : builders)
         premade_samplers[s] = new Sampler(s);
-    
-    window->setVisible(true);
-    debugClearSelection();
 }
 
 Engine::~Engine()
 {
-    debugClearSelection();
+    Engine::debugSelect(WeakRef<Object>());
     scene = nullptr;
-    keep_loaded_refs.clear();
+    application = nullptr;
+    next_application = nullptr;
     loaded_shaders.clear();
     loaded_materials.clear();
     loaded_textures.clear();
     loaded_meshes.clear();
     premade_samplers.clear();
 
-    RenderServer::destroy();
     Package::destroy();
     Input::destroy();
-    window = nullptr;
+    RenderServer::destroy();
     if (!allocated_refs.empty())
     {
         DBG_ERROR("uh oh! there are objects still allocated! prepare for vulkan errors and possibly crashes! see below:");
@@ -336,10 +355,7 @@ Engine::~Engine()
     }
     else
         DBG_INFO("good girl for cleaning up!");
-    Window::terminateEnvironment();
     Debug::close();
-
-    engine = nullptr;
 }
 
 Engine* Engine::getEngine()
@@ -357,20 +373,13 @@ vector<WeakRef<void>> Engine::getRefsWithType(const char* type_name)
     return refs;
 }
 
-void Engine::_keepLoaded(const Ref<Destructible>& ref)
-{ engine->keep_loaded_refs.push_back(ref); }
-
 void Engine::updateStats(const FrameStats& stats)
 {
     last_frame_stats = stats;
 
-    smoothed_delta_time = (smoothed_delta_time * 0.5f) + (stats.delta_time * 0.5f);
-    const float fps = 1.0f / stats.delta_time;
-    smoothed_fps = (smoothed_fps * 0.5f) + (fps * 0.5f);
+    smoothed_delta_time = (smoothed_delta_time * 0.9f) + (delta_time * 0.1f);
+    smoothed_fps = 1.0f / smoothed_delta_time;
 
-    delta_time_history[history_offset] = stats.delta_time;
-    fps_history[history_offset] = 1.0f / stats.delta_time;
-    history_offset = (history_offset + 1) % 512;
-
-    engine->window->setTitle(format("hop-engine   -   {:>4.2f}ms   -   {:>6.2f} fps", smoothed_delta_time * 1000.0f, smoothed_fps));
+    delta_time_history[history_offset] = delta_time * 1000.0f;
+    history_offset = (history_offset + 1) % 200;
 }

@@ -9,6 +9,15 @@ SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIRECTORY}")
 
 project (hop-engine)
 
+if (HOP_BUILD_DEBUG)
+if (WIN32)
+    add_compile_options("/Od")
+    add_compile_options("/ZI")
+    add_link_options("/INCREMENTAL")
+    add_link_options("/DEBUG")
+endif()
+endif()
+
 find_package(Vulkan REQUIRED)
 
 file(GLOB SRC_FILES
