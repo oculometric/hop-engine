@@ -78,7 +78,7 @@ public:
 	Pipeline(const Ref<Shader>& shader, const Builder& config, const Ref<RenderPass>& render_pass);
 	~Pipeline() override;
 	
-	void bind(Ref<DrawCommandBuffer> command_buffer);
+	void bind(WeakRef<DrawCommandBuffer> command_buffer);
 	Builder getConfig() const { return pipeline_config; }
 };
 

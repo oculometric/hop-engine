@@ -13,6 +13,7 @@ using namespace std;
 UniformBlock::UniformBlock(const Shader::Layout& layout_info)
 {
     layout = layout_info;
+    set_index = layout_info.set_index;
     // calculate the total size of the required buffer for the uniforms
     // we use one big buffer regardless of if there are multiple uniform blocks,
     // and just map sections of the buffer when we apply the descriptor set
@@ -66,10 +67,10 @@ UniformBlock::~UniformBlock()
     vkFreeDescriptorSets(RenderServer::getDevice(), RenderServer::getDescriptorPool(), static_cast<uint32_t>(descriptor_sets.size()), descriptor_sets.data());
 }
 
-void UniformBlock::bind(Ref<DrawCommandBuffer> command_buffer, size_t set) const
+void UniformBlock::bind(WeakRef<DrawCommandBuffer> command_buffer) const
 {
     memcpy(uniform_buffers[command_buffer->getImageIndex()]->mapMemory(), live_uniform_buffer.data(), live_uniform_buffer.size());
-    command_buffer->bindDescriptorSetInternal(set, descriptor_sets[command_buffer->getImageIndex()]);
+    command_buffer->bindDescriptorSetInternal(set_index, descriptor_sets[command_buffer->getImageIndex()]);
 }
 
 void UniformBlock::setTexture(const uint32_t binding, const Ref<Texture>& image, const bool use_stencil)

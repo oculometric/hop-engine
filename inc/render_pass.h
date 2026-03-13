@@ -38,10 +38,10 @@ public:
 	Ref<Texture> getImage(size_t attachment) const;
 	std::vector<VkClearValue> getClearValues() const;
 	glm::u32vec2 getExtent() const { return extent; }
-	bool isCompatible(const Ref<RenderPass>& other) const;
+	bool isCompatible(const WeakRef<RenderPass>& other) const;
 	Ref<RenderPass> duplicate() const;
 	void resize(uint32_t width = 0, uint32_t height = 0);
-	void begin(Ref<DrawCommandBuffer> command_buffer, glm::vec3 clear_colour);
+	void begin(WeakRef<DrawCommandBuffer> command_buffer, glm::vec3 clear_colour);
 	
 private:
 	void createRenderPass(Texture::Format main_colour_format, Texture::Layout final_main_colour_layout, bool make_readable);

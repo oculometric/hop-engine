@@ -92,7 +92,7 @@ public:
 	 */
 	void copyToBuffer(const Ref<Buffer>& other) const;
 	
-	void bind(Ref<DrawCommandBuffer> command_buffer, int type);
+	void bind(WeakRef<DrawCommandBuffer> command_buffer, int type);
 };
 
 }

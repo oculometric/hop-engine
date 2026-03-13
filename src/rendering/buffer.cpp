@@ -142,7 +142,7 @@ void Buffer::copyToBuffer(const Ref<Buffer>& other) const
     cmd_buf->submit();
 }
 
-void Buffer::bind(Ref<DrawCommandBuffer> command_buffer, int type)
+void Buffer::bind(WeakRef<DrawCommandBuffer> command_buffer, int type)
 {
     if (type == 0)
         command_buffer->bindVertexBuffer(buffer);

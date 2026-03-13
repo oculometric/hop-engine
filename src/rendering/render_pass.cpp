@@ -64,7 +64,7 @@ vector<VkClearValue> RenderPass::getClearValues() const
     return values;
 }
 
-bool RenderPass::isCompatible(const Ref<RenderPass>& other) const
+bool RenderPass::isCompatible(const WeakRef<RenderPass>& other) const
 {
     if (other->output_config.has_depth_attachment != output_config.has_depth_attachment)
         return false;
@@ -87,7 +87,7 @@ void RenderPass::resize(const uint32_t width, const uint32_t height)
         createResources(Texture::FORMAT_R8G8B8A8_SRGB, width, height);
 }
 
-void RenderPass::begin(Ref<DrawCommandBuffer> command_buffer, glm::vec3 clear_colour)
+void RenderPass::begin(WeakRef<DrawCommandBuffer> command_buffer, glm::vec3 clear_colour)
 {
     command_buffer->startRenderPassInternal(render_pass, framebuffers[command_buffer->getImageIndex() % framebuffers.size()], extent, getClearValues(), clear_colour);
 }

@@ -34,6 +34,7 @@ private:
 	std::vector<uint8_t> live_uniform_buffer;
 	VkDeviceSize size;		// size of the uniform buffer
 	Shader::Layout layout;	// information about the size and offset of uniform variables
+	uint32_t set_index;
 
 public:
 	DELETE_CONSTRUCTORS(UniformBlock);
@@ -44,8 +45,7 @@ public:
 	UniformBlock(const Shader::Layout& layout_info);
 	~UniformBlock() override;
 	
-	void bind(Ref<DrawCommandBuffer> command_buffer, size_t set) const;
-	//VkDescriptorSet getDescriptorSet(const size_t index) const { return descriptor_sets[index]; }
+	void bind(WeakRef<DrawCommandBuffer> command_buffer) const;
 	void* getBuffer() { return live_uniform_buffer.data(); }
 	VkDeviceSize getSize() const { return size; }
 	/**

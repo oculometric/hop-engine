@@ -81,6 +81,11 @@ vector<DrawCommand> Object::getDrawCommands()
 	return commands;
 }
 
+BoundingBox Object::getLocalBounds() const
+{
+	return BoundingBox{ { 0, 0, 0 }, { 0.1f, 0.1f, 0.1f } };
+}
+
 Ref<Scene> Scene::create(const std::string& name)
 {
 	Ref scn = new Scene(name);
@@ -261,12 +266,26 @@ void Scene::update(float delta_time)
 	root->update(delta_time);
 }
 
+void Scene::draw(Ref<DrawCommandBuffer> command_buffer, glm::u32vec2 viewport_size)
+{
+	if (!render_graph)
+		return;
+	// resize render graph
+	render_graph->resizeBuffers(viewport_size);
+	// check the size of each camera slot
+	assert(false);
+	// TODO HERE
+	// find the first camera for each slot, and update its uniforms to be correct (and store)
+	// collect all lights from the scene
+	// collect all draw calls from the scene (plus the skybox!)
+	// call render graph draw with the cameras and draw calls
+}
+
 void Scene::bindOutputMaterial(Ref<DrawCommandBuffer> command_buffer)
 {
 	if (render_graph)
 		render_graph->bindOutputMaterial(command_buffer);
 }
-
 
 Scene::Scene(const string& name)
 {

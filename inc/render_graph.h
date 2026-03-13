@@ -92,8 +92,8 @@ public:
 	void setSkipStep(const std::string& name, bool skip);
 	
 	void resizeBuffers(glm::u32vec2 new_extent);
-	void draw(Ref<DrawCommandBuffer> command_buffer, const std::vector<DrawCommand>& draw_commands, const std::vector<Ref<CameraComponent>>& cameras); // TODO
-	void bindOutputMaterial(Ref<DrawCommandBuffer> command_buffer);
+	void draw(WeakRef<DrawCommandBuffer> command_buffer, const std::vector<DrawCommand>& draw_commands, const std::vector<std::pair<WeakRef<UniformBlock>, glm::vec4>>& cameras);
+	void bindOutputMaterial(WeakRef<DrawCommandBuffer> command_buffer);
 	
 	void drawImGuiDebug();
 	static Ref<RenderGraph> deserialise(const std::string& name);
@@ -101,8 +101,8 @@ public:
 private:
 	size_t findStep(const std::string& name) const;
 	void rebuildBindings();
-	static void recordCameraStep(Ref<DrawCommandBuffer> command_buffer, const Ref<CameraComponent>& camera, const Ref<RenderPass>& pass, const std::multiset<DrawCommand, DrawCommand>& commands, const std::vector<LightParams>& lights, glm::vec4 ambient_colour);
-	static void recordPostProcessStep(Ref<DrawCommandBuffer> command_buffer, const Ref<Material>& material, const Ref<UniformBlock>& scene_descriptor_set);
+	static void recordCameraStep(WeakRef<DrawCommandBuffer> command_buffer, const WeakRef<UniformBlock>& camera, glm::vec4 clear_colour, const WeakRef<RenderPass>& pass, const std::multiset<DrawCommand, DrawCommand>& commands);
+	static void recordPostProcessStep(WeakRef<DrawCommandBuffer> command_buffer, const WeakRef<Material>& material, const WeakRef<UniformBlock>& scene_descriptor_set);
 };
 
 }

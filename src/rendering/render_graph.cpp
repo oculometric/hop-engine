@@ -185,28 +185,18 @@ void RenderGraph::resizeBuffers(glm::u32vec2 new_extent)
 }
 
 
-void RenderGraph::recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, WeakRef<Scene> scene, FrameStats& stats, glm::u32vec2 viewport_size)
+void RenderGraph::draw(WeakRef<DrawCommandBuffer> command_buffer, const std::vector<DrawCommand>& draw_commands, const std::vector<std::pair<WeakRef<UniformBlock>, glm::vec4>>& cameras)
 {
+    // TODO: here....
     for (const RenderStep& step : execution_steps)
     {
-        if (step.is_camera)
+        if (!step.is_camera)
         {
-            glm::u32vec2 extent = step.render_pass->getExtent();
+            SceneUniforms* uniforms = reinterpret_cast<SceneUniforms*>(step.scene_uniforms->getBuffer());
+            // TODO: put more info into the scene uniforms here, like matrices, time, etc
+            uniforms->time = Engine::getEngineTime();
+            uniforms->viewport_size = { step.render_pass->getExtent().x, step.render_pass->getExtent().y };
         }
-        else
-        {
-            glm::u32vec2 extent = execution_steps[0].render_pass->getExtent();
-            // FIXME: what the hell is happening here
-            SceneUniforms uniforms = scene->getCamera(execution_steps[0].camera_slot)->getSceneUniforms({ extent.x, extent.y }, scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
-            uniforms.viewport_size = { step.render_pass->getExtent().x, step.render_pass->getExtent().y };
-            memcpy(step.scene_uniforms->getBuffer(), &uniforms, sizeof(SceneUniforms));
-        }
-    }
-    
-    if (scene->skybox && current_skybox != scene->skybox)
-    {
-        skybox_material->setTexture("tex", scene->skybox);
-        current_skybox = scene->skybox;
     }
     
     auto final_image_info = getFinalImage();
@@ -228,8 +218,7 @@ void RenderGraph::recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, Wea
     }
 
     vector<multiset<DrawCommand, DrawCommand>> step_commands(execution_steps.size());
-    auto scene_commands = scene->getDrawCommands(viewport_size);
-    for (const auto& cmd : scene_commands)
+    for (const auto& cmd : draw_commands)
     {
         for (size_t i = 0; i < execution_steps.size(); ++i)
         {
@@ -241,32 +230,18 @@ void RenderGraph::recordCommandBuffer(Ref<DrawCommandBuffer> command_buffer, Wea
         }
     }
 
-    if (scene->skybox)
-    {
-        for (size_t i = 0; i < execution_steps.size(); ++i)
-        {
-            if (!execution_steps[i].is_camera)
-                continue;
-            step_commands[i].insert(DrawCommand(skybox_material, RenderServer::getSkyboxCube().weak()).priority(1000));
-        }
-    }
-
     for (size_t i = 0; i < execution_steps.size(); ++i)
     {
         if (execution_steps[i].skipped)
             continue;
         if (execution_steps[i].is_camera)
-        {
-            recordCameraStep(command_buffer, scene->getCamera(execution_steps[i].camera_slot), execution_steps[i].render_pass, step_commands[i],
-                scene->getLightParams(), glm::vec4(scene->ambient_colour, 0));
-            ++stats.cameras;
-        }
+            recordCameraStep(command_buffer, cameras[i].first, cameras[i].second, execution_steps[i].render_pass, step_commands[i]);
         else
             recordPostProcessStep(command_buffer, execution_steps[i].material, execution_steps[i].scene_uniforms);
     }
 }
 
-void RenderGraph::bindOutputMaterial(Ref<DrawCommandBuffer> command_buffer)
+void RenderGraph::bindOutputMaterial(WeakRef<DrawCommandBuffer> command_buffer)
 {
     passthrough->bind(command_buffer, false);
 }
@@ -314,9 +289,9 @@ void RenderGraph::rebuildBindings()
     }
 }
 
-void RenderGraph::recordCameraStep(const Ref<DrawCommandBuffer> command_buffer, const Ref<CameraComponent>& camera, const Ref<RenderPass>& pass, const multiset<DrawCommand, DrawCommand>& commands, const vector<LightParams>& lights, glm::vec4 ambient_colour)
+void RenderGraph::recordCameraStep(WeakRef<DrawCommandBuffer> command_buffer, const WeakRef<UniformBlock>& camera, glm::vec4 clear_colour, const WeakRef<RenderPass>& pass, const std::multiset<DrawCommand, DrawCommand>& commands)
 {
-    pass->begin(command_buffer, camera->clear_colour);
+    pass->begin(command_buffer, clear_colour);
 
     for (DrawCommand command : commands)
     {
@@ -327,20 +302,20 @@ void RenderGraph::recordCameraStep(const Ref<DrawCommandBuffer> command_buffer, 
         }
         
         command.material->bind(command_buffer);
-
-        camera->bind(command_buffer, pass->getExtent(), lights, ambient_colour);
+        
+        camera->bind(command_buffer);
         if (command.uniforms)
-            command.uniforms->bind(command_buffer, 1);
+            command.uniforms->bind(command_buffer);
         command.mesh->draw(command_buffer);
     }
 }
 
-void RenderGraph::recordPostProcessStep(Ref<DrawCommandBuffer> command_buffer, const Ref<Material>& material, const Ref<UniformBlock>& scene_descriptor_set)
+void RenderGraph::recordPostProcessStep(WeakRef<DrawCommandBuffer> command_buffer, const WeakRef<Material>& material, const WeakRef<UniformBlock>& scene_descriptor_set)
 {
     material->getRenderPass()->begin(command_buffer, { 0, 0, 0 });
     
     material->bind(command_buffer, false);
-    scene_descriptor_set->bind(command_buffer, 0);
+    scene_descriptor_set->bind(command_buffer);
     
     WeakRef<Mesh> quad = RenderServer::getQuad();
     quad->draw(command_buffer);

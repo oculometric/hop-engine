@@ -35,7 +35,8 @@ Ref<UniformBlock> RenderServer::createSceneUniforms()
 {
     return new UniformBlock(Shader::Layout{
         server->scene_descriptor_set_layout, 
-        {{ 0, Shader::UNIFORM, sizeof(SceneUniforms) } }
+        {{ 0, Shader::UNIFORM, sizeof(SceneUniforms) } },
+        0
     });
 }
 
@@ -43,7 +44,8 @@ Ref<UniformBlock> RenderServer::createObjectUniforms()
 {
     return new UniformBlock(Shader::Layout{
         server->object_descriptor_set_layout, 
-        {{ 0, Shader::UNIFORM, sizeof(ObjectUniforms) } }
+        {{ 0, Shader::UNIFORM, sizeof(ObjectUniforms) } },
+        1
     });
 }
 
@@ -165,11 +167,8 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
     
     for (auto& scene : scenes)
     {
-        if (scene.scene && scene.scene->render_graph)
-        {
-            glm::u32vec2 viewport_size = glm::u32vec2(scene.size_uv * glm::vec2(swapchain->getExtent()));
-            scene.scene->render_graph->recordCommandBuffer(command_buffer, scene.scene, stats, viewport_size);
-        }
+        if (scene.scene)
+            scene.scene->draw(command_buffer, glm::u32vec2(scene.size_uv * glm::vec2(swapchain->getExtent())));
     }
     
     final_render_pass->begin(command_buffer, glm::vec3{ 0.02f, 0.02f, 0.02f });
@@ -178,8 +177,8 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
     {
         if (scene.scene && scene.scene->render_graph)
         {
-            scene.scene->render_graph->bind(command_buffer);
-            final_pass_uniforms->bind(command_buffer, 0);
+            scene.scene->bindOutputMaterial(command_buffer);
+            final_pass_uniforms->bind(command_buffer);
         
             command_buffer->setScissorViewport(scene.start_uv, scene.size_uv, swapchain->getExtent());
             quad->draw(command_buffer);

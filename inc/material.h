@@ -87,6 +87,7 @@ public:
 	{
 		VkDescriptorSetLayout layout = VK_NULL_HANDLE;
 		std::vector<DescriptorBinding> bindings;
+		uint32_t set_index = 2;
 	};
 
 private:
@@ -105,7 +106,7 @@ public:
 	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 	VkPipelineLayout getPipelineLayout() const { return pipeline_layout; }
 	Layout getShaderLayout() const { return { descriptor_set_layout, bindings }; }
-	void bind(Ref<DrawCommandBuffer> command_buffer);
+	void bind(WeakRef<DrawCommandBuffer> command_buffer);
 	
 	std::vector<VkPipelineShaderStageCreateInfo> getShaderStageCreateInfos() const;
 	bool reloadShader(); // TODO: shader reload
@@ -148,7 +149,7 @@ public:
 	Ref<RenderPass> getRenderPass() const;
 	Ref<Material> duplicate() const;
 	
-	void bind(Ref<DrawCommandBuffer> command_buffer, bool wireframe_allowed = true);
+	void bind(WeakRef<DrawCommandBuffer> command_buffer, bool wireframe_allowed = true);
 	
 	void setTexture(uint32_t binding, const Ref<Texture>& texture, bool use_stencil = false);
 	void setSampler(uint32_t binding, const Ref<Sampler>& sampler);

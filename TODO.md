@@ -7,15 +7,12 @@ scene collects draw commands and camera infos and lights and calls draw on rende
 
 ## v0.52
 - switch to entity/component system
+    - get camera resolution FROM THE RENDER GRAPH REMEMBER
     - scene drawing function
-    - render graph refactoring
-    - reimplement basic components
     - fix deserialise
     - fix demo scenes
-    - get camera resolution FROM THE RENDER GRAPH REMEMBER
 - overhaul engine debug interfaces
-- uniforms should know what set they bind to
-- multi-scene mode in the engine
+- fullscreen support
 
 - simplify texture to be in one of several 'modes/types' (fix the way view aspects behave), overhaul initialisation, overhaul renderpass accordingly
 - refactor mesh loading as well
@@ -23,9 +20,10 @@ scene collects draw commands and camera infos and lights and calls draw on rende
 
 - scene window-to-viewport function for mouse position etc
 - fix multi-pass rendering not working
+- multi-scene mode in the engine
+- make most classes `final`
 
 - change the way refs work, and the way `new`ing works (classes only construct via ::create, remove keepLoaded)
-- Application class which contains game update loop, etc, which users override
 ---
 # v0.6
 - interactive node editor
@@ -44,8 +42,6 @@ scene collects draw commands and camera infos and lights and calls draw on rende
 - a proper procedural shading art workflow
 - data blocks should know which package they came from
 ---
-- more scene control using ImGui (modify the render graph, material uniforms) [M]
 - improved gizmo, better control, rotation and scale support [M]
 - bytecode node language
-- tux-racer ripoff demo game [L]
 - VR interfaces

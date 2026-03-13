@@ -127,7 +127,7 @@ void Mesh::updateData(const vector<Vertex>& vertices, const vector<uint16_t>& in
     recomputeBoundingBox(vertices);
 }
 
-void Mesh::draw(Ref<DrawCommandBuffer> command_buffer)
+void Mesh::draw(WeakRef<DrawCommandBuffer> command_buffer)
 {
     vertex_buffer->bind(command_buffer, 0);
     index_buffer->bind(command_buffer, 1);

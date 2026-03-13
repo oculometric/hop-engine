@@ -32,7 +32,7 @@ void Engine::destroy()
     }
 }
 
-void Engine::start(UpdateFunc _update_func)
+void Engine::start()
 {
     if (engine->start_called)
     {
@@ -41,12 +41,16 @@ void Engine::start(UpdateFunc _update_func)
     }
     engine->start_called = true;
     
-    Engine::setUpdateFunc(_update_func);
-
     auto last_frame = chrono::steady_clock::now();
 
     while (!RenderServer::getWindowShouldClose() && !engine->stop_requested)
     {
+        if (engine->next_application)
+        {
+            engine->application = engine->next_application;
+            engine->next_application = nullptr;
+        }
+
         auto this_frame = chrono::steady_clock::now();
         chrono::duration<float> delta = this_frame - last_frame;
         last_frame = this_frame;
@@ -56,14 +60,14 @@ void Engine::start(UpdateFunc _update_func)
 
         Input::pollInput();
 
-        if (engine->imgui_func)
+        if (engine->application)
         {
             ImGui_ImplVulkan_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            RenderServer::waitIdle();
-            engine->imgui_func();
+            if (engine->application)
+                engine->application->drawImGui();
 
             ImGui::Render();
         }
@@ -71,8 +75,8 @@ void Engine::start(UpdateFunc _update_func)
         FrameStats stats = RenderServer::draw();
         
         auto update_start = chrono::steady_clock::now();
-        if (engine->update_func)
-            engine->update_func(getDeltaTime());
+        if (engine->application)
+            engine->application->update(getDeltaTime());
         chrono::duration<float> update_duration = chrono::steady_clock::now() - update_start;
         stats.update_time = update_duration.count();
 
@@ -82,17 +86,7 @@ void Engine::start(UpdateFunc _update_func)
     }
 }
 
-void Engine::setUpdateFunc(UpdateFunc func)
-{
-    engine->update_func = func;
-}
-
-void Engine::setImGuiFunc(ImGuiDrawFunc func)
-{
-    engine->imgui_func = func;
-}
-
-void Engine::setScene(const Ref<Scene>& new_scene)
+void Engine::setScene(const Ref<Scene> &new_scene)
 {
     Engine::debugClearSelection();
     engine->scene = new_scene;

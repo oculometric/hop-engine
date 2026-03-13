@@ -27,6 +27,7 @@ public:
 	// TODO: components can be enabled/disabled
 	
 	WeakRef<Object> getOwner() const { return owner; }
+	template<class T> WeakRef<T> getComponent();
 	WeakRef<Scene> getScene() const;
 	Transform& getTransform() const;
 
@@ -102,7 +103,7 @@ public:
 
 	void update(float delta_time);
 	std::vector<DrawCommand> getDrawCommands();
-	BoundingBox getLocalBounds() const; // TODO
+	BoundingBox getLocalBounds() const;
 	
 	void drawImGuiDebug();
 	
@@ -110,11 +111,15 @@ private:
 	Object() = default;
 };
 
+template<class T> WeakRef<T> Component::getComponent()
+{
+	return owner->getComponent<T>();
+}
+
 class Scene final : public Destructible
 {
 public:
 	glm::vec3 ambient_colour = { 0.01f, 0.01f, 0.01f };
-	Ref<Texture> skybox;
 	Ref<RenderGraph> render_graph;
 
 private:
@@ -123,6 +128,8 @@ private:
 	Ref<Object> root;
 	std::vector<Ref<Object>> objects;
 	glm::u32vec2 last_viewport_size;
+	Ref<Material> skybox_material; // TODO
+	WeakRef<Texture> skybox;
 
 public:
 	DELETE_CONSTRUCTORS(Scene);
@@ -139,6 +146,8 @@ public:
 	
 	glm::u32vec2 getViewportSize() const { return last_viewport_size; }
 	WeakRef<Object> raycast(glm::vec3 position, glm::vec3 direction) const;
+
+	void setSkybox(WeakRef<Texture> texture); // TODO
 
 	void update(float delta_time);
 	void draw(Ref<DrawCommandBuffer> command_buffer, glm::u32vec2 viewport_size); // TODO: gather cameras (set their uniforms), gather lights, gather draw calls, resize and draw render graph

@@ -43,7 +43,7 @@ public:
 	uint32_t camera_mask = 0x000000FF;
 
 public:
-	DELETE_CONSTRUCTORS(StaticMeshComponent);
+	DELETE_NOT_ALL_CONSTRUCTORS(StaticMeshComponent);
 
 	void awake() override;
 
@@ -70,7 +70,7 @@ public:
 	float spot_angle = 0.0f;
 
 public:
-	DELETE_CONSTRUCTORS(LightComponent);
+	DELETE_NOT_ALL_CONSTRUCTORS(LightComponent);
 
 	LightParams getParamsStructure() const;
 	
@@ -85,7 +85,7 @@ private:
     glm::vec3 tint = { 0, 0, 0 };
     
 public:
-    DELETE_CONSTRUCTORS(TextComponent);
+    DELETE_NOT_ALL_CONSTRUCTORS(TextComponent);
 
 	void awake() override;
     

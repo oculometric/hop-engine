@@ -147,7 +147,7 @@ Pipeline::~Pipeline()
     vkDestroyPipeline(RenderServer::getDevice(), pipeline, nullptr);
 }
 
-void Pipeline::bind(Ref<DrawCommandBuffer> command_buffer)
+void Pipeline::bind(WeakRef<DrawCommandBuffer> command_buffer)
 {
     command_buffer->bindPipelineInternal(pipeline);
 }

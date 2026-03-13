@@ -11,15 +11,14 @@
 namespace HopEngine
 {
 
-typedef void(* ImGuiDrawFunc)();
-typedef void(* UpdateFunc)(float);
+class Application;
 
-class Engine
+class Engine final
 {
 private:
 	Ref<Scene> scene;
-	UpdateFunc update_func = nullptr;
-	ImGuiDrawFunc imgui_func = nullptr;
+	Ref<Application> application;
+	Ref<Application> next_application;
 
 	std::multimap<const char*, WeakRef<void>> allocated_refs;
 	std::map<std::string, Ref<Shader>> loaded_shaders;
@@ -50,9 +49,8 @@ public:
 	static void init();
 	static void destroy();
 	
-	static void start(UpdateFunc _update_func);
-	static void setUpdateFunc(UpdateFunc func);
-	static void setImGuiFunc(ImGuiDrawFunc func);
+	template<class T> static void runApplication();
+	template<class T> static void switchApplication();
 	static void setScene(const Ref<Scene>& new_scene);
 	static void stop();
 
@@ -90,6 +88,7 @@ private:
 	Engine();
 	~Engine();
 	
+	static void start();
 	static Engine* getEngine();
 	static std::vector<WeakRef<void>> getRefsWithType(const char* type_name);
 	static void _keepLoaded(const Ref<Destructible>& ref);
@@ -99,7 +98,25 @@ private:
 	void _drawImGuiDebug(float delta_time) const;
 };
 
-template<class T>
+template <class T>
+inline void Engine::runApplication()
+{
+	if (engine->start_called)
+	{
+		DBG_WARNING("an application is already running. did you mean to call switchApplication?");
+        return;
+	}
+	application = new T();
+	Engine::start();
+}
+
+template <class T>
+inline void Engine::switchApplication()
+{
+	next_application = new T();
+}
+
+template <class T>
 std::vector<WeakRef<T>> Engine::getAllRefs()
 {
 	auto refs = getRefsWithType(typeid(T).name());
@@ -108,5 +125,16 @@ std::vector<WeakRef<T>> Engine::getAllRefs()
 		cast_refs.push_back(r.cast<T>());
 	return cast_refs;
 }
+
+class Application : public Destructible
+{
+public:
+	DELETE_NOT_ALL_CONSTRUCTORS(Application);
+	Application() = default;
+	~Application() = default;
+
+	virtual void update(float delta_time) { }
+	virtual void drawImGui() { }
+};
 
 }

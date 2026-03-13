@@ -43,7 +43,7 @@ Shader::~Shader()
 	destroyResources();
 }
 
-void Shader::bind(Ref<DrawCommandBuffer> command_buffer)
+void Shader::bind(WeakRef<DrawCommandBuffer> command_buffer)
 {
 	command_buffer->bindPipelineLayoutInternal(pipeline_layout);
 }

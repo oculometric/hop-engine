@@ -55,14 +55,14 @@ Ref<Material> Material::duplicate() const
 	return new Material(shader, pipeline->getConfig(), render_pass);
 }
 
-void Material::bind(Ref<DrawCommandBuffer> command_buffer, bool wireframe_allowed)
+void Material::bind(WeakRef<DrawCommandBuffer> command_buffer, bool wireframe_allowed)
 {
 	if (Engine::isWireframeMode() && wireframe_allowed)
 		debug_pipeline->bind(command_buffer);
 	else
 		pipeline->bind(command_buffer);
 	shader->bind(command_buffer);
-	uniforms->bind(command_buffer, 2);
+	uniforms->bind(command_buffer);
 }
 
 void Material::setTexture(const uint32_t binding, const Ref<Texture>& texture, const bool use_stencil)
