@@ -9,8 +9,9 @@ scene collects draw commands and camera infos and lights and calls draw on rende
 - switch to entity/component system
     - get camera resolution FROM THE RENDER GRAPH REMEMBER
     - scene drawing function
-    - fix deserialise
+- make most classes `final`
 - overhaul engine debug interfaces
+- shortcut function to make object/component creation easier (creates an object and gives it a component)
 - fullscreen support
 
 - simplify texture to be in one of several 'modes/types' (fix the way view aspects behave), overhaul initialisation, overhaul renderpass accordingly
@@ -20,10 +21,10 @@ scene collects draw commands and camera infos and lights and calls draw on rende
 - scene window-to-viewport function for mouse position etc
 - fix multi-pass rendering not working
 - multi-scene mode in the engine
-- make most classes `final`
+- fix skybox side being flipped
+- make fullscreen quad into a fullscreen tri
 
 - change the way refs work, and the way `new`ing works (classes only construct via ::create, remove keepLoaded)
-- shortcut function to make object/component creation easier (creates an object and gives it a component)
 ---
 # v0.6
 - interactive node editor
@@ -33,6 +34,7 @@ scene collects draw commands and camera infos and lights and calls draw on rende
 - frustrum culling [M]
 - improved text block rendering with wrapping, alignment, font, etc
 - object duplicate function [L]
+- enable/disable components
 ---
 ## v0.7
 - shader node editor

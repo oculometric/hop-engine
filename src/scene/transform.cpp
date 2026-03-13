@@ -117,7 +117,7 @@ void Transform::lookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up)
 void Transform::localFromWorld()
 {
 	glm::mat4 parent = glm::identity<glm::mat4>();
-	if (owner->getParent())
+	if (owner && owner->getParent())
 		parent = owner->getParent()->transform.getMatrix();
 	local_matrix = glm::inverse(parent) * world_matrix;
 
@@ -131,7 +131,7 @@ void Transform::localFromWorld()
 void Transform::worldFromLocal()
 {
 	world_matrix = glm::identity<glm::mat4>();
-	if (owner->getParent())
+	if (owner && owner->getParent())
 		world_matrix = owner->getParent()->transform.getMatrix();
 	world_matrix = world_matrix * local_matrix;
 }

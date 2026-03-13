@@ -76,7 +76,6 @@ RenderGraphBuilder& RenderGraphBuilder::addPostProcess(const Ref<Shader>& shader
 
 RenderGraph::RenderGraph(const RenderGraphBuilder& config)
 {
-    skybox_material = new Material(new Shader("res://engine/shaders/skybox.glsl"), Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false));
     passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough.glsl"), Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false), RenderServer::getFinalRenderPass());
     passthrough->setSampler(0, Engine::makeSampler(Sampler::Builder().filter(config.screen_filtering).address(Sampler::ADDRESS_CLAMP_EDGE)));
     execution_steps = config.execution_steps;

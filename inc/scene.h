@@ -107,7 +107,7 @@ public:
 	void drawImGuiDebug();
 	
 private:
-	Object() = default;
+	Object();
 };
 
 template<class T> WeakRef<T> Component::getComponent()
@@ -152,7 +152,7 @@ public:
 	void draw(Ref<DrawCommandBuffer> command_buffer, glm::u32vec2 viewport_size); // TODO: gather cameras (set their uniforms), gather lights, gather draw calls, resize and draw render graph
 	void bindOutputMaterial(Ref<DrawCommandBuffer> command_buffer);
 
-	static Ref<Scene> deserialise(const std::string& name); // TODO:
+	static Ref<Scene> deserialise(const std::string& name);
 	
 	void drawImGuiDebug();
 	

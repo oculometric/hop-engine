@@ -674,7 +674,8 @@ struct SceneResources
 
 static Ref<Object> deserialiseStaticMesh(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<StaticMeshComponent> obj = StaticMeshComponent::create(nullptr, nullptr);
+	Ref<Object> object = Object::create();
+	WeakRef<StaticMeshComponent> obj = object->addComponent<StaticMeshComponent>();
 	auto it = args.find("mesh");
 	if (it != args.end())
 	{
@@ -703,12 +704,13 @@ static Ref<Object> deserialiseStaticMesh(const map<string, TokenReader::Token>& 
 		obj->camera_mask = it->second.i_value;
 	}
 	
-	return obj.cast<Object>();
+	return object;
 }
 
 static Ref<Object> deserialiseLight(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<LightComponent> obj = LightComponent::create(LightComponent::DIRECTIONAL);
+	Ref<Object> object = Object::create();
+	WeakRef<LightComponent> obj = object->addComponent<LightComponent>();
 	auto it = args.find("type");
 	if (it != args.end())
 	{
@@ -735,15 +737,16 @@ static Ref<Object> deserialiseLight(const map<string, TokenReader::Token>& args,
 		obj->spot_angle = it->second.f_value;
 	}
 	
-	return obj.cast<Object>();
+	return object;
 }
 
 static Ref<Object> deserialiseCamera(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<CameraComponent> obj = CameraComponent::create();
+	Ref<Object> object = Object::create();
+	WeakRef<CameraComponent> obj = object->addComponent<CameraComponent>();
 	auto it = args.find("slot");
 	if (it != args.end())
-		scene->setCameraSlot(obj, it->second.i_value);
+		obj->camera_slot = it->second.i_value;
 	else
 		DBG_WARNING("deserialising a camera object without a slot binding, this camera will not render!");
 	it = args.find("clear_colour");
@@ -759,12 +762,13 @@ static Ref<Object> deserialiseCamera(const map<string, TokenReader::Token>& args
 	if (it != args.end())
 		obj->fov = it->second.f_value;
 	
-	return obj.cast<Object>();
+	return object;
 }
 
 static Ref<Object> deserialiseTextBlock(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<TextComponent> obj = TextComponent::create("Text");
+	Ref<Object> object = Object::create();
+	WeakRef<TextComponent> obj = object->addComponent<TextComponent>();
 	auto it = args.find("text");
 	if (it != args.end())
 		obj->setText(it->second.s_value);
@@ -772,7 +776,7 @@ static Ref<Object> deserialiseTextBlock(const map<string, TokenReader::Token>& a
 	if (it != args.end())
 		obj->setTint(it->second.c_value);
 	
-	return obj.cast<Object>();
+	return object;
 }
 struct ObjectDeserialiseConfig
 {

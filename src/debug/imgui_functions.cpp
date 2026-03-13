@@ -329,12 +329,12 @@ void Engine::debugSelect(const WeakRef<Object>& object)
 }
 
 // TODO: deprecate this
-void Engine::debugClearSelection(const WeakRef<Object>& object, const WeakRef<Material>& material, WeakRef<CameraComponent> camera)
-{
-	selected_object = object;
-	selected_material = material;
-	selected_camera = camera->getOwner();
-}
+// void Engine::debugClearSelection(const WeakRef<Object>& object, const WeakRef<Material>& material, WeakRef<CameraComponent> camera)
+// {
+// 	selected_object = object;
+// 	selected_material = material;
+// 	selected_camera = camera->getOwner();
+// }
 
 WeakRef<Object> Engine::getDebugSelection()
 {

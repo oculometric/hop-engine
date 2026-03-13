@@ -20,7 +20,6 @@ Ref<Object> Object::create()
 {
 	Ref obj = new Object();
 	obj->self = obj;
-	obj->transform.owner = obj.get();
 	return obj;
 }
 
@@ -86,6 +85,11 @@ vector<DrawCommand> Object::getDrawCommands()
 BoundingBox Object::getLocalBounds() const
 {
 	return BoundingBox{ { 0, 0, 0 }, { 0.1f, 0.1f, 0.1f } };
+}
+
+Object::Object()
+{
+	transform.owner = this;
 }
 
 Ref<Scene> Scene::create(const std::string& name)
@@ -263,6 +267,14 @@ WeakRef<Object> Scene::raycast(const glm::vec3 position, const glm::vec3 directi
 	return closest_obj;
 }
 
+void Scene::setSkybox(WeakRef<Texture> texture)
+{
+	if (texture == skybox)
+		return;
+	skybox = texture;
+	skybox_material->setTexture("tex", texture.strong());
+}
+
 void Scene::update(float delta_time)
 {
 	root->update(delta_time);
@@ -294,6 +306,7 @@ Scene::Scene(const string& name)
 	origin = name;
 	render_graph = new RenderGraph(RenderGraphBuilder().addCamera(0));
 	root = Object::create();
+    skybox_material = new Material(new Shader("res://engine/shaders/skybox.glsl"), Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false));
 	root->name = "scene root";
 
 	DBG_INFO("created new scene " + getOrigin());

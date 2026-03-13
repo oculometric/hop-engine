@@ -5,6 +5,7 @@
 #include "common.h"
 #include "scene.h"
 #include "material.h"
+#include "font.h"
 
 namespace HopEngine
 {

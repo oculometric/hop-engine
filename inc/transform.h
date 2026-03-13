@@ -13,7 +13,7 @@ struct Transform
 {
 	friend class Object;
 private:
-	Object* owner;
+	Object* owner = nullptr;
 	glm::vec3 local_position;
 	glm::vec3 local_euler;
 	glm::vec3 local_scale;

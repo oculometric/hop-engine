@@ -68,7 +68,7 @@ public:
 
 	static void debugCamera();
 	static void debugSelect(const WeakRef<Object>& object);
-	static void debugClearSelection(const WeakRef<Object>& object = WeakRef<Object>(), const WeakRef<Material>& material = WeakRef<Material>(), WeakRef<CameraComponent> camera = WeakRef<CameraComponent>());
+	// static void debugClearSelection(const WeakRef<Object>& object = WeakRef<Object>(), const WeakRef<Material>& material = WeakRef<Material>(), WeakRef<CameraComponent> camera = WeakRef<CameraComponent>());
 	static WeakRef<Object> getDebugSelection();
 	
 	static Ref<Shader> loadShader(const std::string& path);

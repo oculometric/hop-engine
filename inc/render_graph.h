@@ -73,8 +73,6 @@ private:
 	std::vector<RenderStep> execution_steps;
 	glm::u32vec2 expected_extent = { 0, 0 };
 	Ref<Material> passthrough;
-	Ref<Material> skybox_material;
-	WeakRef<Texture> current_skybox;
 	WeakRef<Texture> passthrough_texture;
 
 public:
