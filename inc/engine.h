@@ -101,19 +101,21 @@ private:
 template <class T>
 inline void Engine::runApplication()
 {
-	if (engine->start_called)
+	static_assert(std::is_convertible_v<T*, Application*>, "T must be a HopEngine::Application subclass");
+	if (getEngine()->start_called)
 	{
 		DBG_WARNING("an application is already running. did you mean to call switchApplication?");
         return;
 	}
-	application = new T();
+	getEngine()->application = new T();
 	Engine::start();
 }
 
 template <class T>
 inline void Engine::switchApplication()
 {
-	next_application = new T();
+	static_assert(std::is_convertible_v<T*, Application*>, "T must be a HopEngine::Application subclass");
+	getEngine()->next_application = new T();
 }
 
 template <class T>

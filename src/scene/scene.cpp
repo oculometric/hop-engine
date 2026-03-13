@@ -5,6 +5,7 @@
 #include "texture.h"
 #include "render_graph.h"
 #include "math_helpers.h"
+#include "command_buffer.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -19,6 +20,7 @@ Ref<Object> Object::create()
 {
 	Ref obj = new Object();
 	obj->self = obj;
+	obj->transform.owner = obj.get();
 	return obj;
 }
 
@@ -40,7 +42,7 @@ void Object::removeFromParent()
 	DBG_WARNING("object " + name + " claims to be a child of object " + parent->name + ", but could not be found in the parents child list.");
 }
 
-void Object::addChild(Ref<Object> obj)
+void Object::addChild(WeakRef<Object> obj)
 {
 	if (obj->scene && obj->scene != scene)
 	{
@@ -55,7 +57,7 @@ void Object::addChild(Ref<Object> obj)
 		{
 			obj->parent->children.erase(it);
 			obj->parent = self;
-			children.emplace_back(obj);
+			children.emplace_back(obj.strong());
 			return;
 		}
 	}
@@ -118,7 +120,7 @@ WeakRef<Object> Scene::findObject(const std::string& name) const
 	return nullptr;
 }
 
-WeakRef<Object> Scene::insertObject(Ref<Object> obj)
+WeakRef<Object> Scene::insertObject(WeakRef<Object> obj)
 {
 	if (obj->scene)
 	{
@@ -127,7 +129,7 @@ WeakRef<Object> Scene::insertObject(Ref<Object> obj)
 			if (!obj->parent)
 			{
 				obj->parent = root;
-				root->children.emplace_back(obj);
+				root->children.emplace_back(obj.strong());
 				return obj;
 			}
 			DBG_WARNING("object " + obj->name + " is already a member of scene " + getOrigin());
@@ -135,19 +137,19 @@ WeakRef<Object> Scene::insertObject(Ref<Object> obj)
 		}
 		obj->scene->removeObject(obj);
 	}
-	objects.emplace_back(obj);
+	objects.emplace_back(obj.strong());
 	obj->scene = self;
 	if (!obj->parent)
 	{
 		obj->parent = root;
-		root->children.emplace_back(obj);
+		root->children.emplace_back(obj.strong());
 	}
 	for (const auto& child : obj->children)
 		insertObject(child);
 	return obj;
 }
 
-WeakRef<Object> Scene::insertObject(const string& name)
+WeakRef<Object> Scene::addObject(const string& name)
 {
 	Ref obj = new Object();
 	obj->name = name;

@@ -6,7 +6,7 @@
 #include <glm/common.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
-#include "object.h"
+#include "scene.h"
 
 using namespace HopEngine;
 
@@ -117,8 +117,8 @@ void Transform::lookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up)
 void Transform::localFromWorld()
 {
 	glm::mat4 parent = glm::identity<glm::mat4>();
-	if (parent_transform)
-		parent = parent_transform->getMatrix();
+	if (owner->getParent())
+		parent = owner->getParent()->transform.getMatrix();
 	local_matrix = glm::inverse(parent) * world_matrix;
 
 	glm::vec3 skew;
@@ -131,8 +131,8 @@ void Transform::localFromWorld()
 void Transform::worldFromLocal()
 {
 	world_matrix = glm::identity<glm::mat4>();
-	if (parent_transform)
-		world_matrix = parent_transform->getMatrix();
+	if (owner->getParent())
+		world_matrix = owner->getParent()->transform.getMatrix();
 	world_matrix = world_matrix * local_matrix;
 }
 

@@ -10,7 +10,6 @@ scene collects draw commands and camera infos and lights and calls draw on rende
     - get camera resolution FROM THE RENDER GRAPH REMEMBER
     - scene drawing function
     - fix deserialise
-    - fix demo scenes
 - overhaul engine debug interfaces
 - fullscreen support
 
@@ -24,6 +23,7 @@ scene collects draw commands and camera infos and lights and calls draw on rende
 - make most classes `final`
 
 - change the way refs work, and the way `new`ing works (classes only construct via ::create, remove keepLoaded)
+- shortcut function to make object/component creation easier (creates an object and gives it a component)
 ---
 # v0.6
 - interactive node editor

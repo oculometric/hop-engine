@@ -36,9 +36,6 @@ void NodeView::setStyle(Ref<Style> new_style)
     material->setIntUniform("grid_scale", new_style->grid_scale);
     material->setVec3Uniform("outline_colour_highlight", new_style->outline_colour_highlight);
 
-    if (getScene())
-        getScene()->getCamera(0)->clear_colour = style->background_colour;
-
     style = new_style;
     updateMesh();
 }

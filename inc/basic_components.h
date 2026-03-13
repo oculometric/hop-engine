@@ -23,6 +23,8 @@ public:
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(CameraComponent);
+	CameraComponent() = default;
+	~CameraComponent() override = default;
 
 	void awake() override;
 
@@ -44,6 +46,8 @@ public:
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(StaticMeshComponent);
+	StaticMeshComponent() = default;
+	~StaticMeshComponent() override = default;
 
 	void awake() override;
 
@@ -71,6 +75,8 @@ public:
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(LightComponent);
+	LightComponent() = default;
+	~LightComponent() override = default;
 
 	LightParams getParamsStructure() const;
 	
@@ -86,6 +92,8 @@ private:
     
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(TextComponent);
+	TextComponent() = default;
+	~TextComponent() override = default;
 
 	void awake() override;
     

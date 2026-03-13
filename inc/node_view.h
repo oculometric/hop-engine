@@ -6,6 +6,7 @@
 #include "common.h"
 #include "command_buffer.h"
 #include "scene.h"
+#include "basic_components.h"
 #include "mesh.h"
 
 namespace HopEngine
@@ -109,6 +110,7 @@ private:
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(NodeView);
+	NodeView() = default;
 	~NodeView() override;
 	
 	void awake() override;

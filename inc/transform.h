@@ -13,10 +13,10 @@ struct Transform
 {
 	friend class Object;
 private:
+	Object* owner;
 	glm::vec3 local_position;
 	glm::vec3 local_euler;
 	glm::vec3 local_scale;
-	Transform* parent_transform = nullptr;
 	glm::mat4 local_matrix;
 	glm::mat4 world_matrix;
 

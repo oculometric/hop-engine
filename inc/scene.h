@@ -22,7 +22,8 @@ private:
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Component);
-	~Component() override { }
+	Component() = default;
+	~Component() override = default;
 
 	// TODO: components can be enabled/disabled
 	
@@ -38,8 +39,6 @@ public:
 	virtual BoundingBox getLocalBounds() const { return BoundingBox{ }; }
 
 	virtual void drawImGuiDebug();
-private:
-	Component() = default;
 };
 
 class Object final : public Destructible
@@ -67,23 +66,23 @@ public:
 	size_t getChildCount() const { return children.size(); }
 	WeakRef<Object> getChild(size_t index) const { return children[index]; }
 	void removeFromParent();
-	void addChild(Ref<Object> obj);
+	void addChild(WeakRef<Object> obj);
 	
 	template<class T> WeakRef<T> addComponent()
 	{
 		static_assert(std::is_convertible_v<T*, Component*>, "component must be a HopEngine::Component subclass");
 		Ref<T> comp = new T();
-		components.push_back(comp);
+		components.push_back(comp.cast<Component>());
 		comp->awake();
 		return comp.weak();
 	}
 	template<class T> WeakRef<T> getComponent()
 	{
 		static_assert(std::is_convertible_v<T*, Component*>, "component must be a HopEngine::Component subclass");
-		for (const auto& comp : components)
+		for (auto& comp : components)
 		{
-			if (dynamic_cast<T>(comp.get()))
-				return comp;
+			if (dynamic_cast<T*>(comp.get()))
+				return comp.cast<T>();
 		}
 		return WeakRef<T>();
 	}
@@ -140,8 +139,8 @@ public:
 
 	std::vector<WeakRef<Object>> getAllObjects() const;
 	WeakRef<Object> findObject(const std::string& name) const;
-	WeakRef<Object> insertObject(Ref<Object> obj);
-	WeakRef<Object> insertObject(const std::string& name);
+	WeakRef<Object> insertObject(WeakRef<Object> obj);
+	WeakRef<Object> addObject(const std::string& name);
 	void removeObject(WeakRef<Object> obj);
 	
 	glm::u32vec2 getViewportSize() const { return last_viewport_size; }

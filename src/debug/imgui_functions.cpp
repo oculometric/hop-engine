@@ -25,7 +25,7 @@ static WeakRef<Object> selected_object;
 static WeakRef<Material> selected_material;
 static WeakRef<Object> selected_camera;
 
-static Ref<Texture> texturePicker(const Ref<Texture>& current, const char* str)
+static WeakRef<Texture> texturePicker(const WeakRef<Texture>& current, const char* str)
 {
 	auto options = Engine::getAllRefs<Texture>();
 	options.emplace_back(nullptr);
@@ -42,7 +42,7 @@ static Ref<Texture> texturePicker(const Ref<Texture>& current, const char* str)
 	return options[selected].strong();
 }
 
-static Ref<Mesh> meshPicker(const Ref<Mesh>& current, const char* str)
+static WeakRef<Mesh> meshPicker(const WeakRef<Mesh>& current, const char* str)
 {
 	auto options = Engine::getAllRefs<Mesh>();
 	options.emplace_back(nullptr);
@@ -59,7 +59,7 @@ static Ref<Mesh> meshPicker(const Ref<Mesh>& current, const char* str)
 	return options[selected].strong();
 }
 
-static Ref<Material> materialPicker(const Ref<Material>& current, const char* str)
+static WeakRef<Material> materialPicker(const WeakRef<Material>& current, const char* str)
 {
 	auto options = Engine::getAllRefs<Material>();
 	options.emplace_back(nullptr);
@@ -126,14 +126,14 @@ void StaticMeshComponent::drawImGuiDebug()
 {
 	if (ImGui::CollapsingHeader("static mesh component", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		mesh = meshPicker(mesh, "mesh data");
+		mesh = meshPicker(mesh, "mesh data").strong();
 		if (mesh)
 		{
 			ImGui::LabelText("vertices", "%zu", mesh->getVertexCount());
 			ImGui::LabelText("triangles", "%zu", mesh->getIndexCount() / 3);
 			ImGui::LabelText("vertex size", "%llu", sizeof(Vertex));
 		}
-		material = materialPicker(material, "material");
+		material = materialPicker(material, "material").strong();
 		if (material)
 		{
 			if (ImGui::Button("edit material"))
@@ -214,7 +214,7 @@ void Scene::drawImGuiDebug()
 {
 	ImGui::LabelText("scene", "%s", getOrigin().c_str());
 	ImGui::ColorEdit3("ambient light", reinterpret_cast<float*>(&(ambient_colour)));
-	skybox = texturePicker(skybox, "skybox");
+	setSkybox(texturePicker(skybox, "skybox"));
 	ImGui::LabelText("total objects", "%zu", objects.size());
 
 	if (ImGui::CollapsingHeader("object heirarchy", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
@@ -254,7 +254,7 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 			ImGui::LabelText("name", "%s", binding_to_texture_name[tex_id].c_str());
 			auto result = texturePicker(tex_bind.texture, "texture");
 			if (result != tex_bind.texture)
-				setTexture(tex_id, result);
+				setTexture(tex_id, result.strong());
 			ImGui::PopID();
 		}
 	}
@@ -353,21 +353,9 @@ void Engine::_drawImGuiDebug(float delta_time) const
 		if (ImGui::BeginMenu("open scene"))
 		{
 			if (ImGui::MenuItem("bunnygirl"))
-			{
-				const auto scn = getAshaScene();
-				debugClearSelection();
-				scn.init_func();
-				Engine::setUpdateFunc(scn.update_func);
-				Engine::setImGuiFunc(scn.imgui_func);
-			}
+				Engine::switchApplication<AshaApp>();
 			if (ImGui::MenuItem("museum"))
-			{
-				const auto scn = getMuseumScene();
-				debugClearSelection();
-				scn.init_func();
-				Engine::setUpdateFunc(scn.update_func);
-				Engine::setImGuiFunc(scn.imgui_func);
-			}
+				Engine::switchApplication<MuseumApp>();
 			ImGui::EndMenu();
 		}
 #endif

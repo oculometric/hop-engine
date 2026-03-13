@@ -336,6 +336,8 @@ Engine::~Engine()
 {
     debugClearSelection();
     scene = nullptr;
+    application = nullptr;
+    next_application = nullptr;
     keep_loaded_refs.clear();
     loaded_shaders.clear();
     loaded_materials.clear();
