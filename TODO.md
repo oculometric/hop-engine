@@ -1,16 +1,9 @@
 # TODO
 
-call draw on scene with a viewport size, it should return a passthrough material
-scene resizes render graph
-scene collects draw commands and camera infos and lights and calls draw on render graph (doesn't need to know about scene)
-
-
 ## v0.52
-- make fullscreen quad into a fullscreen tri
 - fix skybox side being flipped
 - fullscreen support
 
-- scene window-to-viewport function for mouse position etc
 - remove keepLoaded
 
 - simplify texture to be in one of several 'modes/types' (fix the way view aspects behave), overhaul initialisation, overhaul renderpass accordingly
@@ -18,7 +11,6 @@ scene collects draw commands and camera infos and lights and calls draw on rende
 - create image view on image create
 
 - fix multi-pass rendering not working
-- multi-scene mode in the engine
 ---
 # v0.6
 - interactive node editor

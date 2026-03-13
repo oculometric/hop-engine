@@ -114,12 +114,17 @@ RenderServer::RenderServer()
     default_3d_image = new Texture(2, 1, Texture::FORMAT_R8G8B8A8_SRGB, Texture::Builder().layers({ 2, 1 }).data(default_3d_image_data));
     default_sampler = new Sampler(Sampler::Builder());
 
+    // quad = new Mesh({
+    //                     { { -1, -1, 0, 1 }, {}, {}, {}, { 0, 0 } },
+    //                     { { 1, -1, 0, 1 }, {}, {}, {}, { 1, 0 } },
+    //                     { { -1, 1, 0, 1 }, {}, {}, {}, { 0, 1 } },
+    //                     { { 1, 1, 0, 1 }, {}, {}, {}, { 1, 1 } }
+    //                 }, { 0, 3, 1, 0, 2, 3 });
     quad = new Mesh({
-                        { { -1, -1, 0, 1 }, {}, {}, {}, { 0, 0 } },
-                        { { 1, -1, 0, 1 }, {}, {}, {}, { 1, 0 } },
-                        { { -1, 1, 0, 1 }, {}, {}, {}, { 0, 1 } },
-                        { { 1, 1, 0, 1 }, {}, {}, {}, { 1, 1 } }
-                    }, { 0, 3, 1, 0, 2, 3 });
+        { { -2,  1, 0, 1 }, {}, {}, {}, { -0.5f, 1.0f } },
+        { {  2,  1, 0, 1 }, {}, {}, {}, {  1.5f, 1.0f } },
+        { {  0, -3, 0, 1 }, {}, {}, {}, {  0.5f, -1.0f } },
+    }, { 0, 1, 2 });
     skybox_cube = new Mesh("res://engine/meshes/skybox.obj");
 
     default_material = new Material(new Shader("res://engine/shaders/default_shader.glsl"));
