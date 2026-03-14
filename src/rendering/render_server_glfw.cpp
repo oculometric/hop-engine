@@ -47,20 +47,21 @@ void RenderServer::createWindow()
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     // keep window invisible until vulkan is ready to draw. prevents a flashbang
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    //glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     window = glfwCreateWindow(window_size.x, window_size.y, "hop-engine", fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+    glfwPollEvents();
     DBG_INFO("created window at " + ::to_string(window_size.x) + "x" + ::to_string(window_size.y));
 }
 
-bool RenderServer::resize()
+bool RenderServer::resize(bool force_resize)
 {
     RenderServer::waitIdle();
     if (wants_fullscreen_update)
     {
         destroyImGui();
         swapchain = nullptr;
-        glfwDestroyWindow(window);
         vkDestroySurfaceKHR(instance, surface, nullptr);
+        glfwDestroyWindow(window);
 
         if (fullscreen)
         {
@@ -86,6 +87,7 @@ bool RenderServer::resize()
         const Swapchain::SupportInfo supportInfo = Swapchain::getSwapchainSupportInfo(physical_device, surface);
         window_size = { static_cast<uint32_t>(window_x), static_cast<uint32_t>(window_y) };
         swapchain = new Swapchain(window_size.x, window_size.y, surface);
+        window_size = swapchain->getExtent();
         swapchain->setVsync(vsync);
         final_render_pass = new RenderPass(swapchain, { 0, true });
 
@@ -103,7 +105,7 @@ bool RenderServer::resize()
         int window_y;
         glfwGetFramebufferSize(window, &window_x, &window_y);
         glm::u32vec2 new_size = { static_cast<uint32_t>(window_x), static_cast<uint32_t>(window_y) };
-        if (new_size == window_size && !wants_vsync_update)
+        if (new_size == window_size && !wants_vsync_update && !force_resize)
             return false;
 
         window_size = new_size;

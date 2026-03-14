@@ -25,11 +25,11 @@ private:
 	std::vector<VkFramebuffer> framebuffers;
 	std::vector<Ref<Texture>> textures;
 	glm::u32vec2 extent;
-	Ref<Swapchain> swapchain;
+	WeakRef<Swapchain> swapchain;
 
 public:
 	DELETE_CONSTRUCTORS(RenderPass);
-	RenderPass(const Ref<Swapchain>& _swapchain, const Config& config);
+	RenderPass(const WeakRef<Swapchain>& _swapchain, const Config& config);
 	RenderPass(glm::u32vec2 image_extent, const Config& config);
 	~RenderPass() override;
 	

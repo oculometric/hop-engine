@@ -38,7 +38,7 @@ private:
 
 public:
 	DELETE_CONSTRUCTORS(Sampler);
-	Sampler(const Builder& config = Builder());
+	Sampler(const Builder& config);
 	~Sampler() override;
 	
 	VkSampler getSampler() const { return sampler; }
@@ -106,7 +106,7 @@ public:
 
 	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }
 	glm::u32vec3 getSize() const { return extent; }
-	bool is3D() const { return { extent.z != 1 }; }
+	bool is3D() const { return (extent.z != 1); }
 	Format getFormat() const { return format; }
 	VkImageView getView() const { return view; }
 	void transitionLayout(Layout new_layout);

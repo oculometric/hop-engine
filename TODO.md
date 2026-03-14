@@ -2,6 +2,7 @@
 
 # v0.6
 - interactive node editor
+- eliminate the tautological compare thing
 - audio loading and output
 - actual editor (separate project)
 - shortcut function to make object/component creation easier (creates an object and gives it a component)

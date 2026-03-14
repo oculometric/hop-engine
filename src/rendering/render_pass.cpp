@@ -12,7 +12,7 @@
 using namespace HopEngine;
 using namespace std;
 
-RenderPass::RenderPass(const Ref<Swapchain>& _swapchain, const Config& config)
+RenderPass::RenderPass(const WeakRef<Swapchain>& _swapchain, const Config& config)
 {
     output_config = config;
     swapchain = _swapchain;

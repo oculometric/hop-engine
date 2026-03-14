@@ -55,9 +55,7 @@ private:
 
 	// handle for the vulkan API instance itself
 	VkInstance instance = VK_NULL_HANDLE;
-#if defined(VK_DEBUG)
-	VkDebugUtilsMessengerEXT debug_messenger;
-#endif
+	VkDebugUtilsMessengerEXT debug_messenger = VK_NULL_HANDLE;
 	// the physical device selected, which the logical device is derived from
 	VkPhysicalDevice physical_device = VK_NULL_HANDLE;
 	// logical vulkan device handle. everything goes through here
@@ -152,7 +150,8 @@ private:
 	void createWindow();
 	void createVulkan();
 	void initImGui();
-	bool resize();
+	bool resize(bool force_resize = false);
+	void refreshSyncResources();
 	FrameStats drawFrame();
 	void destroyImGui();
 	void destroyVulkan();

@@ -73,7 +73,7 @@ public:
 		static_assert(std::is_convertible_v<T*, Component*>, "component must be a HopEngine::Component subclass");
 		Ref<T> comp = new T();
 		comp->owner = self;
-		components.push_back(comp.cast<Component>());
+		components.push_back(comp.template cast<Component>());
 		comp->awake();
 		return comp.weak();
 	}
@@ -83,7 +83,7 @@ public:
 		for (auto& comp : components)
 		{
 			if (dynamic_cast<T*>(comp.get()))
-				return comp.cast<T>();
+				return comp.template cast<T>();
 		}
 		return WeakRef<T>();
 	}

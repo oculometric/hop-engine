@@ -174,6 +174,7 @@ void NodeView::updateMesh()
                 else
                     addText(elem.text, elem_position, style->text_colour);
                 break;
+            case ELEMENT_SPACE: break;
             }
             if (it == end_it)
                 break;

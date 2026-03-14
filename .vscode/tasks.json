@@ -2,8 +2,8 @@
     "version": "2.0.0",
     "tasks": [{
         "label": "build",
-        "command": "make", // Could be any other shell command
-        "args": [ "build" ],
+        "command": "${workspaceFolder}/linux_build.sh", // Could be any other shell command
+        "args": [ ],
         "type": "shell"
     }]
 }

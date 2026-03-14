@@ -219,6 +219,8 @@ void RenderGraph::draw(WeakRef<DrawCommandBuffer> command_buffer, const std::vec
         }
     }
 
+    rebuildBindings();
+
     for (size_t i = 0; i < execution_steps.size(); ++i)
     {
         if (execution_steps[i].skipped)

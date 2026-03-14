@@ -45,6 +45,8 @@ IF (WIN32)
 	target_link_libraries(hop-engine PRIVATE ${Vulkan_LIBRARIES})
 	target_link_libraries(hop-engine PRIVATE ${Vulkan_INCLUDE_DIRS}/../Lib/shaderc_combined.lib)
 ELSE()
+    target_include_directories(hop-engine PRIVATE ${CMAKE_SOURCE_DIR}/lib/inc/shaderc)
+    target_link_libraries(hop-engine ${CMAKE_SOURCE_DIR}/lib/bin/libshaderc/libshaderc_combined.a)
 	target_link_libraries(hop-engine pthread)
 	target_link_libraries(hop-engine glfw)
 	target_link_libraries(hop-engine vulkan)
@@ -52,6 +54,8 @@ ELSE()
 	target_link_libraries(hop-engine X11)
 	target_link_libraries(hop-engine Xrandr)
 	target_link_libraries(hop-engine Xi)
+    target_compile_options(hop-engine PRIVATE -fno-delete-null-pointer-checks)
+    target_compile_options(hop-engine PRIVATE -Wno-tautological-undefined-compare)
 ENDIF()
 
 
@@ -70,6 +74,12 @@ target_include_directories(package-tool PUBLIC
 )
 
 target_link_libraries(package-tool hop-engine)
+
+IF(WIN32)
+ELSE()
+    target_compile_options(package-tool PRIVATE -fno-delete-null-pointer-checks)
+    target_compile_options(package-tool PRIVATE -Wno-tautological-undefined-compare)
+ENDIF()
 
 set_property(TARGET package-tool PROPERTY LINKER_LANGUAGE CXX)
 set_property(TARGET package-tool PROPERTY CXX_STANDARD 20)
@@ -94,6 +104,12 @@ target_include_directories(demo PUBLIC
 )
 
 target_link_libraries(demo hop-engine)
+
+IF(WIN32)
+ELSE()
+    target_compile_options(demo PRIVATE -fno-delete-null-pointer-checks)
+    target_compile_options(demo PRIVATE -Wno-tautological-undefined-compare)
+ENDIF()
 
 add_custom_target(demo-resources
 	COMMAND package-tool res -c -b "${CMAKE_BINARY_DIR}/resources.hop"

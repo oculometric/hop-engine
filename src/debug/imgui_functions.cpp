@@ -128,7 +128,7 @@ void StaticMeshComponent::drawImGuiDebug()
 		{
 			ImGui::LabelText("vertices", "%zu", mesh->getVertexCount());
 			ImGui::LabelText("triangles", "%zu", mesh->getIndexCount() / 3);
-			ImGui::LabelText("vertex size", "%llu", sizeof(Mesh::Vertex));
+			ImGui::LabelText("vertex size", "%llu", static_cast<unsigned long long>(sizeof(Mesh::Vertex)));
 		}
 		material = materialPicker(material, "material").strong();
 		if (material)
@@ -165,8 +165,8 @@ void TextComponent::drawImGuiDebug()
 	if (ImGui::CollapsingHeader("text block component", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		static char tmp[513] = { };
-		memcpy(tmp, text.data(), std::min(512ull, text.size()));
-		tmp[std::min(512ull, text.size())] = '\0';
+		memcpy(tmp, text.data(), std::min(static_cast<size_t>(512), static_cast<size_t>(text.size())));
+		tmp[std::min(static_cast<size_t>(512), static_cast<size_t>(text.size()))] = '\0';
 		ImGui::InputText("text", tmp, 513);
 		text = tmp;
 		ImGui::ColorEdit3("tint", reinterpret_cast<float*>(&tint));
@@ -263,7 +263,7 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 				continue;
 			ImGui::LabelText("binding", "%u", block.binding);
 			ImGui::LabelText("block name", "%s", block.name.c_str());
-			ImGui::LabelText("block size", "%llu", block.buffer_size);
+			ImGui::LabelText("block size", "%llu", static_cast<unsigned long long>(block.buffer_size));
 			ImGui::BeginTable("uniforms", 3, ImGuiTableFlags_Borders);
 			ImGui::TableSetupColumn("name");
 			ImGui::TableSetupColumn("size");

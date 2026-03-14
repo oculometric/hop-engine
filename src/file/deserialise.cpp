@@ -785,7 +785,7 @@ struct ObjectDeserialiseConfig
 };
 
 static map<string, ObjectDeserialiseConfig> object_deserialisers = {
-	{ "StaticMeshComponent", { deserialiseStaticMesh, {
+	{ "StaticMesh", { deserialiseStaticMesh, {
 						{ "mesh", TokenReader::IDENTIFIER },
 						{ "material", TokenReader::IDENTIFIER },
                         { "camera_mask", TokenReader::INT }
@@ -802,7 +802,7 @@ static map<string, ObjectDeserialiseConfig> object_deserialisers = {
 						{ "far_clip", TokenReader::FLOAT },
 						{ "fov", TokenReader::FLOAT },
 	} } },
-	{ "TextComponent", { deserialiseTextBlock, {
+	{ "TextBlock", { deserialiseTextBlock, {
 							{ "text", TokenReader::STRING },
 							{ "tint", TokenReader::VECTOR }
 	} } }
