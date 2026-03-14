@@ -1,6 +1,7 @@
 # TODO
 
 # v0.6
+- reintroduce package target (should grab demo, engine/resources.hop, libhopengine.a, inc)
 - interactive node editor
 - eliminate the tautological compare thing
 - fix 3D textures and stuff
