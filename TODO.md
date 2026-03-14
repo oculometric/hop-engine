@@ -17,6 +17,7 @@
 - windows 95 node style
 - texture upload/download of data
 - fix tabs vs spaces
+- hover tooltips for nodes....
 ---
 ## v0.7
 - shader node editor

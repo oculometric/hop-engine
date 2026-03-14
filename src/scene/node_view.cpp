@@ -176,10 +176,31 @@ void NodeView::updateMesh()
         }
 
         // links
+        int out_rows_down = -1;
         for (auto& link : node->outgoing_links)
         {
-            glm::vec2 link_start = header_position + box_width - half_tile_width;
-            glm::vec2 link_end = (link.first->position * style->grid_size) - half_tile_width;
+            ++out_rows_down;
+            while (out_rows_down < node->elements.size() && node->elements[out_rows_down].type != ELEMENT_OUTPUT)
+                ++out_rows_down;
+            if (out_rows_down >= node->elements.size())
+                break;
+            if (!link.first)
+                continue;
+            auto target = link.first;
+
+            int in_rows_down = 0;
+            int in_inputs_seen = 0;
+            while (in_rows_down < target->elements.size() && !(in_inputs_seen == link.second && target->elements[in_rows_down].type == ELEMENT_INPUT))
+            {
+                if (target->elements[in_rows_down].type == ELEMENT_INPUT)
+                    ++in_inputs_seen;
+                ++in_rows_down;
+            }
+            if (in_rows_down >= target->elements.size())
+                break;
+
+            glm::vec2 link_start = header_position + box_width + glm::vec2{ 0, ((float)out_rows_down + 1.5f) * style->grid_size };
+            glm::vec2 link_end = (target->position * style->grid_size) + glm::vec2{ 0, ((float)in_rows_down + 1.5f) * style->grid_size };
             addLink(link_start, link_end);
         }
 
@@ -320,32 +341,32 @@ void NodeView::awake()
     setStyle(style);
 }
 
-void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode, glm::vec3 extra)
+void NodeView::addQuadRaw(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 norm_xy, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode, glm::vec3 extra)
 {
     uint16_t v_off = static_cast<uint16_t>(vertices.size());
     
-    glm::vec4 normal_value = { size.x, size.y, mode, 0.0f };
+    glm::vec4 normal_value = { norm_xy, mode, 0.0f };
     glm::vec4 tangent_value = { extra, 1 };
     glm::vec4 colour_value = glm::vec4{ colour, 1 };
 
     // top left
     vertices.push_back(Mesh::Vertex{
-        { position.x, -position.y, 0, 1 },
+        { p1.x, -p1.y, 0, 1 },
         colour_value, normal_value, tangent_value,
         uv_tl });
     // top right
     vertices.push_back(Mesh::Vertex{
-        { position.x + size.x, -position.y, 0, 1 },
+        { p2.x, -p2.y, 0, 1 },
         colour_value, normal_value, tangent_value,
         glm::vec2{ uv_br.x, uv_tl.y } });
     // bottom left
     vertices.push_back(Mesh::Vertex{
-        { position.x, -position.y - size.y, 0, 1 },
+        { p3.x, -p3.y, 0, 1 },
         colour_value, normal_value, tangent_value,
         glm::vec2{ uv_tl.x, uv_br.y } });
     // bottom right
     vertices.push_back(Mesh::Vertex{
-        { position.x + size.x, -position.y - size.y, 0, 1 },
+        { p4.x, -p4.y, 0, 1 },
         colour_value, normal_value, tangent_value,
         uv_br });
     
@@ -355,6 +376,17 @@ void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm:
     indices.push_back(v_off + 0);
     indices.push_back(v_off + 2);
     indices.push_back(v_off + 3);
+}
+
+void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode, glm::vec3 extra)
+{
+    addQuadRaw(
+        { position.x, position.y },
+        { position.x + size.x, position.y },
+        { position.x, position.y + size.y },
+        { position.x + size.x, position.y + size.y },
+        size, uv_tl, uv_br, colour, mode, extra
+    );
 }
 
 void NodeView::addPin(glm::vec2 position, glm::vec3 tint, int type, bool filled)
@@ -395,6 +427,24 @@ void NodeView::addText(const string& text, glm::vec2 _start, glm::vec3 tint, int
 void NodeView::addLink(glm::vec2 link_start, glm::vec2 link_end)
 {
     // TODO: link rendering
+    float cos_a = glm::dot(glm::normalize(link_end - link_start), { 1, 0 });
+    float sin_a = glm::dot(glm::normalize(link_end - link_start), { 0, 1 });
+    float cps = cos_a + sin_a;
+    float cms = cos_a - sin_a;
+    float smc = -cms;
+
+    float radius = 2.0f;
+    addQuadRaw(
+        { link_start + glm::vec2{ -radius * cms, -radius * cps } },
+        { link_start + glm::vec2{ -radius * cps, -radius * smc } },
+        { link_end   + glm::vec2{  radius * cps,  radius * smc } },
+        { link_end   + glm::vec2{  radius * cms,  radius * cps } },
+        { 1, 1 },
+        { 0, 0 },
+        { 1, 1 },
+        { 0, 0, 0 },
+        RENDER_MODE_BOX,
+        { 0, 1, 0 });
 }
 
 NodeView::~NodeView()

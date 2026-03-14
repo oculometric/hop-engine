@@ -62,6 +62,8 @@ void Engine::start()
 
         if (Input::wasKeyPressed(Input::KEY_F11))
             RenderServer::setFullscreenEnabled(!RenderServer::getFullscreenEnabled());
+        if (Input::wasKeyPressed(Input::KEY_F10))
+            Engine::setForceWireframe(!Engine::isWireframeMode());
 
         if (engine->application)
         {

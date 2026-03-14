@@ -14,55 +14,56 @@ NodeApp::NodeApp()
     node_view = node_obj->addComponent<NodeView>();
     style = node_view->getStyle();
     node_view->nodes.push_back(new NodeView::Node
-        { "Hello, World!",
+        { "multiply",
         {
-            NodeView::NodeElement("Outputs on right", NodeView::ELEMENT_OUTPUT, 0),
-            NodeView::NodeElement("text 6px inwards", NodeView::ELEMENT_OUTPUT, 1, false),
-            NodeView::NodeElement("text 4px down", NodeView::ELEMENT_OUTPUT, 2),
-            NodeView::NodeElement("Inputs on the left", NodeView::ELEMENT_INPUT),
-            NodeView::NodeElement("", NodeView::ELEMENT_SPACE),
-            NodeView::NodeElement("above is a banner", NodeView::ELEMENT_TEXT),
-            NodeView::NodeElement("extra bottom spacing", NodeView::ELEMENT_TEXT),
-        }, glm::vec2{ 0, 0 }, glm::vec2{ 8, 1 } });
-        node_view->nodes.push_back(new NodeView::Node
-            { "multiply",
-            {
-                { "result", NodeView::ELEMENT_OUTPUT },
-                { "input a", NodeView::ELEMENT_INPUT },
-                { "input b", NodeView::ELEMENT_INPUT },
-            }, { 13, 4 } });
-        node_view->nodes.push_back(new NodeView::Node
-            { "add",
-            {
-                { "result", NodeView::ELEMENT_OUTPUT },
-                { "input a", NodeView::ELEMENT_INPUT },
-                { "input b", NodeView::ELEMENT_INPUT },
-            }, { -14, 0 }, { 6, 0 }, { 1, 0, 0 }, { { node_view->nodes[0], 0 }}});
-        node_view->nodes.push_back(new NodeView::Node
-            { "multiply add",
-            {
-                { "result", NodeView::ELEMENT_OUTPUT },
-                { "input a", NodeView::ELEMENT_INPUT },
-                { "input b", NodeView::ELEMENT_INPUT },
-                { "input c", NodeView::ELEMENT_INPUT },
-            }, { -6, 10 } });
-        node_view->nodes.push_back(new NodeView::Node
-            { "make vec3",
-            {
-                { "vector", NodeView::ELEMENT_OUTPUT, 1 },
-                { "length", NodeView::ELEMENT_OUTPUT },
-                { "normalised", NodeView::ELEMENT_OUTPUT, 3, false },
-                { "x", NodeView::ELEMENT_INPUT, 0, false },
-                { "y", NodeView::ELEMENT_INPUT, 0, false },
-                { "z", NodeView::ELEMENT_INPUT, 0, false },
-            }, { -6, -10 } });
-        node_view->nodes.push_back(new NodeView::Node
-            { "kill john lennon",
-            {
-                { "", NodeView::ELEMENT_INPUT, 4, false },
-                { "execution?", NodeView::ELEMENT_OUTPUT, 5 },
-                { "hello", NodeView::ELEMENT_INPUT, 0, false },
-            }, { -6, -15 } });
+            { "result", NodeView::ELEMENT_OUTPUT },
+            { "input a", NodeView::ELEMENT_INPUT },
+            { "input b", NodeView::ELEMENT_INPUT },
+        }, { 13, 4 } });
+    node_view->nodes.push_back(new NodeView::Node
+    { "Hello, World!",
+    {
+        NodeView::NodeElement("Outputs on right", NodeView::ELEMENT_OUTPUT, 0),
+        NodeView::NodeElement("text 6px inwards", NodeView::ELEMENT_OUTPUT, 1, false),
+        NodeView::NodeElement("text 4px down", NodeView::ELEMENT_OUTPUT, 2),
+        NodeView::NodeElement("Inputs on the left", NodeView::ELEMENT_INPUT),
+        NodeView::NodeElement("", NodeView::ELEMENT_SPACE),
+        NodeView::NodeElement("above is a banner", NodeView::ELEMENT_TEXT),
+        NodeView::NodeElement("extra bottom spacing", NodeView::ELEMENT_TEXT),
+    }, glm::vec2{ 0, 0 }, glm::vec2{ 8, 1 }, { 1.0f, 0.44f, 0.0f }, { { node_view->nodes[0], 0 } } });
+    node_view->nodes.push_back(new NodeView::Node
+        { "add",
+        {
+            { "input a", NodeView::ELEMENT_INPUT },
+            { "input b", NodeView::ELEMENT_INPUT },
+            { "result", NodeView::ELEMENT_OUTPUT },
+        }, { -14, 0 }, { 6, 0 }, { 1, 0, 0 }, { { node_view->nodes[1], 0 } }});
+    node_view->nodes.push_back(new NodeView::Node
+        { "multiply add",
+        {
+            { "result", NodeView::ELEMENT_OUTPUT },
+            { "input a", NodeView::ELEMENT_INPUT },
+            { "input b", NodeView::ELEMENT_INPUT },
+            { "input c", NodeView::ELEMENT_INPUT },
+        }, { -6, 10 } });
+    node_view->nodes.push_back(new NodeView::Node
+        { "kill john lennon",
+        {
+            { "", NodeView::ELEMENT_INPUT, 4, false },
+            { "execution?", NodeView::ELEMENT_OUTPUT, 5 },
+            { "hello", NodeView::ELEMENT_INPUT, 0, false },
+        }, { 2, -15 } });
+    node_view->nodes.push_back(new NodeView::Node
+        { "make vec3",
+        {
+            { "vector", NodeView::ELEMENT_OUTPUT, 1 },
+            { "length", NodeView::ELEMENT_OUTPUT },
+            { "normalised", NodeView::ELEMENT_OUTPUT, 3, false },
+            { "x", NodeView::ELEMENT_INPUT, 0, false },
+            { "y", NodeView::ELEMENT_INPUT, 0, false },
+            { "z", NodeView::ELEMENT_INPUT, 0, false },
+        }, { -6, -10 }, { 5, 0 }, { 1, 0.8f, 0 }, { {}, { node_view->nodes[0], 1 }, { node_view->nodes[4], 1 } } });
+
 
     node_view->updateMesh();
 
