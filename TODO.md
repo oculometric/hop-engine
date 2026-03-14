@@ -3,6 +3,7 @@
 # v0.6
 - reintroduce package target (should grab demo, engine/resources.hop, libhopengine.a, inc)
 - interactive node editor
+- refactor lots of node view into a UI builder class
 - eliminate the tautological compare thing
 - fix 3D textures and stuff
 - audio loading and output
@@ -15,6 +16,7 @@
 - enable/disable components
 - windows 95 node style
 - texture upload/download of data
+- fix tabs vs spaces
 ---
 ## v0.7
 - shader node editor

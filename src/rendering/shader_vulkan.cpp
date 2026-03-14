@@ -95,6 +95,20 @@ VkShaderModule Shader::createShaderModule(const vector<uint32_t>& blob)
 	return shader_module;
 }
 
+string formatShaderCode(const string& code)
+{
+    size_t insert_point = 0;
+    size_t line_number = 1;
+    string result = code;
+    while (insert_point != string::npos)
+    {
+        result.insert(insert_point + 1, format("{:>4}| ", line_number));
+        ++line_number;
+        insert_point = result.find('\n', insert_point + 1);
+    }
+    return result;
+}
+
 bool Shader::compileShaders(const string& path, vector<uint32_t>& vert_blob, vector<uint32_t>& frag_blob)
 {
 	auto shader_data = Package::load(path);
@@ -132,8 +146,8 @@ bool Shader::compileShaders(const string& path, vector<uint32_t>& vert_blob, vec
 	auto result = compiler.CompileGlslToSpv(vertex_text.data(), vertex_text.size(), shaderc_glsl_vertex_shader, path.c_str(), options);
 	if (result.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
-		DBG_ERROR("error compiling vertex shader " + path + ": " + result.GetErrorMessage());
-		DBG_INFO("see the full shader code below: " + vertex_text);
+		DBG_ERROR("error compiling vertex shader " + path + ": \n" + result.GetErrorMessage());
+		DBG_INFO("see the full shader code below: \n" + formatShaderCode(vertex_text));
 		return false;
 	}
 	vert_blob = { result.cbegin(), result.cend() };
@@ -144,7 +158,7 @@ bool Shader::compileShaders(const string& path, vector<uint32_t>& vert_blob, vec
 	if (result.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
 		DBG_ERROR("error compiling fragment shader " + path + ": " + result.GetErrorMessage());
-		DBG_INFO("see the full shader code below: " + fragment_text);
+		DBG_INFO("see the full shader code below: " + formatShaderCode(fragment_text));
 		return false;
 	}
 	frag_blob = { result.cbegin(), result.cend() };

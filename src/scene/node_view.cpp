@@ -40,6 +40,12 @@ void NodeView::setStyle(Ref<Style> new_style)
     updateMesh();
 }
 
+float encodeFourBits(bool a, bool b, bool c, bool d)
+{
+    int i = (a << 0) | (b << 1) | (c << 2) | (d << 3);
+    return static_cast<float>(i);
+}
+
 void NodeView::updateMesh()
 {
     if (nodes.empty())
@@ -78,7 +84,7 @@ void NodeView::updateMesh()
         {
             addQuad(position + style->shadow_offset, glm::vec2{ node_width_tiles, 1 + (node->minimised ? 0 : node_height_tiles) } * style->grid_size,
                 glm::vec2{ 0, 0 }, glm::vec2{ 1, 1 },
-                style->shadow_colour, RENDER_MODE_BOX, { 0, 1, 0 });
+                style->shadow_colour, RENDER_MODE_BOX, { 0, 1, 15.0f });
         //    float shadow_width_extra = (style->grid_size * 0.25f);
         //    addQuad(position + (glm::vec2{ 0,  } * style->grid_size) + glm::vec2{ style->shadow_offset.x, -shadow_width_extra }, glm::vec2{ node_width_tiles * style->grid_size, style->shadow_offset.y + shadow_width_extra },
         //        glm::vec2{ 0, 0.5f }, glm::vec2{ 1, 1 }, style->shadow_colour, RENDER_MODE_BOX, { 0, 1, 0 }, glm::vec2{ node_width_tiles * style->grid_size, (style->shadow_offset.y + shadow_width_extra) * 2.0f });
@@ -89,24 +95,12 @@ void NodeView::updateMesh()
         // heading box
         glm::vec2 header_position = position;
         {
-            float header_uv_top = 0.0f;
-            float header_uv_bottom = 0.5f;
             if (!style->header_at_top)
-            {
                 header_position = header_position + glm::vec2{ 0, node_height_tiles * style->grid_size };
-                header_uv_top = 0.5f;
-                header_uv_bottom = 1.0f;
-            }
-            if (node->minimised)
-            {
-                header_uv_top = 0.0f;
-                header_uv_bottom = 1.0f;
-            }
             addQuad(header_position, glm::vec2{ node_width_tiles, 1 } * style->grid_size,
-                { 0, header_uv_top }, { 1, header_uv_bottom },
+                { 0, 0 }, { 1, 1 },
                 node->colour, RENDER_MODE_BOX,
-                { node_outline_mode, style->header_fill ? 1.0f : node_fill_mode, 0.0f },
-                glm::vec2{ node_width_tiles, node->minimised ? 1.0f : 2.0f } * style->grid_size);
+                { node_outline_mode, style->header_fill ? 1.0f : node_fill_mode, encodeFourBits(true, node->minimised, true, true) });
             if (style->header_align > 0) header_position = header_position + box_width;
             else if (style->header_align == 0) header_position = header_position + (box_width * 0.5f);
             addText(node->title, header_position, style->text_colour, style->header_align);
@@ -114,7 +108,8 @@ void NodeView::updateMesh()
             // minimise button
             glm::vec2 seg_size = glm::vec2(style->ui_atlas->getSize()) / 4.0f;
             glm::vec2 uv_size = glm::vec2(1.0f / 4.0f);
-            glm::vec2 uv_base = glm::vec2{ uv_size.x * (0 % 4), uv_size.y * (0 / 4) };
+            int texture_part = node->minimised ? 1 : 0;
+            glm::vec2 uv_base = glm::vec2{ uv_size.x * (texture_part % 4), uv_size.y * (texture_part / 4) };
             addQuad(header_position + glm::round((style->grid_size - seg_size) * 0.5f) + (glm::vec2{ node_width_tiles - 1, 0 } * style->grid_size), seg_size,
                 flipUV(uv_base), flipUV(uv_base + uv_size), style->outline_colour, RENDER_MODE_UI, style->fill_colour);
 
@@ -127,19 +122,14 @@ void NodeView::updateMesh()
         // main box
         glm::vec2 box_position = position + glm::vec2{ 0, style->grid_size };
         {
-            float box_uv_top = 0.5f;
-            float box_uv_bottom = 1.0f;
             if (!style->header_at_top)
             {
                 box_position -= glm::vec2{ 0, style->grid_size };
-                box_uv_top = 0.0f;
-                box_uv_bottom = 0.5f;
             }
             addQuad(box_position, glm::vec2{ node_width_tiles, node_height_tiles } * style->grid_size,
-                { 0, box_uv_top }, { 1, box_uv_bottom },
+                { 0, 0 }, { 1, 1 },
                 node->colour, RENDER_MODE_BOX,
-                { node_outline_mode, node_fill_mode, 0.0f },
-                glm::vec2{ node_width_tiles, node_height_tiles * 2.0f } * style->grid_size);
+                { node_outline_mode, node_fill_mode, encodeFourBits(false, true, true, true) });
         }
 
         // elements
@@ -330,15 +320,11 @@ void NodeView::awake()
     setStyle(style);
 }
 
-void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode, glm::vec3 extra, glm::vec2 fake_size)
+void NodeView::addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode, glm::vec3 extra)
 {
     uint16_t v_off = static_cast<uint16_t>(vertices.size());
     
     glm::vec4 normal_value = { size.x, size.y, mode, 0.0f };
-    if (fake_size.x != 0.0f)
-        normal_value.x = fake_size.x;
-    if (fake_size.y != 0.0f)
-        normal_value.y = fake_size.y;
     glm::vec4 tangent_value = { extra, 1 };
     glm::vec4 colour_value = glm::vec4{ colour, 1 };
 

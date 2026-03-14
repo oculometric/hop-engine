@@ -121,7 +121,7 @@ int main()
 
     Package::importPackage("resources.hop");
 
-    Engine::runApplication<ProtoEditorApp>();
+    Engine::runApplication<NodeApp>();
 
     Engine::destroy();
     

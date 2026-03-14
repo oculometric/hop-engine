@@ -43,23 +43,46 @@ layout(set = 2, binding = 2) uniform sampler2D text_atlas;
 layout(set = 2, binding = 3) uniform sampler2D extra_atlas;
 layout(set = 2, binding = 4) uniform sampler2D ui_atlas;
 
-vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size)
+vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size, bool top_border, bool bottom_border, bool left_border, bool right_border)
 {
-    // FIXME: actually fix nine-slicing so the UVs behave correctly, and we can index individual segments of the texture
-    
-    vec2 coordinate = uv * quad_size;
-    vec2 atlas_border = atlas_size / 4.0f;
-    vec2 c_over_s = coordinate / atlas_size;
-    // if coordinate is less than a quarter of atlas size away from the edge of the quad
-    if (coordinate.x <= atlas_border.x) uv.x = c_over_s.x;
-    else if (quad_size.x - coordinate.x <= atlas_border.x) uv.x = (atlas_size.x - (quad_size.x - coordinate.x)) / atlas_size.x;
-    else uv.x = 0.5f;
+    vec2 pixels_one_third = atlas_size / 3.0f;
+    vec2 pixels_two_third = pixels_one_third * 2.0f;
+    vec2 pixel_coord = uv * quad_size;
 
-    if (coordinate.y <= atlas_border.y) uv.y = c_over_s.y;
-    else if (quad_size.y - coordinate.y <= atlas_border.y) uv.y = (atlas_size.y - (quad_size.y - coordinate.y)) / atlas_size.y;
-    else uv.y = 0.5f;
+    // figure out which region of the atlas we should be drawing
+    int region_x = 0;
+    int region_y = 0;
+    if      (pixel_coord.x < pixels_one_third.x)               region_x = 0;
+    else if (quad_size.x - pixel_coord.x < pixels_one_third.x) region_x = 2;
+    else                                                       region_x = 1;
+
+    if      (pixel_coord.y < pixels_one_third.y)               region_y = 0;
+    else if (quad_size.y - pixel_coord.y < pixels_one_third.y) region_y = 2;
+    else                                                       region_y = 1;
+
+    // apply border toggles
+    if      (region_x == 0 && !left_border)   region_x = 1;
+    else if (region_x == 2 && !right_border)  region_x = 1;
+    if      (region_y == 0 && !top_border)    region_y = 1;
+    else if (region_y == 2 && !bottom_border) region_y = 1;
     
-    return uv;
+    // figure out our UV within the quadrant
+    vec2 new_uv;
+    switch (region_x)
+    {
+        case 0: new_uv.x = min(pixel_coord.x, pixels_one_third.x); break;
+        case 1: new_uv.x = pixels_one_third.x + mod(pixel_coord.x, pixels_one_third.x); break;
+        case 2: new_uv.x = max((pixel_coord.x - quad_size.x) + atlas_size.x, pixels_two_third.x); break;
+    }
+    switch (region_y)
+    {
+        case 0: new_uv.y = min(pixel_coord.y, pixels_one_third.y); break;
+        case 1: new_uv.y = pixels_one_third.y + mod(pixel_coord.y, pixels_one_third.y); break;
+        case 2: new_uv.y = max((pixel_coord.y - quad_size.y) + atlas_size.y, pixels_two_third.y); break;
+    }
+    new_uv = new_uv / atlas_size;
+
+    return new_uv;
 }
 
 #define RENDER_MODE_BOX 0.0f
@@ -73,15 +96,15 @@ void fragment()
     vec2 uv = frag.uv;
     float render_mode = frag.normal.z;
     vec2 quad_size = frag.normal.xy;
-    vec2 atlas_size = textureSize(node_atlas, 0);
 
     if (render_mode == RENDER_MODE_BOX)
     {
         // box mode
-        uv = nineSliceUV(uv, quad_size, atlas_size);
+        int unpacked = int(frag.tangent.z);
+        uv = nineSliceUV(uv, quad_size, textureSize(node_atlas, 0), bool(unpacked & 1), bool(unpacked & 2), bool(unpacked & 4), bool(unpacked & 8));
 
         vec3 fill = fill_colour;
-        if (frag.tangent.y == 1.0f)      fill = frag.colour.rgb;
+        if      (frag.tangent.y == 1.0f) fill = frag.colour.rgb;
         else if (frag.tangent.y == 2.0f) fill = frag.colour.rgb * fill_modulate;
 
         vec3 outline = fill;
@@ -91,13 +114,13 @@ void fragment()
         }
         else if (frag.tangent.x > 0.0f)
         {
-            if (outline_style == 1)      outline = outline_colour;
+            if      (outline_style == 1) outline = outline_colour;
             else if (outline_style == 2) outline = frag.colour.rgb;
             else if (outline_style == 3) outline = frag.colour.rgb * outline_modulate;
         }
 
         vec4 alb = texture(node_atlas, uv);
-        if (alb.r < 0.001f) discard;
+        if (alb.a < 0.001f) discard;
         if (alb.r > 0.9f)   out_colour = vec4(fill, 1);
         else                out_colour = vec4(outline, 1);
     }
