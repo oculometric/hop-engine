@@ -218,7 +218,7 @@ void NodeView::updateMesh()
 
 void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
 {
-    static glm::vec2 mouse_delta_since_down = glm::vec2{ 0, 0 };
+    static glm::vec2 mouse_delta_since_down = glm::vec2{ 0, 0 }; // TODO: this is not allowed to be static!!
 
     glm::vec2 mouse_pos = Input::getMousePosition();
     if (mouse_pos.x < rect_min.x

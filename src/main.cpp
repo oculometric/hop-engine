@@ -121,7 +121,7 @@ int main()
 
     Package::importPackage("resources.hop");
 
-    Engine::runApplication<NodeApp>();
+    Engine::runApplication<MuseumApp>();
 
     Engine::destroy();
     

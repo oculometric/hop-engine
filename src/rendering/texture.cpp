@@ -128,17 +128,17 @@ Ref<Texture> Texture::loadImage3D(const string& path, glm::u32vec2 segments)
     
     for (uint32_t slice = 0; slice < layers; ++slice)
     {
-        uint32_t origin_offset = (layer_width * (slice % segments.x)) + (input_width * (slice / segments.x) * layer_height);
-        size_t destination_offset = layer_width * layer_height * slice;
+        uint32_t origin_offset = ((slice % segments.x) * layer_width * 4) + ((slice / segments.x) * input_width * layer_height);
+        uint32_t destination_offset = layer_width * layer_height * 4 * slice;
         for (size_t row = 0; row < layer_height; ++row)
         {
-            memcpy(rearranged.data() + destination_offset, static_cast<uint8_t*>(pixels) + origin_offset, layer_width);
-            destination_offset += layer_width;
+            memcpy(rearranged.data() + destination_offset, static_cast<uint8_t*>(pixels) + origin_offset, layer_width * 4);
+            destination_offset += layer_width * 4;
             origin_offset += input_width;
         }
     }
 
-    Ref<Texture> t = new Texture({ layer_width, layer_height, layers }, FORMAT_SRGB_8X4, pixels);
+    Ref<Texture> t = new Texture({ layer_width, layer_height, layers }, FORMAT_SRGB_8X4, rearranged.data());
     t->origin = path;
     DBG_VERBOSE("created image from " + path + " with size " + ::to_string(extent.x) + "x" + ::to_string(extent.y) + "x" + ::to_string(extent.z) + " and format " + to_string(format));
     stbi_image_free(pixels);
