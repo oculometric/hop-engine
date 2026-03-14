@@ -101,7 +101,7 @@ Pipeline::Pipeline(const Ref<Shader>& shader, const Builder& config, const Ref<R
     colour_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
     colour_attachment_blends.push_back(colour_blend_attachment);
 
-    auto [additional_attachments, has_depth_attachment] = render_pass->getOutputConfig();
+    auto [additional_attachments, has_depth_attachment, main_colour_format] = render_pass->getOutputConfig();
     for (size_t i = 0; i < additional_attachments; ++i)
     {
         VkPipelineColorBlendAttachmentState blend_attachment{ };

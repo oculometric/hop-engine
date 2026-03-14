@@ -14,7 +14,6 @@
 - enable/disable components
 - windows 95 node style
 - texture upload/download of data
-- allow linear render pass main attachment
 ---
 ## v0.7
 - shader node editor

@@ -101,7 +101,7 @@ void RenderPass::begin(WeakRef<DrawCommandBuffer> command_buffer, glm::vec3 clea
 
 void RenderPass::createRenderPass()
 {
-    const Texture::Format main_colour_format = swapchain ? swapchain->getFormat() : Texture::FORMAT_SRGB_8X4;
+    const Texture::Format main_colour_format = swapchain ? swapchain->getFormat() : output_config.main_colour_format;
     const Texture::Layout final_main_colour_layout = swapchain ? Texture::LAYOUT_PRESENT_SRC : Texture::LAYOUT_SHADER_READ_ONLY;
     const bool readable_output = swapchain ? false : true;
 
@@ -220,7 +220,7 @@ void RenderPass::createResources()
 {
     // create texture buffers to back everything
     if (!swapchain)
-        textures.push_back(new Texture({ extent.x, extent.y, 1 }, Texture::FORMAT_SRGB_8X4));
+        textures.push_back(new Texture({ extent.x, extent.y, 1 }, output_config.main_colour_format));
     for (size_t i = 0; i < output_config.additional_attachments; ++i)
         textures.push_back(new Texture({ extent.x, extent.y, 1 }, Texture::FORMAT_FLOAT_16X4));
     if (output_config.has_depth_attachment)

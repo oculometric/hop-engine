@@ -17,6 +17,7 @@ public:
 	{
 		size_t additional_attachments = 0;
 		bool has_depth_attachment = true;
+		Texture::Format main_colour_format = Texture::FORMAT_FLOAT_16X4;
 	};
 
 private:
