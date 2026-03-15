@@ -1,9 +1,8 @@
 # TODO
 
 # v0.6
-- reintroduce package target (should grab demo, engine/resources.hop, libhopengine.a, inc)
 - eliminate the tautological compare thing
-- fix tabs vs spaces
+- reintroduce package target (should grab demo, engine/resources.hop, libhopengine.a, inc)
 - interactive node editor
 - refactor lots of node view into a UI builder class
 - windows 95 node style
