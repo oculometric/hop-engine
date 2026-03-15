@@ -132,3 +132,43 @@ add_dependencies(demo engine-resources)
 
 set_property(TARGET demo PROPERTY LINKER_LANGUAGE CXX)
 set_property(TARGET demo PROPERTY CXX_STANDARD 20)
+
+project(exporting)
+
+message("Generating exported zip...")
+string(TIMESTAMP TODAY "%d_%m_%Y %H.%M.%S")
+set(ENGINE_PACKAGE_OUTPUT ${CMAKE_BINARY_DIR}/engine.hop)
+set(DEMO_PACKAGE_OUTPUT ${CMAKE_BINARY_DIR}/resources.hop)
+set(ZIP_COMMAND "tar")
+if(WIN32)
+	set(PLATFORM Windows)
+	set(DEMO_EXE_PATH ${CMAKE_BINARY_DIR}/demo.exe)
+    set(ENGINE_LIB_PATH ${CMAKE_BINARY_DIR}/hop-engine.lib)
+    set(PACKAGE_EXE_PATH ${CMAKE_BINARY_DIR}/package-tool.exe)
+	set(TAR_OPTIONS -caf)
+	set(TAR_OUTPUT ${CMAKE_SOURCE_DIR}/ProjectPlaceholder-${PLATFORM}-${TODAY}.zip)
+    set(COPY_COMMAND robocopy /E ${CMAKE_SOURCE_DIR}/inc ${CMAKE_BINARY_DIR}/include)
+else()
+	set(PLATFORM Linux)
+	set(DEMO_EXE_PATH ${CMAKE_BINARY_DIR}/demo)
+    set(ENGINE_LIB_PATH ${CMAKE_BINARY_DIR}/libhop-engine.a)
+    set(PACKAGE_EXE_PATH ${CMAKE_BINARY_DIR}/package-tool)
+	set(TAR_OPTIONS -cf)
+	set(TAR_OUTPUT ${CMAKE_SOURCE_DIR}/ProjectPlaceholder-${PLATFORM}-${TODAY}.tar)
+    set(COPY_COMMAND "cp -r ${CMAKE_SOURCE_DIR}/inc/* ${CMAKE_BINARY_DIR}/include")
+endif()
+cmake_path(GET ENGINE_PACKAGE_OUTPUT FILENAME ENGINE_HOP)
+cmake_path(GET DEMO_PACKAGE_OUTPUT FILENAME RESOURCES_HOP)
+cmake_path(GET DEMO_EXE_PATH FILENAME DEMO_EXE)
+cmake_path(GET ENGINE_LIB_PATH FILENAME ENGINE_LIB)
+cmake_path(GET PACKAGE_EXE_PATH FILENAME PACKAGE_EXE)
+set(ARCHIVE_TARGETS ${ENGINE_HOP} ${RESOURCES_HOP} ${DEMO_EXE} ${ENGINE_LIB} "include" ${PACKAGE_EXE})
+
+add_custom_target(exporting
+    COMMAND ${COPY_COMMAND}
+	COMMAND ${ZIP_COMMAND} ${TAR_OPTIONS} ${TAR_OUTPUT} ${ARCHIVE_TARGETS}
+)
+
+add_dependencies(exporting demo)
+add_dependencies(exporting hop-engine)
+add_dependencies(exporting engine-resources)

@@ -2,7 +2,6 @@
 
 # v0.6
 - eliminate the tautological compare thing
-- reintroduce package target (should grab demo, engine/resources.hop, libhopengine.a, inc)
 - interactive node editor
 - refactor lots of node view into a UI builder class
 - windows 95 node style
