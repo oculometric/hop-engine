@@ -1,666 +1,358 @@
-#include <filesystem>
-
-#include "material.h"
-#include "texture.h"
-#include "token_file.h"
-#include "package.h"
-#include "render_graph.h"
-#include "engine.h"
-#include "scene.h"
-#include "mesh.h"
-#include "basic_components.h"
+#include "deserialise.h"
 
 using namespace HopEngine;
 using namespace std;
 
-static int getArgument(const string& name, string& result, const TokenReader::TokenType type, const vector<pair<string, TokenReader::Token>>& args)
+void Deserialiser::AnonymousStatementResult::read(size_t index, float& destination)
 {
-	for (const auto& [arg_name, token] : args)
-	{
-		if (arg_name != name)
-			continue;
-		if (token.type != type)
-			return 2;
-		result = token.s_value;
-		return 0;
-	}
-	return 1;
+    if (arguments[index].type == TokenReader::FLOAT)
+        destination = arguments[index].f_value;
+    else
+        destination = static_cast<float>(arguments[index].i_value);
 }
 
-static bool getAnonArgument(const size_t index, string& result, const TokenReader::TokenType type, const vector<pair<string, TokenReader::Token>>& args)
+void Deserialiser::AnonymousStatementResult::read(size_t index, int& destination)
 {
-	if (index >= args.size())
-		return false;
-	if (!args[index].first.empty())
-		return false;
-	if (args[index].second.type != type)
-		return false;
-	result = args[index].second.s_value;
-	return true;
+    if (arguments[index].type == TokenReader::FLOAT)
+        destination = static_cast<int>(arguments[index].f_value);
+    else
+        destination = arguments[index].i_value;
 }
 
-static bool getAnonArgument(const size_t index, glm::vec4& result, const vector<pair<string, TokenReader::Token>>& args)
+void Deserialiser::AnonymousStatementResult::read(size_t index, uint32_t& destination)
 {
-	if (index >= args.size())
-		return false;
-	if (!args[index].first.empty())
-		return false;
-	if (args[index].second.type != TokenReader::VECTOR)
-		return false;
-	result = args[index].second.c_value;
-	return true;
+    if (arguments[index].type == TokenReader::FLOAT)
+        destination = static_cast<uint32_t>(arguments[index].f_value);
+    else
+        destination = static_cast<uint32_t>(arguments[index].i_value);
 }
 
-static bool getAnonArgument(const size_t index, float& result, const vector<pair<string, TokenReader::Token>>& args)
+void Deserialiser::AnonymousStatementResult::read(size_t index, glm::vec2& destination)
 {
-	if (index >= args.size())
-		return false;
-	if (!args[index].first.empty())
-		return false;
-	if (args[index].second.type == TokenReader::FLOAT)
-	{
-		result = args[index].second.f_value;
-		return true;
-	}
-	if (args[index].second.type == TokenReader::INT)
-	{
-		result = static_cast<float>(args[index].second.i_value);
-		return true;
-	}
-	return false;
+    destination = arguments[index].c_value;
 }
 
-static Pipeline::CompareOp getCompareOp(const string& str)
+void Deserialiser::AnonymousStatementResult::read(size_t index, glm::ivec2& destination)
 {
-	static map<string, Pipeline::CompareOp> op_map =
-	{
-		{ "ALWAYS", Pipeline::COMPARE_ALWAYS },
-		{ "EQUAL", Pipeline::COMPARE_EQUAL },
-		{ "GREATER", Pipeline::COMPARE_GREATER },
-		{ "GREATER_EQUAL", Pipeline::COMPARE_GREATER_OR_EQUAL },
-		{ "LESS", Pipeline::COMPARE_LESS },
-		{ "LESS_EQUAL", Pipeline::COMPARE_LESS_OR_EQUAL },
-		{ "NEVER", Pipeline::COMPARE_NEVER },
-		{ "NOT_EQUAL", Pipeline::COMPARE_NOT_EQUAL }
-	};
-	const auto it = op_map.find(str);
-	if (it == op_map.end())
-		return static_cast<Pipeline::CompareOp>(-1);
-	return it->second;
+    destination = arguments[index].c_value;
 }
 
-static int getBool(const string& str)
+void Deserialiser::AnonymousStatementResult::read(size_t index, glm::vec3& destination)
 {
-	static map<string, bool> bool_map =
-	{
-		{ "TRUE", true },
-		{ "FALSE", false }
-	};
-	const auto it = bool_map.find(str);
-	if (it == bool_map.end())
-		return -1;
-	return it->second;
+    destination = arguments[index].c_value;
 }
 
-static Pipeline::CullMode getCullMode(const string& str)
+void Deserialiser::AnonymousStatementResult::read(size_t index, glm::ivec3& destination)
 {
-	static map<string, Pipeline::CullMode> cull_map =
-	{
-		{ "NONE", Pipeline::CULL_NONE },
-		{ "FRONT", Pipeline::CULL_FRONT },
-		{ "BACK", Pipeline::CULL_BACK }
-	};
-	const auto it = cull_map.find(str);
-	if (it == cull_map.end())
-		return static_cast<Pipeline::CullMode>(-1);
-	return it->second;
+    destination = arguments[index].c_value;
 }
 
-static Pipeline::PolygonMode getPolygonMode(const string& str)
+void Deserialiser::AnonymousStatementResult::read(size_t index, glm::vec4& destination)
 {
-	static map<string, Pipeline::PolygonMode> polygon_map =
-	{
-		{ "FILL", Pipeline::POLYGON_FILL },
-		{ "LINE", Pipeline::POLYGON_LINE },
-		{ "POINT", Pipeline::POLYGON_POINT }
-	};
-	const auto it = polygon_map.find(str);
-	if (it == polygon_map.end())
-		return static_cast<Pipeline::PolygonMode>(-1);
-	return it->second;
+    destination = arguments[index].c_value;
 }
 
-static Sampler::Filter getFilter(const string& str)
+void Deserialiser::AnonymousStatementResult::read(size_t index, string& destination)
 {
-	static map<string, Sampler::Filter> filter_map =
-	{
-		{ "LINEAR", Sampler::FILTER_LINEAR },
-		{ "NEAREST", Sampler::FILTER_NEAREST },
-	};
-	const auto it = filter_map.find(str);
-	if (it == filter_map.end())
-		return static_cast<Sampler::Filter>(-1);
-	return it->second;
+    destination = arguments[index].s_value;
 }
 
-static Sampler::Address getAddressMode(const string& str)
+void Deserialiser::NamedStatementResult::read(string name, float& destination)
 {
-	static map<string, Sampler::Address> address_map =
-	{
-		{ "REPEAT", Sampler::ADDRESS_REPEAT },
-		{ "MIRROR", Sampler::ADDRESS_MIRRORED },
-		{ "CLAMP", Sampler::ADDRESS_CLAMP_EDGE }
-	};
-	const auto it = address_map.find(str);
-	if (it == address_map.end())
-		return static_cast<Sampler::Address>(-1);
-	return it->second;
+    auto it = arguments.find(name);
+    if (it == arguments.end())
+        return;
+    
+    if (it->second.type == TokenReader::FLOAT)
+        destination = it->second.f_value;
+    else
+        destination = static_cast<float>(it->second.i_value);
 }
 
-Ref<Material> Material::deserialise(const string& name)
+void Deserialiser::NamedStatementResult::read(string name, int& destination)
 {
-	auto raw_data = Package::load(name);
-	if (raw_data.empty())
-		return nullptr;
-
-	std::string token_str(reinterpret_cast<char*>(raw_data.data()), raw_data.size());
-	auto tokens = TokenReader::tokenise(token_str);
-	if (tokens.empty())
-		return nullptr;
-
-	auto syntax_tree = TokenReader::extractSyntaxTree(tokens, token_str);
-	if (syntax_tree.empty())
-		return nullptr;
-
-	map<string, Ref<Shader>> shaders;
-	map<string, Ref<Texture>> textures;
-
-	Pipeline::Builder pipeline_builder;
-	Ref<Shader> main_shader;
-
-	vector<TokenReader::Statement> uniforms;
-	vector<map<string, TokenReader::Token>> texture_bindings;
-
-	for (const TokenReader::Statement& statement : syntax_tree)
-	{
-		if (statement.keyword == "Resource")
-		{
-			vector<TokenReader::Token> args;
-			if (!TokenReader::readStatementAnonymous(statement, false, true,
-				{
-					TokenReader::TEXT,
-					TokenReader::STRING
-				}, args, "error deserialising material '" + name + "'"))
-				return nullptr;
-			if (args[0].s_value == "shader")
-				shaders[statement.identifier] = Engine::loadShader(args[1].s_value);
-			else if (args[0].s_value == "texture")
-				textures[statement.identifier] = Engine::loadTexture(args[1].s_value);
-			else
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid resource type");
-				return nullptr;
-			}
-		}
-		else if (statement.keyword == "Depth")
-		{
-			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatementNamed(statement, false, false,
-				{
-					{ "operation", { TokenReader::TEXT, false } },
-					{ "test", { TokenReader::TEXT, false } },
-					{ "write", { TokenReader::TEXT, false } }
-				}, args, "error deserialising material '" + name + "'"))
-				return nullptr;
-			auto it = args.find("operation");
-			if (it != args.end())
-			{
-				Pipeline::CompareOp operation = getCompareOp(it->second.s_value);
-				if (operation == static_cast<Pipeline::CompareOp>(-1))
-				{
-					DBG_ERROR("error deserialising material '" + name + "': invalid depth operation value");
-					return nullptr;
-				}
-				pipeline_builder.depthOp(operation);
-			}
-			it = args.find("test");
-			if (it != args.end())
-			{
-				int test = getBool(it->second.s_value);
-				if (test == -1)
-				{
-					DBG_ERROR("error deserialising material '" + name + "': invalid depth test value");
-					return nullptr;
-				}
-				pipeline_builder.depthTest(test);
-			}
-			it = args.find("write");
-			if (it != args.end())
-			{
-				int write = getBool(it->second.s_value);
-				if (write == -1)
-				{
-					DBG_ERROR("error deserialising material '" + name + "': invalid depth write value");
-					return nullptr;
-				}
-				pipeline_builder.depthWrite(write);
-			}
-		}
-		else if (statement.keyword == "Culling")
-		{
-			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatementNamed(statement, false, false,
-				{
-					{ "mode", { TokenReader::TEXT, false } },
-				}, args, "error deserialising material '" + name + "'"))
-				return nullptr;
-			auto it = args.find("mode");
-			if (it != args.end())
-			{
-				Pipeline::CullMode cull = getCullMode(it->second.s_value);
-				if (cull == static_cast<Pipeline::CullMode>(-1))
-				{
-					DBG_ERROR("error deserialising material '" + name + "': invalid culling mode value");
-					return nullptr;
-				}
-				pipeline_builder.cullMode(cull);
-			}
-		}
-		else if (statement.keyword == "Polygon")
-		{
-			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatementNamed(statement, false, false,
-				{
-					{ "mode", { TokenReader::TEXT, false } },
-				}, args, "error deserialising material '" + name + "'"))
-				return nullptr;
-			auto it = args.find("mode");
-			if (it != args.end())
-			{
-				Pipeline::PolygonMode polygon = getPolygonMode(it->second.s_value);
-				if (polygon == static_cast<Pipeline::PolygonMode>(-1))
-				{
-					DBG_ERROR("error deserialising material '" + name + "': invalid polygon mode value");
-					return nullptr;
-				}
-				pipeline_builder.polygonMode(polygon);
-			}
-		}
-		else if (statement.keyword == "Stencil")
-		{
-			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatementNamed(statement, false, false,
-				{
-					{ "compare", { TokenReader::TEXT, true } },
-					{ "compare_value", { TokenReader::INT, true } },
-					{ "compare_mask", { TokenReader::INT, true } },
-					{ "write_mask", { TokenReader::INT, false } },
-				}, args, "error deserialising material '" + name + "'"))
-				return nullptr;
-			Pipeline::CompareOp compare = getCompareOp(args["compare"].s_value);
-			if (compare == static_cast<Pipeline::CompareOp>(-1))
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid stencil compare op value");
-				return nullptr;
-			}
-			pipeline_builder.stencilCompare(compare, args["compare_value"].i_value, args["compare_mask"].i_value);
-			auto it = args.find("write_mask");
-			if (it != args.end())
-				pipeline_builder.stencilWrite(it->second.i_value);
-		}
-		else if (statement.keyword == "Shader")
-		{
-			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatementNamed(statement, false, false,
-				{
-					{ "resource", { TokenReader::IDENTIFIER, true } },
-				}, args, "error deserialising material '" + name + "'"))
-				return nullptr;
-			auto it = args.find("resource");
-			if (it != args.end())
-			{
-				auto shader_it = shaders.find(it->second.s_value);
-				if (shader_it == shaders.end())
-				{
-					DBG_ERROR("error deserialising material '" + name + "': invalid shader descriptor, no such resource loaded");
-					return nullptr;
-				}
-				main_shader = shader_it->second;
-			}
-		}
-		else if (statement.keyword == "Uniform")
-		{
-			if (!statement.arguments.empty())
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid uniform descritor, arguments are not allowed");
-				return nullptr;
-			}
-			for (const TokenReader::Statement& uniform : statement.children)
-				uniforms.push_back(uniform);
-		}
-		else if (statement.keyword == "Texture")
-		{
-			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatementNamed(statement, false, false,
-				{
-					{ "resource", { TokenReader::IDENTIFIER, true } },
-					{ "binding", { TokenReader::STRING, true } },
-					{ "filter", { TokenReader::TEXT, false } },
-					{ "address", { TokenReader::TEXT, false } },
-				}, args, "error deserialising material '" + name + "'"))
-				return nullptr;
-			texture_bindings.push_back(args);
-		}
-		else
-		{
-			DBG_ERROR("error deserialising material '" + name + "': invalid keyword '" + statement.keyword + "'");
-			return nullptr;
-		}
-	}
-
-	if (!main_shader)
-		return nullptr;
-	Ref<Material> material = new Material(main_shader, pipeline_builder);
-	if (!material)
-		return nullptr;
-
-	for (const auto& args : texture_bindings)
-	{
-		auto it = args.find("resource");
-		auto texture_it = textures.find(it->second.s_value);
-		if (texture_it == textures.end())
-		{
-			DBG_ERROR("error deserialising material '" + name + "': texture descriptor resource is not loaded");
-			return nullptr;
-		}
-		string binding;
-		binding = args.find("binding")->second.s_value;
-		Sampler::Builder sampler_builder;
-		it = args.find("filter");
-		if (it != args.end())
-		{
-			Sampler::Filter filter = getFilter(it->second.s_value);
-			if (filter == static_cast<Sampler::Filter>(-1))
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor filter value");
-				return nullptr;
-			}
-			sampler_builder.filter(filter);
-		}
-		it = args.find("address");
-		if (it != args.end())
-		{
-			Sampler::Address address = getAddressMode(it->second.s_value);
-			if (address == static_cast<Sampler::Address>(-1))
-			{
-				DBG_ERROR("error deserialising material '" + name + "': invalid texture descriptor address value");
-				return nullptr;
-			}
-			sampler_builder.address(address);
-		}
-		material->setTexture(binding, texture_it->second);
-		material->setSampler(binding, Engine::makeSampler(sampler_builder));
-	}
-
-	for (const TokenReader::Statement& statement : uniforms)
-	{
-		if (statement.keyword == "vec4")
-		{
-			string binding;
-			if (!getAnonArgument(0, binding, TokenReader::STRING, statement.arguments))
-			{
-				DBG_ERROR("error deserialising material '" + name + "': vec4 statement first argument must be a shader variable name");
-				return nullptr;
-			}
-			glm::vec4 value = { 0, 0, 0, 0 };
-			if (!getAnonArgument(1, value, statement.arguments))
-			{
-				DBG_ERROR("error deserialising material '" + name + "': vec4 statement second argument must be a vector");
-				return nullptr;
-			}
-			material->setVec4Uniform(binding, value);
-		}
-		else if (statement.keyword == "float")
-		{
-			string binding;
-			if (!getAnonArgument(0, binding, TokenReader::STRING, statement.arguments))
-			{
-				DBG_ERROR("error deserialising material '" + name + "': float statement first argument must be a shader variable name");
-				return nullptr;
-			}
-			float value = 0;
-			if (!getAnonArgument(1, value, statement.arguments))
-			{
-				DBG_ERROR("error deserialising material '" + name + "': float statement second argument must be a float");
-				return nullptr;
-			}
-			material->setFloatUniform(binding, value);
-		}
-		else
-		{
-			DBG_ERROR("error deserialising material '" + name + "': invalid uniform keyword '" + statement.keyword + "'");
-			return nullptr;
-		}
-	}
-
-	material->origin = name;
-	return material;
+    auto it = arguments.find(name);
+    if (it == arguments.end())
+        return;
+    
+    if (it->second.type == TokenReader::FLOAT)
+        destination = static_cast<int>(it->second.f_value);
+    else
+        destination = it->second.i_value;
 }
 
-Ref<RenderGraph> RenderGraph::deserialise(const string& name)
+void Deserialiser::NamedStatementResult::read(string name, uint32_t& destination)
 {
-	auto raw_data = Package::load(name);
-	if (raw_data.empty())
-		return nullptr;
+    auto it = arguments.find(name);
+    if (it == arguments.end())
+        return;
 
-	std::string token_str(reinterpret_cast<char*>(raw_data.data()), raw_data.size());
-	auto tokens = TokenReader::tokenise(token_str);
-	if (tokens.empty())
-		return nullptr;
+    if (it->second.type == TokenReader::FLOAT)
+        destination = static_cast<uint32_t>(it->second.f_value);
+    else
+        destination = static_cast<uint32_t>(it->second.i_value);
+}
 
-	auto syntax_tree = TokenReader::extractSyntaxTree(tokens, token_str);
-	if (syntax_tree.empty())
-		return nullptr;
+void Deserialiser::NamedStatementResult::read(string name, glm::vec2& destination)
+{
+    auto it = arguments.find(name);
+    if (it != arguments.end())
+        destination = it->second.c_value;
+}
 
-	map<string, Ref<Shader>> shaders;
-	map<string, RenderPass::Config> render_passes;
-	map<string, int> step_identifiers;
-	Builder builder;
-	
-	for (const TokenReader::Statement& statement : syntax_tree)
-	{
-		if (statement.keyword == "Resource")
-		{
-			vector<TokenReader::Token> args;
-			if (!TokenReader::readStatementAnonymous(statement, false, true,
-				{
-					TokenReader::TEXT,
-					TokenReader::STRING
-				}, args, "error deserialising render graph '" + name + "'"))
-				return nullptr;
-			if (args[0].s_value == "shader")
-				shaders[statement.identifier] = Engine::loadShader(args[1].s_value);
-			else
-			{
-				DBG_ERROR("error deserialising render graph '" + name + "': invalid resource type");
-				return nullptr;
-			}
-		}
-		else if (statement.keyword == "RenderPass")
-		{
-			vector<TokenReader::Token> args;
-			if (!TokenReader::readStatementAnonymous(statement, false, true,
-				{
-					TokenReader::TEXT,
-					TokenReader::INT
-				}, args, "error deserialising render graph '" + name + "'"))
-				return nullptr;
-			int has_depth = getBool(args[0].s_value);
-			if (has_depth == -1)
-			{
-				DBG_ERROR("error deserialising render graph '" + name + "': invalid 'depth enabled' value for render pass descriptor");
-				return nullptr;
-			}
-			size_t extra_buffers = glm::clamp(args[1].i_value, 0, 6);
-			render_passes[statement.identifier] = RenderPass::Config{ extra_buffers, static_cast<bool>(has_depth) };
-		}
-		else if (statement.keyword == "Camera")
-		{
-			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatementNamed(statement, false, true,
-				{
-					{ "slot", { TokenReader::INT, true } },
-					{ "scale", { TokenReader::FLOAT, false } },
-					{ "custom_size", { TokenReader::VECTOR, false } },
-					{ "render_pass", { TokenReader::IDENTIFIER, false } },
-				}, args, "error deserialising render graph '" + name + "'"))
-				return nullptr;
-			int slot = args["slot"].i_value;
-			if (slot < 0)
-			{
-				DBG_ERROR("error deserialising render graph '" + name + "': camera slot must be greater than 0");
-				return nullptr;
-			}
-			float scale = 1.0f;
-			auto it = args.find("scale");
-			if (it != args.end())
-				scale = it->second.f_value;
-			glm::vec2 custom_size{ 1, 1 };
-			it = args.find("custom_size");
-			if (it != args.end())
-			{
-				scale = 0.0f;
-				custom_size = glm::max(it->second.c_value, 1.0f);
-			}
-			it = args.find("render_pass");
-			if (it != args.end())
-			{
-				auto render_pass_it = render_passes.find(it->second.s_value);
-				if (render_pass_it == render_passes.end())
-				{
-					DBG_ERROR("error deserialising render graph '" + name + "': unknown render pass identifier '" + it->second.s_value + "'");
-					return nullptr;
-				}
-				builder.addCamera(slot, render_pass_it->second, scale, { static_cast<uint32_t>(custom_size.x), static_cast<uint32_t>(custom_size.y) });
-			}
-			else
-				builder.addCamera(slot, scale, { static_cast<uint32_t>(custom_size.x), static_cast<uint32_t>(custom_size.y) });
-			builder.execution_steps[builder.execution_steps.size() - 1].name = statement.identifier;
-			step_identifiers[statement.identifier] = static_cast<int>(builder.execution_steps.size()) - 1;
-		}
-		else if (statement.keyword == "PostProcess")
-		{
-			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatementNamed(statement, true, true,
-				{
-					{ "shader", { TokenReader::IDENTIFIER, true } },
-					{ "scale", { TokenReader::FLOAT, false } },
-					{ "custom_size", { TokenReader::VECTOR, false } },
-					{ "render_pass", { TokenReader::IDENTIFIER, false } },
-				}, args, "error deserialising render graph '" + name + "'"))
-				return nullptr;
-			auto shader_it = shaders.find(args["shader"].s_value);
-			if (shader_it == shaders.end())
-			{
-				DBG_ERROR("error deserialising render graph '" + name + "': unknown shader identifier '" + args["shader"].s_value + "'");
-				return nullptr;
-			}
-			float scale = 1.0f;
-			auto it = args.find("scale");
-			if (it != args.end())
-				scale = it->second.f_value;
-			glm::vec2 custom_size{ 1, 1 };
-			it = args.find("custom_size");
-			if (it != args.end())
-			{
-				scale = 0.0f;
-				custom_size = glm::max(it->second.c_value, 1.0f);
-			}
-			map<uint32_t, AttachmentBinding> bindings;
-			for (const TokenReader::Statement& sub_statement : statement.children)
-			{
-				if (sub_statement.keyword != "Input")
-				{
-					DBG_ERROR("error deserialising render graph '" + name + "': only Input statements are allowed inside a PostProcess statement");
-					return nullptr;
-				}
-				map<string, TokenReader::Token> args2;
-				if (!TokenReader::readStatementNamed(sub_statement, false, false,
-					{
-						{ "binding", { TokenReader::INT, true } },
-						{ "step", { TokenReader::IDENTIFIER, true } },
-						{ "attachment", { TokenReader::INT, true } },
-						{ "filter", { TokenReader::TEXT, false } },
-						{ "address", { TokenReader::TEXT, false } },
-					}, args2, "error deserialising render graph '" + name + "'"))
-					return nullptr;
-				int binding = args2["binding"].i_value;
-				if (binding < 0)
-				{
-					DBG_ERROR("error deserialising render graph '" + name + "': post-process input binding must be positive");
-					return nullptr;
-				}
-				auto step_it = step_identifiers.find(args2["step"].s_value);
-				if (step_it == step_identifiers.end())
-				{
-					DBG_ERROR("error deserialising render graph '" + name + "': nonexistent step identifier '" + args2["step"].s_value + "'");
-					return nullptr;
-				}
-				int attachment = args2["attachment"].i_value;
-				if (binding < 0)
-				{
-					DBG_ERROR("error deserialising render graph '" + name + "': post-process input attachment must be positive");
-					return nullptr;
-				}
-				AttachmentBinding texture_binding(step_it->second, attachment);
-				auto filter_it = args2.find("filter");
-				if (filter_it != args2.end())
-				{
-					Sampler::Filter filter = getFilter(filter_it->second.s_value);
-					if (filter == static_cast<Sampler::Filter>(-1))
-					{
-						DBG_ERROR("error deserialising render graph '" + name + "': invalid post-process input filter value");
-						return nullptr;
-					}
-					texture_binding.filter(filter);
-				}
-				filter_it = args2.find("address");
-				if (filter_it != args2.end())
-				{
-					Sampler::Address address = getAddressMode(filter_it->second.s_value);
-					if (address == static_cast<Sampler::Address>(-1))
-					{
-						DBG_ERROR("error deserialising render graph '" + name + "': invalid post-process input address mode value");
-						return nullptr;
-					}
-					texture_binding.address(address);
-				}
-				bindings[static_cast<uint32_t>(binding)] = texture_binding;
-			}
-			it = args.find("render_pass");
-			if (it != args.end())
-			{
-				auto render_pass_it = render_passes.find(it->second.s_value);
-				if (render_pass_it == render_passes.end())
-				{
-					DBG_ERROR("error deserialising render graph '" + name + "': unknown render pass identifier '" + it->second.s_value + "'");
-					return nullptr;
-				}
-				builder.addPostProcess(shader_it->second, bindings, render_pass_it->second, scale, { static_cast<uint32_t>(custom_size.x), static_cast<uint32_t>(custom_size.y) });
-			}
-			else
-				builder.addPostProcess(shader_it->second, bindings, scale, { static_cast<uint32_t>(custom_size.x), static_cast<uint32_t>(custom_size.y) });
-			builder.execution_steps[builder.execution_steps.size() - 1].name = statement.identifier;
-			step_identifiers[statement.identifier] = static_cast<int>(builder.execution_steps.size()) - 1;
-		}
-		else
-		{
-			DBG_ERROR("error deserialising render graph '" + name + "': invalid keyword '" + statement.keyword + "'");
-			return nullptr;
-		}
-	}
-	
-	auto rg = new RenderGraph(builder);
-	rg->origin = name;
-	return rg;
+void Deserialiser::NamedStatementResult::read(string name, glm::ivec2& destination)
+{
+    auto it = arguments.find(name);
+    if (it != arguments.end())
+        destination = it->second.c_value;
+}
+
+void Deserialiser::NamedStatementResult::read(string name, glm::vec3& destination)
+{
+    auto it = arguments.find(name);
+    if (it != arguments.end())
+        destination = it->second.c_value;
+}
+
+void Deserialiser::NamedStatementResult::read(string name, glm::ivec3& destination)
+{
+    auto it = arguments.find(name);
+    if (it != arguments.end())
+        destination = it->second.c_value;
+}
+
+void Deserialiser::NamedStatementResult::read(string name, glm::vec4& destination)
+{
+    auto it = arguments.find(name);
+    if (it != arguments.end())
+        destination = it->second.c_value;
+}
+
+void Deserialiser::NamedStatementResult::read(string name, string& destination)
+{
+    auto it = arguments.find(name);
+    if (it != arguments.end())
+        destination = it->second.s_value;
+}
+
+bool Deserialiser::execute(const vector<TokenReader::Statement>& statements)
+{
+    vector<AnonymousStatementResult> anonymous_results;
+    vector<NamedStatementResult> named_results;
+    vector<pair<bool, size_t>> results_ordered;
+
+    anonymous_results.reserve(statements.size());
+    named_results.reserve(statements.size());
+    for (const auto& statement : statements)
+    {
+        auto it1 = anonymous_statement_types.find(statement.keyword);
+        if (it1 != anonymous_statement_types.end())
+        {
+            vector<TokenReader::Token> arguments;
+            if (!errorCheckAnonymous(statement, it1->second.first, arguments))
+                return false;
+            results_ordered.emplace_back(false, anonymous_results.size());
+            anonymous_results.emplace_back(statement, arguments);
+            continue;
+        }
+
+        auto it2 = named_statement_types.find(statement.keyword);
+        if (it2 != named_statement_types.end())
+        {
+            map<string, TokenReader::Token> arguments;
+            if (!errorCheckNamed(statement, it2->second.first, arguments))
+                return false;
+            results_ordered.emplace_back(true, named_results.size());
+            named_results.emplace_back(statement, arguments);
+            continue;
+        }
+
+        DBG_ERROR(error + ": unable to deserialise unknown '" + statement.keyword + "' statement.");
+        return false;
+    }
+
+    for (const auto& pair : results_ordered)
+    {
+        if (!pair.first)
+        {
+            const auto& result = anonymous_results[pair.second];
+            if (!anonymous_statement_types[result.statement.keyword].second(result))
+                return false;
+        }
+        else
+        {
+            const auto& result = named_results[pair.second];
+            if (!named_statement_types[result.statement.keyword].second(result))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+bool Deserialiser::emitError(const string& _error)
+{
+    DBG_ERROR(error + ": " + _error);
+    return false;
+}
+
+static bool checkNamedArgs(const TokenReader::Statement& statement, bool named)
+{
+    for (const auto& [name, token] : statement.arguments)
+    {
+        if (name.empty() == named)
+            return false;
+    }
+    return true;
+}
+
+bool Deserialiser::errorCheckAnonymous(const TokenReader::Statement& statement,
+    const AnonymousStatementSpec& spec, vector<TokenReader::Token>& output)
+{
+    // check if there are children
+    if (!statement.children.empty() && !spec.children_permitted)
+    {
+        DBG_ERROR(error + ": children are not allowed in a '" + statement.keyword + "' statement");
+        return false;
+    }
+    // check if there is an identifier
+    if (statement.identifier.empty() && spec.identifier_allowed == Deserialiser::STATEMENT_IDENTIFIER_REQUIRED)
+    {
+        DBG_ERROR(error + ": an identifier is required in a '" + statement.keyword + "' statement");
+        return false;
+    }
+    if (!statement.identifier.empty() && spec.identifier_allowed == Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN)
+    {
+        DBG_ERROR(error + ": an identifier is forbidden in a '" + statement.keyword + "' statement");
+        return false;
+    }
+    // check if enough args are present
+    if (statement.arguments.size() > spec.expected_anon_args.size())
+    {
+        DBG_ERROR(error + ": too many arguments in '" + statement.keyword + "' statement, requires " + ::to_string(spec.expected_anon_args.size()));
+        return false;
+    }
+    if (statement.arguments.size() < spec.expected_anon_args.size())
+    {
+        DBG_ERROR(error + ": not enough arguments in '" + statement.keyword + "' statement, requires " + ::to_string(spec.expected_anon_args.size()));
+        return false;
+    }
+    // check if there are named arguments (not allowed)
+    if (!checkNamedArgs(statement, false))
+    {
+        DBG_ERROR(error + ": named arguments are not allowed in a '" + statement.keyword + "' statement");
+        return false;
+    }
+    // check if all the args have the expected types
+    output.clear();
+    size_t index = 0;
+    for (const auto& [name, token] : statement.arguments)
+    {
+        if (spec.expected_anon_args[index] == TokenReader::FLOAT && token.type == TokenReader::INT)
+        {
+            TokenReader::Token t = token;
+            t.type = TokenReader::FLOAT;
+            t.f_value = static_cast<float>(token.i_value);
+            output.push_back(t);
+        }
+        else if (spec.expected_anon_args[index] == TokenReader::INT && token.type == TokenReader::FLOAT)
+        {
+            TokenReader::Token t = token;
+            t.type = TokenReader::INT;
+            t.i_value = static_cast<int>(token.f_value);
+            output.push_back(t);
+        }
+        else if (token.type != spec.expected_anon_args[index])
+        {
+            DBG_ERROR(error + ": argument " + ::to_string(index) + " in a '" + statement.keyword + "' statement must be a " + TokenReader::typeToString(spec.expected_anon_args[index]));
+            return false;
+        }
+        else
+            output.push_back(token);
+        ++index;
+    }
+
+    return true;
+}
+
+bool Deserialiser::errorCheckNamed(const TokenReader::Statement& statement,
+    const NamedStatementSpec& spec, map<string, TokenReader::Token>& output)
+{
+    // check if there are children
+    if (!statement.children.empty() && !spec.children_permitted)
+    {
+        DBG_ERROR(error + ": children are not allowed in a '" + statement.keyword + "' statement");
+        return false;
+    }
+    // check if there is an identifier
+    if (statement.identifier.empty() && spec.identifier_allowed == Deserialiser::STATEMENT_IDENTIFIER_REQUIRED)
+    {
+        DBG_ERROR(error + ": an identifier is required in a '" + statement.keyword + "' statement");
+        return false;
+    }
+    if (!statement.identifier.empty() && spec.identifier_allowed == Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN)
+    {
+        DBG_ERROR(error + ": an identifier is forbidden in a '" + statement.keyword + "' statement");
+        return false;
+    }
+    // check if there are non-named arguments (not allowed)
+    if (!checkNamedArgs(statement, true))
+    {
+        DBG_ERROR(error + ": only named arguments are allowed in a '" + statement.keyword + "' statement");
+        return false;
+    }
+    // for each arg, check if it is present, throw error if it is not present and required, or if it is the wrong type
+    // check for duplicate args, and unrecognised args
+    output.clear();
+    for (const auto& [name, token] : statement.arguments)
+    {
+        auto it = spec.expected_named_args.find(name);
+        if (it == spec.expected_named_args.end())
+        {
+            DBG_ERROR(error + ": unrecognised argument '" + name + "' in '" + statement.keyword + "' statement");
+            return false;
+        }
+        auto is_found = spec.expected_named_args.find(name);
+        if (is_found != spec.expected_named_args.end())
+        {
+            DBG_ERROR(error + ": duplicate argument '" + name + "' in '" + statement.keyword + "' statement");
+            return false;
+        }
+        if (it->second.first == TokenReader::FLOAT && token.type == TokenReader::INT)
+        {
+            TokenReader::Token t = token;
+            t.type = TokenReader::FLOAT;
+            t.f_value = static_cast<float>(token.i_value);
+            output[name] = t;
+        }
+        else if (it->second.first == TokenReader::INT && token.type == TokenReader::FLOAT)
+        {
+            TokenReader::Token t = token;
+            t.type = TokenReader::INT;
+            t.i_value = static_cast<int>(token.f_value);
+            output[name] = t;
+        }
+        else if (token.type != it->second.first)
+        {
+            DBG_ERROR(error + ": argument '" + name + "' has wrong type for '" + statement.keyword + "' statement, must be a " + TokenReader::typeToString(it->second.first));
+            return false;
+        }
+        else
+            output[name] = token;
+    }
+    // check if all args are present
+    for (const auto& [name, spec] : spec.expected_named_args)
+    {
+        if (spec.second)
+        {
+            auto is_found = output.find(name);
+            if (is_found == output.end())
+            {
+                DBG_ERROR(error + ": argument '" + name + "' is required for '" + statement.keyword + "' statement, must be a(n) " + TokenReader::typeToString(spec.first));
+                return false;
+            }
+        }
+    }
+
+    return true;
 }

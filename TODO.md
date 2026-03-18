@@ -6,12 +6,12 @@
     - provide functions to get args
     - provide function to turn a KEYWORD into an int/bool/enum
     - provide a simplified interface to list possible statements, whether they can/must have identifiers, whether they can/must have named arguments, how many/which arguments, handle errors automatically, returns which args were present and their values (a statement-reader class)
+- node style deserialisation
 - actual editor (separate project)
     - resizeable/swappable views
     - editor build target
     - file/project manager
     
-- node style deserialisation
 - document everything
 - eliminate the tautological compare thing
 - interactive node editor
