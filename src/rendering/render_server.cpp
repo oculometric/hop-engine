@@ -112,7 +112,7 @@ RenderServer::RenderServer()
 
     createVulkan();
 
-    swapchain = new Swapchain(window_size.x, window_size.y, surface);
+    swapchain = new Swapchain(window_size);
 
     final_render_pass = new RenderPass(swapchain, { 0, true });
     offscreen_pass = new RenderPass({ 1, 1 }, { 3, true });

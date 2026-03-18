@@ -41,10 +41,6 @@ public:
 	};
 
 private:
-	// number of concurrently processed/queued frames. may be adjusted
-	// at runtime.
-	int frames_in_flight = 3;
-	
 	// main window that the render server will create a surface for
 	GLFWwindow* window;
 	glm::u32vec2 window_size = { 1024, 1024 };
@@ -64,9 +60,6 @@ private:
 	VkQueue present_queue = VK_NULL_HANDLE;
 	VkCommandPool command_pool = VK_NULL_HANDLE;
 	std::vector<Ref<DrawCommandBuffer>> command_buffers;
-	std::vector<VkSemaphore> image_available_semaphores;
-	std::vector<VkSemaphore> render_finished_semaphores;
-	std::vector<VkFence> in_flight_fences;
 
 	Ref<Swapchain> swapchain;
 	// standard render pass used by all scene camera render passes
@@ -104,12 +97,13 @@ public:
 	static void init();
 	static void destroy();
 
-	static size_t getFramesInFlight() { return getInstance()->frames_in_flight; }
 	static VkDevice getDevice() { return getInstance()->device; }
 	static void waitIdle();
 	static VkPhysicalDevice getPhysicalDevice() { return getInstance()->physical_device; }
-	static QueueFamilies getQueueFamilies(VkPhysicalDevice device);
+    static VkSurfaceKHR getSurface() { return getInstance()->surface; }
+	static QueueFamilies getQueueFamilies(VkPhysicalDevice device); // TODO: make this cached/internal
 	static VkQueue getGraphicsQueue() { return getInstance()->graphics_queue; }
+	static VkQueue getPresentQueue() { return getInstance()->present_queue; }
 	static VkCommandPool getCommandPool() { return getInstance()->command_pool; }
 	static VkDescriptorPool getDescriptorPool() { return getInstance()->descriptor_pool; }
 	static Ref<UniformBlock> createSceneUniforms();
@@ -151,7 +145,6 @@ private:
 	void createVulkan();
 	void initImGui();
 	bool resize(bool force_resize = false);
-	void refreshSyncResources();
 	FrameStats drawFrame();
 	void destroyImGui();
 	void destroyVulkan();

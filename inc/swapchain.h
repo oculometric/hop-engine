@@ -22,36 +22,41 @@ public:
 
 private:
 	VkSwapchainKHR swapchain = VK_NULL_HANDLE;
-	std::vector<VkImage> images;
 	Texture::Format format;
 	glm::u32vec2 extent;
+    bool vsync_enabled = true;
+	std::vector<VkImage> images;
 	std::vector<VkImageView> image_views;
-	VkSurfaceKHR surface;
-	uint32_t queue_families[2];
-	VkSwapchainCreateInfoKHR* create_info;
+    std::vector<VkSemaphore> image_available_semaphores;
+	std::vector<VkSemaphore> render_finished_semaphores;
+	std::vector<VkFence> in_flight_fences;
+    size_t frame_index = -1;
 
 public:
 	DELETE_CONSTRUCTORS(Swapchain);
-	Swapchain(uint32_t width, uint32_t height, VkSurfaceKHR _surface);
+	Swapchain(glm::u32vec2 new_extent);
 	~Swapchain() override;
 	
-	static SupportInfo getSwapchainSupportInfo(VkPhysicalDevice device, VkSurfaceKHR surface);
-	static glm::u32vec2 computeExtent(uint32_t window_width, uint32_t window_height);
+	static SupportInfo getSwapchainSupportInfo(VkPhysicalDevice device);
+	static glm::u32vec2 computeActualExtent(glm::u32vec2 extent);
 	static uint32_t computeImageCount();
 	
-	VkSwapchainKHR getHandle() const { return swapchain; }
 	uint32_t getImageCount() const { return static_cast<uint32_t>(image_views.size()); }
-	VkImageView getImage(size_t i) const { return image_views[i]; }
+	VkImageView getImageView(size_t i) const { return image_views[i]; }
 	Texture::Format getFormat() const { return format; }
 	glm::u32vec2 getExtent() const { return extent; }
 
-	void resize(uint32_t width, uint32_t height);
+    uint32_t acquireNextImage();
+    bool submitCommands(WeakRef<DrawCommandBuffer> command_buffer, uint32_t image_index);
+	void resize(glm::u32vec2 new_extent);
 	void setVsync(bool enabled);
 	bool getVsync();
 
 private:
+    void createSwapchain();
 	void createImageViews();
-	void destroyResources() const;
+    void createSyncObjects();
+	void destroyResources();
 };
 
 }

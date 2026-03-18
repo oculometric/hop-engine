@@ -7,7 +7,7 @@
 #include "render_server.h"
 #include "swapchain.h"
 #include "texture.h"
-#include "vulkan_converters.h"
+#include "vulkan_helpers.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -235,7 +235,7 @@ void RenderPass::createResources()
     {
         vector<VkImageView> image_attachments;
         if (swapchain)
-            image_attachments.push_back(swapchain->getImage(i));
+            image_attachments.push_back(swapchain->getImageView(i));
         for (const auto& image : textures)
             image_attachments.push_back(image->getView());
 

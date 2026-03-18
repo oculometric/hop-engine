@@ -5,106 +5,65 @@
 #include <vulkan/vulkan.hpp>
 
 #include "render_server.h"
-#include "vulkan_converters.h"
+#include "vulkan_helpers.h"
+#include "command_buffer.h"
 
 using namespace HopEngine;
 using namespace std;
 
-static Swapchain::SupportInfo cached_info;
-
-Swapchain::SupportInfo Swapchain::getSwapchainSupportInfo(const VkPhysicalDevice device, const VkSurfaceKHR surface)
+Swapchain::SupportInfo Swapchain::getSwapchainSupportInfo(const VkPhysicalDevice device)
 {
-    cached_info.surface_capabilities.resize(1);
+    SupportInfo si;
+    si.surface_capabilities.resize(1);
 
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, cached_info.surface_capabilities.data());
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, RenderServer::getSurface(), si.surface_capabilities.data());
 
     uint32_t format_count;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &format_count, nullptr);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(device, RenderServer::getSurface(), &format_count, nullptr);
     if (format_count != 0)
     {
-        cached_info.surface_formats.resize(format_count);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &format_count, cached_info.surface_formats.data());
+        si.surface_formats.resize(format_count);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, RenderServer::getSurface(), &format_count, si.surface_formats.data());
     }
 
-    return cached_info;
+    return si;
 }
 
-glm::u32vec2 Swapchain::computeExtent(const uint32_t window_width, const uint32_t window_height)
+glm::u32vec2 Swapchain::computeActualExtent(const glm::u32vec2 extent)
 {
-    if (cached_info.surface_capabilities[0].currentExtent.width != numeric_limits<uint32_t>::max())
-        return { cached_info.surface_capabilities[0].currentExtent.width, cached_info.surface_capabilities[0].currentExtent.height };
+    SupportInfo si = getSwapchainSupportInfo(RenderServer::getPhysicalDevice());
+    if (si.surface_capabilities[0].currentExtent.width != numeric_limits<uint32_t>::max())
+        return { si.surface_capabilities[0].currentExtent.width, si.surface_capabilities[0].currentExtent.height };
     else
     {
-        VkExtent2D actual_extent =
-        {
-            window_width,
-            window_height
-        };
+        glm::u32vec2 actual_extent = glm::clamp(extent,
+            { si.surface_capabilities[0].minImageExtent.width, si.surface_capabilities[0].minImageExtent.height },
+            { si.surface_capabilities[0].maxImageExtent.width, si.surface_capabilities[0].maxImageExtent.height });
 
-        actual_extent.width = clamp(actual_extent.width, cached_info.surface_capabilities[0].minImageExtent.width, cached_info.surface_capabilities[0].maxImageExtent.width);
-        actual_extent.height = clamp(actual_extent.height, cached_info.surface_capabilities[0].minImageExtent.height, cached_info.surface_capabilities[0].maxImageExtent.height);
-
-        return { actual_extent.width, actual_extent.height };
+        return actual_extent;
     }
 }
 
 uint32_t HopEngine::Swapchain::computeImageCount()
 {
-    uint32_t image_count = cached_info.surface_capabilities[0].minImageCount + 1;
-    if (cached_info.surface_capabilities[0].maxImageCount > 0)
-        image_count = min(image_count, cached_info.surface_capabilities[0].maxImageCount);
+    SupportInfo si = getSwapchainSupportInfo(RenderServer::getPhysicalDevice());
+    uint32_t image_count = si.surface_capabilities[0].minImageCount + 1;
+    if (si.surface_capabilities[0].maxImageCount > 0)
+        image_count = min(image_count, si.surface_capabilities[0].maxImageCount);
     return image_count;
 }
 
-Swapchain::Swapchain(const uint32_t width, const uint32_t height, const VkSurfaceKHR _surface)
+Swapchain::Swapchain(glm::u32vec2 new_extent)
 {
-    surface = _surface;
-    create_info = new VkSwapchainCreateInfoKHR{ };
-
     // calculate actual swapchain parameters
-    const SupportInfo support_info = getSwapchainSupportInfo(RenderServer::getPhysicalDevice(), surface);
     format = Texture::FORMAT_SWAPCHAIN;
-    extent = computeExtent(width, height);
+    extent = computeActualExtent(new_extent);
 
-    create_info[0] = VkSwapchainCreateInfoKHR{ };
-    create_info[0].sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    create_info[0].surface = surface;
-    create_info[0].minImageCount = computeImageCount();
-    create_info[0].imageFormat = VK_FORMAT_B8G8R8A8_SRGB;
-    create_info[0].imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-    create_info[0].imageExtent = { extent.x, extent.y };
-    create_info[0].imageArrayLayers = 1;
-    create_info[0].imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-
-    // get info about which present mode we're going to use
-    RenderServer::QueueFamilies indices = RenderServer::getQueueFamilies(RenderServer::getPhysicalDevice());
-    queue_families[0] = indices.graphics_family.value();
-    queue_families[1] = indices.present_family.value();
-    if (indices.graphics_family != indices.present_family)
-    {
-        create_info[0].imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-        create_info[0].queueFamilyIndexCount = 2;
-        create_info[0].pQueueFamilyIndices = queue_families;
-    }
-    else
-    {
-        create_info[0].imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        create_info[0].queueFamilyIndexCount = 0;
-        create_info[0].pQueueFamilyIndices = nullptr;
-    }
-
-    create_info[0].preTransform = support_info.surface_capabilities[0].currentTransform;
-    create_info[0].compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    create_info[0].presentMode = VK_PRESENT_MODE_FIFO_KHR;
-    create_info[0].clipped = VK_TRUE;
-    create_info[0].oldSwapchain = VK_NULL_HANDLE;
-
-    // create the swapchain
-    if (vkCreateSwapchainKHR(RenderServer::getDevice(), create_info, nullptr, &swapchain) != VK_SUCCESS)
-        DBG_FAULT("vkCreateSwapchainKHR failed");
+    createSwapchain();    
     createImageViews();
+    createSyncObjects();
 
-    DBG_INFO("created swapchain at " + ::to_string(width) + "x" + ::to_string(height) + " with " + ::to_string(images.size()) + " images in present mode " + vk::to_string(static_cast<vk::PresentModeKHR>(create_info[0].presentMode)));
+    DBG_INFO("created swapchain at " + ::to_string(new_extent.x) + "x" + ::to_string(new_extent.y) + " with " + ::to_string(images.size()) + " images");
 }
 
 Swapchain::~Swapchain()
@@ -113,39 +72,131 @@ Swapchain::~Swapchain()
     destroyResources();
 }
 
-void Swapchain::resize(const uint32_t width, const uint32_t height)
+uint32_t Swapchain::acquireNextImage()
 {
-    DBG_VERBOSE("resizing swapchain to " + ::to_string(width) + "x" + ::to_string(height));
+    ++frame_index;
+
+    CHECK_RESULT(
+        vkWaitForFences, (RenderServer::getDevice(), 1, &in_flight_fences[frame_index % in_flight_fences.size()], VK_TRUE, 10000000),
+        WARNING,
+        return -1);
+    CHECK_RESULT(
+        vkResetFences, (RenderServer::getDevice(), 1, &in_flight_fences[frame_index % in_flight_fences.size()]),
+        ERROR,
+        return -1);
+
+    uint32_t image_index;
+    CHECK_RESULT(
+        vkAcquireNextImageKHR, (RenderServer::getDevice(), swapchain, UINT64_MAX, image_available_semaphores[frame_index % in_flight_fences.size()], VK_NULL_HANDLE, &image_index),
+        WARNING,
+        return -1);
+    DBG_BABBLE("acquired image " + ::to_string(image_index));
+
+    return image_index;
+}
+
+bool Swapchain::submitCommands(WeakRef<DrawCommandBuffer> command_buffer, uint32_t image_index)
+{
+    VkSubmitInfo submit_info{ };
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    const VkSemaphore wait_semaphores[] = { image_available_semaphores[frame_index % image_available_semaphores.size()] };
+    constexpr VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    submit_info.waitSemaphoreCount = 1;
+    submit_info.pWaitSemaphores = wait_semaphores;
+    submit_info.pWaitDstStageMask = wait_stages;
+    submit_info.commandBufferCount = 1;
+    VkCommandBuffer cmd_buf = command_buffer->getCommandBuffer();
+    submit_info.pCommandBuffers = &cmd_buf;
+    const VkSemaphore signal_semaphores[] = { render_finished_semaphores[image_index] };
+    submit_info.signalSemaphoreCount = 1;
+    submit_info.pSignalSemaphores = signal_semaphores;
+    CHECK_RESULT(
+        vkQueueSubmit, (RenderServer::getGraphicsQueue(), 1, &submit_info, in_flight_fences[frame_index % in_flight_fences.size()]),
+        ERROR, return false);
+
+    VkPresentInfoKHR present_info{ };
+    present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    present_info.waitSemaphoreCount = 1;
+    present_info.pWaitSemaphores = signal_semaphores;
+    present_info.swapchainCount = 1;
+    present_info.pSwapchains = &swapchain;
+    present_info.pImageIndices = &image_index;
+    CHECK_RESULT(
+        vkQueuePresentKHR, (RenderServer::getPresentQueue(), &present_info),
+        ERROR, return false);
+
+    return true;
+}
+
+void Swapchain::resize(const glm::u32vec2 new_extent)
+{
+    DBG_VERBOSE("resizing swapchain to " + ::to_string(new_extent.x) + "x" + ::to_string(new_extent.y));
     
     destroyResources();
 
-    getSwapchainSupportInfo(RenderServer::getPhysicalDevice(), surface);
-    extent = computeExtent(width, height);
-    create_info[0].imageExtent = { extent.x, extent.y };
+    extent = computeActualExtent(new_extent);
 
-    if (vkCreateSwapchainKHR(RenderServer::getDevice(), create_info, nullptr, &swapchain) != VK_SUCCESS)
-        DBG_FAULT("vkCreateSwapchainKHR failed");
+    createSwapchain();
     createImageViews();
+    createSyncObjects();
 }
 
 void Swapchain::setVsync(bool enabled)
 {
-    if ((create_info[0].presentMode == VK_PRESENT_MODE_FIFO_KHR) == enabled)
+    if (vsync_enabled == enabled)
         return;
 
     destroyResources();
 
-    create_info[0].presentMode = enabled ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR;
-    
-    if (vkCreateSwapchainKHR(RenderServer::getDevice(), create_info, nullptr, &swapchain) != VK_SUCCESS)
-        DBG_FAULT("vkCreateSwapchainKHR failed");
-    createImageViews(); 
-}
+    vsync_enabled = enabled;
 
+    createSwapchain();
+    createImageViews();
+    createSyncObjects();
+}
 
 bool Swapchain::getVsync()
 {
-    return create_info[0].presentMode == VK_PRESENT_MODE_FIFO_KHR;
+    return vsync_enabled;
+}
+
+void Swapchain::createSwapchain()
+{
+    VkSwapchainCreateInfoKHR create_info{ };
+    create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    create_info.surface = RenderServer::getSurface();
+    create_info.minImageCount = computeImageCount();
+    create_info.imageFormat = VK_FORMAT_B8G8R8A8_SRGB;
+    create_info.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+    create_info.imageExtent = { extent.x, extent.y };
+    create_info.imageArrayLayers = 1;
+    create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    RenderServer::QueueFamilies indices = RenderServer::getQueueFamilies(RenderServer::getPhysicalDevice());
+    uint32_t queue_families[2] = { 0 };
+    queue_families[0] = indices.graphics_family.value();
+    queue_families[1] = indices.present_family.value();
+    if (indices.graphics_family != indices.present_family)
+    {
+        create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+        create_info.queueFamilyIndexCount = 2;
+        create_info.pQueueFamilyIndices = queue_families;
+    }
+    else
+    {
+        create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        create_info.queueFamilyIndexCount = 0;
+        create_info.pQueueFamilyIndices = nullptr;
+    }
+    SupportInfo si = Swapchain::getSwapchainSupportInfo(RenderServer::getPhysicalDevice());
+    create_info.preTransform = si.surface_capabilities[0].currentTransform;
+    create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    create_info.presentMode = vsync_enabled ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR;
+    create_info.clipped = VK_TRUE;
+    create_info.oldSwapchain = VK_NULL_HANDLE;
+
+    CHECK_RESULT(
+        vkCreateSwapchainKHR, (RenderServer::getDevice(), &create_info, nullptr, &swapchain),
+        FAULT, ;);
 }
 
 void Swapchain::createImageViews()
@@ -180,10 +231,46 @@ void Swapchain::createImageViews()
     }
 }
 
-void Swapchain::destroyResources() const
+void Swapchain::createSyncObjects()
+{
+    VkSemaphoreCreateInfo semaphore_create_info{ };
+    semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    VkFenceCreateInfo fence_create_info{ };
+    fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+    image_available_semaphores.resize(images.size());
+    render_finished_semaphores.resize(images.size());
+    in_flight_fences.resize(images.size());
+
+    for (size_t i = 0; i < images.size(); ++i)
+    {
+        CHECK_RESULT(
+            vkCreateSemaphore, (RenderServer::getDevice(), &semaphore_create_info, nullptr, &image_available_semaphores[i]),
+            FAULT, ;);
+        CHECK_RESULT(
+            vkCreateSemaphore, (RenderServer::getDevice(), &semaphore_create_info, nullptr, &render_finished_semaphores[i]),
+            FAULT, ;);
+        CHECK_RESULT(
+            vkCreateFence, (RenderServer::getDevice(), &fence_create_info, nullptr, &in_flight_fences[i]),
+            FAULT, ;);
+    }
+}
+
+void Swapchain::destroyResources()
 {
     RenderServer::waitIdle();
     for (const auto image_view : image_views)
         vkDestroyImageView(RenderServer::getDevice(), image_view, nullptr);
+    image_views.clear();
+    for (size_t i = 0; i < image_available_semaphores.size(); ++i)
+    {
+        vkDestroySemaphore(RenderServer::getDevice(), image_available_semaphores[i], nullptr);
+        vkDestroySemaphore(RenderServer::getDevice(), render_finished_semaphores[i], nullptr);
+        vkDestroyFence(RenderServer::getDevice(), in_flight_fences[i], nullptr);
+    }
+    image_available_semaphores.clear();
+    render_finished_semaphores.clear();
+    in_flight_fences.clear();
     vkDestroySwapchainKHR(RenderServer::getDevice(), swapchain, nullptr);
 }

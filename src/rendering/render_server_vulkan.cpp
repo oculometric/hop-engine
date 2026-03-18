@@ -15,6 +15,7 @@
 #include "engine.h"
 #include "material.h"
 #include "command_buffer.h"
+#include "vulkan_helpers.h"
 
 #define VK_DEBUG
 
@@ -39,22 +40,6 @@ static const vector<const char*> required_extensions =
 {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
-
-#define CHECK_RESULT(line, error) { \
-VkResult result = line; \
-if (result != VK_SUCCESS) DBG_ERROR(std::string(error) + " (error " + vk::to_string((vk::Result)result) + ")"); \
-}
-
-#define CHECK_RESULT_CRITICAL(line, error) { \
-VkResult result = line; \
-if (result != VK_SUCCESS) DBG_FAULT(std::string(error) + " (error " + vk::to_string((vk::Result)result) + ")"); \
-}
-
-#define CHECK_RESULT_RETURN(line, error, rval) { \
-VkResult result = line; \
-if (result != VK_SUCCESS) { DBG_ERROR(std::string(error) + " (error " + vk::to_string((vk::Result)result) + ")"); \
-return rval; } \
-}
 
 #if defined(VK_DEBUG)
 static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
@@ -263,7 +248,7 @@ void RenderServer::createVulkan()
 
             if (score != 0)
             {
-                auto swapchain_info = Swapchain::getSwapchainSupportInfo(test_device, surface);
+                auto swapchain_info = Swapchain::getSwapchainSupportInfo(test_device);
                 if (swapchain_info.surface_formats.empty())
                     score = 0;
             }
@@ -319,11 +304,11 @@ void RenderServer::createVulkan()
         DBG_VERBOSE("extracting queues");
         vkGetDeviceQueue(device, queue_family_indices.graphics_family.value(), 0, &graphics_queue);
         vkGetDeviceQueue(device, queue_family_indices.present_family.value(), 0, &present_queue);
-
-        Swapchain::getSwapchainSupportInfo(physical_device, surface);
-        frames_in_flight = static_cast<int>(Swapchain::computeImageCount());
-        DBG_VERBOSE("adjusted frames in flight to " + ::to_string(frames_in_flight));
     }
+
+    Swapchain::getSwapchainSupportInfo(physical_device);
+    uint32_t frames_in_flight = Swapchain::computeImageCount();
+    DBG_VERBOSE("adjusted frames in flight to " + ::to_string(frames_in_flight));
 
     {
         array<VkDescriptorPoolSize, 2> descriptor_pool_sizes;
@@ -377,8 +362,6 @@ void RenderServer::createVulkan()
         for (uint32_t i = 0; i < static_cast<uint32_t>(frames_in_flight); ++i)
             command_buffers.push_back(new DrawCommandBuffer());
     }
-
-    refreshSyncResources();
 }
 
 void RenderServer::initImGui()
@@ -397,47 +380,14 @@ void RenderServer::initImGui()
     init_info.Queue = graphics_queue;
     init_info.PipelineCache = VK_NULL_HANDLE;
     init_info.DescriptorPool = descriptor_pool;
-    init_info.MinImageCount = frames_in_flight;
-    init_info.ImageCount = frames_in_flight;
+    Swapchain::getSwapchainSupportInfo(physical_device);
+    init_info.MinImageCount = Swapchain::computeImageCount();
+    init_info.ImageCount = Swapchain::computeImageCount();
     init_info.Allocator = nullptr;
     init_info.PipelineInfoMain.RenderPass = final_render_pass->getRenderPass();
     init_info.PipelineInfoMain.Subpass = 0;
     init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     ImGui_ImplVulkan_Init(&init_info);
-}
-
-void RenderServer::refreshSyncResources()
-{
-    RenderServer::waitIdle();
-    if (!image_available_semaphores.empty())
-    {
-        DBG_VERBOSE("destroying sync resources");
-        for (size_t i = 0; i < image_available_semaphores.size(); ++i)
-        {
-            vkDestroySemaphore(device, image_available_semaphores[i], nullptr);
-            vkDestroySemaphore(device, render_finished_semaphores[i], nullptr);
-            vkDestroyFence(device, in_flight_fences[i], nullptr);
-        }
-    }
-
-    DBG_VERBOSE("creating sync objects");
-    VkSemaphoreCreateInfo semaphore_create_info{ };
-    semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-    VkFenceCreateInfo fence_create_info{ };
-    fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-    image_available_semaphores.resize(frames_in_flight);
-    render_finished_semaphores.resize(frames_in_flight);
-    in_flight_fences.resize(frames_in_flight);
-
-    for (int i = 0; i < frames_in_flight; ++i)
-    {
-        if (vkCreateSemaphore(device, &semaphore_create_info, nullptr, &image_available_semaphores[i]) != VK_SUCCESS ||
-            vkCreateSemaphore(device, &semaphore_create_info, nullptr, &render_finished_semaphores[i]) != VK_SUCCESS ||
-            vkCreateFence(device, &fence_create_info, nullptr, &in_flight_fences[i]) != VK_SUCCESS)
-            DBG_FAULT("vkCreateSemaphore failed");
-    }
 }
 
 FrameStats RenderServer::drawFrame()
@@ -453,29 +403,9 @@ FrameStats RenderServer::drawFrame()
 
     FrameStats stats{ };
 
-    {
-        VkResult result = vkWaitForFences(device, 1, &in_flight_fences[frame_index % frames_in_flight], VK_TRUE, 10000000);
-        if (result != VK_SUCCESS)
-        {
-            DBG_WARNING("wait for fences timed out: (error " + vk::to_string((vk::Result)result) + ")");
-            refreshSyncResources();
-            return { };
-        }
-    }
-    vkResetFences(device, 1, &in_flight_fences[frame_index % frames_in_flight]);
-
-    uint32_t image_index;
-    {
-        VkResult result = vkAcquireNextImageKHR(device, swapchain->getHandle(), UINT64_MAX, image_available_semaphores[frame_index % frames_in_flight], VK_NULL_HANDLE, &image_index);
-        if (result != VK_SUCCESS)
-        {
-            DBG_WARNING("failed to acquire swapchain image: (error " + vk::to_string((vk::Result)result) + ")");
-            refreshSyncResources();
-            resize(true);
-            return { };
-        }
-    }
-    DBG_BABBLE("acquired image " + ::to_string(image_index));
+    uint32_t image_index = swapchain->acquireNextImage();
+    if (image_index == (uint32_t)-1)
+        return { };
 
     SceneUniforms scene_uniforms;
     scene_uniforms.time = Engine::getEngineTime();
@@ -503,32 +433,7 @@ FrameStats RenderServer::drawFrame()
     const chrono::duration<float> record_duration = chrono::steady_clock::now() - record_start;
     stats.record_time = record_duration.count();
     
-    VkSubmitInfo submit_info{ };
-    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    const VkSemaphore wait_semaphores[] = { image_available_semaphores[frame_index % frames_in_flight] };
-    constexpr VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    submit_info.waitSemaphoreCount = 1;
-    submit_info.pWaitSemaphores = wait_semaphores;
-    submit_info.pWaitDstStageMask = wait_stages;
-    submit_info.commandBufferCount = 1;
-    VkCommandBuffer cmd_buf = command_buffers[image_index]->getCommandBuffer();
-    submit_info.pCommandBuffers = &cmd_buf;
-    const VkSemaphore signal_semaphores[] = { render_finished_semaphores[image_index] };
-    submit_info.signalSemaphoreCount = 1;
-    submit_info.pSignalSemaphores = signal_semaphores;
-    DBG_BABBLE("submitting command buffer");
-    CHECK_RESULT_RETURN(vkQueueSubmit(graphics_queue, 1, &submit_info, in_flight_fences[frame_index % frames_in_flight]), "vkQueueSubmit failed", { });
-
-    VkPresentInfoKHR present_info{ };
-    present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-    present_info.waitSemaphoreCount = 1;
-    present_info.pWaitSemaphores = signal_semaphores;
-    const VkSwapchainKHR swapchains[] = { swapchain->getHandle() };
-    present_info.swapchainCount = 1;
-    present_info.pSwapchains = swapchains;
-    present_info.pImageIndices = &image_index;
-    DBG_BABBLE("submitting present");
-    vkQueuePresentKHR(present_queue, &present_info);
+    swapchain->submitCommands(command_buffers[image_index], image_index);
     
     command_buffers[image_index]->extractTiming();
     return stats;
@@ -544,14 +449,6 @@ void RenderServer::destroyImGui()
 
 void RenderServer::destroyVulkan()
 {
-    DBG_VERBOSE("destroying sync resources");
-    for (size_t i = 0; i < image_available_semaphores.size(); ++i)
-    {
-        vkDestroySemaphore(device, image_available_semaphores[i], nullptr);
-        vkDestroySemaphore(device, render_finished_semaphores[i], nullptr);
-        vkDestroyFence(device, in_flight_fences[i], nullptr);
-    }
-
     DBG_VERBOSE("destroying command pool");
     vkDestroyCommandPool(device, command_pool, nullptr);
     

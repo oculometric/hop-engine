@@ -23,7 +23,7 @@ public:
 	};
 
 private:
-	// array of descriptor sets, one per frame-in-flight
+	// array of descriptor sets
 	std::vector<VkDescriptorSet> descriptor_sets;
 	// array of buffers containing uniform variables, one per descriptor set
 	std::vector<Ref<Buffer>> uniform_buffers;

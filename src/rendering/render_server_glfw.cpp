@@ -84,9 +84,8 @@ bool RenderServer::resize(bool force_resize)
         int window_x;
         int window_y;
         glfwGetFramebufferSize(window, &window_x, &window_y);
-        const Swapchain::SupportInfo supportInfo = Swapchain::getSwapchainSupportInfo(physical_device, surface);
         window_size = { static_cast<uint32_t>(window_x), static_cast<uint32_t>(window_y) };
-        swapchain = new Swapchain(window_size.x, window_size.y, surface);
+        swapchain = new Swapchain(window_size);
         window_size = swapchain->getExtent();
         swapchain->setVsync(vsync);
         final_render_pass = new RenderPass(swapchain, { 0, true });
@@ -114,7 +113,7 @@ bool RenderServer::resize(bool force_resize)
             swapchain->setVsync(vsync);
             wants_vsync_update = false;
         }
-        swapchain->resize(window_size.x, window_size.y);
+        swapchain->resize(window_size);
         final_render_pass->resize();
 
         return true;
