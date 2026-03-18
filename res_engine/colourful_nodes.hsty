@@ -1,0 +1,40 @@
+Font(atlas      = "res://engine/textures/font_IBM_XGA_AI_12x23.png",
+     glyph_size = [ 14, 25 ]);
+
+Atlas(nodes = "res://engine/textures/node_atlas.png",
+      extra = "res://engine/textures/extra_atlas.png",
+      ui    = "res://engine/textures/ui_atlas.png");
+
+Grid(size              = 32,
+     show              = TRUE,
+     line_scale        = 4,
+     line_colour       = [ 0.700, 0.700, 0.700 ],
+     dots_modulate     = 0.001,
+     background_colour = [ 0.940, 0.940, 0.940 ]);
+
+Header(align       = LEFT,
+       position    = TOP,
+       filled      = TRUE,
+       lines_after = 0);
+
+Text(offset  = [ 6, 2 ],
+     colour  = [ 0.020, 0.020, 0.038 ],
+     spacing = -1);
+
+Outline(style     = PRESET_COLOUR,
+        colour    = [ 0.020, 0.020, 0.038 ],
+        highlight = [ 0.750, 0.087, 0.000 ],
+        modulate  = 0.700);
+
+Fill(style    = PRESET_COLOUR,
+     colour   = [ 0.900, 0.850, 0.810 ],
+     modulate = 0.100);
+
+Shadows(show   = TRUE,
+        offset = [ 4.000, 4.000 ],
+        colour = [ 0.140, 0.140, 0.290 ]);
+
+Misc(pin_offset    = 2,
+     element_order = FORWARD,
+     center_text   = TRUE,
+     lines_after   = 0);

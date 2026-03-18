@@ -333,11 +333,7 @@ void NodeView::awake()
     material->setSampler("extra_atlas", sampler);
     material->setSampler("ui_atlas", sampler);
 
-    style              = new Style();
-    style->node_atlas  = Texture::loadImage("res://engine/textures/node_atlas.png");
-    style->extra_atlas = Texture::loadImage("res://engine/textures/extra_atlas.png");
-    style->ui_atlas    = Texture::loadImage("res://engine/textures/ui_atlas.png");
-    style->font = new Font("res://engine/textures/font_IBM_XGA_AI_12x23.png", glm::ivec2{ 14, 25 });
+    style = Style::deserialise("res://engine/colourful_nodes.hsty");
 
     setStyle(style);
 }

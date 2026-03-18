@@ -1,13 +1,21 @@
 # TODO
 
 # v0.6
+- actual editor (separate project)
+- refactor synchronisation into swapchain
+- refactor deserialise to provide more utils
+    - refactor files
+    - provide functions to get args
+    - provide function to turn a KEYWORD into an int/bool/enum
+    - provide a simplified interface to list possible statements, whether they can/must have identifiers, whether they can/must have named arguments, how many/which arguments, handle errors automatically, returns which args were present and their values (a statement-reader class)
+- node style deserialisation
+- document everything
 - eliminate the tautological compare thing
 - interactive node editor
 - refactor lots of node view into a UI builder class
 - windows 95 node style
 - hover tooltips for nodes....
 - audio loading and output
-- actual editor (separate project)
 - shortcut function to make object/component creation easier (creates an object and gives it a component)
 - shader & other resource reloading at runtime [H]
 - frustrum culling [M]

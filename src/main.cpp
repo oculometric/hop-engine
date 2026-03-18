@@ -148,7 +148,7 @@ int main()
 
     Package::importPackage("resources.hop");
 
-    Engine::runApplication<MuseumApp>();
+    Engine::runApplication<ProtoEditorApp>();
 
     Engine::destroy();
 

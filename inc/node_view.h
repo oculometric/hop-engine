@@ -98,6 +98,8 @@ public:
 		bool shadows = true;
 		glm::vec2 shadow_offset = { 4.0f, 4.0f };
 		glm::vec3 shadow_colour = { 0.14f, 0.14f, 0.29f };
+
+        static Ref<Style> deserialise(const std::string& path);
 	};
 
 public:
