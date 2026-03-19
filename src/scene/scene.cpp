@@ -138,7 +138,6 @@ WeakRef<Object> Scene::insertObject(WeakRef<Object> obj)
 				root->children.emplace_back(obj.strong());
 				return obj;
 			}
-			DBG_WARNING("object " + obj->name + " is already a member of scene " + getOrigin());
 			return obj;
 		}
 		obj->scene->removeObject(obj);

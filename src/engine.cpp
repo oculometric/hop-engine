@@ -64,6 +64,12 @@ void Engine::start()
             RenderServer::setFullscreenEnabled(!RenderServer::getFullscreenEnabled());
         if (Input::wasKeyPressed(Input::KEY_F10))
             Engine::setForceWireframe(!Engine::isWireframeMode());
+        
+
+        auto update_start = chrono::steady_clock::now();
+        if (engine->application)
+            engine->application->update(getDeltaTime());
+        chrono::duration<float> update_duration = chrono::steady_clock::now() - update_start;
 
         if (engine->application)
         {
@@ -76,13 +82,7 @@ void Engine::start()
 
             ImGui::Render();
         }
-        
         FrameStats stats = RenderServer::draw();
-        
-        auto update_start = chrono::steady_clock::now();
-        if (engine->application)
-            engine->application->update(getDeltaTime());
-        chrono::duration<float> update_duration = chrono::steady_clock::now() - update_start;
         stats.update_time = update_duration.count();
 
         engine->updateStats(stats);
