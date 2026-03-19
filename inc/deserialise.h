@@ -268,18 +268,18 @@ public:
         TokenReader::Statement statement;
         std::vector<TokenReader::Token> arguments;
 
-        void read(size_t index, float& destination);
-        void read(size_t index, int& destination);
-        void read(size_t index, uint32_t& destination);
-        void read(size_t index, glm::vec2& destination);
-        void read(size_t index, glm::ivec2& destination);
-        void read(size_t index, glm::vec3& destination);
-        void read(size_t index, glm::ivec3& destination);
-        void read(size_t index, glm::vec4& destination);
-        void read(size_t index, std::string& destination);
-        bool read(size_t index, bool& destination);
+        void read(size_t index, float& destination) const;
+        void read(size_t index, int& destination) const;
+        void read(size_t index, uint32_t& destination) const;
+        void read(size_t index, glm::vec2& destination) const;
+        void read(size_t index, glm::ivec2& destination) const;
+        void read(size_t index, glm::vec3& destination) const;
+        void read(size_t index, glm::ivec3& destination) const;
+        void read(size_t index, glm::vec4& destination) const;
+        void read(size_t index, std::string& destination) const;
+        bool read(size_t index, bool& destination) const;
         template<typename T>
-        bool read(size_t index, T& destination, std::function<bool(const std::string&, T&)> converter)
+        bool read(size_t index, T& destination, std::function<bool(const std::string&, T&)> converter) const
             { return converter(arguments[index].s_value, destination); }
     };
 
@@ -288,18 +288,18 @@ public:
         TokenReader::Statement statement;
         std::map<std::string, TokenReader::Token> arguments;
 
-        void read(std::string name, float& destination);
-        void read(std::string name, int& destination);
-        void read(std::string name, uint32_t& destination);
-        void read(std::string name, glm::vec2& destination);
-        void read(std::string name, glm::ivec2& destination);
-        void read(std::string name, glm::vec3& destination);
-        void read(std::string name, glm::ivec3& destination);
-        void read(std::string name, glm::vec4& destination);
-        void read(std::string name, std::string& destination);
-        bool read(std::string name, bool& destination);
+        void read(const std::string& name, float& destination) const;
+        void read(const std::string& name, int& destination) const;
+        void read(const std::string& name, uint32_t& destination) const;
+        void read(const std::string& name, glm::vec2& destination) const;
+        void read(const std::string& name, glm::ivec2& destination) const;
+        void read(const std::string& name, glm::vec3& destination) const;
+        void read(const std::string& name, glm::ivec3& destination) const;
+        void read(const std::string& name, glm::vec4& destination) const;
+        void read(const std::string& name, std::string& destination) const;
+        bool read(const std::string& name, bool& destination) const;
         template<typename T>
-        bool read(std::string name, T& destination, std::function<bool(const std::string&, T&)> converter)
+        bool read(const std::string& name, T& destination, std::function<bool(const std::string&, T&)> converter) const
         {
             std::string data; read(name, data);
             if (data.empty())

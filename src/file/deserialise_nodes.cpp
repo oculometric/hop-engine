@@ -23,7 +23,7 @@ Ref<NodeView::Style> NodeView::Style::deserialise(const string& path)
 		return nullptr;
 
     Ref<Style> style = new Style();
-
+/*
     for (const auto& statement : syntax_tree)
     {
         if (statement.keyword == "Font")
@@ -109,6 +109,6 @@ Ref<NodeView::Style> NodeView::Style::deserialise(const string& path)
             // TODO: other settings
         }
     }
-
+*/
     return style;
 }

@@ -13,77 +13,6 @@
 using namespace HopEngine;
 using namespace std;
 
-static int getArgument(const string& name, string& result, const TokenReader::TokenType type, const vector<pair<string, TokenReader::Token>>& args)
-{
-	for (const auto& [arg_name, token] : args)
-	{
-		if (arg_name != name)
-			continue;
-		if (token.type != type)
-			return 2;
-		result = token.s_value;
-		return 0;
-	}
-	return 1;
-}
-
-static bool getAnonArgument(const size_t index, string& result, const TokenReader::TokenType type, const vector<pair<string, TokenReader::Token>>& args)
-{
-	if (index >= args.size())
-		return false;
-	if (!args[index].first.empty())
-		return false;
-	if (args[index].second.type != type)
-		return false;
-	result = args[index].second.s_value;
-	return true;
-}
-
-static bool getAnonArgument(const size_t index, glm::vec4& result, const vector<pair<string, TokenReader::Token>>& args)
-{
-	if (index >= args.size())
-		return false;
-	if (!args[index].first.empty())
-		return false;
-	if (args[index].second.type != TokenReader::VECTOR)
-		return false;
-	result = args[index].second.c_value;
-	return true;
-}
-
-static bool getAnonArgument(const size_t index, float& result, const vector<pair<string, TokenReader::Token>>& args)
-{
-	if (index >= args.size())
-		return false;
-	if (!args[index].first.empty())
-		return false;
-	if (args[index].second.type == TokenReader::FLOAT)
-	{
-		result = args[index].second.f_value;
-		return true;
-	}
-	if (args[index].second.type == TokenReader::INT)
-	{
-		result = static_cast<float>(args[index].second.i_value);
-		return true;
-	}
-	return false;
-}
-
-static int getBool(const string& str)
-{
-	static map<string, bool> bool_map =
-	{
-		{ "TRUE", true },
-		{ "FALSE", false }
-	};
-	const auto it = bool_map.find(str);
-	if (it == bool_map.end())
-		return -1;
-	return it->second;
-}
-
-
 struct SceneResources
 {
 	map<string, Ref<Material>> materials;
@@ -91,116 +20,90 @@ struct SceneResources
 	map<string, Ref<Texture>> textures;
 };
 
-static Ref<Object> deserialiseStaticMesh(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
+static bool deserialiseStaticMesh(const Deserialiser::NamedStatementResult& result, WeakRef<Object> object, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<Object> object = Object::create();
 	WeakRef<StaticMeshComponent> obj = object->addComponent<StaticMeshComponent>();
-	auto it = args.find("mesh");
-	if (it != args.end())
+    string mesh_res; result.read("mesh", mesh_res);
+	if (!mesh_res.empty())
 	{
-		const auto mesh_it = resources.meshes.find(it->second.s_value);
+		const auto mesh_it = resources.meshes.find(mesh_res);
 		if (mesh_it == resources.meshes.end())
 		{
-			DBG_ERROR("error deserialising static mesh, invalid mesh identifier '" + it->second.s_value + "'");
-			return nullptr;
+			DBG_ERROR("error deserialising static mesh, invalid mesh identifier '" + mesh_res + "'");
+			return false;
 		}
 		obj->mesh = mesh_it->second;
 	}
-	it = args.find("material");
-	if (it != args.end())
+    string mat_res; result.read("material", mat_res);
+	if (!mat_res.empty())
 	{
-		const auto material_it = resources.materials.find(it->second.s_value);
+		const auto material_it = resources.materials.find(mat_res);
 		if (material_it == resources.materials.end())
 		{
-			DBG_ERROR("error deserialising static mesh, invalid material identifier '" + it->second.s_value + "'");
-			return nullptr;
+			DBG_ERROR("error deserialising static mesh, invalid material identifier '" + mat_res + "'");
+			return false;
 		}
 		obj->material = material_it->second;
 	}
-	it = args.find("camera_mask");
-	if (it != args.end())
-	{
-		obj->camera_mask = it->second.i_value;
-	}
-	
-	return object;
+    result.read("camera_mask", obj->camera_mask);
+	return true;
 }
 
-static Ref<Object> deserialiseLight(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
+static bool deserialiseLight(const Deserialiser::NamedStatementResult& result, WeakRef<Object> object, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<Object> object = Object::create();
 	WeakRef<LightComponent> obj = object->addComponent<LightComponent>();
-	auto it = args.find("type");
-	if (it != args.end())
-	{
-		if (it->second.s_value == "DIRECTIONAL")
-			obj->type = LightComponent::DIRECTIONAL;
-		else if (it->second.s_value == "POINT")
-			obj->type = LightComponent::POINT;
-		else if (it->second.s_value == "SPOT")
-			obj->type = LightComponent::SPOT;
-		else
-		{
-			DBG_ERROR("error deserialising light, invalid light type '" + it->second.s_value + "'");
-			return nullptr;
-		}
-	}
-	it = args.find("colour");
-	if (it != args.end())
-	{
-		obj->colour = it->second.c_value;
-	}
-	it = args.find("angle");
-	if (it != args.end())
-	{
-		obj->spot_angle = it->second.f_value;
-	}
+    if (!result.read<LightComponent::LightType>("type", obj->type, [](const string& s, LightComponent::LightType& d) -> bool
+    {
+        if (s == "DIRECTIONAL")
+            d = LightComponent::DIRECTIONAL;
+        else if (s == "POINT")
+            d = LightComponent::POINT;
+        else if (s == "SPOT")
+            d = LightComponent::SPOT;
+        else
+        {
+            DBG_ERROR("error deserialising light, invalid light type '" + s + "'");
+            return false;
+        }
+        return true;
+    }))
+        return false;
+    result.read("colour", obj->colour);
+    result.read("angle", obj->spot_angle);
 	
-	return object;
+	return true;
 }
 
-static Ref<Object> deserialiseCamera(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
+static bool deserialiseCamera(const Deserialiser::NamedStatementResult& result, WeakRef<Object> object, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<Object> object = Object::create();
 	WeakRef<CameraComponent> obj = object->addComponent<CameraComponent>();
-	auto it = args.find("slot");
-	if (it != args.end())
-		obj->camera_slot = it->second.i_value;
+    int slot = -1; result.read("slot", slot);
+	if (slot >= 0)
+		obj->camera_slot = slot;
 	else
 		DBG_WARNING("deserialising a camera object without a slot binding, this camera will not render!");
-	it = args.find("clear_colour");
-	if (it != args.end())
-		obj->clear_colour = it->second.c_value;
-	it = args.find("near_clip");
-	if (it != args.end())
-		obj->near_clip = it->second.f_value;
-	it = args.find("far_clip");
-	if (it != args.end())
-		obj->far_clip = it->second.f_value;
-	it = args.find("fov");
-	if (it != args.end())
-		obj->fov = it->second.f_value;
+    result.read("clear_colour", obj->clear_colour);
+    result.read("near_clip", obj->near_clip);
+    result.read("far_clip", obj->far_clip);
+    result.read("fov", obj->fov);
 	
-	return object;
+	return true;
 }
 
-static Ref<Object> deserialiseTextBlock(const map<string, TokenReader::Token>& args, const Ref<Scene>& scene, const SceneResources& resources)
+static bool deserialiseTextBlock(const Deserialiser::NamedStatementResult& result, WeakRef<Object> object, const Ref<Scene>& scene, const SceneResources& resources)
 {
-	Ref<Object> object = Object::create();
 	WeakRef<TextComponent> obj = object->addComponent<TextComponent>();
-	auto it = args.find("text");
-	if (it != args.end())
-		obj->setText(it->second.s_value);
-	it = args.find("tint");
-	if (it != args.end())
-		obj->setTint(it->second.c_value);
+    string text = "Text"; result.read("text", text);
+    obj->setText(text);
+    glm::vec3 tint{ 1, 1, 1 }; result.read("tint", tint);
+    obj->setTint(tint);
 	
-	return object;
+	return true;
 }
 
 struct ObjectDeserialiseConfig
 {
-	Ref<Object> (* builder_function)(const map<string, TokenReader::Token>&, const Ref<Scene>&, const SceneResources& resources);
+	bool (* builder_function)(const Deserialiser::NamedStatementResult&, WeakRef<Object>, const Ref<Scene>&, const SceneResources&);
 	map<string, TokenReader::TokenType> arguments;
 };
 
@@ -228,71 +131,6 @@ static map<string, ObjectDeserialiseConfig> object_deserialisers = {
 	} } }
 };
 
-static bool deserialiseObject(const TokenReader::Statement& statement, const Ref<Scene>& scene, const SceneResources& resources, const Ref<Object>& parent, const string& name)
-{
-	Ref<Object> obj;
-	map<string, pair<TokenReader::TokenType, bool>> expected = {
-		{ "position", { TokenReader::VECTOR, false } },
-		{ "euler", { TokenReader::VECTOR, false } },
-		{ "scale", { TokenReader::VECTOR, false } }
-	};
-	ObjectDeserialiseConfig info;
-	if (statement.keyword != "Object")
-	{
-		info = object_deserialisers[statement.keyword];
-		for (const auto& thing : info.arguments)
-			expected[thing.first] = { thing.second, false };
-	}
-	map<string, TokenReader::Token> args;
-	if (!TokenReader::readStatementNamed(statement, true, false,
-				expected, args, "error deserialising scene '" + name + "'"))
-		return false;
-	
-	if (statement.keyword == "Object")
-		obj = Object::create();
-	else
-		obj = info.builder_function(args, scene, resources);
-	if (obj == nullptr)
-		return false;
-	
-	scene->insertObject(obj);
-	if (parent)
-		parent->addChild(obj);
-	
-	auto it = args.find("position");
-	if (it != args.end())
-		obj->transform.setLocalPosition(it->second.c_value);
-	else
-		obj->transform.setLocalPosition({ 0, 0, 0 });
-	it = args.find("euler");
-	if (it != args.end())
-		obj->transform.setLocalEuler(it->second.c_value);
-	else
-		obj->transform.setLocalEuler({ 0, 0, 0 });
-	it = args.find("scale");
-	if (it != args.end())
-		obj->transform.setLocalScale(it->second.c_value);
-	else
-		obj->transform.setLocalScale({ 1, 1, 1 });
-	if (!statement.identifier.empty())
-		obj->name = statement.identifier;
-	
-	for (const TokenReader::Statement& child : statement.children)
-	{
-		if (object_deserialisers.contains(child.keyword) || child.keyword == "Object")
-		{
-			if (!deserialiseObject(child, scene, resources, obj, name))
-				return false;
-		}
-		else
-		{
-			DBG_ERROR("error deserialising scene '" + name + "': invalid keyword '" + child.keyword + "'");
-			return false;
-		}
-	}
-	return true;
-}
-
 Ref<Scene> Scene::deserialise(const string& name)
 {
 	auto raw_data = Package::load(name);
@@ -314,84 +152,118 @@ Ref<Scene> Scene::deserialise(const string& name)
 	map<string, Ref<RenderGraph>> render_graphs;
 	
 	Ref<Scene> scene = Scene::create(name);
-	
-	for (const TokenReader::Statement& statement : syntax_tree)
-	{
-		if (statement.keyword == "Resource")
-		{
-			vector<TokenReader::Token> args;
-			if (!TokenReader::readStatementAnonymous(statement, false, true,
-				{
-					TokenReader::TEXT,
-					TokenReader::STRING
-				}, args, "error deserialising scene '" + name + "'"))
-				return nullptr;
-			if (args[0].s_value == "material")
-				materials[statement.identifier] = Engine::loadMaterial(args[1].s_value);
-			else if (args[0].s_value == "texture")
-				textures[statement.identifier] = Engine::loadTexture(args[1].s_value);
-			else if (args[0].s_value == "mesh")
-				meshes[statement.identifier] = Engine::loadMesh(args[1].s_value);
-			else if (args[0].s_value == "render_graph")
-				render_graphs[statement.identifier] = RenderGraph::deserialise(args[1].s_value);
-			else
-			{
-				DBG_ERROR("error deserialising scene '" + name + "': invalid resource type");
-				return nullptr;
-			}
-		}
-		else if (statement.keyword == "AmbientLight")
-		{
-			vector<TokenReader::Token> args;
-			if (!TokenReader::readStatementAnonymous(statement, false, false,
-				{
-					TokenReader::VECTOR
-				}, args, "error deserialising scene '" + name + "'"))
-				return nullptr;
-			scene->ambient_colour = args[0].c_value;
-		}
-		else if (statement.keyword == "Skybox")
-		{
-			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatementNamed(statement, false, false,
-				{
-					{ "resource", { TokenReader::IDENTIFIER, true } }
-				}, args, "error deserialising scene '" + name + "'"))
-				return nullptr;
-			auto it = textures.find(args["resource"].s_value);
-			if (it == textures.end())
-			{
-				DBG_ERROR("error deserialising scene '" + name + "': no such texture loaded '" + args["resource"].s_value + "'");
-				return nullptr;
-			}
-			scene->skybox = it->second;
-		}
-		else if (statement.keyword == "RenderGraph")
-		{
-			map<string, TokenReader::Token> args;
-			if (!TokenReader::readStatementNamed(statement, false, false,
-				{
-					{ "resource", { TokenReader::IDENTIFIER, true } }
-				}, args, "error deserialising scene '" + name + "'"))
-				return nullptr;
-			auto it = render_graphs.find(args["resource"].s_value);
-			if (it == render_graphs.end())
-			{
-				DBG_ERROR("error deserialising scene '" + name + "': no such render graph loaded '" + args["resource"].s_value + "'");
-				return nullptr;
-			}
-			scene->render_graph = it->second;
-		}
-		else if (object_deserialisers.contains(statement.keyword) || statement.keyword == "Object")
-		{
-			if (!deserialiseObject(statement, scene, { materials, meshes, textures }, nullptr, name))
-				return nullptr;
-		}
-		else
-		{
-			DBG_ERROR("error deserialising scene '" + name + "': invalid keyword '" + statement.keyword + "'");
-			return nullptr;
-		}
-	}
+
+    Deserialiser deserialiser("error deserialising scene '" + name + "'");
+    deserialiser.addStatementAnonymous(
+        Deserialiser::AnonymousStatementSpec("Resource", Deserialiser::STATEMENT_IDENTIFIER_REQUIRED, false)
+            .argument(TokenReader::TEXT)
+            .argument(TokenReader::STRING),
+        [&](Deserialiser::AnonymousStatementResult result) -> bool
+    {
+        string res_type; result.read(0, res_type);
+        string res_addr; result.read(1, res_addr);
+        if (res_type == "material")
+            materials[result.statement.identifier] = Engine::loadMaterial(res_addr);
+        else if (res_type == "texture")
+            textures[result.statement.identifier] = Engine::loadTexture(res_addr);
+        else if (res_type == "mesh")
+            meshes[result.statement.identifier] = Engine::loadMesh(res_addr);
+        else if (res_type == "render_graph")
+            render_graphs[result.statement.identifier] = RenderGraph::deserialise(res_addr);
+        else
+            return deserialiser.emitError("invalid resource type");
+        return true;
+    });
+    deserialiser.addStatementAnonymous(
+        Deserialiser::AnonymousStatementSpec("AmbientLight", Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
+            .argument(TokenReader::VECTOR),
+        [&](Deserialiser::AnonymousStatementResult result) -> bool
+    {
+        result.read(0, scene->ambient_colour);
+        return true;
+    });
+    deserialiser.addStatementNamed(
+        Deserialiser::NamedStatementSpec("Skybox", Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
+            .argument("resource", TokenReader::IDENTIFIER, true),
+        [&](Deserialiser::NamedStatementResult result) -> bool
+    {
+        string texture_res; result.read("resource", texture_res);
+        auto texture_it = textures.find(texture_res);
+        if (texture_it == textures.end())
+            return deserialiser.emitError("no such texture loaded '" + texture_res + "'");
+        scene->setSkybox(texture_it->second);
+        return true;
+    });
+    deserialiser.addStatementNamed(
+        Deserialiser::NamedStatementSpec("RenderGraph", Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
+            .argument("resource", TokenReader::IDENTIFIER, true),
+        [&](Deserialiser::NamedStatementResult result) -> bool
+    {
+        string rg_res; result.read("resource", rg_res);
+        auto rg_it = render_graphs.find(rg_res);
+        if (rg_it == render_graphs.end())
+            return deserialiser.emitError("no such render graph loaded '" + rg_res + "'");
+        scene->render_graph = rg_it->second;
+        return true;
+    });
+
+    vector<WeakRef<Object>> parent_stack;
+    Deserialiser object_deserialiser("error deserialising scene '" + name + "'");
+
+    auto object_spec = Deserialiser::NamedStatementSpec("Object", Deserialiser::STATEMENT_IDENTIFIER_OPTIONAL, true)
+            .argument("position", TokenReader::VECTOR, false)
+            .argument("euler", TokenReader::VECTOR, false)
+            .argument("scale", TokenReader::VECTOR, false);
+    auto object_handler_base = [&](Deserialiser::NamedStatementResult result) -> WeakRef<Object>
+    {
+        WeakRef<Object> obj;
+        if (result.statement.identifier.empty())        
+            obj = scene->addObject("object");
+        else
+            obj = scene->addObject(result.statement.identifier);
+        if (!parent_stack.empty())
+            parent_stack[parent_stack.size() - 1]->addChild(obj);
+        glm::vec3 temp = { 0, 0, 0 }; result.read("position", temp);
+        obj->transform.setLocalPosition(temp);
+        temp = { 0, 0, 0 }; result.read("euler", temp);
+        obj->transform.setLocalEuler(temp);
+        temp = { 1, 1, 1 }; result.read("scale", temp);
+        obj->transform.setLocalScale(temp);
+        parent_stack.push_back(obj);
+        if (!object_deserialiser.execute(result.statement.children))
+            return nullptr;
+        parent_stack.pop_back();
+        return obj;
+    };
+    auto object_handler = [&](Deserialiser::NamedStatementResult result) -> bool
+    {
+        if (!object_handler_base(result))
+            return false;
+        return true;
+    };
+
+    deserialiser.addStatementNamed(object_spec, object_handler);
+    object_deserialiser.addStatementNamed(object_spec, object_handler);
+
+    for (const auto& pair : object_deserialisers)
+    {
+        auto spec = object_spec;
+        spec.keyword_name = pair.first;
+        for (const auto& arg : pair.second.arguments)
+            spec.argument(arg.first, arg.second, false);
+        auto handler = [&](Deserialiser::NamedStatementResult result) -> bool
+        {
+            WeakRef<Object> obj = object_handler_base(result);
+            if (!obj)
+                return false;
+            return pair.second.builder_function(result, obj, scene, { materials, meshes, textures });
+        };
+        deserialiser.addStatementNamed(spec, handler);
+        object_deserialiser.addStatementNamed(spec, handler);
+    }
+
+    if (!deserialiser.execute(syntax_tree))
+        return nullptr;
+
 	return scene;
 }

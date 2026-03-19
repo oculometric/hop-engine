@@ -12,6 +12,7 @@
     - editor build target
     - file/project manager
     
+- overhaul scene deserialise (components??)
 - document everything
 - eliminate the tautological compare thing
 - interactive node editor

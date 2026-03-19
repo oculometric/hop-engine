@@ -3,7 +3,7 @@
 using namespace HopEngine;
 using namespace std;
 
-void Deserialiser::AnonymousStatementResult::read(size_t index, float& destination)
+void Deserialiser::AnonymousStatementResult::read(size_t index, float& destination) const
 {
     if (arguments[index].type == TokenReader::FLOAT)
         destination = arguments[index].f_value;
@@ -11,7 +11,7 @@ void Deserialiser::AnonymousStatementResult::read(size_t index, float& destinati
         destination = static_cast<float>(arguments[index].i_value);
 }
 
-void Deserialiser::AnonymousStatementResult::read(size_t index, int& destination)
+void Deserialiser::AnonymousStatementResult::read(size_t index, int& destination) const
 {
     if (arguments[index].type == TokenReader::FLOAT)
         destination = static_cast<int>(arguments[index].f_value);
@@ -19,7 +19,7 @@ void Deserialiser::AnonymousStatementResult::read(size_t index, int& destination
         destination = arguments[index].i_value;
 }
 
-void Deserialiser::AnonymousStatementResult::read(size_t index, uint32_t& destination)
+void Deserialiser::AnonymousStatementResult::read(size_t index, uint32_t& destination) const
 {
     if (arguments[index].type == TokenReader::FLOAT)
         destination = static_cast<uint32_t>(arguments[index].f_value);
@@ -27,37 +27,48 @@ void Deserialiser::AnonymousStatementResult::read(size_t index, uint32_t& destin
         destination = static_cast<uint32_t>(arguments[index].i_value);
 }
 
-void Deserialiser::AnonymousStatementResult::read(size_t index, glm::vec2& destination)
+void Deserialiser::AnonymousStatementResult::read(size_t index, glm::vec2& destination) const
 {
     destination = arguments[index].c_value;
 }
 
-void Deserialiser::AnonymousStatementResult::read(size_t index, glm::ivec2& destination)
+void Deserialiser::AnonymousStatementResult::read(size_t index, glm::ivec2& destination) const
 {
     destination = arguments[index].c_value;
 }
 
-void Deserialiser::AnonymousStatementResult::read(size_t index, glm::vec3& destination)
+void Deserialiser::AnonymousStatementResult::read(size_t index, glm::vec3& destination) const
 {
     destination = arguments[index].c_value;
 }
 
-void Deserialiser::AnonymousStatementResult::read(size_t index, glm::ivec3& destination)
+void Deserialiser::AnonymousStatementResult::read(size_t index, glm::ivec3& destination) const
 {
     destination = arguments[index].c_value;
 }
 
-void Deserialiser::AnonymousStatementResult::read(size_t index, glm::vec4& destination)
+void Deserialiser::AnonymousStatementResult::read(size_t index, glm::vec4& destination) const
 {
     destination = arguments[index].c_value;
 }
 
-void Deserialiser::AnonymousStatementResult::read(size_t index, string& destination)
+void Deserialiser::AnonymousStatementResult::read(size_t index, string& destination) const
 {
     destination = arguments[index].s_value;
 }
 
-void Deserialiser::NamedStatementResult::read(string name, float& destination)
+bool Deserialiser::AnonymousStatementResult::read(size_t index, bool& destination) const
+{
+    if (arguments[index].s_value == "TRUE")
+        destination = true;
+    else if (arguments[index].s_value == "FALSE")
+        destination = false;
+    else
+        return false;
+    return true;
+}
+
+void Deserialiser::NamedStatementResult::read(const string& name, float& destination) const
 {
     auto it = arguments.find(name);
     if (it == arguments.end())
@@ -69,7 +80,7 @@ void Deserialiser::NamedStatementResult::read(string name, float& destination)
         destination = static_cast<float>(it->second.i_value);
 }
 
-void Deserialiser::NamedStatementResult::read(string name, int& destination)
+void Deserialiser::NamedStatementResult::read(const string& name, int& destination) const
 {
     auto it = arguments.find(name);
     if (it == arguments.end())
@@ -81,7 +92,7 @@ void Deserialiser::NamedStatementResult::read(string name, int& destination)
         destination = it->second.i_value;
 }
 
-void Deserialiser::NamedStatementResult::read(string name, uint32_t& destination)
+void Deserialiser::NamedStatementResult::read(const string& name, uint32_t& destination) const
 {
     auto it = arguments.find(name);
     if (it == arguments.end())
@@ -93,46 +104,61 @@ void Deserialiser::NamedStatementResult::read(string name, uint32_t& destination
         destination = static_cast<uint32_t>(it->second.i_value);
 }
 
-void Deserialiser::NamedStatementResult::read(string name, glm::vec2& destination)
+void Deserialiser::NamedStatementResult::read(const string& name, glm::vec2& destination) const
 {
     auto it = arguments.find(name);
     if (it != arguments.end())
         destination = it->second.c_value;
 }
 
-void Deserialiser::NamedStatementResult::read(string name, glm::ivec2& destination)
+void Deserialiser::NamedStatementResult::read(const string& name, glm::ivec2& destination) const
 {
     auto it = arguments.find(name);
     if (it != arguments.end())
         destination = it->second.c_value;
 }
 
-void Deserialiser::NamedStatementResult::read(string name, glm::vec3& destination)
+void Deserialiser::NamedStatementResult::read(const string& name, glm::vec3& destination) const
 {
     auto it = arguments.find(name);
     if (it != arguments.end())
         destination = it->second.c_value;
 }
 
-void Deserialiser::NamedStatementResult::read(string name, glm::ivec3& destination)
+void Deserialiser::NamedStatementResult::read(const string& name, glm::ivec3& destination) const
 {
     auto it = arguments.find(name);
     if (it != arguments.end())
         destination = it->second.c_value;
 }
 
-void Deserialiser::NamedStatementResult::read(string name, glm::vec4& destination)
+void Deserialiser::NamedStatementResult::read(const string& name, glm::vec4& destination) const
 {
     auto it = arguments.find(name);
     if (it != arguments.end())
         destination = it->second.c_value;
 }
 
-void Deserialiser::NamedStatementResult::read(string name, string& destination)
+void Deserialiser::NamedStatementResult::read(const string& name, string& destination) const
 {
     auto it = arguments.find(name);
     if (it != arguments.end())
         destination = it->second.s_value;
+}
+
+bool Deserialiser::NamedStatementResult::read(const string& name, bool& destination) const
+{
+    auto it = arguments.find(name);
+    if (it == arguments.end())
+        return true;
+
+    if (it->second.s_value == "TRUE")
+        destination = true;
+    else if (it->second.s_value == "FALSE")
+        destination = false;
+    else
+        return false;
+    return true;
 }
 
 bool Deserialiser::execute(const vector<TokenReader::Statement>& statements)
@@ -312,8 +338,8 @@ bool Deserialiser::errorCheckNamed(const TokenReader::Statement& statement,
             DBG_ERROR(error + ": unrecognised argument '" + name + "' in '" + statement.keyword + "' statement");
             return false;
         }
-        auto is_found = spec.expected_named_args.find(name);
-        if (is_found != spec.expected_named_args.end())
+        auto is_found = output.find(name);
+        if (is_found != output.end())
         {
             DBG_ERROR(error + ": duplicate argument '" + name + "' in '" + statement.keyword + "' statement");
             return false;
