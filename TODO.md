@@ -1,20 +1,19 @@
 # TODO
 
 # v0.6
-- profile launch
 - onscreen debug log
 - eliminate the tautological compare thing
-- shortcut function to make object/component creation easier (creates an object and gives it a component)
 - windows 95 node style
 - interactive node editor
     - linking/unlinking nodes
     - box selection
     - select/deselect all
     - move camera
-- actual editor (separate project)
+- actual editor
     - resizeable/swappable views
     - editor build target
     - file/project manager
+- switch to glslang for shader compilation [H]
 - refactor lots of node view into a UI builder class
 - improved text block rendering with wrapping, alignment, font, etc
 - document everything
@@ -29,6 +28,7 @@
 ## v0.7
 - shader node editor
 - render graph node editor
+- animation timeline using nodes
 - shadows
 - textures should be loadable in linear mode?
 - a proper procedural shading art workflow

@@ -143,6 +143,12 @@ public:
 	WeakRef<Object> findObject(const std::string& name) const;
 	WeakRef<Object> insertObject(WeakRef<Object> obj);
 	WeakRef<Object> addObject(const std::string& name);
+    template<class T> WeakRef<T> addObject(const std::string& name)
+    {
+		static_assert(std::is_convertible_v<T*, Component*>, "component must be a HopEngine::Component subclass");
+        auto obj = addObject(name);
+        return obj->addComponent<T>();
+    }
 	void removeObject(WeakRef<Object> obj);
 	
 	glm::u32vec2 getViewportSize() const { return last_viewport_size; }

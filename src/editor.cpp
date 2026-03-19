@@ -6,8 +6,7 @@ Editor::Editor()
 {
     view_3d = Scene::create("3D View");
     {
-        auto obj = view_3d->addObject("bunny");
-        auto comp = obj->addComponent<StaticMeshComponent>();
+        auto comp = view_3d->addObject<StaticMeshComponent>("bunny");
         comp->mesh = Engine::loadMesh("res://engine/samples/bunny.obj");
         comp->material = new Material(
             Engine::loadShader("res://engine/samples/psx.glsl"),
@@ -15,7 +14,7 @@ Editor::Editor()
         comp->material->setTexture("albedo", Engine::loadTexture("res://engine/samples/bunny.png"));
         comp->material->setSampler("albedo", Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST)));
         
-        obj = view_3d->addObject("camera");
+        auto obj = view_3d->addObject("camera");
         auto cam = obj->addComponent<CameraComponent>();
         cam->clear_colour = { 0.05f, 0.05f, 0.05f };
         view_3d->setSkybox(Engine::loadTexture("res://engine/textures/basic_skybox.png"));
@@ -26,8 +25,7 @@ Editor::Editor()
 
     view_nodes = Scene::create("Node Editor");
     {
-        auto obj = view_nodes->addObject("nodes");
-        node_view = obj->addComponent<NodeView>();
+        node_view = view_nodes->addObject<NodeView>("nodes");
         node_view->nodes.push_back(new NodeView::Node{
             "Camera",
             {
@@ -123,8 +121,7 @@ Editor::Editor()
         });
         node_view->setStyle(node_view->getStyle());
 
-        obj = view_nodes->addObject("camera");
-        obj->addComponent<CameraComponent>();
+        view_nodes->addObject<CameraComponent>("camera");
     }
 
     Engine::setScene(view_3d);
