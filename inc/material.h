@@ -141,7 +141,7 @@ private:
 
 public:
 	DELETE_CONSTRUCTORS(Material);
-	Material(const Ref<Shader>& _shader, const Pipeline::Builder& config = Pipeline::Builder(), const Ref<RenderPass>& _render_pass = nullptr);
+	Material(Ref<Shader> _shader, const Pipeline::Builder& config = Pipeline::Builder(), WeakRef<RenderPass> _render_pass = nullptr);
 	~Material() override;
 	
 	std::string getOrigin() const { if (this == nullptr) return "0x0"; return origin.empty() ? PTR(this) : origin; }

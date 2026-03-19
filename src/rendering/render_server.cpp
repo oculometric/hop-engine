@@ -8,6 +8,7 @@
 #include "mesh.h"
 #include "scene.h"
 #include "command_buffer.h"
+#include "font.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -48,27 +49,6 @@ Ref<UniformBlock> RenderServer::createObjectUniforms()
         1
     });
 }
-
-Ref<RenderPass> RenderServer::getMainRenderPass()
-{ return server->offscreen_pass; }
-
-Ref<RenderPass> RenderServer::getFinalRenderPass()
-{ return server->final_render_pass; }
-
-Ref<Texture> RenderServer::getDefaultTexture()
-{ return server->default_image; }
-
-Ref<Texture> RenderServer::getDefault3DTexture()
-{ return server->default_3d_image; }
-
-Ref<Sampler> RenderServer::getDefaultSampler()
-{ return server->default_sampler; }
-
-Ref<Mesh> RenderServer::getSkyboxCube()
-{ return server->skybox_cube; }
-
-Ref<Mesh> RenderServer::getQuad()
-{ return server->quad; }
 
 glm::vec2 RenderServer::getFramebufferSize()
 { return glm::vec2(server->swapchain->getExtent()); }
@@ -138,6 +118,14 @@ RenderServer::RenderServer()
 
     default_material = new Material(new Shader("res://engine/shaders/default_shader.glsl"));
     final_pass_uniforms = createSceneUniforms();
+
+    debug_text_font = new Font("res://engine/textures/font_IBM_XGA_AI_12x23.png", { 14, 25 });
+    debug_text_mesh = new Mesh({}, {}, true);
+    debug_text_material = new Material(new Shader("res://engine/shaders/screen_space_text.glsl"),
+        Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthTest(false), final_render_pass);
+    debug_text_material->setTexture(0, debug_text_font->getAtlas());
+    debug_text_material->setSampler(0, Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_LINEAR)));
+
     initImGui();
 
     DBG_VERBOSE("graphics server initialised");
@@ -154,6 +142,11 @@ RenderServer::~RenderServer()
 
     command_buffers.clear();
     scenes.clear();
+
+    debug_text_font = nullptr;
+    debug_text_mesh = nullptr;
+    debug_text_material = nullptr;
+
     final_pass_uniforms = nullptr;
     skybox_cube = nullptr;
     default_material = nullptr;
@@ -173,6 +166,68 @@ RenderServer::~RenderServer()
 
 RenderServer* RenderServer::getInstance()
 { return server; }
+
+void RenderServer::updateTextMesh()
+{
+    if (!overlay_logs)
+        return;
+    auto lines = Debug::queryLines(32);
+    const glm::vec2 uv_size   = debug_text_font->getGlyphUVSize();
+    const glm::vec2 char_size = debug_text_font->getGlyphSize();
+    glm::vec2 position = { 0, 0 };
+    vector<Mesh::Vertex> vertices;
+    vector<uint16_t> indices;
+    uint16_t v_off = 0;
+
+    glm::vec4 normal_value  = {};
+    glm::vec4 colour_value  = glm::vec4{ 1, 1, 1, 1 };
+
+    for (const auto& line : lines)
+    {
+        for (char c : line)
+        {
+            const glm::vec2 uv_base = debug_text_font->getGlyphUVOffset(c);
+            glm::vec2 uv_br  = uv_base + uv_size; uv_br.y = 1.0f - uv_br.y;
+            glm::vec2 uv_tl  = uv_base;           uv_tl.y = 1.0f - uv_tl.y;
+            glm::vec2 pos_tl = position;
+            glm::vec2 pos_br = pos_tl + char_size;
+            
+            vertices.push_back(Mesh::Vertex{
+                { pos_tl.x, pos_tl.y, 0, 1 },
+                colour_value, normal_value, normal_value,
+                uv_tl
+            });
+            vertices.push_back(Mesh::Vertex{
+                { pos_br.x, pos_tl.y, 0, 1 },
+                colour_value, normal_value, normal_value,
+                { uv_br.x, uv_tl.y }
+            });
+            vertices.push_back(Mesh::Vertex{
+                { pos_tl.x, pos_br.y, 0, 1 },
+                colour_value, normal_value, normal_value,
+                { uv_tl.x, uv_br.y }
+            });
+            vertices.push_back(Mesh::Vertex{
+                { pos_br.x, pos_br.y, 0, 1 },
+                colour_value, normal_value, normal_value,
+                uv_br
+            });
+
+            indices.push_back(v_off + 0);
+            indices.push_back(v_off + 3);
+            indices.push_back(v_off + 1);
+            indices.push_back(v_off + 0);
+            indices.push_back(v_off + 2);
+            indices.push_back(v_off + 3);
+            v_off += 4;
+
+            position.x += char_size.x - 1;
+        }
+        position.x = 0;
+        position.y += char_size.y;
+    }
+    debug_text_mesh->updateData(vertices, indices, (vertices.size() / 512) * 512, (indices.size() / 512) * 512);
+}
 
 void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
 {
@@ -199,6 +254,13 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
         }
     }
     
+    if (overlay_logs)
+    {
+        command_buffer->setScissorViewport({ 0, 0 }, { 1, 1 }, swapchain->getExtent());
+        debug_text_material->bind(command_buffer, false);
+        debug_text_mesh->draw(command_buffer);
+    }
+
     command_buffer->drawImGui();
 
     command_buffer->end();

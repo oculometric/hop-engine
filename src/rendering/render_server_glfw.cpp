@@ -9,6 +9,9 @@
 #include "swapchain.h"
 #include "render_pass.h"
 #include "input.h"
+#include "engine.h"
+#include "scene.h"
+#include "command_buffer.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -168,6 +171,9 @@ FrameStats RenderServer::drawFrame()
     swapchain->submitCommands(command_buffers[image_index], image_index);
     
     command_buffers[image_index]->extractTiming();
+    
+    updateTextMesh();
+
     return stats;
 }
 

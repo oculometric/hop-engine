@@ -82,6 +82,10 @@ private:
 
 	Ref<Mesh> skybox_cube;			// mesh used to render skyboxes
 	Ref<Mesh> quad;					// full screen quad mesh
+    
+    Ref<Material> debug_text_material;
+    Ref<Mesh> debug_text_mesh;
+    Ref<Font> debug_text_font;
 	
 	Ref<UniformBlock> final_pass_uniforms;
 	std::vector<SceneRender> scenes;
@@ -90,6 +94,7 @@ private:
 	bool wants_fullscreen_update = false;
 	bool vsync = true;
 	bool wants_vsync_update = false;
+    bool overlay_logs = false;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(RenderServer);
@@ -110,13 +115,13 @@ public:
 	static Ref<UniformBlock> createObjectUniforms();
 	static VkPipelineLayout createPipelineLayout(VkDescriptorSetLayout set_2);
 	
-	static Ref<RenderPass> getMainRenderPass();
-	static Ref<RenderPass> getFinalRenderPass();
-	static Ref<Texture> getDefaultTexture();
-	static Ref<Texture> getDefault3DTexture();
-	static Ref<Sampler> getDefaultSampler();
-	static Ref<Mesh> getSkyboxCube();
-	static Ref<Mesh> getQuad();
+	static WeakRef<RenderPass> getMainRenderPass() { return getInstance()->offscreen_pass; }
+	static WeakRef<RenderPass> getFinalRenderPass() { return getInstance()->final_render_pass; }
+	static WeakRef<Texture> getDefaultTexture() { return getInstance()->default_image; }
+	static WeakRef<Texture> getDefault3DTexture() { return getInstance()->default_3d_image; }
+	static WeakRef<Sampler> getDefaultSampler() { return getInstance()->default_sampler; }
+	static WeakRef<Mesh> getSkyboxCube() { return getInstance()->skybox_cube; }
+	static WeakRef<Mesh> getQuad() { return getInstance()->quad; }
 	
 	static GLFWwindow* getWindow() { return getInstance()->window; }
 	static glm::vec2 getFramebufferSize();
@@ -129,6 +134,8 @@ public:
 	static bool getVsyncEnabled();
 	static void setFullscreenEnabled(bool enabled);
 	static bool getFullscreenEnabled();
+    static void setOverlayLogs(bool enabled) { getInstance()->overlay_logs = enabled; }
+    static bool getOverlayLogs() { return getInstance()->overlay_logs; }
 
 	static void setSingleScene(const Ref<Scene>& scene);
 	static void setMultiScene(const std::vector<SceneRender>& multi_scenes);
@@ -145,6 +152,7 @@ private:
 	void createVulkan();
 	void initImGui();
 	bool resize(bool force_resize = false);
+    void updateTextMesh();
 	FrameStats drawFrame();
 	void destroyImGui();
 	void destroyVulkan();

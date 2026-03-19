@@ -1,7 +1,5 @@
 #pragma once
 
-#include <fstream>
-
 #if defined(_WIN32)
 #pragma warning(push)
 #pragma warning(disable: 4005)
@@ -57,6 +55,9 @@
 #endif
 
 #include <string>
+#include <fstream>
+#include <vector>
+#include <deque>
 
 #include "common.h"
 
@@ -88,6 +89,7 @@ private:
 	// minimum severity for a debug command to trigger a program crash.
 	Level crash_level = DEBUG_FAULT;
 	std::ofstream file_output;
+    std::deque<std::string> lines_history;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Debug);
@@ -128,6 +130,7 @@ public:
 	 * crashes.
 	 */
 	static void flush();
+    static std::vector<std::string> queryLines(size_t count);
 
 private:
 	Debug(Level crash);

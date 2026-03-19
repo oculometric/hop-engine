@@ -64,7 +64,8 @@ void Engine::start()
             RenderServer::setFullscreenEnabled(!RenderServer::getFullscreenEnabled());
         if (Input::wasKeyPressed(Input::KEY_F10))
             Engine::setForceWireframe(!Engine::isWireframeMode());
-        
+        if (Input::wasKeyPressed(Input::KEY_F9))
+            RenderServer::setOverlayLogs(!RenderServer::getOverlayLogs());
 
         auto update_start = chrono::steady_clock::now();
         if (engine->application)

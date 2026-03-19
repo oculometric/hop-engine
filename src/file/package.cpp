@@ -80,7 +80,7 @@ bool Package::store(const string& path, const DataBlock& data)
 	string real_path;
 	if (isResPath(path, real_path))
 	{
-		DBG_VERBOSE("storing '" + identifier + "'; " + to_string(data.size()) + " bytes");
+		DBG_VERBOSE("storing '" + path + "'; " + to_string(data.size()) + " bytes");
 		instance->database[real_path] = data;
 		return true;
 	}

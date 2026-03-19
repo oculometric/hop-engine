@@ -284,7 +284,7 @@ void RenderGraph::rebuildBindings()
             {
                 if (binding_step.is_camera || binding_step.texture_bindings.empty())
                 {
-                    texture = RenderServer::getDefaultTexture();
+                    texture = RenderServer::getDefaultTexture().strong();
                     break;                    
                 }
                 binding_step = execution_steps[binding_step.texture_bindings[0].step_index];

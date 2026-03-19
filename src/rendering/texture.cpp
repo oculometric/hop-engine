@@ -82,7 +82,7 @@ Ref<Texture> Texture::loadImage(const string& path)
 
     Ref<Texture> t = new Texture({ static_cast<uint32_t>(img_width), static_cast<uint32_t>(img_height), 1 }, FORMAT_SRGB_8X4, pixels);
     t->origin = path;
-    DBG_VERBOSE("created image from " + path + " with size " + ::to_string(extent.x) + "x" + ::to_string(extent.y) + " and format " + to_string(format));
+    DBG_VERBOSE("created image from " + path + " with size " + ::to_string(t->extent.x) + "x" + ::to_string(t->extent.y) + " and format " + to_string(t->format));
     stbi_image_free(pixels);
     return t;
 }
@@ -140,7 +140,7 @@ Ref<Texture> Texture::loadImage3D(const string& path, glm::u32vec2 segments)
 
     Ref<Texture> t = new Texture({ layer_width, layer_height, layers }, FORMAT_SRGB_8X4, rearranged.data());
     t->origin = path;
-    DBG_VERBOSE("created image from " + path + " with size " + ::to_string(extent.x) + "x" + ::to_string(extent.y) + "x" + ::to_string(extent.z) + " and format " + to_string(format));
+    DBG_VERBOSE("created image from " + path + " with size " + ::to_string(t->extent.x) + "x" + ::to_string(t->extent.y) + "x" + ::to_string(t->extent.z) + " and format " + to_string(t->format));
     stbi_image_free(pixels);
 
     return t;

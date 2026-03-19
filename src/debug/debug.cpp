@@ -106,7 +106,9 @@ void Debug::write(const string& description, Level severity)
 	string term_line = format("{}[{}{: >8} {}]{}: {}{:0>2}:{:0>2}:{:0>2}{} - {}", 
 	                          bracket_col, type_col, log_type, bracket_col, standard_col,
 	                          time_col, time.tm_hour, time.tm_min, time.tm_sec, standard_col, description);
-
+    instance->lines_history.push_back(log_line);
+    if (instance->lines_history.size() > 256)
+        instance->lines_history.pop_front();
 	if (instance->file_output.is_open())
 		instance->file_output << log_line << endl;
 	DEBUG_TERMINAL << term_line << endl;
@@ -129,6 +131,19 @@ void Debug::flush()
 	if (instance->file_output.is_open())
 		instance->file_output.flush();
 	DEBUG_TERMINAL.flush();
+}
+
+vector<string> Debug::queryLines(size_t count)
+{
+    vector<string> arr;
+    arr.reserve(count);
+    for (size_t i = 0; i < count; ++i)
+    {
+        if (i >= instance->lines_history.size())
+            break;
+        arr.push_back(*(instance->lines_history.rbegin() + (count - i - 1)));
+    }
+    return arr;
 }
 
 Debug::Debug(Level crash)

@@ -11,9 +11,9 @@
 using namespace HopEngine;
 using namespace std;
 
-Material::Material(const Ref<Shader>& _shader, const Pipeline::Builder& config, const Ref<RenderPass>& _render_pass)
+Material::Material(Ref<Shader> _shader, const Pipeline::Builder& config, WeakRef<RenderPass> _render_pass)
 {
-	render_pass = _render_pass.isValid() ? _render_pass : RenderServer::getMainRenderPass();
+	render_pass = _render_pass ? _render_pass.strong() : RenderServer::getMainRenderPass().strong();
 	shader = _shader;
 	pipeline = new Pipeline(shader, config, render_pass);
 	debug_pipeline = new Pipeline(shader, Pipeline::Builder().polygonMode(Pipeline::POLYGON_LINE), render_pass);

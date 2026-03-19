@@ -363,6 +363,8 @@ void Engine::_drawImGuiDebug(float delta_time) const
 			RenderServer::setVsyncEnabled(!RenderServer::getVsyncEnabled());
 		if (ImGui::MenuItem("toggle fullscreen"))
 			RenderServer::setFullscreenEnabled(!RenderServer::getFullscreenEnabled());
+        if (ImGui::MenuItem("toggle overlay logs"))
+            RenderServer::setOverlayLogs(!RenderServer::getOverlayLogs());
 		ImGui::EndMenu();
 	}
 

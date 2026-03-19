@@ -27,8 +27,8 @@ UniformBlock::UniformBlock(const Shader::Layout& layout_info)
         {
             textures_in_use[binding.binding] =
             {
-                binding.texture_is_3d ? RenderServer::getDefault3DTexture() : RenderServer::getDefaultTexture(),
-                RenderServer::getDefaultSampler()
+                binding.texture_is_3d ? RenderServer::getDefault3DTexture().strong() : RenderServer::getDefaultTexture().strong(),
+                RenderServer::getDefaultSampler().strong()
             };
         }
     }
@@ -79,7 +79,7 @@ void UniformBlock::setTexture(const uint32_t binding, WeakRef<Texture>& image)
         return;
     // update the binding
     if (!image)
-        textures_in_use[binding].texture = layout.bindings[binding].texture_is_3d ? RenderServer::getDefault3DTexture() : RenderServer::getDefaultTexture();
+        textures_in_use[binding].texture = layout.bindings[binding].texture_is_3d ? RenderServer::getDefault3DTexture().strong() : RenderServer::getDefaultTexture().strong();
     else
         textures_in_use[binding].texture = image.strong();
     applyDescriptorBindings();
@@ -92,7 +92,7 @@ void UniformBlock::setSampler(const uint32_t binding, WeakRef<Sampler>& sampler)
         return;
     // update sampler binding; use default engine sampler if null
     if (!sampler)
-        textures_in_use[binding].sampler = RenderServer::getDefaultSampler();
+        textures_in_use[binding].sampler = RenderServer::getDefaultSampler().strong();
     else
         textures_in_use[binding].sampler = sampler.strong();
     applyDescriptorBindings();
@@ -141,7 +141,7 @@ void UniformBlock::applyDescriptorBindings()
                 if (texture->is3D() != binding.texture_is_3d)
                 {
                     DBG_ERROR("uniform attempted to bind an incompatible texture dimension. texture will be reset to default.");
-                    textures_in_use[binding.binding].texture = binding.texture_is_3d ? RenderServer::getDefault3DTexture() : RenderServer::getDefaultTexture();
+                    textures_in_use[binding.binding].texture = binding.texture_is_3d ? RenderServer::getDefault3DTexture().strong() : RenderServer::getDefaultTexture().strong();
                     texture = textures_in_use[binding.binding].texture;
                 }
                 image_info.imageView = texture->getView();

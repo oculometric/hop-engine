@@ -1,7 +1,6 @@
 # TODO
 
 # v0.60
-- onscreen debug log
 - eliminate the tautological compare thing
 - interactive node editor
     - linking/unlinking nodes
@@ -12,6 +11,7 @@
 - switch to glslang for shader compilation
 - object duplicate function
 
+- add pending-destruct system, so we don't have to wait for idle in the middle of a frame!!
 - actual editor
     - resizeable/swappable views
     - editor build target
