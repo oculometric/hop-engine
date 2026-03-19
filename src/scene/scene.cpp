@@ -68,7 +68,11 @@ void Object::addChild(WeakRef<Object> obj)
 void Object::update(float delta_time)
 {
 	for (const auto& comp : components)
+    {
+        if (!comp->getEnabled())
+            continue;
 		comp->update(delta_time);
+    }
 	for (const auto& child : children)
 		child->update(delta_time);
 }
@@ -78,6 +82,8 @@ vector<DrawCommand> Object::getDrawCommands()
 	vector<DrawCommand> commands;
 	for (const auto& comp : components)
 	{
+        if (!comp->getEnabled())
+            continue;
 		auto sub_commands = comp->getDrawCommands();
 		commands.insert(commands.begin(), sub_commands.begin(), sub_commands.end());
 	}

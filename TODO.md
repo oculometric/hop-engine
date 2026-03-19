@@ -1,31 +1,43 @@
 # TODO
 
-# v0.6
+# v0.60
 - onscreen debug log
 - eliminate the tautological compare thing
-- windows 95 node style
 - interactive node editor
     - linking/unlinking nodes
     - box selection
     - select/deselect all
     - move camera
+- windows 95 node style
+- switch to glslang for shader compilation
+- object duplicate function
+
 - actual editor
     - resizeable/swappable views
     - editor build target
-    - file/project manager
-- switch to glslang for shader compilation [H]
-- refactor lots of node view into a UI builder class
-- improved text block rendering with wrapping, alignment, font, etc
-- document everything
-- hover tooltips for nodes....
-- audio loading and output
-- shader & other resource reloading at runtime [H]
-- frustrum culling [M]
-- object duplicate function [L]
-- enable/disable components
-- texture upload/download of data
+    - full-screen-node file/project manager
+    - full-screen-node properties view
+    - full-screen-node log view
+    - transform gizmos
+    - debug meshes for cameras, lights
+- ui rendering refactor
+    - general purpose text rendering (wrapping, alignment, font, underline, bold, italic, strikethrough)
+    - general purpose 9-slice, image, and icon rendering kits
+    - refactor node view code somewhat
+    - ui interaction toolkit
+    - ui elements - label, button, dropdown, checkbox, textbox, slider
 ---
+
+# v0.61
+- document everything
+- audio loading and output
+- shader & other resource reloading at runtime
+---
+
 ## v0.7
+- hover tooltips for nodes....
+- frustrum culling [M]
+- texture upload/download of data
 - shader node editor
 - render graph node editor
 - animation timeline using nodes
@@ -33,8 +45,6 @@
 - textures should be loadable in linear mode?
 - a proper procedural shading art workflow
 - data blocks should know which package they came from
----
-- improved gizmo, better control, rotation and scale support [M]
 - bytecode node language
 - VR interfaces
 - Steamworks integration

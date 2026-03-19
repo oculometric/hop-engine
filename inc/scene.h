@@ -19,6 +19,7 @@ class Component : public Destructible
 	friend class Object;
 private:
 	WeakRef<Object> owner;
+    bool enabled = true;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Component);
@@ -31,6 +32,8 @@ public:
 	template<class T> WeakRef<T> getComponent();
 	WeakRef<Scene> getScene() const;
 	Transform& getTransform() const;
+    bool getEnabled() const { return enabled; }
+    void setEnabled(bool state) { enabled = state; }
 
 	virtual void awake() { }
 	virtual void update(float delta_time) { }
