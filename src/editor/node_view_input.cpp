@@ -22,14 +22,51 @@ enum UIElement
     OUTPUT_PIN
 };
 
+static bool checkNodeBox(WeakRef<NodeView::Node> node, glm::vec2 pos)
+{
+    glm::vec2 node_min = node->position;
+    glm::vec2 node_max = node->minimised ?
+        node_min + glm::vec2{ node->size.x, 1 } :
+        node_min + node->size + glm::vec2{ 0, 1 };
+    if (pos.x < node_min.x || pos.y < node_min.y ||
+        pos.x > node_max.x || pos.y > node_max.y)
+        return false;
+    return true;
+}
+
+static bool checkPinBox(WeakRef<NodeView::Node> node, int element, glm::vec2 pos, WeakRef<NodeView::Style> style, glm::vec2& selbox_min)
+{
+    if (element < 0 || element >= node->elements.size())
+        return false;
+    glm::vec2 selbox_max;
+    int index = (style->header_at_top ? style->after_header_spacing + 1 : style->after_elements_spacing) + element;
+    if (node->elements[element].type == NodeView::ELEMENT_OUTPUT)
+    {
+        selbox_min = (node->position + glm::vec2{ node->size.x - 1, index });
+        selbox_max = selbox_min + glm::vec2{ 1, 1 };
+    }
+    else if (node->elements[element].type == NodeView::ELEMENT_INPUT)
+    {
+        selbox_min = (node->position + glm::vec2{ 0, index });
+        selbox_max = selbox_min + glm::vec2{ 1, 1 };
+    }
+    else
+        return false;
+    if (pos.x < selbox_min.x || pos.x > selbox_max.x ||
+        pos.y < selbox_min.y || pos.y > selbox_max.y)
+        return false;
+    return true;
+}
+
 // TODO: refactor this into an input event system!! (in the input class)
-void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
+bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
 {
     // TODO: this is not allowed to be static!!
     static InputState state = IDLE;
     static Input::MouseButton button_upon_press;
     static glm::vec2 mouse_pos_upon_press;
     static UIElement element_type_upon_press = NONE;
+    static int input_output_element_index = 0;
     static auto node_upon_press = nodes.rend();
 
     bool needs_update = false;
@@ -37,8 +74,28 @@ void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
     glm::vec2 mouse_pos = Input::getMousePosition();
     if (mouse_pos.x < rect_min.x || mouse_pos.y < rect_min.y ||
         mouse_pos.x > rect_min.x + rect_size.x || mouse_pos.y > rect_min.y + rect_size.y)
-        return;
-    glm::vec2 node_space_pos = (mouse_pos - glm::vec2(rect_min)) - (glm::vec2(rect_size) / 2.0f);
+        return false;
+    glm::vec2 offset = getTransform().getLocalPosition();
+    glm::vec2 node_space_pos = ((mouse_pos - glm::vec2(rect_min)) - (glm::vec2(rect_size) / 2.0f)) - offset;
+
+    if (Input::isKeyDown('A') && Input::isKeyDown(Input::KEY_LEFT_CONTROL))
+    {
+        for (auto& node : nodes)
+            node->highlighted = true;
+        needs_update = true;
+    }
+    else if (Input::isKeyDown(Input::KEY_ESCAPE))
+    {
+        for (auto& node : nodes)
+            node->highlighted = false;
+        needs_update = true;
+    }
+
+    if (Input::isMouseDown(Input::MOUSE_RIGHT) || Input::isMouseDown(Input::MOUSE_MIDDLE))
+    {
+        getTransform().translateLocal(glm::vec3(Input::getMouseDelta(), 0));
+        return true;
+    }
 
     // TODO: right mouse support
     if (state == IDLE && Input::wasMousePressed(Input::MOUSE_LEFT))
@@ -53,12 +110,7 @@ void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
         for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
         {
             auto node          = *it;
-            glm::vec2 node_min = node->position * style->grid_size;
-            glm::vec2 node_max = node->minimised ?
-                node_min + (glm::vec2{ node->size.x, 1 } * style->grid_size) :
-                node_min + (node->size * style->grid_size);
-            if (node_space_pos.x < node_min.x || node_space_pos.y < node_min.y ||
-                node_space_pos.x > node_max.x || node_space_pos.y > node_max.y)
+            if (!checkNodeBox(node, node_space_pos / style->grid_size))
                 continue;
             node_upon_press = it;
             element_type_upon_press = NODE;
@@ -72,38 +124,31 @@ void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
             }
             else if (!node->minimised)
             {
-                int index = style->header_at_top ? style->after_header_spacing : style->after_elements_spacing - 1;
+                int actual_index = -1;
+                int output_index = -1;
+                int input_index = -1;
                 for (const auto& element : node->elements)
                 {
-                    ++index;
-                    glm::vec2 selbox_min;
-                    glm::vec2 selbox_max;
                     if (element.type == ELEMENT_OUTPUT)
-                    {
-                        selbox_min = (node->position + glm::vec2{ node->size.x - 1, index }) * style->grid_size;
-                        selbox_max = selbox_min + style->grid_size;
-                    }
+                        ++output_index;
                     else if (element.type == ELEMENT_INPUT)
-                    {
-                        selbox_min = (node->position + glm::vec2{ 0, index }) * style->grid_size;
-                        selbox_max = selbox_min + style->grid_size;
-                    }
-                    else
-                        continue;
-
-                    if (node_space_pos.x < selbox_min.x || node_space_pos.x > selbox_max.x ||
-                        node_space_pos.y < selbox_min.y || node_space_pos.y > selbox_max.y)
+                        ++input_index;
+                    ++actual_index;
+                    glm::vec2 selbox_min;
+                    if (!checkPinBox(node, actual_index, node_space_pos / style->grid_size, style, selbox_min))
                         continue;
                     
                     if (element.type == ELEMENT_OUTPUT)
                     {
                         element_type_upon_press = OUTPUT_PIN;
-                        temp_link_start = (selbox_min / style->grid_size) + glm::vec2{ 1.0f, 0.5f };
+                        temp_link_start = selbox_min + glm::vec2{ 1.0f, 0.5f };
+                        input_output_element_index = output_index;
                     }
                     else
                     {
                         element_type_upon_press = INPUT_PIN;
-                        temp_link_start = (selbox_min / style->grid_size) + glm::vec2{ 0.0f, 0.5f };
+                        temp_link_start = selbox_min + glm::vec2{ 0.0f, 0.5f };
+                        input_output_element_index = input_index;
                     }
                     draw_temp_link = true;
                     break;
@@ -188,8 +233,43 @@ void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
         state = MOUSE_RELEASING;
 
         // a drag event is ending
-        for (auto& n : nodes)
-            if (n->highlighted) n->position = glm::round(n->position);
+        if (element_type_upon_press == OUTPUT_PIN)
+        {
+            auto cur = *node_upon_press;
+            for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
+            {
+                auto node          = *it;
+                if (!checkNodeBox(node, node_space_pos / style->grid_size))
+                    continue;
+                if (!node->minimised)
+                {
+                    int actual_index = -1;
+                    int input_index = -1;
+                    for (const auto& element : node->elements)
+                    {
+                        if (element.type == ELEMENT_INPUT)
+                            ++input_index;
+                        ++actual_index;
+                        glm::vec2 selbox_min;
+                        if (!checkPinBox(node, actual_index, node_space_pos / style->grid_size, style, selbox_min))
+                            continue;
+                        
+                        if (element.type == ELEMENT_OUTPUT)
+                            continue;
+
+                        cur->outgoing_links.resize(glm::max(cur->outgoing_links.size(), static_cast<size_t>(input_output_element_index) + 1));
+                        cur->outgoing_links[input_output_element_index] = { node, input_index };
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+        else
+        {
+            for (auto& n : nodes)
+                if (n->highlighted) n->position = glm::round(n->position);
+        }
         needs_update = true;
     }
     else if (state == MOUSE_RELEASING)
@@ -203,4 +283,6 @@ void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
     }
 
     if (needs_update) updateMesh();
+
+    return true;
 }

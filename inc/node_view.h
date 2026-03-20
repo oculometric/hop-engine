@@ -123,7 +123,7 @@ public:
 	Ref<Style> getStyle() { return style; }
 	void setStyle(Ref<Style> new_style);
 	void updateMesh();
-	void checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size);
+	bool checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size);
 
 private:
     void addQuadRaw(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 norm_xy, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode, glm::vec3 extra);

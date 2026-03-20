@@ -26,14 +26,15 @@ layout(set = 2, binding = 0) uniform MaterialUniforms
 
 void vertex()
 {
-    frag.position = vec4(in_position.xy, 0, 1);//(object.model_to_world * vec4(in_position.xyz, 1));
+    frag.position = vec4(in_position.xy, 0, 1);
     frag.colour = in_colour;
     frag.normal = in_normal;
     frag.tangent = in_tangent;
     frag.uv = in_uv;
     // FIXME: consider this in viewport coordinates, round it, then take it back to clip coords
     vec2 viewport_half = floor(scene.viewport_size.xy / vec2(2, -2));
-    gl_Position = vec4(in_position.xy / viewport_half, 0.5f, 1.0f);
+    vec2 camera_offset = round(object.model_to_world[3].xy * vec2(0.5f, -0.5f)) / 0.5f;
+    gl_Position = vec4((frag.position.xy + camera_offset) / viewport_half, 0.5f, 1.0f);
 }
 
 #pragma DEFAULT_ATTACHMENTS

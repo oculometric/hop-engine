@@ -136,6 +136,6 @@ Editor::Editor()
 
 void Editor::update(float delta_time)
 {
-    node_view->checkInput({ 0, RenderServer::getFramebufferSize().y * 0.7f }, view_nodes->getViewportSize());
-    Engine::debugCamera(view_3d->findObject("camera"));
+    if (!node_view->checkInput({ 0, RenderServer::getFramebufferSize().y * 0.7f }, view_nodes->getViewportSize()))
+        Engine::debugCamera(view_3d->findObject("camera"));
 }

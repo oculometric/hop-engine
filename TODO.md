@@ -2,12 +2,10 @@
 
 # v0.60
 - interactive node editor
-    - linking/unlinking nodes
-    - select/deselect all
-    - move camera
     - draw nodes in multiple passes (so links are always behind, shadows behind more)
-    - box selection
+    - links should be BACKWARDS not forwards, add makeLink function
     - allow nodes to be resized
+    - box selection
     - right-click menu to allow adding more nodes
     - move overlays (temp link, right click menu, selection box) into their own mesh
 - transparent window support
