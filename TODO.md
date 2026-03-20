@@ -8,7 +8,6 @@
     - box selection
     - select/deselect all
     - move camera
-- borderless window support
 - transparent window support
 - windows 95 node style
 - eliminate the tautological compare thing

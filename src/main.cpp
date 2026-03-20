@@ -12,7 +12,7 @@ int main()
     Engine::init();
 
     Package::importPackage("resources.hop");
-
+    
     Engine::runApplication<Editor>();
 
     Engine::destroy();

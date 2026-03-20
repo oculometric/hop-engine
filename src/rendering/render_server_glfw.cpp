@@ -43,6 +43,11 @@ void RenderServer::setIcon(const string &path)
     stbi_image_free(image.pixels);
 }
 
+void RenderServer::setBorderless(bool borderless)
+{
+    glfwSetWindowAttrib(getWindow(), GLFW_DECORATED, !borderless);
+}
+
 void RenderServer::createWindow()
 {
     glfwInit();

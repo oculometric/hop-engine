@@ -147,6 +147,7 @@ public:
 	static void setTitle(const std::string& title);
 	static void setVisible(bool visible);
 	static void setIcon(const std::string& path);
+    static void setBorderless(bool borderless);
 
 	static void setVsyncEnabled(bool enabled);
 	static bool getVsyncEnabled();
