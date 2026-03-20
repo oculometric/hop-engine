@@ -109,6 +109,9 @@ private:
 	std::vector<Mesh::Vertex> vertices;
 	std::vector<uint16_t> indices;
 	Ref<Style> style;
+    glm::vec2 temp_link_start;
+    glm::vec2 temp_link_end;
+    bool draw_temp_link = false;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(NodeView);

@@ -2,12 +2,14 @@
 
 # v0.60
 - interactive node editor
-    - selection on minimised nodes
-    - universal picking system
     - linking/unlinking nodes
-    - box selection
     - select/deselect all
     - move camera
+    - draw nodes in multiple passes (so links are always behind, shadows behind more)
+    - box selection
+    - allow nodes to be resized
+    - right-click menu to allow adding more nodes
+    - move overlays (temp link, right click menu, selection box) into their own mesh
 - transparent window support
 - windows 95 node style
 - eliminate the tautological compare thing

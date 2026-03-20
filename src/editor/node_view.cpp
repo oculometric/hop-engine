@@ -1,6 +1,6 @@
 #include "node_view.h"
 
-#include "hop_engine.h"
+#include "engine.h"
 
 #include <glm/gtc/integer.hpp>
 
@@ -85,20 +85,6 @@ void NodeView::updateMesh()
                     style->grid_size,
                 glm::vec2{ 0, 0 }, glm::vec2{ 1, 1 }, style->shadow_colour, RENDER_MODE_BOX,
                 { 0, 1, 15.0f });
-            //    float shadow_width_extra = (style->grid_size * 0.25f);
-            //    addQuad(position + (glm::vec2{ 0,  } * style->grid_size) + glm::vec2{
-            //    style->shadow_offset.x, -shadow_width_extra }, glm::vec2{ node_width_tiles *
-            //    style->grid_size, style->shadow_offset.y + shadow_width_extra },
-            //        glm::vec2{ 0, 0.5f }, glm::vec2{ 1, 1 }, style->shadow_colour, RENDER_MODE_BOX, {
-            //        0, 1, 0 }, glm::vec2{ node_width_tiles * style->grid_size, (style->shadow_offset.y
-            //        + shadow_width_extra) * 2.0f });
-            //    addQuad(position + (glm::vec2{ node_width_tiles, 0 } * style->grid_size) + glm::vec2{
-            //    -shadow_width_extra, style->shadow_offset.y }, glm::vec2{ style->shadow_offset.x +
-            //    shadow_width_extra, (1 + (node->minimised ? 0 : node_height_tiles)) * style->grid_size
-            //    },
-            //        glm::vec2{ 0.5f, 0 }, glm::vec2{ 1, 1 }, style->shadow_colour, RENDER_MODE_BOX, {
-            //        0, 1, 0 }, glm::vec2{ (style->shadow_offset.x + shadow_width_extra) * 2.0f, (1 +
-            //        (node->minimised ? 0 : node_height_tiles)) * style->grid_size });
         }
 
         // heading box
@@ -217,6 +203,11 @@ void NodeView::updateMesh()
         // TODO: come up with a list of input types
     }
 
+    if (draw_temp_link)
+    {
+        addLink(temp_link_start * style->grid_size, temp_link_end * style->grid_size);
+    }
+
     size_t vertices_rounded_up =
         ((vertices.size() / v_i_buffer_rounding_size) + 2) * v_i_buffer_rounding_size;
     size_t indices_rounded_up =
@@ -225,101 +216,6 @@ void NodeView::updateMesh()
     if (mesh) mesh->updateData(vertices, indices, vertices_rounded_up, indices_rounded_up);
     else
         mesh = new Mesh(vertices, indices, true);
-}
-
-void NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
-{
-    static glm::vec2 mouse_delta_since_down =
-        glm::vec2{ 0, 0 }; // TODO: this is not allowed to be static!!
-
-    glm::vec2 mouse_pos = Input::getMousePosition();
-    if (mouse_pos.x < rect_min.x || mouse_pos.y < rect_min.y ||
-        mouse_pos.x > rect_min.x + rect_size.x || mouse_pos.y > rect_min.y + rect_size.y)
-        return;
-    glm::vec2 node_space_pos = (mouse_pos - glm::vec2(rect_min)) - (glm::vec2(rect_size) / 2.0f);
-
-    bool needs_update = false;
-    static auto it    = nodes.rend();
-    if (Input::wasMousePressed(Input::MOUSE_LEFT))
-    {
-        for (it = nodes.rbegin(); it != nodes.rend(); ++it)
-        {
-            auto node          = *it;
-            glm::vec2 node_min = node->position * style->grid_size;
-            glm::vec2 node_max = node_min + (node->size * style->grid_size);
-            if (node_space_pos.x < node_min.x || node_space_pos.y < node_min.y ||
-                node_space_pos.x > node_max.x || node_space_pos.y > node_max.y)
-                continue;
-            break;
-        }
-        mouse_delta_since_down = glm::vec2{ 0, 0 };
-        if (it == nodes.rend())
-        {
-            for (auto& n : nodes) n->highlighted = false;
-            needs_update = true;
-        }
-    }
-    if (Input::isMouseDown(Input::MOUSE_LEFT)) mouse_delta_since_down += Input::getMouseDelta();
-
-    if (it != nodes.rend() && (length(mouse_delta_since_down) < 2.0f) &&
-        !Input::isMouseDown(Input::MOUSE_LEFT))
-    {
-        // mouse pressed and released quickly
-        auto node = *it;
-
-        glm::vec2 minibox_min = (node->position + glm::vec2{ node->size.x - 1, 0 }) * style->grid_size;
-        glm::vec2 minibox_max = minibox_min + style->grid_size;
-        if (!(node_space_pos.x < minibox_min.x || node_space_pos.y < minibox_min.y ||
-                node_space_pos.x > minibox_max.x || node_space_pos.y > minibox_max.y))
-        {
-            node->minimised = !node->minimised;
-            it              = nodes.rend();
-            needs_update    = true;
-        }
-        else
-        {
-            if (!Input::isKeyDown(Input::KEY_LEFT_SHIFT))
-            {
-                for (auto& n : nodes) n->highlighted = false;
-                node->highlighted = true;
-            }
-            else
-                node->highlighted = !node->highlighted;
-            nodes.erase((it + 1).base());
-            nodes.insert(nodes.end(), node);
-            it           = nodes.rend();
-            needs_update = true;
-        }
-    }
-    else if (length(mouse_delta_since_down) > 2.0f && Input::isMouseDown(Input::MOUSE_LEFT))
-    {
-        // mouse drag is occurring!
-        if (it != nodes.rend() && !(*it)->highlighted && !Input::isKeyDown(Input::KEY_LEFT_SHIFT))
-        {
-            auto node = *it;
-            for (auto& n : nodes) n->highlighted = false;
-            node->highlighted = true;
-            nodes.erase((it + 1).base());
-            nodes.insert(nodes.end(), node);
-            it = nodes.rend();
-        }
-
-        for (auto& n : nodes)
-            if (n->highlighted) n->position += Input::getMouseDelta() / style->grid_size;
-        needs_update = true;
-    }
-    else if (length(mouse_delta_since_down) > 2.0f)
-    {
-        for (auto& n : nodes)
-            if (n->highlighted) n->position = glm::round(n->position);
-        needs_update = true;
-    }
-
-    // TODO: links
-    // TODO: add new
-    // TODO: resize
-    if (needs_update) updateMesh();
-    // DBG_INFO("pos: " + ::to_string(node_space_pos.x) + ", " + ::to_string(node_space_pos.y));
 }
 
 void NodeView::awake()
