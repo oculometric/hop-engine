@@ -2,7 +2,7 @@
 
 # v0.60
 - interactive node editor
-    - draw nodes in multiple passes (so links are always behind, shadows behind more)
+    - draw links to header if the target (or origin) is minimised
     - links should be BACKWARDS not forwards, add makeLink function
     - allow nodes to be resized
     - box selection

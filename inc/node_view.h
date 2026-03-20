@@ -131,6 +131,7 @@ private:
 	void addPin(glm::vec2 position, glm::vec3 tint, int type, bool filled);
 	void addText(const std::string& text, glm::vec2 _start, glm::vec3 tint, int align = -1);
 	void addLink(glm::vec2 link_start, glm::vec2 link_end);
+    void drawNode(WeakRef<Node> node, int pass);
 };
 
 }
