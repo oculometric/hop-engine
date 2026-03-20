@@ -173,6 +173,7 @@ FrameStats RenderServer::drawFrame()
     command_buffers[image_index]->extractTiming();
     
     updateTextMesh();
+    tryFreeResources();
 
     return stats;
 }

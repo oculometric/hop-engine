@@ -229,6 +229,24 @@ void RenderServer::updateTextMesh()
     debug_text_mesh->updateData(vertices, indices, (vertices.size() / 512) * 512, (indices.size() / 512) * 512);
 }
 
+void RenderServer::tryFreeResources(bool force)
+{
+    static float last_free_time = 0.0f;
+
+    float current_time = Engine::getEngineTime();
+    if (free_list.empty())
+        return;
+    if (!force && (current_time - last_free_time < 2.0f) && free_list.size() < 30)
+        return;
+
+    RenderServer::waitIdle();
+    DBG_INFO("freeing " + ::to_string(free_list.size()) + " resources");
+    last_free_time = current_time;
+    for (auto& item : free_list)
+        item();
+    free_list.clear();
+}
+
 void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
 {
     Ref<DrawCommandBuffer> command_buffer = command_buffers[image_index];

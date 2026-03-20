@@ -36,9 +36,8 @@ RenderPass::RenderPass(const glm::u32vec2 image_extent, const Config& config)
 RenderPass::~RenderPass()
 {
     DBG_VERBOSE("destroying render pass " + PTR(this));
-    RenderServer::waitIdle();
     destroyResources();
-    vkDestroyRenderPass(RenderServer::getDevice(), render_pass, nullptr);
+    RenderServer::free(render_pass);
 }
 
 Ref<Texture> RenderPass::getImage(const size_t attachment) const
@@ -85,12 +84,11 @@ Ref<RenderPass> RenderPass::duplicate() const
 
 void RenderPass::resize(const glm::u32vec2 new_extent)
 {
-    RenderServer::waitIdle();
+    destroyResources();
     if (swapchain)
         extent = swapchain->getExtent();
     else
         extent = new_extent;
-    destroyResources();
     createResources();
 }
 
@@ -255,8 +253,7 @@ void RenderPass::createResources()
 
 void RenderPass::destroyResources()
 {
-    RenderServer::waitIdle();
-    for (const VkFramebuffer framebuffer : framebuffers)
-        vkDestroyFramebuffer(RenderServer::getDevice(), framebuffer, nullptr);
+    for (VkFramebuffer framebuffer : framebuffers)
+        RenderServer::free(framebuffer);
     textures.clear();
 }

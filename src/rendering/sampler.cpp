@@ -54,6 +54,5 @@ Sampler::Sampler(const Sampler::Builder& config)
 Sampler::~Sampler()
 {
 	DBG_VERBOSE("destroying sampler " + PTR(this));
-    RenderServer::waitIdle();
-	vkDestroySampler(RenderServer::getDevice(), sampler, nullptr);
+    RenderServer::free(sampler);
 }

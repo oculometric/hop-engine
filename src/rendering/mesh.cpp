@@ -11,27 +11,6 @@
 using namespace HopEngine;
 using namespace std;
 
-// Mesh::Mesh(const string& path)
-// {
-//     origin = path;
-//     vector<Vertex> verts;
-//     vector<uint16_t> inds;
-    
-//     if (readFileToArrays(path, verts, inds))
-//     {
-//         uploadFromArrays(verts, inds);
-//         is_renderable = true;        
-//     }
-//     else
-//         DBG_ERROR("failed to load mesh " + path);
-
-//     DBG_VERBOSE("created mesh from " + path + " with " + ::to_string(verts.size()) + " vertices and " + ::to_string(inds.size()) + " indices");
-// }
-
-/*
-*/
-
-
 Mesh::Mesh(const vector<Vertex>& vertices, const vector<uint16_t>& indices, const bool keep_accessible)
 {
     accessible = keep_accessible;

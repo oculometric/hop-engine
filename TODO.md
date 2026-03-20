@@ -1,17 +1,20 @@
 # TODO
 
 # v0.60
-- eliminate the tautological compare thing
 - interactive node editor
+    - selection on minimised nodes
+    - universal picking system
     - linking/unlinking nodes
     - box selection
     - select/deselect all
     - move camera
+- borderless window support
+- transparent window support
 - windows 95 node style
+- eliminate the tautological compare thing
 - switch to glslang for shader compilation
 - object duplicate function
 
-- add pending-destruct system, so we don't have to wait for idle in the middle of a frame!!
 - actual editor
     - resizeable/swappable views
     - editor build target
@@ -32,6 +35,7 @@
 - document everything
 - audio loading and output
 - shader & other resource reloading at runtime
+- windowless offscreen rendering support
 ---
 
 ## v0.7

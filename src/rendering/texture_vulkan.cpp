@@ -179,8 +179,7 @@ void Texture::createView()
 
 void Texture::destroyResources()
 {
-    RenderServer::waitIdle();
-    vkDestroyImageView(RenderServer::getDevice(), view, nullptr);
-    vkDestroyImage(RenderServer::getDevice(), image, nullptr);
-    vkFreeMemory(RenderServer::getDevice(), memory, nullptr);
+    RenderServer::free(view);
+    RenderServer::free(image);
+    RenderServer::free(memory);
 }

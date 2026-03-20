@@ -191,10 +191,9 @@ void Shader::createDescriptorSetLayout()
 
 void Shader::destroyResources()
 {
-    RenderServer::waitIdle();
-	vkDestroyPipelineLayout(RenderServer::getDevice(), pipeline_layout, nullptr);
-	vkDestroyDescriptorSetLayout(RenderServer::getDevice(), descriptor_set_layout, nullptr);
-
-	vkDestroyShaderModule(RenderServer::getDevice(), vert_module, nullptr);
-	vkDestroyShaderModule(RenderServer::getDevice(), frag_module, nullptr);
+    RenderServer::free(pipeline_layout);
+    RenderServer::free(descriptor_set_layout);
+    
+    RenderServer::free(vert_module);
+    RenderServer::free(frag_module);
 }

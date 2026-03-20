@@ -50,8 +50,6 @@ void Shader::bind(WeakRef<DrawCommandBuffer> command_buffer)
 
 bool Shader::reloadShader()
 {
-	RenderServer::waitIdle();
-
 	DBG_WARNING("shader reloading is not implemented. this function does nothing.");
 	
 	return true;

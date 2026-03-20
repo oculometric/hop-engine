@@ -96,6 +96,8 @@ private:
 	bool wants_vsync_update = false;
     bool overlay_logs = false;
 
+    std::vector<std::function<void()>> free_list;
+
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(RenderServer);
 	
@@ -114,6 +116,22 @@ public:
 	static Ref<UniformBlock> createSceneUniforms();
 	static Ref<UniformBlock> createObjectUniforms();
 	static VkPipelineLayout createPipelineLayout(VkDescriptorSetLayout set_2);
+
+    static void free(std::function<void()> destructor);
+    static void free(VkBuffer& resource);
+    static void free(VkDescriptorSetLayout& resource);
+    static void free(VkDescriptorSet& resource);
+    static void free(VkDeviceMemory& resource);
+    static void free(VkImage& resource);
+    static void free(VkImageView& resource);
+    static void free(VkPipelineLayout& resource);
+    static void free(VkPipeline& resource);
+    static void free(VkShaderModule& resource);
+    static void free(VkSampler& resource);
+    static void free(VkFramebuffer& resource);
+    static void free(VkCommandBuffer& resource);
+    static void free(VkQueryPool& resource);
+    static void free(VkRenderPass& resource);
 	
 	static WeakRef<RenderPass> getMainRenderPass() { return getInstance()->offscreen_pass; }
 	static WeakRef<RenderPass> getFinalRenderPass() { return getInstance()->final_render_pass; }
@@ -153,6 +171,7 @@ private:
 	void initImGui();
 	bool resize(bool force_resize = false);
     void updateTextMesh();
+    void tryFreeResources(bool force = false);
 	FrameStats drawFrame();
 	void destroyImGui();
 	void destroyVulkan();

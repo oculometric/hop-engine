@@ -62,8 +62,8 @@ UniformBlock::UniformBlock(const Shader::Layout& layout_info)
 UniformBlock::~UniformBlock()
 {
     DBG_VERBOSE("destroying uniform block " + PTR(this));
-    RenderServer::waitIdle();
-    vkFreeDescriptorSets(RenderServer::getDevice(), RenderServer::getDescriptorPool(), static_cast<uint32_t>(descriptor_sets.size()), descriptor_sets.data());
+    for (VkDescriptorSet set : descriptor_sets)
+        RenderServer::free(set);
 }
 
 void UniformBlock::bind(WeakRef<DrawCommandBuffer> command_buffer) const
@@ -102,7 +102,6 @@ void UniformBlock::applyDescriptorBindings()
 {
     // updating the descriptor set bindings so that they correctly connect
     // to our specified textures, and our uniform buffers
-    RenderServer::waitIdle();
     DBG_BABBLE("uniform block " + PTR(this) + " updating " + ::to_string(layout.bindings.size()) + " descriptor bindings");
     for (size_t i = 0; i < descriptor_sets.size(); ++i)
     {

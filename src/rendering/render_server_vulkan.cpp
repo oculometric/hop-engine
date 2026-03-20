@@ -115,6 +115,107 @@ VkPipelineLayout RenderServer::createPipelineLayout(VkDescriptorSetLayout set_2)
     return pipeline_layout;
 }
 
+void RenderServer::free(std::function<void()> destructor)
+{ getInstance()->free_list.push_back(destructor); }
+
+void RenderServer::free(VkBuffer& resource)
+{
+    RenderServer::free([resource]()
+    { vkDestroyBuffer(getInstance()->device, resource, nullptr); });
+    resource = VK_NULL_HANDLE;
+}
+
+void RenderServer::free(VkDescriptorSetLayout& resource)
+{
+    RenderServer::free([resource]()
+    { vkDestroyDescriptorSetLayout(getInstance()->device, resource, nullptr); });
+    resource = VK_NULL_HANDLE;
+}
+
+void RenderServer::free(VkDescriptorSet& resource)
+{
+    RenderServer::free([resource]()
+    { vkFreeDescriptorSets(getInstance()->device, getInstance()->descriptor_pool, 1, &resource); });
+    resource = VK_NULL_HANDLE;
+}
+
+void RenderServer::free(VkDeviceMemory& resource)
+{
+    RenderServer::free([resource]
+    { vkFreeMemory(getInstance()->device, resource, nullptr); });
+    resource = VK_NULL_HANDLE;
+}
+
+void RenderServer::free(VkImage& resource)
+{
+    RenderServer::free([resource]()
+    { vkDestroyImage(getInstance()->device, resource, nullptr); });
+    resource = VK_NULL_HANDLE;
+}
+
+void RenderServer::free(VkImageView& resource)
+{
+    RenderServer::free([resource]()
+    { vkDestroyImageView(getInstance()->device, resource, nullptr); });
+    resource = VK_NULL_HANDLE;
+}
+
+void RenderServer::free(VkPipelineLayout& resource)
+{
+    RenderServer::free([resource]()
+    { vkDestroyPipelineLayout(getInstance()->device, resource, nullptr); });
+    resource = VK_NULL_HANDLE;
+}
+
+void RenderServer::free(VkPipeline& resource)
+{
+    RenderServer::free([resource]()
+    { vkDestroyPipeline(getInstance()->device, resource, nullptr); });
+    resource = VK_NULL_HANDLE;
+}
+
+void RenderServer::free(VkShaderModule& resource)
+{
+    RenderServer::free([resource]()
+    { vkDestroyShaderModule(getInstance()->device, resource, nullptr); });
+    resource = VK_NULL_HANDLE;
+}
+
+void RenderServer::free(VkSampler& resource)
+{
+    RenderServer::free([resource]()
+    { vkDestroySampler(getInstance()->device, resource, nullptr); });
+    resource = VK_NULL_HANDLE;
+}
+
+void RenderServer::free(VkFramebuffer& resource)
+{
+    RenderServer::free([resource]()
+    { vkDestroyFramebuffer(getInstance()->device, resource, nullptr); });
+    resource = VK_NULL_HANDLE;
+}
+
+void RenderServer::free(VkCommandBuffer& resource)
+{
+    RenderServer::free([resource]()
+    { vkFreeCommandBuffers(getInstance()->device, getInstance()->command_pool, 1, &resource); });
+    resource = VK_NULL_HANDLE;
+}
+
+void RenderServer::free(VkQueryPool& resource)
+{
+    RenderServer::free([resource]()
+    { vkDestroyQueryPool(getInstance()->device, resource, nullptr); });
+    resource = VK_NULL_HANDLE;
+}
+
+void RenderServer::free(VkRenderPass& resource)
+{
+    RenderServer::free([resource]()
+    { vkDestroyRenderPass(getInstance()->device, resource, nullptr); });
+    resource = VK_NULL_HANDLE;
+}
+
 void RenderServer::createVulkan()
 {
     {
@@ -400,6 +501,8 @@ void RenderServer::destroyImGui()
 
 void RenderServer::destroyVulkan()
 {
+    tryFreeResources(true);
+
     DBG_VERBOSE("destroying command pool");
     vkDestroyCommandPool(device, command_pool, nullptr);
     
