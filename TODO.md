@@ -3,15 +3,16 @@
 # v0.60
 - windows 95 node style
 - interactive node editor
-    - fix click-box for node so that sub-elements can stick out slightly
     - links should be BACKWARDS not forwards, add makeLink function
     - box selection
     - right-click menu to allow adding more nodes
     - move overlays (temp link, right click menu, selection box) into their own mesh
-- ui input event system
 - transparent window support
-- eliminate the tautological compare thing
 - switch to glslang for shader compilation
+- ui input event system
+    - mousedown/mouseup/mouseclick/mousedrag
+    - keydown/keyup
+    - multi-element intersection testing, i.e. we end up with a stack of elements which were intersected
 - object duplicate function
 - actual editor
     - resizeable/swappable views

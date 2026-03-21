@@ -24,12 +24,17 @@ enum UIElement
     LEFT_RESIZE,
 };
 
-static bool checkNodeBox(WeakRef<NodeView::Node> node, glm::vec2 pos)
+static bool checkNodeBox(WeakRef<NodeView::Node> node, glm::vec2 pos, bool extended)
 {
     glm::vec2 node_min = node->position;
     glm::vec2 node_max = node->minimised ?
         node_min + glm::vec2{ node->size.x, 1 } :
         node_min + node->size + glm::vec2{ 0, 1 };
+    if (extended)
+    {
+        node_min.x -= 0.5f;
+        node_max.x += 0.5f;
+    }
     if (pos.x < node_min.x || pos.y < node_min.y ||
         pos.x > node_max.x || pos.y > node_max.y)
         return false;
@@ -44,12 +49,12 @@ static bool checkPinBox(WeakRef<NodeView::Node> node, int element, glm::vec2 pos
     int index = (style->header_at_top ? style->after_header_spacing + 1 : style->after_elements_spacing) + element;
     if (node->elements[element].type == NodeView::ELEMENT_OUTPUT)
     {
-        selbox_min = (node->position + glm::vec2{ node->size.x - 1, index });
+        selbox_min = (node->position + glm::vec2{ node->size.x - 0.5f, index });
         selbox_max = selbox_min + glm::vec2{ 1, 1 };
     }
     else if (node->elements[element].type == NodeView::ELEMENT_INPUT)
     {
-        selbox_min = (node->position + glm::vec2{ 0, index });
+        selbox_min = (node->position + glm::vec2{ -0.5f, index });
         selbox_max = selbox_min + glm::vec2{ 1, 1 };
     }
     else
@@ -111,7 +116,7 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
         for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
         {
             auto node          = *it;
-            if (!checkNodeBox(node, node_space_pos / style->grid_size))
+            if (!checkNodeBox(node, node_space_pos / style->grid_size, true))
                 continue;
             node_upon_press = it;
             element_type_upon_press = NODE;
@@ -143,13 +148,13 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
                     if (element.type == ELEMENT_OUTPUT)
                     {
                         element_type_upon_press = OUTPUT_PIN;
-                        temp_link_start = selbox_min + glm::vec2{ 1.0f, 0.5f };
+                        temp_link_start = selbox_min + glm::vec2{ 0.5f, 0.5f };
                         input_output_element_index = output_index;
                     }
                     else
                     {
                         element_type_upon_press = INPUT_PIN;
-                        temp_link_start = selbox_min + glm::vec2{ 0.0f, 0.5f };
+                        temp_link_start = selbox_min + glm::vec2{ -0.5f, 0.5f };
                         input_output_element_index = input_index;
                     }
                     break;
@@ -174,6 +179,8 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
                     element_type_upon_press = LEFT_RESIZE;
                 }
             }
+            if (element_type_upon_press == NODE && !checkNodeBox(node, node_space_pos / style->grid_size, false))
+                continue;
             break;
         }
 
@@ -296,7 +303,7 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
             for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
             {
                 auto node          = *it;
-                if (!checkNodeBox(node, node_space_pos / style->grid_size))
+                if (!checkNodeBox(node, node_space_pos / style->grid_size, true))
                     continue;
                 if (!node->minimised)
                 {
