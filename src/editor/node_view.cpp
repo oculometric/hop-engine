@@ -192,7 +192,7 @@ void NodeView::addText(const string& text, glm::vec2 _start, glm::vec3 tint, int
     }
 }
 
-void NodeView::addLink(glm::vec2 link_start, glm::vec2 link_end)
+void NodeView::addLink(glm::vec2 link_start, glm::vec2 link_end, bool translucent)
 {
     float cos_a = glm::dot(glm::normalize(link_end - link_start), { 1, 0 });
     float sin_a = glm::dot(glm::normalize(link_end - link_start), { 0, 1 });
@@ -202,13 +202,13 @@ void NodeView::addLink(glm::vec2 link_start, glm::vec2 link_end)
 
     float radius = 2.0f;
     addQuadRaw(
-        {
-            link_start + glm::vec2{ -radius * cms, -radius * cps }
-    },
+        { link_start + glm::vec2{ -radius * cms, -radius * cps } },
         { link_start + glm::vec2{ -radius * cps, -radius * smc } },
         { link_end + glm::vec2{ radius * cps, radius * smc } },
-        { link_end + glm::vec2{ radius * cms, radius * cps } }, { 1, 1 }, { 0, 0 }, { 1, 1 },
-        { 0, 0, 0 }, RENDER_MODE_BOX, { 0, 1, 0 });
+        { link_end + glm::vec2{ radius * cms, radius * cps } },
+        { 1, 1 }, { 0, 0 }, { 1, 1 },
+        translucent ? glm::vec3{ 0.01f, 0.01f, 0.01f } : glm::vec3{ 0, 0, 0 },
+        RENDER_MODE_BOX, { 0, translucent ? 3 : 1, 0 });
 }
 
 void NodeView::drawNode(WeakRef<Node> node, int pass)
@@ -347,11 +347,13 @@ void NodeView::drawNode(WeakRef<Node> node, int pass)
             }
             if (in_rows_down >= target->elements.size()) break;
 
-            glm::vec2 link_start = header_position + box_width +
-                                    glm::vec2{ 0, ((float)out_rows_down + 1.5f) * style->grid_size };
-            glm::vec2 link_end = (target->position * style->grid_size) +
-                                    glm::vec2{ 0, ((float)in_rows_down + 1.5f) * style->grid_size };
-            addLink(link_start, link_end);
+            glm::vec2 link_start = node->minimised ? 
+                header_position + box_width + glm::vec2{ 0, 0.5f * style->grid_size } :
+                header_position + box_width + glm::vec2{ 0, ((float)out_rows_down + 1.5f) * style->grid_size };
+            glm::vec2 link_end = target->minimised ?
+                (target->position * style->grid_size) + glm::vec2{ 0, 0.5f * style->grid_size } :
+                (target->position * style->grid_size) + glm::vec2{ 0, ((float)in_rows_down + 1.5f) * style->grid_size };
+            addLink(link_start, link_end, node->minimised || target->minimised);
         }
     }
 

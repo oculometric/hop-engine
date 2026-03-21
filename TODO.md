@@ -2,7 +2,6 @@
 
 # v0.60
 - interactive node editor
-    - draw links to header if the target (or origin) is minimised
     - links should be BACKWARDS not forwards, add makeLink function
     - allow nodes to be resized
     - box selection

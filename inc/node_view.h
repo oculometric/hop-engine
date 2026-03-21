@@ -130,7 +130,7 @@ private:
 	void addQuad(glm::vec2 position, glm::vec2 size, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode, glm::vec3 extra = { 0.0f, 0.0f, 15.0f });
 	void addPin(glm::vec2 position, glm::vec3 tint, int type, bool filled);
 	void addText(const std::string& text, glm::vec2 _start, glm::vec3 tint, int align = -1);
-	void addLink(glm::vec2 link_start, glm::vec2 link_end);
+	void addLink(glm::vec2 link_start, glm::vec2 link_end, bool translucent = false);
     void drawNode(WeakRef<Node> node, int pass);
 };
 

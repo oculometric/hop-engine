@@ -33,7 +33,7 @@ void vertex()
     frag.uv = in_uv;
     // FIXME: consider this in viewport coordinates, round it, then take it back to clip coords
     vec2 viewport_half = floor(scene.viewport_size.xy / vec2(2, -2));
-    vec2 camera_offset = round(object.model_to_world[3].xy * vec2(0.5f, -0.5f)) / 0.5f;
+    vec2 camera_offset = floor(object.model_to_world[3].xy * vec2(0.5f, -0.5f)) / 0.5f;
     gl_Position = vec4((frag.position.xy + camera_offset) / viewport_half, 0.5f, 1.0f);
 }
 
@@ -107,6 +107,12 @@ void fragment()
         vec3 fill = fill_colour;
         if      (frag.tangent.y == 1.0f) fill = frag.colour.rgb;
         else if (frag.tangent.y == 2.0f) fill = frag.colour.rgb * fill_modulate;
+        else if (frag.tangent.y == 3.0f)
+        {
+            fill = frag.colour.rgb;
+            if (mod(floor(frag.position.x / 2.0f), 2.0f) == mod(floor(frag.position.y / 2.0f), 2.0f))
+                discard;
+        }
 
         vec3 outline = fill;
         if (frag.tangent.x > 1.0f)
