@@ -1,6 +1,7 @@
 # TODO
 
 # v0.60
+- transparent window support
 - windows 95 node style
 - interactive node editor
     - need to be able to move/disconnect existing links
@@ -10,7 +11,14 @@
     - box selection
     - right-click menu to allow adding more nodes
     - move overlays (temp link, right click menu, selection box) into their own mesh
-- transparent window support
+- ui rendering refactor
+    - general purpose text rendering (wrapping, alignment, font, underline, bold, italic, strikethrough)
+    - ui uber-shader
+    - general purpose 9-slice, image, and icon rendering kits
+    - refactor node view code somewhat
+    - ui interaction toolkit
+    - ui elements - label, button, dropdown, checkbox, textbox, slider
+    - right click menu builder
 - switch to glslang for shader compilation
 - ui input event system
     - mousedown/mouseup/mouseclick/mousedrag
@@ -25,13 +33,6 @@
     - full-screen-node log view
     - transform gizmos
     - debug meshes for cameras, lights
-- ui rendering refactor
-    - general purpose text rendering (wrapping, alignment, font, underline, bold, italic, strikethrough)
-    - general purpose 9-slice, image, and icon rendering kits
-    - refactor node view code somewhat
-    - ui interaction toolkit
-    - ui elements - label, button, dropdown, checkbox, textbox, slider
-    - right click menu builder
 ---
 
 # v0.61
