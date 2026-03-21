@@ -6,6 +6,7 @@
     - need to be able to move/disconnect existing links
     - dirty flag system for updating the mesh
     - auto-size nodes horizontally
+    - fix rendering behaviour when header is at bottom/node order is flipped
     - box selection
     - right-click menu to allow adding more nodes
     - move overlays (temp link, right click menu, selection box) into their own mesh

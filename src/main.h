@@ -20,20 +20,6 @@ public:
     void drawImGui() override;
 };
 
-class NodeApp : public Application
-{
-private:
-    WeakRef<NodeView> node_view;
-    WeakRef<NodeView::Style> style;
-
-public:
-    NodeApp();
-    ~NodeApp() = default;
-
-    void update(float delta_time) override;
-    void drawImGui() override;
-};
-
 class MuseumApp : public Application
 {
 private:

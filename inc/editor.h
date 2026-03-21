@@ -14,6 +14,7 @@ public:
     Editor();
 
     void update(float delta_time) override;
+    void drawImGui() override;
 };
 
 }

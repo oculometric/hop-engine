@@ -638,3 +638,72 @@ void RenderGraph::drawImGuiDebug()
 	}
 	ImGui::Text("hover over a render step for more info");
 }
+
+void NodeView::drawImGuiDebug()
+{
+    ImGui::Begin("style controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    {
+        if (ImGui::CollapsingHeader("header", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::InputInt("header_align", &style->header_align, 1, 1);
+            ImGui::Checkbox("header_at_top", &style->header_at_top);
+            ImGui::Checkbox("header_fill", &style->header_fill);
+            ImGui::InputInt("after_header_spacing", &style->after_header_spacing, 1, 1);
+            ImGui::Spacing();
+        }
+
+        if (ImGui::CollapsingHeader("text", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::SliderFloat2("text_offset", (float*)&style->text_offset, -10.0f, 10.0f);
+            ImGui::ColorEdit3("text_colour", (float*)&style->text_colour);
+            ImGui::SliderFloat("text_spacing", &style->text_spacing, -2.0f, 4.0f);
+            ImGui::Spacing();
+        }
+
+        if (ImGui::CollapsingHeader("outline", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::Combo("outline_style", (int*)&style->outline_style, "HIDDEN\0PRESET_COLOUR\0NODE_COLOUR\0MODULATE_NODE_COLOUR\0");
+            ImGui::ColorEdit3("outline_colour", (float*)&style->outline_colour);
+            ImGui::ColorEdit3("outline_colour_highlight", (float*)&style->outline_colour_highlight);
+            ImGui::SliderFloat("outline_colour_mult", &style->outline_colour_mult, 0.0f, 1.0f);
+            ImGui::Spacing();
+        }
+
+        if (ImGui::CollapsingHeader("fill", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::Checkbox("fill_modulate_colour", &style->fill_modulate_colour);
+            ImGui::ColorEdit3("fill_colour", (float*)&style->fill_colour);
+            ImGui::SliderFloat("fill_colour_mult", &style->fill_colour_mult, 0.0f, 1.0f);
+            ImGui::Spacing();
+        }
+
+        if (ImGui::CollapsingHeader("background", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::ColorEdit3("background_colour", (float*)&style->background_colour);
+            ImGui::Checkbox("show_grid", &style->show_grid);
+            ImGui::InputInt("grid_scale", &style->grid_scale, 1);
+            ImGui::ColorEdit3("grid_colour", (float*)&style->grid_colour);
+            ImGui::SliderFloat("grid_dots_modulate", &style->grid_dots_modulate, 0.0f, 10.0f);
+            ImGui::Spacing();
+        }
+
+        if (ImGui::CollapsingHeader("elements", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::InputFloat("pin_offset", &style->pin_offset, 1.0f, 1.0f);
+            ImGui::Checkbox("reverse_element_order", &style->reverse_element_order);
+            ImGui::Checkbox("center_text_elements", &style->center_text_elements);
+            ImGui::InputInt("after_elements_spacing", &style->after_elements_spacing, 1, 1);
+            ImGui::Spacing();
+        }
+
+        ImGui::Checkbox("shadows", &style->shadows);
+        ImGui::SliderFloat2("shadow_offset", (float*)&style->shadow_offset, -12, 12);
+        ImGui::ColorEdit3("shadow_colour", (float*)&style->shadow_colour);
+
+        ImGui::Spacing();
+        if (ImGui::Button("update style"))
+            setStyle(style);
+
+        ImGui::End();
+    }
+}
