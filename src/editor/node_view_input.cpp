@@ -145,16 +145,15 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
                     if (!checkPinBox(node, actual_index, node_space_pos / style->grid_size, style, selbox_min))
                         continue;
                     
+                    temp_link_start = selbox_min + glm::vec2{ 0.5f, 0.5f };
                     if (element.type == ELEMENT_OUTPUT)
                     {
                         element_type_upon_press = OUTPUT_PIN;
-                        temp_link_start = selbox_min + glm::vec2{ 0.5f, 0.5f };
                         input_output_element_index = output_index;
                     }
                     else
                     {
                         element_type_upon_press = INPUT_PIN;
-                        temp_link_start = selbox_min + glm::vec2{ -0.5f, 0.5f };
                         input_output_element_index = input_index;
                     }
                     break;
@@ -321,8 +320,38 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
                         if (element.type == ELEMENT_OUTPUT)
                             continue;
 
-                        cur->outgoing_links.resize(glm::max(cur->outgoing_links.size(), static_cast<size_t>(input_output_element_index) + 1));
-                        cur->outgoing_links[input_output_element_index] = { node, input_index };
+                        makeLink(cur, input_output_element_index, node, input_index);
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+        else if (element_type_upon_press == INPUT_PIN)
+        {
+            auto cur = *node_upon_press;
+            for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
+            {
+                auto node          = *it;
+                if (!checkNodeBox(node, node_space_pos / style->grid_size, true))
+                    continue;
+                if (!node->minimised)
+                {
+                    int actual_index = -1;
+                    int output_index = -1;
+                    for (const auto& element : node->elements)
+                    {
+                        if (element.type == ELEMENT_OUTPUT)
+                            ++output_index;
+                        ++actual_index;
+                        glm::vec2 selbox_min;
+                        if (!checkPinBox(node, actual_index, node_space_pos / style->grid_size, style, selbox_min))
+                            continue;
+                        
+                        if (element.type == ELEMENT_INPUT)
+                            continue;
+
+                        makeLink(node, output_index, cur, input_output_element_index);
                         break;
                     }
                 }

@@ -38,14 +38,27 @@ public:
 
 	struct Node final
 	{
+        friend class NodeView;
+    private:
+        WeakRef<Node> self;
+		std::vector<std::pair<WeakRef<Node>, size_t>> incoming_links;
+    public:
 		std::string title = "node";
 		std::vector<NodeElement> elements;
 		glm::vec2 position = { 0, 0 };
 		glm::vec2 size = { 8, 1 };
 		glm::vec3 colour = { 1.0f, 0.44f, 0.0f };
-		std::vector<std::pair<WeakRef<Node>, size_t>> outgoing_links;
 		bool highlighted = false;
 		bool minimised = false;
+
+        WeakRef<Node> input(const std::string& text) { elements.push_back(NodeElement(text, ELEMENT_INPUT)); return self; }
+        WeakRef<Node> output(const std::string& text) { elements.push_back(NodeElement(text, ELEMENT_OUTPUT)); return self; }
+        WeakRef<Node> text(const std::string& text)  { elements.push_back(NodeElement(text, ELEMENT_TEXT)); return self; }
+        WeakRef<Node> space() { elements.push_back(NodeElement("", ELEMENT_SPACE)); return self; }
+
+    private:
+        DELETE_NOT_ALL_CONSTRUCTORS(Node);
+        Node() = default;
 	};
 
 	enum OutlineStyle
@@ -103,9 +116,9 @@ public:
 	};
 
 public:
-	std::vector<Ref<Node>> nodes;
 
 private:
+	std::vector<Ref<Node>> nodes;
 	std::vector<Mesh::Vertex> vertices;
 	std::vector<uint16_t> indices;
 	Ref<Style> style;
@@ -124,6 +137,8 @@ public:
 	void setStyle(Ref<Style> new_style);
 	void updateMesh();
 	bool checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size);
+    WeakRef<Node> makeNode(const std::string& title, glm::vec3 colour, int tiles_wide);
+    void makeLink(WeakRef<Node> sender_node, size_t output_index, WeakRef<Node> receiver_node, size_t input_index);
 
 private:
     void addQuadRaw(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 norm_xy, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode, glm::vec3 extra);

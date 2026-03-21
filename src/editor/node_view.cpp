@@ -326,11 +326,11 @@ void NodeView::drawNode(WeakRef<Node> node, int pass)
     if (pass == 2)
     {
         int out_rows_down = -1;
-        for (auto& link : node->outgoing_links)
+        for (auto& link : node->incoming_links)
         {
             ++out_rows_down;
             while (out_rows_down < node->elements.size() &&
-                    node->elements[out_rows_down].type != ELEMENT_OUTPUT)
+                    node->elements[out_rows_down].type != ELEMENT_INPUT)
                 ++out_rows_down;
             if (out_rows_down >= node->elements.size()) break;
             if (!link.first) continue;
@@ -340,24 +340,41 @@ void NodeView::drawNode(WeakRef<Node> node, int pass)
             int in_inputs_seen = 0;
             while (in_rows_down < target->elements.size() &&
                     !(in_inputs_seen == link.second &&
-                        target->elements[in_rows_down].type == ELEMENT_INPUT))
+                        target->elements[in_rows_down].type == ELEMENT_OUTPUT))
             {
-                if (target->elements[in_rows_down].type == ELEMENT_INPUT) ++in_inputs_seen;
+                if (target->elements[in_rows_down].type == ELEMENT_OUTPUT) ++in_inputs_seen;
                 ++in_rows_down;
             }
             if (in_rows_down >= target->elements.size()) break;
 
             glm::vec2 link_start = node->minimised ? 
-                header_position + box_width + glm::vec2{ 0, 0.5f * style->grid_size } :
-                header_position + box_width + glm::vec2{ 0, ((float)out_rows_down + 1.5f) * style->grid_size };
+                header_position + glm::vec2{ 0, 0.5f * style->grid_size } :
+                header_position + glm::vec2{ 0, ((float)out_rows_down + 1.5f) * style->grid_size };
             glm::vec2 link_end = target->minimised ?
-                (target->position * style->grid_size) + glm::vec2{ 0, 0.5f * style->grid_size } :
-                (target->position * style->grid_size) + glm::vec2{ 0, ((float)in_rows_down + 1.5f) * style->grid_size };
+                (target->position + glm::vec2{ target->size.x, 0.5f }) * style->grid_size :
+                (target->position + glm::vec2{ target->size.x, (float)in_rows_down + 1.5f }) * style->grid_size;
             addLink(link_start, link_end, node->minimised || target->minimised);
         }
     }
 
     // TODO: come up with a list of input types
+}
+
+WeakRef<NodeView::Node> NodeView::makeNode(const string& title, glm::vec3 colour, int tiles_wide)
+{
+    Ref<Node> node = new Node();
+    node->title = title;
+    node->colour = colour;
+    node->self = node;
+    node->size.x = static_cast<float>(tiles_wide);
+    nodes.push_back(node);
+    return node;
+}
+
+void NodeView::makeLink(WeakRef<Node> sender_node, size_t output_index, WeakRef<Node> receiver_node, size_t input_index)
+{
+    receiver_node->incoming_links.resize(glm::max(input_index + 1, receiver_node->incoming_links.size()));
+    receiver_node->incoming_links[input_index] = { sender_node, output_index };
 }
 
 NodeView::~NodeView()

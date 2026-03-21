@@ -26,100 +26,59 @@ Editor::Editor()
     view_nodes = Scene::create("Node Editor");
     {
         node_view = view_nodes->addObject<NodeView>("nodes");
-        node_view->nodes.push_back(new NodeView::Node{
-            "Camera",
-            {
-              { "main_cam", NodeView::ELEMENT_TEXT },
-              { "slot: 0", NodeView::ELEMENT_TEXT },
-              { "colour", NodeView::ELEMENT_OUTPUT },
-              { "data_0", NodeView::ELEMENT_OUTPUT },
-              { "data_1", NodeView::ELEMENT_OUTPUT },
-              { "data_2", NodeView::ELEMENT_OUTPUT },
-              { "depth", NodeView::ELEMENT_OUTPUT },
-              },
-            glm::vec2{ -16, -5 },
-            glm::vec2{ 4, 1 },
-            glm::vec3{ 1, 0, 0 }
-        });
-        node_view->nodes.push_back(new NodeView::Node{
-            "Camera",
-            {
-              { "right_cam", NodeView::ELEMENT_TEXT },
-              { "slot: 1", NodeView::ELEMENT_TEXT },
-              { "colour", NodeView::ELEMENT_OUTPUT },
-              { "data_0", NodeView::ELEMENT_OUTPUT },
-              { "data_1", NodeView::ELEMENT_OUTPUT },
-              { "data_2", NodeView::ELEMENT_OUTPUT },
-              { "depth", NodeView::ELEMENT_OUTPUT },
-              },
-            glm::vec2{ -11, -4 },
-            glm::vec2{ 4, 1 },
-            glm::vec3{ 1, 0, 0 }
-        });
-        node_view->nodes.push_back(new NodeView::Node{
-            "Camera",
-            {
-              { "ring_doorbell", NodeView::ELEMENT_TEXT },
-              { "slot: 2", NodeView::ELEMENT_TEXT },
-              { "colour", NodeView::ELEMENT_OUTPUT },
-              { "data_0", NodeView::ELEMENT_OUTPUT },
-              { "data_1", NodeView::ELEMENT_OUTPUT },
-              { "data_2", NodeView::ELEMENT_OUTPUT },
-              { "depth", NodeView::ELEMENT_OUTPUT },
-              },
-            glm::vec2{ -6, -3 },
-            glm::vec2{ 5, 1 },
-            glm::vec3{ 1, 0, 0 }
-        });
-        node_view->nodes.push_back(new NodeView::Node{
-            "Shader",
-            {
-              { "ssao", NodeView::ELEMENT_TEXT },
-              { "shader", NodeView::ELEMENT_INPUT, 3 },
-              { "tex_norm", NodeView::ELEMENT_INPUT },
-              { "tex_depth", NodeView::ELEMENT_INPUT },
-              { "colour", NodeView::ELEMENT_OUTPUT },
-              },
-            glm::vec2{ 0, -1 },
-            glm::vec2{ 4, 1 },
-            glm::vec3{ 0, 1, 0.8f }
-        });
-        node_view->nodes.push_back(new NodeView::Node{
-            "Shader",
-            {
-              { "multi_composite", NodeView::ELEMENT_TEXT },
-              { "shader", NodeView::ELEMENT_INPUT, 3 },
-              { "tex_a", NodeView::ELEMENT_INPUT },
-              { "tex_b", NodeView::ELEMENT_INPUT },
-              { "tex_c", NodeView::ELEMENT_INPUT },
-              { "colour", NodeView::ELEMENT_OUTPUT },
-              },
-            glm::vec2{ 5, -3 },
-            glm::vec2{ 6, 1 },
-            glm::vec3{ 0, 1, 0.8f }
-        });
-        node_view->nodes.push_back(new NodeView::Node{
-            "Shader",
-            {
-              { "final_pass", NodeView::ELEMENT_TEXT },
-              { "shader", NodeView::ELEMENT_INPUT, 3 },
-              { "tex", NodeView::ELEMENT_INPUT },
-              { "colour", NodeView::ELEMENT_OUTPUT },
-              },
-            glm::vec2{ 12, 0 },
-            glm::vec2{ 5, 1 },
-            glm::vec3{ 0, 1, 0.8f }
-        });
-        node_view->nodes.push_back(new NodeView::Node{
-            "Screen",
-            {
-              { "texture", NodeView::ELEMENT_INPUT },
-              },
-            glm::vec2{ 18, 3 },
-            glm::vec2{ 4, 1 },
-            glm::vec3{ 0.7f, 0.2f, 0 }
-        });
-        node_view->setStyle(node_view->getStyle());
+        node_view->makeNode("Camera", { 1, 0, 0 }, 4)
+            ->text("main_cam")
+            ->text("slot: 0")
+            ->output("colour")
+            ->output("data_0")
+            ->output("data_1")
+            ->output("data_2")
+            ->output("depth")
+            ->position = { -16, -5 };
+        node_view->makeNode("Camera", { 1, 0, 0 }, 4)
+            ->text("right_cam")
+            ->text("slot: 1")
+            ->output("colour")
+            ->output("data_0")
+            ->output("data_1")
+            ->output("data_2")
+            ->output("depth")
+            ->position = { -11, -4 };
+        node_view->makeNode("Camera", { 1, 0, 0 }, 5)
+            ->text("ring_doorbell")
+            ->text("slot: 2")
+            ->output("colour")
+            ->output("data_0")
+            ->output("data_1")
+            ->output("data_2")
+            ->output("depth")
+            ->position = { -6, -3 };
+        node_view->makeNode("Shader", { 0, 1, 0.8f }, 4)
+            ->text("ssao")
+            ->input("shader")
+            ->input("tex_norm")
+            ->input("tex_depth")
+            ->output("colour")
+            ->position = { 0, -1 };
+        node_view->makeNode("Shader", { 0, 1, 0.8f }, 6)
+            ->text("multi_composite")
+            ->input("shader")
+            ->input("tex_a")
+            ->input("tex_b")
+            ->input("tex_c")
+            ->output("colour")
+            ->position = { 5, -3 };
+        node_view->makeNode("Shader", { 0, 1, 0.8f }, 5)
+            ->text("final_pass")
+            ->input("shader")
+            ->input("tex")
+            ->output("colour")
+            ->position = { 12, 0 };
+        node_view->makeNode("Screen", { 0.7f, 0.2f, 0 }, 4)
+            ->input("texture")
+            ->position = { 18, 3 };
+            
+        node_view->updateMesh();
 
         view_nodes->addObject<CameraComponent>("camera");
     }

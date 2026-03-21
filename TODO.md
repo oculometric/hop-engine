@@ -3,7 +3,9 @@
 # v0.60
 - windows 95 node style
 - interactive node editor
-    - links should be BACKWARDS not forwards, add makeLink function
+    - need to be able to move/disconnect existing links
+    - dirty flag system for updating the mesh
+    - auto-size nodes horizontally
     - box selection
     - right-click menu to allow adding more nodes
     - move overlays (temp link, right click menu, selection box) into their own mesh
