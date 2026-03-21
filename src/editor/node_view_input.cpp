@@ -103,12 +103,8 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
         Input::unlockMouse();
 
     // TODO: right mouse support
-    if (state == IDLE && Input::wasMousePressed(Input::MOUSE_LEFT))
+    if (state == IDLE)
     {
-        mouse_pos_upon_press = node_space_pos;
-        button_upon_press = Input::MOUSE_LEFT;
-        state = MOUSE_PRESSING;
-
         // a click event is starting, find element under the mouse when it was pressed
         node_upon_press = nodes.rend();
         element_type_upon_press = NONE;
@@ -156,7 +152,6 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
                         temp_link_start = selbox_min + glm::vec2{ 0.0f, 0.5f };
                         input_output_element_index = input_index;
                     }
-                    draw_temp_link = true;
                     break;
                 }
             }
@@ -180,6 +175,30 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
                 }
             }
             break;
+        }
+
+        switch (element_type_upon_press)
+        {
+        case NONE:
+        case MINIMISE_BUT:
+        case NODE:
+            Input::setCursorImage(Input::CURSOR_NORMAL); break;
+        case INPUT_PIN:
+        case OUTPUT_PIN:
+            Input::setCursorImage(Input::CURSOR_HAND); break;
+        case RIGHT_RESIZE:
+        case LEFT_RESIZE:
+            Input::setCursorImage(Input::CURSOR_RESIZE_HORIZONTAL); break;
+        }
+
+        if (Input::wasMousePressed(Input::MOUSE_LEFT))
+        {
+            mouse_pos_upon_press = node_space_pos;
+            button_upon_press = Input::MOUSE_LEFT;
+            state = MOUSE_PRESSING;
+
+            if (element_type_upon_press == OUTPUT_PIN || element_type_upon_press == INPUT_PIN)
+                draw_temp_link = true;
         }
     }
     else if (state == MOUSE_PRESSING && Input::isMouseDown(Input::MOUSE_LEFT))

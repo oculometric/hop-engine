@@ -3,7 +3,6 @@
 # v0.60
 - windows 95 node style
 - interactive node editor
-    - add mouse over types
     - fix click-box for node so that sub-elements can stick out slightly
     - links should be BACKWARDS not forwards, add makeLink function
     - box selection

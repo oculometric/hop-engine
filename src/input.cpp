@@ -166,19 +166,7 @@ void Input::setCursorVisible(const bool visible)
 
 void Input::setCursorImage(CursorType type)
 {
-    if (instance->cursor)
-        glfwDestroyCursor(instance->cursor);
-    switch (type)
-    {
-        case CURSOR_NORMAL: instance->cursor = nullptr; break;
-        case CURSOR_RESIZE_HORIZONTAL: instance->cursor = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR); break;
-        case CURSOR_RESIZE_VERTICAL: instance->cursor = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR); break;
-        case CURSOR_TEXT: instance->cursor = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR); break;
-        case CURSOR_CROSSHAIR: instance->cursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR); break;
-        case CURSOR_HAND: instance->cursor = glfwCreateStandardCursor(GLFW_HAND_CURSOR); break;
-        case CURSOR_BUSY: instance->cursor = glfwCreateStandardCursor(GLFW_NOT_ALLOWED_CURSOR); break;
-    }
-    glfwSetCursor(instance->window, instance->cursor);
+    glfwSetCursor(instance->window, instance->cursors[type]);
 }
 
 void Input::applyCallbackBindings()
@@ -207,6 +195,14 @@ void Input::mouseButtonCallback(GLFWwindow* window, const int button, const int 
 
 Input::Input()
 {
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 	instance = this;
-	applyCallbackBindings();
+    cursors[CURSOR_NORMAL]            = nullptr;
+    cursors[CURSOR_RESIZE_HORIZONTAL] = glfwCreateStandardCursor(GLFW_RESIZE_EW_CURSOR);
+    cursors[CURSOR_RESIZE_VERTICAL]   = glfwCreateStandardCursor(GLFW_RESIZE_NS_CURSOR);
+    cursors[CURSOR_TEXT]              = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+    cursors[CURSOR_CROSSHAIR]         = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
+    cursors[CURSOR_HAND]              = glfwCreateStandardCursor(GLFW_POINTING_HAND_CURSOR);
+    cursors[CURSOR_BUSY]              = glfwCreateStandardCursor(GLFW_NOT_ALLOWED_CURSOR);
+    applyCallbackBindings();
 }

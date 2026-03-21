@@ -2,6 +2,7 @@
 
 #include <glm/vec2.hpp>
 #include <set>
+#include <array>
 #include <map>
 
 #include "common.h"
@@ -146,12 +147,13 @@ public:
         CURSOR_TEXT,
         CURSOR_CROSSHAIR,
         CURSOR_HAND,
-        CURSOR_BUSY
+        CURSOR_BUSY,
+        CURSOR_MAX_ENUM
     };
 
 private:
 	GLFWwindow* window;
-    GLFWcursor* cursor;
+    std::array<GLFWcursor*, CURSOR_MAX_ENUM> cursors;
 	std::set<int> pressed_since_checked;
 	std::set<MouseButton> pressed_since_checked_mouse;
 	std::map<int, GamepadState> gamepad_states;
