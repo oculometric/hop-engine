@@ -214,7 +214,7 @@ void NodeView::addLink(glm::vec2 link_start, glm::vec2 link_end, bool translucen
 void NodeView::drawNode(WeakRef<Node> node, int pass)
 {
     const glm::vec2 position = node->position * style->grid_size;
-    int node_width_tiles     = static_cast<int>(node->size.x);
+    float node_width_tiles     = node->size.x;
     int node_height_tiles = static_cast<int>(node->elements.size()) + style->after_header_spacing +
                             style->after_elements_spacing;
     node->size.y = static_cast<float>(node_height_tiles);

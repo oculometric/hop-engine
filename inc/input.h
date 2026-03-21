@@ -7,6 +7,7 @@
 #include "common.h"
 
 struct GLFWwindow;
+struct GLFWcursor;
 
 namespace HopEngine
 {
@@ -137,8 +138,20 @@ public:
 		float axes[9] = { 0.0f };
 	};
 	
+    enum CursorType
+    {
+        CURSOR_NORMAL,
+        CURSOR_RESIZE_HORIZONTAL,
+        CURSOR_RESIZE_VERTICAL,
+        CURSOR_TEXT,
+        CURSOR_CROSSHAIR,
+        CURSOR_HAND,
+        CURSOR_BUSY
+    };
+
 private:
 	GLFWwindow* window;
+    GLFWcursor* cursor;
 	std::set<int> pressed_since_checked;
 	std::set<MouseButton> pressed_since_checked_mouse;
 	std::map<int, GamepadState> gamepad_states;
@@ -168,6 +181,7 @@ public:
     static void lockMouseToRectangle(glm::vec2 min, glm::vec2 max);
     static void unlockMouse();
 	static void setCursorVisible(bool visible);
+    static void setCursorImage(CursorType type);
 
 	static bool isGamepadButtonDown(GamepadButton button, int controller = 0);
 	static float getGamepadAxis(GamepadAxis axis, int controller = 0);

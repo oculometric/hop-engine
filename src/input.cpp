@@ -164,6 +164,23 @@ void Input::setCursorVisible(const bool visible)
 	glfwSetInputMode(instance->window, GLFW_CURSOR, visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 }
 
+void Input::setCursorImage(CursorType type)
+{
+    if (instance->cursor)
+        glfwDestroyCursor(instance->cursor);
+    switch (type)
+    {
+        case CURSOR_NORMAL: instance->cursor = nullptr; break;
+        case CURSOR_RESIZE_HORIZONTAL: instance->cursor = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR); break;
+        case CURSOR_RESIZE_VERTICAL: instance->cursor = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR); break;
+        case CURSOR_TEXT: instance->cursor = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR); break;
+        case CURSOR_CROSSHAIR: instance->cursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR); break;
+        case CURSOR_HAND: instance->cursor = glfwCreateStandardCursor(GLFW_HAND_CURSOR); break;
+        case CURSOR_BUSY: instance->cursor = glfwCreateStandardCursor(GLFW_NOT_ALLOWED_CURSOR); break;
+    }
+    glfwSetCursor(instance->window, instance->cursor);
+}
+
 void Input::applyCallbackBindings()
 {
 	instance->window = RenderServer::getWindow();

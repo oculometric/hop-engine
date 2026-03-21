@@ -19,7 +19,9 @@ enum UIElement
     NODE,
     MINIMISE_BUT,
     INPUT_PIN,
-    OUTPUT_PIN
+    OUTPUT_PIN,
+    RIGHT_RESIZE,
+    LEFT_RESIZE,
 };
 
 static bool checkNodeBox(WeakRef<NodeView::Node> node, glm::vec2 pos)
@@ -127,6 +129,7 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
             }
             else if (!node->minimised)
             {
+                // if node is not minimised, check if the user is dragging from a pin
                 int actual_index = -1;
                 int output_index = -1;
                 int input_index = -1;
@@ -155,6 +158,25 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
                     }
                     draw_temp_link = true;
                     break;
+                }
+            }
+            if (element_type_upon_press == NODE)
+            {
+                // if the user wasnt dragging a pin, then check if they're on an edge anyway
+                glm::vec2 edgebox_min = (node->position + glm::vec2{ node->size.x - 0.5f, 0 }) * style->grid_size;
+                glm::vec2 edgebox_max = edgebox_min + (glm::vec2{ 1.0f, node->size.y + 1.0f } * style->grid_size);
+                if (node_space_pos.x >= edgebox_min.x && node_space_pos.x <= edgebox_max.x
+                 && node_space_pos.y >= edgebox_min.y && node_space_pos.y <= edgebox_max.y)
+                {
+                    element_type_upon_press = RIGHT_RESIZE;
+                }
+
+                edgebox_min = (node->position + glm::vec2{ -0.5f, 0 }) * style->grid_size;
+                edgebox_max = edgebox_min + (glm::vec2{ 1.0f, node->size.y + 1.0f } * style->grid_size);
+                if (node_space_pos.x >= edgebox_min.x && node_space_pos.x <= edgebox_max.x
+                 && node_space_pos.y >= edgebox_min.y && node_space_pos.y <= edgebox_max.y)
+                {
+                    element_type_upon_press = LEFT_RESIZE;
                 }
             }
             break;
@@ -212,6 +234,19 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
             temp_link_end = node_space_pos / style->grid_size;
             needs_update = true;
         }
+        else if (element_type_upon_press == RIGHT_RESIZE)
+        {
+            auto node = *node_upon_press;
+            node->size.x += Input::getMouseDelta().x / style->grid_size;
+            needs_update = true;
+        }
+        else if (element_type_upon_press == LEFT_RESIZE)
+        {
+            auto node = *node_upon_press;
+            node->size.x -= Input::getMouseDelta().x / style->grid_size;
+            node->position.x += Input::getMouseDelta().x / style->grid_size;
+            needs_update = true;
+        }
         else
         {
             // if mouse was dragged from a node, move some nodes!
@@ -267,6 +302,12 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
                 }
                 break;
             }
+        }
+        else if (element_type_upon_press == RIGHT_RESIZE || element_type_upon_press == LEFT_RESIZE)
+        {
+            auto node = *node_upon_press;
+            node->size.x = glm::round(node->size.x);
+            node->position.x = glm::round(node->position.x);
         }
         else
         {
