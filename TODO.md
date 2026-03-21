@@ -1,18 +1,18 @@
 # TODO
 
 # v0.60
+- windows 95 node style
 - interactive node editor
     - links should be BACKWARDS not forwards, add makeLink function
     - allow nodes to be resized
     - box selection
     - right-click menu to allow adding more nodes
     - move overlays (temp link, right click menu, selection box) into their own mesh
+- ui input event system
 - transparent window support
-- windows 95 node style
 - eliminate the tautological compare thing
 - switch to glslang for shader compilation
 - object duplicate function
-
 - actual editor
     - resizeable/swappable views
     - editor build target
@@ -27,6 +27,7 @@
     - refactor node view code somewhat
     - ui interaction toolkit
     - ui elements - label, button, dropdown, checkbox, textbox, slider
+    - right click menu builder
 ---
 
 # v0.61

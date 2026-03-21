@@ -144,6 +144,9 @@ private:
 	std::map<int, GamepadState> gamepad_states;
 	glm::vec2 mouse_delta;
 	glm::vec2 mouse_position;
+    glm::vec2 mouse_lock_min;
+    glm::vec2 mouse_lock_max;
+    bool lock_mouse = false;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Input);
@@ -151,18 +154,23 @@ public:
 	static void init();
 	static void destroy();
 
+	static void pollInput();
+	static void applyCallbackBindings();
+
 	static bool isKeyDown(int key);
 	static bool wasKeyPressed(int key);
 	static float getAxis(int key_negative, int key_positive);
+
 	static bool isMouseDown(MouseButton button);
 	static bool wasMousePressed(MouseButton button);
 	static glm::vec2 getMouseDelta();
 	static glm::vec2 getMousePosition();
-	static void pollInput();
+    static void lockMouseToRectangle(glm::vec2 min, glm::vec2 max);
+    static void unlockMouse();
+	static void setCursorVisible(bool visible);
+
 	static bool isGamepadButtonDown(GamepadButton button, int controller = 0);
 	static float getGamepadAxis(GamepadAxis axis, int controller = 0);
-	static void setCursorVisible(bool visible);
-	static void applyCallbackBindings();
 
 private:
 	Input();

@@ -1,5 +1,6 @@
 #include "input.h"
 
+#include <glm/glm.hpp>
 #include <imgui/imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #define GLFW_INCLUDE_VULKAN
@@ -82,6 +83,18 @@ glm::vec2 Input::getMousePosition()
 	return instance->mouse_position;
 }
 
+void Input::lockMouseToRectangle(glm::vec2 min, glm::vec2 max)
+{
+    instance->lock_mouse = true;
+    instance->mouse_lock_min = min;
+    instance->mouse_lock_max = max;
+}
+
+void Input::unlockMouse()
+{
+    instance->lock_mouse = false;
+}
+
 void Input::pollInput()
 {
     glfwPollEvents();
@@ -93,6 +106,12 @@ void Input::pollInput()
 	glm::vec2 new_mouse = { static_cast<float>(new_mouse_x), static_cast<float>(new_mouse_y) };
 	instance->mouse_delta = new_mouse - instance->mouse_position;
 	instance->mouse_position = new_mouse;
+
+    if (instance->lock_mouse)
+    {
+        instance->mouse_position = glm::clamp(instance->mouse_position, instance->mouse_lock_min, instance->mouse_lock_max);
+        glfwSetCursorPos(instance->window, static_cast<double>(instance->mouse_position.x), static_cast<double>(instance->mouse_position.y));
+    }
 
 	for (int i = 0; i <= GLFW_JOYSTICK_LAST; ++i)
 	{

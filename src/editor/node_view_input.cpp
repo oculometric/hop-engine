@@ -94,8 +94,11 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
     if (Input::isMouseDown(Input::MOUSE_RIGHT) || Input::isMouseDown(Input::MOUSE_MIDDLE))
     {
         getTransform().translateLocal(glm::vec3(Input::getMouseDelta(), 0));
+        Input::lockMouseToRectangle(rect_min, rect_min + rect_size);
         return true;
     }
+    else
+        Input::unlockMouse();
 
     // TODO: right mouse support
     if (state == IDLE && Input::wasMousePressed(Input::MOUSE_LEFT))
