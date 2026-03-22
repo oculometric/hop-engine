@@ -258,7 +258,7 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
             scene.scene->draw(command_buffer, glm::u32vec2(scene.size_uv * glm::vec2(swapchain->getExtent())));
     }
     
-    final_render_pass->begin(command_buffer, glm::vec3{ 0.02f, 0.02f, 0.02f });
+    final_render_pass->begin(command_buffer, glm::vec3{ 0.02f, 0.02f, 0.02f }, true);
     
     for (auto& scene : scenes)
     {

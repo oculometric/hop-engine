@@ -2,6 +2,7 @@
 
 # v0.60
 - windows 95 node style
+- make validation layers optional
 - interactive node editor
     - need to be able to move/disconnect existing links
     - dirty flag system for updating the mesh
@@ -19,6 +20,7 @@
     - ui elements - label, button, dropdown, checkbox, textbox, slider
     - right click menu builder
 - switch to glslang for shader compilation
+- fix mouse locking not behaving correctly on linux
 - ui input event system
     - mousedown/mouseup/mouseclick/mousedrag
     - keydown/keyup

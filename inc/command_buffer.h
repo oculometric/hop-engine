@@ -66,7 +66,7 @@ public:
 	VkCommandBuffer getCommandBuffer() const { return buffer; }
 	
 	// these get called by different assets (render pass, material, shader, object, etc)
-	void startRenderPassInternal(GPUHandle render_pass, GPUHandle framebuffer, glm::u32vec2 extent, std::vector<VkClearValue> clear_values, glm::vec3 clear_colour);
+	void startRenderPassInternal(GPUHandle render_pass, GPUHandle framebuffer, glm::u32vec2 extent, std::vector<VkClearValue> clear_values, glm::vec3 clear_colour, bool transparent);
 	void bindPipelineInternal(GPUHandle pipeline);
 	void bindPipelineLayoutInternal(GPUHandle pipeline_layout);
 	void bindDescriptorSetInternal(size_t set, GPUHandle descriptor_set);

@@ -92,9 +92,9 @@ void RenderPass::resize(const glm::u32vec2 new_extent)
     createResources();
 }
 
-void RenderPass::begin(WeakRef<DrawCommandBuffer> command_buffer, glm::vec3 clear_colour)
+void RenderPass::begin(WeakRef<DrawCommandBuffer> command_buffer, glm::vec3 clear_colour, bool transparent)
 {
-    command_buffer->startRenderPassInternal(render_pass, framebuffers[command_buffer->getImageIndex() % framebuffers.size()], extent, getClearValues(), clear_colour);
+    command_buffer->startRenderPassInternal(render_pass, framebuffers[command_buffer->getImageIndex() % framebuffers.size()], extent, getClearValues(), clear_colour, transparent);
 }
 
 void RenderPass::createRenderPass()
