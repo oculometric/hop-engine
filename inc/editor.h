@@ -1,3 +1,5 @@
+#pragma once
+
 #include "hop_engine.h"
 
 namespace HopEngine

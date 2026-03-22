@@ -1,7 +1,6 @@
 # TODO
 
 # v0.60
-- windows 95 node style
 - interactive node editor
     - need to be able to move/disconnect existing links
     - dirty flag system for updating the mesh

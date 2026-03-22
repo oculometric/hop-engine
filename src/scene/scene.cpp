@@ -110,7 +110,7 @@ Ref<Scene> Scene::create(const std::string& name)
 
 Scene::~Scene()
 {
-	DBG_INFO("destroying scene " + PTR(this));
+	DBG_INFO("destroying scene " + getOrigin());
 }
 
 vector<WeakRef<Object>> Scene::getAllObjects() const
