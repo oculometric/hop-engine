@@ -1,7 +1,6 @@
 # TODO
 
 # v0.60
-- transparent window support
 - windows 95 node style
 - interactive node editor
     - need to be able to move/disconnect existing links

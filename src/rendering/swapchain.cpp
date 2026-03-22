@@ -189,7 +189,12 @@ void Swapchain::createSwapchain()
     }
     SupportInfo si = Swapchain::getSwapchainSupportInfo(RenderServer::getPhysicalDevice());
     create_info.preTransform = si.surface_capabilities[0].currentTransform;
-    create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    if (si.surface_capabilities[0].supportedCompositeAlpha & VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR)
+        create_info.compositeAlpha = VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR;
+    else if (si.surface_capabilities[0].supportedCompositeAlpha & VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR)
+        create_info.compositeAlpha = VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR;
+    else
+        create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     create_info.presentMode = vsync_enabled ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR;
     create_info.clipped = VK_TRUE;
     create_info.oldSwapchain = VK_NULL_HANDLE;

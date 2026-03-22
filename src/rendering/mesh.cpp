@@ -113,32 +113,32 @@ void Mesh::uploadFromArrays(const vector<Vertex>& verts, const vector<uint16_t>&
     if (accessible)
     {
         if (!vertex_buffer || vertex_buffer->getSize() != vertex_buffer_size)
-            vertex_buffer = new Buffer(vertex_buffer_size, Buffer::BUFFER_USAGE_VERTEX,
+            vertex_buffer = new Buffer(glm::max(vertex_buffer_size, static_cast<size_t>(4)), Buffer::BUFFER_USAGE_VERTEX,
                 MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
         memcpy(vertex_buffer->mapMemory(), verts.data(), vertex_data_size);
         vertex_buffer->unmapMemory();
 
         if (!index_buffer || index_buffer->getSize() != index_buffer_size)
-            index_buffer = new Buffer(index_buffer_size, Buffer::BUFFER_USAGE_INDEX,
+            index_buffer = new Buffer(glm::max(index_buffer_size, static_cast<size_t>(4)), Buffer::BUFFER_USAGE_INDEX,
                 MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
         memcpy(index_buffer->mapMemory(), inds.data(), index_data_size);
         index_buffer->unmapMemory();
     }
     else
     {
-        Ref<Buffer> staging_buffer = new Buffer(vertex_data_size, Buffer::BUFFER_USAGE_TRANSFER_SRC,
+        Ref<Buffer> staging_buffer = new Buffer(glm::max(vertex_data_size, static_cast<size_t>(4)), Buffer::BUFFER_USAGE_TRANSFER_SRC,
             MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
         memcpy(staging_buffer->mapMemory(), verts.data(), vertex_data_size);
         staging_buffer->unmapMemory();
-        vertex_buffer = new Buffer(vertex_buffer_size,
+        vertex_buffer = new Buffer(glm::max(vertex_buffer_size, static_cast<size_t>(4)),
             Buffer::BUFFER_USAGE_VERTEX | Buffer::BUFFER_USAGE_TRANSFER_DST, MEMORY_PROPERTY_DEVICE_LOCAL);
         staging_buffer->copyToBuffer(vertex_buffer);
 
-        staging_buffer = new Buffer(index_data_size, Buffer::BUFFER_USAGE_TRANSFER_SRC,
+        staging_buffer = new Buffer(glm::max(index_data_size, static_cast<size_t>(4)), Buffer::BUFFER_USAGE_TRANSFER_SRC,
             MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
         memcpy(staging_buffer->mapMemory(), inds.data(), index_data_size);
         staging_buffer->unmapMemory();
-        index_buffer = new Buffer(index_buffer_size,
+        index_buffer = new Buffer(glm::max(index_buffer_size, static_cast<size_t>(4)),
             Buffer::BUFFER_USAGE_INDEX | Buffer::BUFFER_USAGE_TRANSFER_DST, MEMORY_PROPERTY_DEVICE_LOCAL);
         staging_buffer->copyToBuffer(index_buffer);
     }
