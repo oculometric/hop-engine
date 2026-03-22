@@ -14,6 +14,7 @@ void vertex()
     frag.uv = in_uv;
     // vertex coordinates are passed in in canvas space ({ 0, 0 } is top left, { width, height } is bottom right)
     gl_Position.xy = round(in_position.xy - (scene.viewport_size / 2.0f)) / (scene.viewport_size / 2.0f);
+    gl_Position.zw = vec2(0, 1);
 }
 
 #pragma CANVAS_ATTACHMENTS
@@ -86,9 +87,9 @@ void fragment()
         if (colour.a < 0.5f)
             discard;
         if (colour.rgb == vec3(1, 0, 1))
-            out_colour = fill_colour;
+            out_colour = vec4(fill_colour, 1);
         else
-            out_colour = colour.rgb;
+            out_colour = vec4(colour.rgb, 1);
     }
     else if (draw_mode == 2)    // simple uv mode
     {
@@ -98,6 +99,6 @@ void fragment()
         vec4 colour = texture(ui_atlas, vec3(uv, float(slice) / atlas_size.z));
         if (colour.a < 0.5f)
             discard;
-        out_colour = fill_colour;
+        out_colour = vec4(fill_colour, 1);
     }
 }

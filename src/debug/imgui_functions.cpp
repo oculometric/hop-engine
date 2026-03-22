@@ -16,6 +16,7 @@
 #include "package.h"
 #if !defined(STANDALONE)
 #include "../main.h"
+#include "node_view.h"
 #endif
 
 using namespace HopEngine;

@@ -384,3 +384,13 @@ NodeView::~NodeView()
     material          = nullptr;
     nodes.clear();
 }
+
+#include "user_interface.h"
+
+vector<DrawCommand> NodeView::getDrawCommands()
+{
+    auto arr = StaticMeshComponent::getDrawCommands();
+    if (context_menu)
+        arr.push_back(context_menu->draw());
+    return arr;
+}

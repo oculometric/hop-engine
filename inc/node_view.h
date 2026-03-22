@@ -125,6 +125,7 @@ private:
     glm::vec2 temp_link_start;
     glm::vec2 temp_link_end;
     bool draw_temp_link = false;
+    Ref<UIContextMenu> context_menu;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(NodeView);
@@ -140,6 +141,7 @@ public:
     WeakRef<Node> makeNode(const std::string& title, glm::vec3 colour, int tiles_wide);
     void makeLink(WeakRef<Node> sender_node, size_t output_index, WeakRef<Node> receiver_node, size_t input_index);
     void drawImGuiDebug() override;
+	std::vector<DrawCommand> getDrawCommands() override;
 
 private:
     void addQuadRaw(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 norm_xy, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec3 colour, float mode, glm::vec3 extra);

@@ -1,6 +1,7 @@
 #include "node_view.h"
 
 #include "input.h"
+#include "user_interface.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -85,6 +86,13 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
     glm::vec2 offset = getTransform().getLocalPosition();
     glm::vec2 node_space_pos = ((mouse_pos - glm::vec2(rect_min)) - (glm::vec2(rect_size) / 2.0f)) - offset;
 
+    if (context_menu)
+    {
+        if ((!context_menu->checkInput() && Input::isMouseDown(Input::MOUSE_LEFT)) || Input::wasKeyPressed(Input::KEY_ESCAPE))
+            context_menu = nullptr;
+        return true;
+    }
+
     if (Input::isKeyDown('A') && Input::isKeyDown(Input::KEY_LEFT_CONTROL))
     {
         for (auto& node : nodes)
@@ -98,7 +106,18 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
         needs_update = true;
     }
 
-    if (Input::isMouseDown(Input::MOUSE_RIGHT) || Input::isMouseDown(Input::MOUSE_MIDDLE))
+    if (Input::wasMousePressed(Input::MOUSE_RIGHT))
+    {
+        context_menu = new UIContextMenu(mouse_pos);
+        context_menu->addButton("a button", nullptr);
+        context_menu->addButton("another button", nullptr);
+        context_menu->addText("text stuff");
+        context_menu->addButton("final button", nullptr);
+        context_menu->done();
+        return true;
+    }
+
+    if (Input::isMouseDown(Input::MOUSE_MIDDLE))
     {
         getTransform().translateLocal(glm::vec3(Input::getMouseDelta(), 0));
         Input::lockMouseToRectangle(rect_min, rect_min + rect_size);

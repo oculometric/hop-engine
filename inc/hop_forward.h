@@ -38,6 +38,11 @@ class LightComponent;
 class TextComponent;
 class NodeView;
 
+// ui classes
+class UIRenderer;
+class UIStyle;
+class UIContextMenu;
+
 // misc
 class Font;
 
