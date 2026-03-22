@@ -42,7 +42,7 @@ public:
 	bool isCompatible(const WeakRef<RenderPass>& other) const;
 	Ref<RenderPass> duplicate() const;
 	void resize(glm::u32vec2 new_extent = { 0, 0 });
-	void begin(WeakRef<DrawCommandBuffer> command_buffer, glm::vec3 clear_colour);
+	void begin(WeakRef<DrawCommandBuffer> command_buffer, glm::vec3 clear_colour, bool transparent = false);
 	
 private:
 	void createRenderPass();

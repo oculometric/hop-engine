@@ -19,6 +19,7 @@
     - ui elements - label, button, dropdown, checkbox, textbox, slider
     - right click menu builder
 - switch to glslang for shader compilation
+- fix mouse locking not behaving correctly on linux
 - ui input event system
     - mousedown/mouseup/mouseclick/mousedrag
     - keydown/keyup

@@ -119,7 +119,7 @@ void DrawCommandBuffer::begin(uint32_t index, FrameStats* frame_stats)
     begun = true;
 }
 
-void DrawCommandBuffer::startRenderPassInternal(GPUHandle render_pass, GPUHandle framebuffer, glm::u32vec2 extent, vector<VkClearValue> clear_values, glm::vec3 clear_colour)
+void DrawCommandBuffer::startRenderPassInternal(GPUHandle render_pass, GPUHandle framebuffer, glm::u32vec2 extent, vector<VkClearValue> clear_values, glm::vec3 clear_colour, bool transparent)
 {
     if (!begun)
     {
@@ -147,10 +147,10 @@ void DrawCommandBuffer::startRenderPassInternal(GPUHandle render_pass, GPUHandle
     render_pass_begin_info.framebuffer = static_cast<VkFramebuffer>(framebuffer);
     render_pass_begin_info.renderArea.offset = { 0, 0 };
     render_pass_begin_info.renderArea.extent = { extent.x, extent.y };
-    clear_values[0].color.float32[0] = clear_colour.r;
-    clear_values[0].color.float32[1] = clear_colour.g;
-    clear_values[0].color.float32[2] = clear_colour.b;
-    clear_values[0].color.float32[3] = 0.0f;
+    if (transparent)
+        clear_values[0].color = { 0, 0, 0, 0 };
+    else
+        clear_values[0].color = { clear_colour.r, clear_colour.g, clear_colour.b, 1.0f };
     render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
     render_pass_begin_info.pClearValues = clear_values.data();
 

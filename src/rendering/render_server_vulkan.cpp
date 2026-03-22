@@ -248,14 +248,16 @@ void RenderServer::createVulkan()
         vkEnumerateInstanceLayerProperties(&validation_layer_count, available_validation_layers.data());
         // check if all the required validation layers exist
         set<string> required_layers_unmet(required_validation_layers.begin(), required_validation_layers.end());
+        vector<const char*> enabled_layers;
         for (const VkLayerProperties& layer : available_validation_layers)
-            required_layers_unmet.erase(layer.layerName);
-        if (!required_layers_unmet.empty())
         {
-            DBG_FAULT("validation layer not found: " + *(required_layers_unmet.begin()));
+            if (required_layers_unmet.erase(layer.layerName))
+                enabled_layers.push_back(layer.layerName);
         }
-        create_info.enabledLayerCount = static_cast<uint32_t>(required_validation_layers.size());
-        create_info.ppEnabledLayerNames = required_validation_layers.data();
+        if (!required_layers_unmet.empty())
+            DBG_WARNING("validation layer not found: " + *(required_layers_unmet.begin()) + ", we will continue without it.");
+        create_info.enabledLayerCount = static_cast<uint32_t>(enabled_layers.size());
+        create_info.ppEnabledLayerNames = enabled_layers.data();
 #else
         create_info.enabledLayerCount = 0;
 #endif
