@@ -122,8 +122,7 @@ private:
 	static void removeFunction(std::string& code, const std::string& signature);
 	static void destroyAllPragmas(std::string& code);
 	static bool compileShaders(const std::string& path, std::vector<uint32_t>& vert_blob, std::vector<uint32_t>& frag_blob);
-	static bool compileShader(const std::string& path, const std::string& text, std::vector<uint32_t>& blob, int shader_stage);
-
+	
 	void createDescriptorSetLayout();
 	void destroyResources();
 };
