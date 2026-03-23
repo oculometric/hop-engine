@@ -1,10 +1,8 @@
 # TODO
 
 # v0.60
-- switch to glslang for shader compilation
 - splash screen
 - screen capture support (write out texture)
-- right click menu builder
 
 - ui rendering refactor
     - ui management stack/static class
@@ -40,6 +38,7 @@
 ---
 
 # v0.61
+- switch to glslang for shader compilation
 - document everything
 - audio loading and output
 - shader & other resource reloading at runtime

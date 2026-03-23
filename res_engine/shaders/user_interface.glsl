@@ -13,7 +13,7 @@ void vertex()
                                     // .zw   -> unused
     frag.uv = in_uv;
     // vertex coordinates are passed in in canvas space ({ 0, 0 } is top left, { width, height } is bottom right)
-    gl_Position.xy = round(in_position.xy - (scene.viewport_size / 2.0f)) / (scene.viewport_size / 2.0f);
+    gl_Position.xy = in_position.xy / (scene.viewport_size / 2.0f);//round(in_position.xy - (scene.viewport_size / 2.0f)) / (scene.viewport_size / 2.0f);
     gl_Position.zw = vec2(0, 1);
 }
 

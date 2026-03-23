@@ -64,7 +64,7 @@ void UIRenderer::addQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4,
     });
     // bottom right
     vertices.push_back(Mesh::Vertex{
-        { p4.x, -p4.y, 0, 1 },
+        { p4.x, p4.y, 0, 1 },
         colour, normal, tangent, uv_br
     });
 
@@ -136,19 +136,26 @@ UIContextMenu::UIContextMenu(glm::vec2 position)
 
 void UIContextMenu::addText(const string& text)
 {
-    renderer->addText(text, top_corner + glm::vec2{ 5, (element_index * 32) + 5 }, glm::vec3{ 0, 0, 0 }, -1);
-    ++element_index;
+    elements.emplace_back(text, false, nullptr);
 }
 
 void UIContextMenu::addButton(const string& text, function<void()> callback)
 {
-    renderer->addNineSlice(top_corner + glm::vec2{ 3, (element_index * 32) + 3 }, glm::vec2{ 100 - 6, 32 - 6 }, 0, glm::vec3{ 0.9f, 0.9f, 0.9f });
-    renderer->addText(text, top_corner + glm::vec2{ 5, (element_index * 32) + 5 }, glm::vec3{ 0, 0, 0 }, -1);
-    ++element_index;
+    elements.emplace_back(text, true, callback);
 }
 
 void UIContextMenu::done()
 {
+    renderer->addNineSlice(top_corner - glm::vec2{ 5, 5 }, glm::vec2{ 220, elements.size() * 32 } + glm::vec2{ 10, 10 }, 1, glm::vec3{ 0.8f, 0.8f, 0.8f });
+    size_t element_index = 0;
+    for (const auto& elem : elements)
+    {
+        if (std::get<bool>(elem))
+            renderer->addNineSlice(top_corner + glm::vec2{ 0, (element_index * 32) + 0 }, glm::vec2{ 220, 32 }, 0, glm::vec3{ 0.8f, 0.8f, 0.8f });
+        renderer->addText(std::get<std::string>(elem), top_corner + glm::vec2{ 5, (element_index * 32) + 5 }, glm::vec3{ 0, 0, 0 }, -1);
+
+        ++element_index;
+    }
     renderer->finalise();
     renderer->clear();
 }
@@ -156,7 +163,7 @@ void UIContextMenu::done()
 bool UIContextMenu::checkInput()
 {
     glm::vec2 bounds_min = top_corner;
-    glm::vec2 bounds_max = top_corner + glm::vec2{ 100, (element_index * 32) };
+    glm::vec2 bounds_max = top_corner + glm::vec2{ 220, (elements.size() * 32) };
     glm::vec2 mouse_pos = Input::getMousePosition();
 
     if (mouse_pos.x < bounds_min.x || mouse_pos.x > bounds_max.x

@@ -378,6 +378,8 @@ void NodeView::makeLink(WeakRef<Node> sender_node, size_t output_index, WeakRef<
     receiver_node->incoming_links[input_index] = { sender_node, output_index };
 }
 
+NodeView::NodeView() {}
+
 NodeView::~NodeView()
 {
     style->font       = nullptr;
@@ -385,8 +387,6 @@ NodeView::~NodeView()
     material          = nullptr;
     nodes.clear();
 }
-
-#include "user_interface.h"
 
 vector<DrawCommand> NodeView::getDrawCommands()
 {

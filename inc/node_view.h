@@ -129,7 +129,7 @@ private:
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(NodeView);
-	NodeView() = default;
+	NodeView();
 	~NodeView() override;
 	
 	void awake() override;

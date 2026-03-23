@@ -108,7 +108,7 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
 
     if (Input::wasMousePressed(Input::MOUSE_RIGHT))
     {
-        context_menu = new UIContextMenu(mouse_pos);
+        context_menu = new UIContextMenu(node_space_pos);
         context_menu->addButton("a button", nullptr);
         context_menu->addButton("another button", nullptr);
         context_menu->addText("text stuff");
@@ -221,9 +221,6 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
             mouse_pos_upon_press = node_space_pos;
             button_upon_press = Input::MOUSE_LEFT;
             state = MOUSE_PRESSING;
-
-            if (element_type_upon_press == OUTPUT_PIN || element_type_upon_press == INPUT_PIN)
-                draw_temp_link = true;
         }
     }
     else if (state == MOUSE_PRESSING && Input::isMouseDown(Input::MOUSE_LEFT))
@@ -277,6 +274,7 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
         {
             temp_link_end = node_space_pos / style->grid_size;
             needs_update = true;
+            draw_temp_link = true;
         }
         else if (element_type_upon_press == RIGHT_RESIZE)
         {

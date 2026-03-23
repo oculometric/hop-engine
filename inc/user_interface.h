@@ -52,8 +52,8 @@ class UIContextMenu final : public Destructible
 {
 private:
     Ref<UIRenderer> renderer;
-    size_t element_index = 0;
     glm::vec2 top_corner;
+    std::vector<std::tuple<std::string, bool, std::function<void()>>> elements;
 
 public:
     DELETE_CONSTRUCTORS(UIContextMenu);
