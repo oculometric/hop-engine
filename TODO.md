@@ -1,7 +1,6 @@
 # TODO
 
 # v0.60
-- splash screen
 - screen capture support (write out texture)
 
 - ui rendering refactor

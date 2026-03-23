@@ -149,27 +149,6 @@ FrameStats RenderServer::drawFrame()
     if (image_index == (uint32_t)-1)
         return { };
 
-    SceneUniforms scene_uniforms;
-    scene_uniforms.time = Engine::getEngineTime();
-    scene_uniforms.eye_position = { 0, 0, 0 };
-    scene_uniforms.viewport_size = swapchain->getExtent();
-    scene_uniforms.world_to_view = glm::mat4(1);
-    scene_uniforms.view_to_clip = glm::mat4(1);
-    scene_uniforms.clip_to_view = glm::mat4(1);
-    scene_uniforms.view_to_world = glm::mat4(1);
-    scene_uniforms.near_far = { -1, 1 };
-    memcpy(final_pass_uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
-    
-    size_t valid_scenes = 0;
-    for (auto& scene : scenes)
-    {
-        if (!scene.scene)
-            continue;
-        ++valid_scenes;
-    }
-    if (valid_scenes == 0)
-        DBG_WARNING("no scene attached to server");
-
     const auto record_start = chrono::steady_clock::now();
     recordRenderCommands(image_index, stats);
     const chrono::duration<float> record_duration = chrono::steady_clock::now() - record_start;

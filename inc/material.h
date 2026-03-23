@@ -151,10 +151,10 @@ public:
 	
 	void bind(WeakRef<DrawCommandBuffer> command_buffer, bool wireframe_allowed = true);
 	
-	void setTexture(uint32_t binding, WeakRef<Texture> texture);
-	void setSampler(uint32_t binding, WeakRef<Sampler> sampler);
-	void setTexture(const std::string& name, WeakRef<Texture> texture);
-	void setSampler(const std::string& name, WeakRef<Sampler> sampler);
+	void setTexture(uint32_t binding, Ref<Texture> texture);
+	void setSampler(uint32_t binding, Ref<Sampler> sampler);
+	void setTexture(const std::string& name, Ref<Texture> texture);
+	void setSampler(const std::string& name, Ref<Sampler> sampler);
 
 	void setFloatUniform(const std::string& name, float value) { setUniform(name, &value, sizeof(value)); }
 	void setVec2Uniform(const std::string& name, glm::vec2 value) { setUniform(name, &value, sizeof(value)); }

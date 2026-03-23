@@ -82,12 +82,15 @@ private:
 
 	Ref<Mesh> skybox_cube;			// mesh used to render skyboxes
 	Ref<Mesh> quad;					// full screen quad mesh
+    Ref<Mesh> tri;
     
     Ref<Material> debug_text_material;
     Ref<Mesh> debug_text_mesh;
     Ref<Font> debug_text_font;
 	
 	Ref<UniformBlock> final_pass_uniforms;
+    Ref<Material> spinner_material;
+    Ref<UniformBlock> spinner_uniforms;
 	std::vector<SceneRender> scenes;
 
 	bool fullscreen = false;

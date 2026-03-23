@@ -65,19 +65,19 @@ void Material::bind(WeakRef<DrawCommandBuffer> command_buffer, bool wireframe_al
 	uniforms->bind(command_buffer);
 }
 
-void Material::setTexture(const uint32_t binding, WeakRef<Texture> texture)
+void Material::setTexture(const uint32_t binding, Ref<Texture> texture)
 {
 	DBG_BABBLE("material '" + getOrigin() + "' assigned texture '" + texture->getOrigin() + "' to binding " + ::to_string(binding));
 	uniforms->setTexture(binding, texture);
 }
 
-void Material::setSampler(const uint32_t binding, WeakRef<Sampler> sampler)
+void Material::setSampler(const uint32_t binding, Ref<Sampler> sampler)
 {
 	DBG_BABBLE("material '" + getOrigin() + "' assigned sampler " + PTR(sampler.get()) + " to binding " + ::to_string(binding));
 	uniforms->setSampler(binding, sampler);
 }
 
-void Material::setTexture(const string& name, WeakRef<Texture> texture)
+void Material::setTexture(const string& name, Ref<Texture> texture)
 {
 	const auto it = texture_name_to_binding.find(name);
 	if (it != texture_name_to_binding.end())
@@ -89,7 +89,7 @@ void Material::setTexture(const string& name, WeakRef<Texture> texture)
 		DBG_WARNING("material '" + getOrigin() + "' has no such binding '" + name + '\'');
 }
 
-void Material::setSampler(const string& name, WeakRef<Sampler> sampler)
+void Material::setSampler(const string& name, Ref<Sampler> sampler)
 {
 	const auto it = texture_name_to_binding.find(name);
 	if (it != texture_name_to_binding.end())

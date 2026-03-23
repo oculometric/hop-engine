@@ -72,7 +72,7 @@ void UniformBlock::bind(WeakRef<DrawCommandBuffer> command_buffer) const
     command_buffer->bindDescriptorSetInternal(set_index, descriptor_sets[0]);
 }
 
-void UniformBlock::setTexture(const uint32_t binding, WeakRef<Texture>& image)
+void UniformBlock::setTexture(const uint32_t binding, Ref<Texture> image)
 {
     // if the texture is already bound, skip rebinding it
     if (textures_in_use[binding].texture == image)
@@ -81,11 +81,11 @@ void UniformBlock::setTexture(const uint32_t binding, WeakRef<Texture>& image)
     if (!image)
         textures_in_use[binding].texture = layout.bindings[binding].texture_is_3d ? RenderServer::getDefault3DTexture().strong() : RenderServer::getDefaultTexture().strong();
     else
-        textures_in_use[binding].texture = image.strong();
+        textures_in_use[binding].texture = image;
     applyDescriptorBindings();
 }
 
-void UniformBlock::setSampler(const uint32_t binding, WeakRef<Sampler>& sampler)
+void UniformBlock::setSampler(const uint32_t binding, Ref<Sampler> sampler)
 {
     // if same sampler, skip rebinding
     if (textures_in_use[binding].sampler == sampler)
@@ -94,7 +94,7 @@ void UniformBlock::setSampler(const uint32_t binding, WeakRef<Sampler>& sampler)
     if (!sampler)
         textures_in_use[binding].sampler = RenderServer::getDefaultSampler().strong();
     else
-        textures_in_use[binding].sampler = sampler.strong();
+        textures_in_use[binding].sampler = sampler;
     applyDescriptorBindings();
 }
 

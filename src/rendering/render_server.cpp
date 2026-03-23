@@ -103,13 +103,13 @@ RenderServer::RenderServer()
     default_3d_image = new Texture({ 1, 1, 2 }, Texture::FORMAT_SRGB_8X4, default_3d_image_data);
     default_sampler = new Sampler(Sampler::Builder());
 
-    // quad = new Mesh({
-    //                     { { -1, -1, 0, 1 }, {}, {}, {}, { 0, 0 } },
-    //                     { { 1, -1, 0, 1 }, {}, {}, {}, { 1, 0 } },
-    //                     { { -1, 1, 0, 1 }, {}, {}, {}, { 0, 1 } },
-    //                     { { 1, 1, 0, 1 }, {}, {}, {}, { 1, 1 } }
-    //                 }, { 0, 3, 1, 0, 2, 3 });
     quad = new Mesh({
+                        { { -1, -1, 0, 1 }, {}, {}, {}, { 0, 0 } },
+                        { { 1, -1, 0, 1 }, {}, {}, {}, { 1, 0 } },
+                        { { -1, 1, 0, 1 }, {}, {}, {}, { 0, 1 } },
+                        { { 1, 1, 0, 1 }, {}, {}, {}, { 1, 1 } }
+                    }, { 0, 3, 1, 0, 2, 3 });
+    tri = new Mesh({
         { { -2,  1, 0, 1 }, {}, {}, {}, { -0.5f, 1.0f } },
         { {  2,  1, 0, 1 }, {}, {}, {}, {  1.5f, 1.0f } },
         { {  0, -3, 0, 1 }, {}, {}, {}, {  0.5f, -1.0f } },
@@ -118,13 +118,19 @@ RenderServer::RenderServer()
 
     default_material = new Material(new Shader("res://engine/shaders/default_shader.glsl"));
     final_pass_uniforms = createSceneUniforms();
+    spinner_material = new Material(Engine::loadShader("res://engine/shaders/screen_space_image.glsl"), Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false), RenderServer::getFinalRenderPass());
+    spinner_uniforms = createObjectUniforms();
+    ObjectUniforms* spinner = static_cast<ObjectUniforms*>(spinner_uniforms->getBuffer());
+    spinner->model_to_world = glm::mat4(1);
+    spinner_material->setTexture(0, Engine::loadTexture("res://engine/icon.png"));
+    spinner_material->setSampler(0, new Sampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST)));
 
     debug_text_font = new Font("res://engine/textures/font_IBM_XGA_AI_12x23.png", { 14, 25 });
     debug_text_mesh = new Mesh({}, {}, true);
     debug_text_material = new Material(new Shader("res://engine/shaders/screen_space_text.glsl"),
         Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthTest(false), final_render_pass);
     debug_text_material->setTexture(0, debug_text_font->getAtlas());
-    debug_text_material->setSampler(0, Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_LINEAR)));
+    debug_text_material->setSampler(0, new Sampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST)));
 
     initImGui();
 
@@ -147,10 +153,13 @@ RenderServer::~RenderServer()
     debug_text_mesh = nullptr;
     debug_text_material = nullptr;
 
+    spinner_uniforms = nullptr;
+    spinner_material = nullptr;
     final_pass_uniforms = nullptr;
     skybox_cube = nullptr;
     default_material = nullptr;
     quad = nullptr;
+    tri = nullptr;
     default_image = nullptr;
     default_3d_image = nullptr;
     default_sampler = nullptr;
@@ -249,6 +258,26 @@ void RenderServer::tryFreeResources(bool force)
 
 void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
 {
+    SceneUniforms scene_uniforms;
+    scene_uniforms.time = Engine::getEngineTime();
+    scene_uniforms.eye_position = { 0, 0, 0 };
+    scene_uniforms.viewport_size = swapchain->getExtent();
+    scene_uniforms.world_to_view = glm::mat4(1);
+    scene_uniforms.view_to_clip = glm::mat4(1);
+    scene_uniforms.clip_to_view = glm::mat4(1);
+    scene_uniforms.view_to_world = glm::mat4(1);
+    scene_uniforms.near_far = { -1, 1 };
+    memcpy(final_pass_uniforms->getBuffer(), &scene_uniforms, sizeof(SceneUniforms));
+
+    ObjectUniforms* spinner = static_cast<ObjectUniforms*>(spinner_uniforms->getBuffer());
+    spinner->model_to_world = glm::scale(glm::rotate(
+        glm::translate(
+            glm::mat4(1), 
+            glm::vec3{ glm::vec2(swapchain->getExtent()) / 2.0f, 0.0f }),
+        Engine::getEngineTime(),
+        glm::vec3{ 0, 0, 1 }),
+    glm::vec3(256, 256, 1));
+
     Ref<DrawCommandBuffer> command_buffer = command_buffers[image_index];
     command_buffer->begin(image_index, &stats);
     
@@ -258,7 +287,15 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
             scene.scene->draw(command_buffer, glm::u32vec2(scene.size_uv * glm::vec2(swapchain->getExtent())));
     }
     
-    final_render_pass->begin(command_buffer, glm::vec3{ 0.02f, 0.02f, 0.02f }, true);
+    final_render_pass->begin(command_buffer, glm::vec3{ 0.02f, 0.02f, 0.02f }, !scenes.empty());
+
+    if (scenes.empty())
+    {
+        spinner_material->bind(command_buffer, false);
+        final_pass_uniforms->bind(command_buffer);
+        spinner_uniforms->bind(command_buffer);
+        quad->draw(command_buffer);
+    }
     
     for (auto& scene : scenes)
     {
@@ -268,7 +305,7 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
             final_pass_uniforms->bind(command_buffer);
         
             command_buffer->setScissorViewport(scene.start_uv, scene.size_uv, swapchain->getExtent());
-            quad->draw(command_buffer);
+            tri->draw(command_buffer);
         }
     }
     
