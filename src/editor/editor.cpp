@@ -7,12 +7,8 @@ Editor::Editor()
     view_3d = Scene::create("3D View");
     {
         auto comp = view_3d->addObject<StaticMeshComponent>("bunny");
-        comp->mesh = Engine::loadMesh("res://engine/samples/bunny.obj");
-        comp->material = new Material(
-            Engine::loadShader("res://engine/samples/psx.glsl"),
-            Pipeline::Builder().cullMode(Pipeline::CULL_NONE));
-        comp->material->setTexture("albedo", Engine::loadTexture("res://engine/samples/bunny.png"));
-        comp->material->setSampler("albedo", Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST)));
+        comp->mesh = Engine::loadMesh("res://engine/meshes/bunny.obj");
+        comp->material = Engine::loadMaterial("res://engine/materials/bunny.hmat");
         
         auto obj = view_3d->addObject("camera");
         auto cam = obj->addComponent<CameraComponent>();

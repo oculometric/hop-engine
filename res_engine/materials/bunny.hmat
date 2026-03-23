@@ -1,0 +1,6 @@
+Resource(shader, "res://engine/shaders/psx.glsl") : shader;
+Resource(texture, "res://engine/textures/bunny.png") : albedo;
+
+Shader(resource = @shader);
+Texture(binding = "albedo", resource = @albedo, filter = NEAREST);
+Culling(mode = NONE);

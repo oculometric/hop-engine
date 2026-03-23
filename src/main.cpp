@@ -1,7 +1,3 @@
-#if !defined(STANDALONE)
-
-#include "main.h"
-
 #include "hop_engine.h"
 #include "editor.h"
 
@@ -19,5 +15,3 @@ int main()
 
     return 0;
 }
-
-#endif

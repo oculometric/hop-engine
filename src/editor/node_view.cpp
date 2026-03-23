@@ -1,6 +1,7 @@
 #include "node_view.h"
 
 #include "engine.h"
+#include "user_interface.h"
 
 #include <glm/gtc/integer.hpp>
 

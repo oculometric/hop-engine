@@ -1,6 +1,23 @@
 # TODO
 
 # v0.60
+- switch to glslang for shader compilation
+- splash screen
+- screen capture support (write out texture)
+- right click menu builder
+
+- ui rendering refactor
+    - ui management stack/static class
+    - general purpose text rendering (wrapping, alignment, font, underline, bold, italic, strikethrough)
+    - refactor node view code somewhat
+    - ui interaction toolkit
+    - make nodes UI instead of a scene...
+    - ui elements - label, button, dropdown, checkbox, textbox, slider
+- ui input event system
+    - mousedown/mouseup/mouseclick/mousedrag
+    - keydown/keyup
+    - multi-element intersection testing, i.e. we end up with a stack of elements which were intersected
+
 - interactive node editor
     - need to be able to move/disconnect existing links
     - dirty flag system for updating the mesh
@@ -9,22 +26,8 @@
     - box selection
     - right-click menu to allow adding more nodes
     - move overlays (temp link, right click menu, selection box) into their own mesh
-- ui rendering refactor
-    - general purpose text rendering (wrapping, alignment, font, underline, bold, italic, strikethrough)
-    - general purpose 9-slice, image, and icon rendering kits
-    - refactor node view code somewhat
-    - ui interaction toolkit
-    - ui management stack/static class
-    - make nodes UI instead of a scene...
-    - ui elements - label, button, dropdown, checkbox, textbox, slider
-    - right click menu builder
-- switch to glslang for shader compilation
 - proper font library
 - fix mouse locking not behaving correctly on linux
-- ui input event system
-    - mousedown/mouseup/mouseclick/mousedrag
-    - keydown/keyup
-    - multi-element intersection testing, i.e. we end up with a stack of elements which were intersected
 - object duplicate function
 - actual editor
     - resizeable/swappable views

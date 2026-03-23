@@ -14,10 +14,7 @@
 #include "render_graph.h"
 #include "render_server.h"
 #include "package.h"
-#if !defined(STANDALONE)
-#include "../main.h"
 #include "node_view.h"
-#endif
 
 using namespace HopEngine;
 using namespace std;
@@ -339,16 +336,6 @@ void Engine::_drawImGuiDebug(float delta_time) const
 	ImGui::BeginMainMenuBar();
 	if (ImGui::BeginMenu("file"))
 	{
-#if !defined(STANDALONE)
-		if (ImGui::BeginMenu("open scene"))
-		{
-			if (ImGui::MenuItem("bunnygirl"))
-				Engine::switchApplication<AshaApp>();
-			if (ImGui::MenuItem("museum"))
-				Engine::switchApplication<MuseumApp>();
-			ImGui::EndMenu();
-		}
-#endif
 		if (ImGui::MenuItem("quit"))
 			stop();
 		ImGui::EndMenu();
