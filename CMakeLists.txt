@@ -26,6 +26,7 @@ file(GLOB SRC_FILES
 	"lib/src/*.cpp"
 )
 list(FILTER SRC_FILES EXCLUDE REGEX ".*/package-builder.cpp")
+list(FILTER SRC_FILES EXCLUDE REGEX ".*main.cpp")
 
 add_library(hop-engine STATIC ${SRC_FILES})
 
