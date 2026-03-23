@@ -311,8 +311,9 @@ void RenderServer::createVulkan()
         {
             VkPhysicalDeviceProperties properties;
             vkGetPhysicalDeviceProperties(test_device, &properties);
-            VkPhysicalDeviceFeatures features;
-            vkGetPhysicalDeviceFeatures(test_device, &features);
+            VkPhysicalDeviceFeatures2 features{ };
+            features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+            vkGetPhysicalDeviceFeatures2(test_device, &features);
             
             // discrete GPUs are preferred, etc
             int score = 0;
@@ -328,9 +329,9 @@ void RenderServer::createVulkan()
 
             score += static_cast<int>(properties.limits.maxImageDimension2D);
 
-            if (features.fillModeNonSolid == VK_FALSE
-                || features.samplerAnisotropy == VK_FALSE
-                || features.independentBlend == VK_FALSE)
+            if (features.features.fillModeNonSolid == VK_FALSE
+                || features.features.samplerAnisotropy == VK_FALSE
+                || features.features.independentBlend == VK_FALSE)
                 score = 0;
 
             // check that the necessary queues are present
@@ -385,19 +386,26 @@ void RenderServer::createVulkan()
             queue_create_infos.push_back(queue_create_info);
         }
 
-        VkPhysicalDeviceFeatures features{ };
-        features.fillModeNonSolid = VK_TRUE;
-        features.samplerAnisotropy = VK_TRUE;
-        features.independentBlend = VK_TRUE;
+        VkPhysicalDeviceFeatures2 features{ };
+        features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+        features.features.fillModeNonSolid = VK_TRUE;
+        features.features.samplerAnisotropy = VK_TRUE;
+        features.features.independentBlend = VK_TRUE;
+
+        VkPhysicalDeviceVulkan12Features extended_features{ };
+        extended_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+        extended_features.runtimeDescriptorArray = VK_TRUE;
+        features.pNext = &extended_features;
         
         // actually create the logical device
         VkDeviceCreateInfo device_create_info{ };
         device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         device_create_info.pQueueCreateInfos = queue_create_infos.data();
         device_create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
-        device_create_info.pEnabledFeatures = &features;
+        device_create_info.pEnabledFeatures = nullptr;
         device_create_info.ppEnabledExtensionNames = required_extensions.data();
         device_create_info.enabledExtensionCount = static_cast<uint32_t>(required_extensions.size());
+        device_create_info.pNext = &features;
         
         DBG_VERBOSE("creating device");
         if (vkCreateDevice(physical_device, &device_create_info, nullptr, &device) != VK_SUCCESS)

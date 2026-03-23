@@ -18,7 +18,7 @@ endif()
 	add_link_options("/DEBUG")
 endif()
 
-find_package(Vulkan REQUIRED)
+find_package(Vulkan REQUIRED COMPONENTS glslang SPIRV-Tools)
 
 file(GLOB SRC_FILES
 	"src/*.cpp"
@@ -46,10 +46,12 @@ if(WIN32)
 	target_link_libraries(hop-engine
 		PRIVATE "${CMAKE_SOURCE_DIR}/lib/bin/GLFW/lib-vc2019/glfw3.lib"
 	)
-	target_link_libraries(hop-engine PRIVATE ${Vulkan_LIBRARIES})
-	target_link_libraries(hop-engine
-		PRIVATE ${Vulkan_INCLUDE_DIRS}/../Lib/shaderc_combined.lib
-	)
+	target_link_libraries(hop-engine PRIVATE
+        ${Vulkan_LIBRARIES}
+        ${Vulkan_INCLUDE_DIR}/../lib/glslang-default-resource-limits.lib
+        ${Vulkan_INCLUDE_DIR}/../lib/SPIRV-Tools-opt.lib
+        Vulkan::glslang
+        Vulkan::SPIRV-Tools)
 else()
 	target_include_directories(hop-engine
 		PRIVATE ${CMAKE_SOURCE_DIR}/lib/inc/shaderc

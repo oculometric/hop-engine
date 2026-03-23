@@ -1,7 +1,9 @@
 #include "material.h"
 
 #include <vulkan/vulkan.hpp>
-#include <shaderc/shaderc.hpp>
+#include <glslang/Public/ResourceLimits.h>
+#include <glslang/Public/ShaderLang.h>
+#include <glslang/SPIRV/GlslangToSpv.h>
 #include <spirv_reflect/spirv_reflect.h>
 #include <filesystem>
 
@@ -140,30 +142,102 @@ bool Shader::compileShaders(const string& path, vector<uint32_t>& vert_blob, vec
 	if (vertex_text.empty() || fragment_text.empty())
 		return false;
 	
-	const shaderc::Compiler compiler;
-	shaderc::CompileOptions options;
-	options.AddMacroDefinition("vertex", "main");
-	auto result = compiler.CompileGlslToSpv(vertex_text.data(), vertex_text.size(), shaderc_glsl_vertex_shader, path.c_str(), options);
-	if (result.GetCompilationStatus() != shaderc_compilation_status_success)
-	{
-		DBG_ERROR("error compiling vertex shader " + path + ": \n" + result.GetErrorMessage());
-		DBG_INFO("see the full shader code below: \n" + formatShaderCode(vertex_text));
-		return false;
-	}
-	vert_blob = { result.cbegin(), result.cend() };
+    return compileShader(path, vertex_text, vert_blob, EShLangVertex)
+        && compileShader(path, fragment_text, frag_blob, EShLangFragment);
+    // TODO: compile shaders!!
+    
+    
+    
+	// const shaderc::Compiler compiler;
+	// shaderc::CompileOptions options;
+	// options.AddMacroDefinition("vertex", "main");
+	// auto result = compiler.CompileGlslToSpv(vertex_text.data(), vertex_text.size(), shaderc_glsl_vertex_shader, path.c_str(), options);
+	// if (result.GetCompilationStatus() != shaderc_compilation_status_success)
+	// {
+	// 	DBG_ERROR("error compiling vertex shader " + path + ": \n" + result.GetErrorMessage());
+	// 	DBG_INFO("see the full shader code below: \n" + formatShaderCode(vertex_text));
+	// 	return false;
+	// }
+	// vert_blob = { result.cbegin(), result.cend() };
 	
-	shaderc::CompileOptions options2;
-	options2.AddMacroDefinition("fragment", "main");
-	result = compiler.CompileGlslToSpv(fragment_text.data(), fragment_text.size(), shaderc_glsl_fragment_shader, path.c_str(), options2);
-	if (result.GetCompilationStatus() != shaderc_compilation_status_success)
-	{
-		DBG_ERROR("error compiling fragment shader " + path + ": " + result.GetErrorMessage());
-		DBG_INFO("see the full shader code below: " + formatShaderCode(fragment_text));
-		return false;
-	}
-	frag_blob = { result.cbegin(), result.cend() };
+	// shaderc::CompileOptions options2;
+	// options2.AddMacroDefinition("fragment", "main");
+	// result = compiler.CompileGlslToSpv(fragment_text.data(), fragment_text.size(), shaderc_glsl_fragment_shader, path.c_str(), options2);
+	// if (result.GetCompilationStatus() != shaderc_compilation_status_success)
+	// {
+	// 	DBG_ERROR("error compiling fragment shader " + path + ": " + result.GetErrorMessage());
+	// 	DBG_INFO("see the full shader code below: " + formatShaderCode(fragment_text));
+	// 	return false;
+	// }
+	// frag_blob = { result.cbegin(), result.cend() };
 	
 	return true;
+}
+
+bool Shader::compileShader(const string& path, const string& text, vector<uint32_t>& blob, int shader_stage)
+{
+    string version = glslang::GetEsslVersionString();
+    string other_version = glslang::GetGlslVersionString();
+
+    DBG_INFO(version);
+    DBG_INFO(other_version);
+
+
+    if (!glslang::InitializeProcess()) // FIXME: move these to the correct place
+    {
+        DBG_FAULT("failed to initialise glslang");
+        return false;
+    }
+
+    glslang::TShader shader(static_cast<EShLanguage>(shader_stage));
+    const char* text_data = text.data();
+    const int text_size = text.size();
+    //shader.addSourceText(text.data(), text.size());
+    shader.setStringsWithLengths(&text_data, &text_size, 1);
+    shader.setEnvInput(glslang::EShSourceGlsl, static_cast<EShLanguage>(shader_stage), glslang::EShClientVulkan, 100);
+    shader.setEnvClient(glslang::EShClientVulkan, glslang::EShTargetVulkan_1_4);
+    shader.setEnvTarget(glslang::EShTargetSpv, glslang::EShTargetSpv_1_6);
+    shader.setAutoMapBindings(false);
+    shader.setAutoMapLocations(false);
+    switch (shader_stage)
+    {
+        case EShLangVertex: shader.setEntryPoint("vertex"); break;
+        case EShLangFragment: shader.setEntryPoint("fragment"); break;
+        default: DBG_ERROR("invalid shader stage passed to compileShader function"); return false;
+    }
+
+    const TBuiltInResource* resources = GetDefaultResources();
+    const int default_version = 450;
+    const bool forward_compatible = false;
+    const EShMessages message_flags = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules);
+    EProfile default_profile = ENoProfile;
+    if (!shader.parse(resources, default_version, forward_compatible, message_flags))
+    {
+        DBG_ERROR("shader '" + path + "' failed to compile: " + string(shader.getInfoLog()) + ", shader text follows: \n" + formatShaderCode(text));
+        return false;
+    }
+
+    glslang::TProgram program;
+    program.addShader(&shader);
+    if (!program.link(message_flags))
+    {
+        DBG_ERROR("shader '" + path + "' failed to compile: " + string(program.getInfoLog()) + ", shader text follows: \n" + formatShaderCode(text));
+        return false;
+    }
+
+    program.mapIO();
+    glslang::TIntermediate* intermediate = program.getIntermediate(static_cast<EShLanguage>(shader_stage));
+    glslang::SpvOptions opt;
+    opt.validate = true;
+    //opt.stripDebugInfo = true;
+    //opt.disableOptimizer = false;
+    opt.compileOnly = true;
+    spv::SpvBuildLogger l;
+    glslang::GlslangToSpv(*intermediate, blob, &l, &opt);
+
+    glslang::FinalizeProcess();
+
+    return true;
 }
 
 void Shader::createDescriptorSetLayout()

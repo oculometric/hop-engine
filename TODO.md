@@ -17,7 +17,7 @@
     - mousedown/mouseup/mouseclick/mousedrag
     - keydown/keyup
     - multi-element intersection testing, i.e. we end up with a stack of elements which were intersected
-
+- eliminate SPIRV-reflect (use glslang instead)
 - interactive node editor
     - need to be able to move/disconnect existing links
     - dirty flag system for updating the mesh

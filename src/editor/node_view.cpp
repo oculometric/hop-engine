@@ -386,8 +386,6 @@ NodeView::~NodeView()
     nodes.clear();
 }
 
-#include "user_interface.h"
-
 vector<DrawCommand> NodeView::getDrawCommands()
 {
     auto arr = StaticMeshComponent::getDrawCommands();
