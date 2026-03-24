@@ -166,9 +166,13 @@ cmake_path(GET ENGINE_LIB_PATH FILENAME ENGINE_LIB)
 cmake_path(GET PACKAGE_EXE_PATH FILENAME PACKAGE_EXE)
 set(ARCHIVE_TARGETS ${ENGINE_HOP} ${RESOURCES_HOP} ${DEMO_EXE} ${ENGINE_LIB} "include" ${PACKAGE_EXE})
 
-add_custom_target(exporting
+add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/include"
     COMMAND ${COPY_COMMAND}
+)
+
+add_custom_target(exporting
 	COMMAND ${ZIP_COMMAND} ${TAR_OPTIONS} ${TAR_OUTPUT} ${ARCHIVE_TARGETS}
+    DEPENDS "${CMAKE_BINARY_DIR}/include"
 )
 
 add_dependencies(exporting demo)
