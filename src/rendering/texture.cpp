@@ -156,3 +156,52 @@ void Texture::uploadData(void* data)
     copyBufferToImage(staging_buffer);
     transitionLayout(LAYOUT_SHADER_READ_ONLY);
 }
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
+
+void Texture::storeImage(const string& path)
+{
+    auto raw = download();
+    int channels = 4;
+    switch (format)
+    {
+        case Texture::FORMAT_SRGB_8X4:   channels = 4; break;
+        case Texture::FORMAT_DEPTH:      channels = 1; break;
+        case Texture::FORMAT_FLOAT_16X4: channels = 4; break;
+        case Texture::FORMAT_SWAPCHAIN:  channels = 4; break;
+    }
+
+    if (format == FORMAT_FLOAT_16X4)
+    {
+        for (size_t i = 0; i < raw.size() / 2; ++i)
+        {
+            uint16_t input = *reinterpret_cast<uint16_t*>(raw.data() + (i * 2));
+            uint32_t t1 = input & 0x7fffu; t1 <<= 13;
+            uint32_t t2 = input & 0x8000u; t2 <<= 16;
+            uint32_t t3 = input & 0x7c00u;
+            t1 += 0x38000000;
+            t1 = (t3 == 0 ? 0 : t1);
+            t1 |= t2;
+            float intermediate;
+            *((uint32_t*)&intermediate) = t1;
+            uint8_t output = static_cast<uint8_t>(intermediate * UINT8_MAX);
+            *reinterpret_cast<uint8_t*>(raw.data() + i) = output;
+        }
+    }
+    else if (format == FORMAT_DEPTH)
+    {
+        for (size_t i = 0; i < raw.size() / 4; ++i)
+        {
+            float input = *reinterpret_cast<float*>(raw.data() + (i * 4));
+            uint8_t output = static_cast<uint8_t>(input * UINT8_MAX);
+            *reinterpret_cast<uint8_t*>(raw.data() + i) = output;
+        }
+    }
+
+    int out_length = 0;
+    unsigned char* out_data = stbi_write_png_to_mem(raw.data(), channels * extent.x, extent.x, extent.y, channels, &out_length);
+    DataBlock block(out_length);
+    memcpy(block.data(), out_data, out_length);
+    Package::store(path, block);
+}

@@ -112,6 +112,7 @@ public:
 	VkImageView getView() const { return view; }
 	void transitionLayout(Layout new_layout);
     std::vector<uint8_t> download();
+    void storeImage(const std::string& path);
 	// TODO: upload and download data from the texture
 
 private:

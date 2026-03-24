@@ -1,8 +1,6 @@
 # TODO
 
 # v0.60
-- screen capture support (write out texture)
-
 - ui rendering refactor
     - ui management stack/static class
     - general purpose text rendering (wrapping, alignment, font, underline, bold, italic, strikethrough)
