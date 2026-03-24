@@ -9,7 +9,6 @@
 #include <Windows.h>
 #endif
 
-#include "../resource.h"
 #include "hop_engine.h"
 
 using namespace HopEngine;

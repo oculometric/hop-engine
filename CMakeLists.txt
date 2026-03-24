@@ -157,7 +157,7 @@ else()
     set(PACKAGE_EXE_PATH ${CMAKE_BINARY_DIR}/package-tool)
 	set(TAR_OPTIONS -cf)
 	set(TAR_OUTPUT "${CMAKE_SOURCE_DIR}/hop-engine ${PLATFORM} ${TODAY}.tar")
-    set(COPY_COMMAND "cp -r ${CMAKE_SOURCE_DIR}/inc/* ${CMAKE_BINARY_DIR}/include")
+    set(COPY_COMMAND "cp -r ${CMAKE_SOURCE_DIR}/inc/* ${CMAKE_BINARY_DIR}/include/")
 endif()
 cmake_path(GET ENGINE_PACKAGE_OUTPUT FILENAME ENGINE_HOP)
 cmake_path(GET DEMO_PACKAGE_OUTPUT FILENAME RESOURCES_HOP)
@@ -166,15 +166,17 @@ cmake_path(GET ENGINE_LIB_PATH FILENAME ENGINE_LIB)
 cmake_path(GET PACKAGE_EXE_PATH FILENAME PACKAGE_EXE)
 set(ARCHIVE_TARGETS ${ENGINE_HOP} ${RESOURCES_HOP} ${DEMO_EXE} ${ENGINE_LIB} "include" ${PACKAGE_EXE})
 
-add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/include"
-    COMMAND ${COPY_COMMAND}
+add_custom_target(copy_include
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${CMAKE_SOURCE_DIR}/inc/" "${CMAKE_BINARY_DIR}/include"
+    COMMENT "Copying include directory"
 )
 
 add_custom_target(exporting
+    DEPENDS copy_include
 	COMMAND ${ZIP_COMMAND} ${TAR_OPTIONS} ${TAR_OUTPUT} ${ARCHIVE_TARGETS}
-    DEPENDS "${CMAKE_BINARY_DIR}/include"
 )
 
 add_dependencies(exporting demo)
+add_dependencies(exporting copy_include)
 add_dependencies(exporting hop-engine)
 add_dependencies(exporting engine-resources)
