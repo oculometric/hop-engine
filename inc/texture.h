@@ -95,6 +95,7 @@ private:
 	VkImage image = VK_NULL_HANDLE;
 	VkDeviceMemory memory = VK_NULL_HANDLE;
 	VkImageView view = VK_NULL_HANDLE;
+    VkDeviceSize allocated_size = 0;
 
 public:
 	DELETE_CONSTRUCTORS(Texture);
@@ -110,6 +111,7 @@ public:
 	Format getFormat() const { return format; }
 	VkImageView getView() const { return view; }
 	void transitionLayout(Layout new_layout);
+    std::vector<uint8_t> download();
 	// TODO: upload and download data from the texture
 
 private:

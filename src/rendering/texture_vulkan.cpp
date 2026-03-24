@@ -80,6 +80,24 @@ void Texture::transitionLayout(const Layout new_layout)
         memory_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
         dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
     }
+    else if (current_layout == LAYOUT_SHADER_READ_ONLY && new_layout == LAYOUT_TRANSFER_SRC)
+    {
+        if (!(usage & IMAGE_USAGE_TRANSFER_SRC))
+            DBG_WARNING("attempt to transition an image to transfer source layout, but it does not support being a transfer source");
+        memory_barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        src_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        memory_barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    }
+    else if (current_layout == LAYOUT_TRANSFER_SRC && new_layout == LAYOUT_SHADER_READ_ONLY)
+    {
+        if (!(usage & IMAGE_USAGE_SAMPLED))
+            DBG_WARNING("attempt to transition an image to shader read only layout, but it does not support being sampled");
+        memory_barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        memory_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    }
     else
     {
         DBG_ERROR("unsupported layout transition: " + to_string(current_layout) + " -> " + to_string(new_layout));
@@ -92,6 +110,39 @@ void Texture::transitionLayout(const Layout new_layout)
 
     cmd_buf->submit();
     current_layout = new_layout;
+}
+
+std::vector<uint8_t> Texture::download()
+{
+    current_layout = Texture::LAYOUT_SHADER_READ_ONLY; // assume the position
+    Texture::Layout previous_layout = current_layout;
+    transitionLayout(Texture::LAYOUT_TRANSFER_SRC);
+    Ref<Buffer> buffer = new Buffer(allocated_size, Buffer::BUFFER_USAGE_TRANSFER_DST, MemoryProperties::MEMORY_PROPERTY_HOST_COHERENT | MemoryProperties::MEMORY_PROPERTY_HOST_VISIBLE);
+    
+    VkBufferImageCopy image_copy{ };
+    image_copy.bufferOffset = 0;
+    image_copy.bufferRowLength = 0;
+    image_copy.bufferImageHeight = 0;
+
+    image_copy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    image_copy.imageSubresource.mipLevel = 0;
+    image_copy.imageSubresource.baseArrayLayer = 0;
+    image_copy.imageSubresource.layerCount = 1;
+
+    image_copy.imageOffset = { 0, 0, 0 };
+    image_copy.imageExtent = { extent.x, extent.y, extent.z };
+
+    Ref<TransientCommandBuffer> cmd_buf = new TransientCommandBuffer();
+
+    vkCmdCopyImageToBuffer(cmd_buf->getHandle(), image, toVulkanLayout(current_layout), buffer->getHandle(), 1, &image_copy);
+
+    cmd_buf->submit();
+
+    transitionLayout(previous_layout);
+    vector<uint8_t> data;
+    data.resize(buffer->getSize());
+    memcpy(data.data(), buffer->mapMemory(), data.size());
+    return data;
 }
 
 void Texture::copyBufferToImage(Ref<Buffer> buffer) const
@@ -154,6 +205,7 @@ void Texture::createImage()
     VkMemoryAllocateInfo allocate_info{ };
     allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocate_info.allocationSize = memory_requirements.size;
+    allocated_size = memory_requirements.size;
     allocate_info.memoryTypeIndex = Buffer::findMemoryType(memory_requirements.memoryTypeBits, MEMORY_PROPERTY_DEVICE_LOCAL);
     if (vkAllocateMemory(RenderServer::getDevice(), &allocate_info, nullptr, &memory) != VK_SUCCESS)
         DBG_FAULT("vkAllocateMemory failed");

@@ -93,6 +93,11 @@ void Editor::update(float delta_time)
 {
     if (!node_view->checkInput({ 0, RenderServer::getFramebufferSize().y * 0.7f }, view_nodes->getViewportSize()))
         Engine::debugCamera(view_3d->findObject("camera"));
+
+    if (Input::wasKeyPressed('P'))
+    {
+        auto data = view_3d->render_graph->getFinalImage()->download();
+    }
 }
 
 void Editor::drawImGui()

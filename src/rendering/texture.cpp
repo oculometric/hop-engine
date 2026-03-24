@@ -30,6 +30,7 @@ Texture::Texture(glm::u32vec3 image_extent, Format image_format, void* data_ptr)
         usage = IMAGE_USAGE_COLOR_ATTACHMENT | IMAGE_USAGE_SAMPLED; break;
     }
     if (data_ptr) usage = usage | IMAGE_USAGE_TRANSFER_DST;
+    usage = usage | IMAGE_USAGE_TRANSFER_SRC;
 
     extent = glm::max(image_extent, glm::u32vec3{ 1, 1, 1 });
 
