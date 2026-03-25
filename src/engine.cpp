@@ -298,6 +298,9 @@ void Engine::drawImGuiDebug()
     engine->_drawImGuiDebug(getDeltaTime());
 }
 
+extern unsigned char engine_hop_raw[];
+extern unsigned long long engine_hop_raw_size;
+
 Engine::Engine()
 {
     engine = this;
@@ -316,7 +319,9 @@ Engine::Engine()
 //     memcpy(engine_package.data(), data, size);
 //     Package::loadPackageFromMemory(engine_package, "engine.hop (internal)");
 // #else
-    Package::importPackage("engine.hop");
+    DataBlock engine_hop(engine_hop_raw_size);
+    memcpy(engine_hop.data(), engine_hop_raw, engine_hop.size());
+    Package::importPackage(engine_hop);
 // #endif
     RenderServer::init();
     RenderServer::setIcon("res://engine/icon.png");

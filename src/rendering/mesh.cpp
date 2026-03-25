@@ -25,6 +25,21 @@ Mesh::~Mesh()
     DBG_VERBOSE("destroying mesh '" + getOrigin() + '\'');
 }
 
+void Mesh::updateData(const vector<Vertex>& vertices, const vector<uint16_t>& indices, size_t vertex_alloc, size_t index_alloc)
+{
+    if (!accessible)
+    {
+        DBG_WARNING("attempted to update mesh '" + getOrigin() + "' which is not accessible to CPU memory");
+        return;
+    }
+
+    vertex_capacity = max(vertex_alloc, vertices.size());
+    index_capacity = max(index_alloc, indices.size());
+    uploadFromArrays(vertices, indices);
+    
+    recomputeBoundingBox(vertices);
+}
+
 Ref<Mesh> Mesh::loadMesh(const string& path)
 {
     const auto file_data = Package::load(path);
@@ -50,48 +65,6 @@ Ref<Mesh> Mesh::loadMesh(const string& path)
     auto m = new Mesh(verts, inds);
     m->origin = path;
     return m;
-}
-
-DataBlock Mesh::convertToBinaryMesh(const string& obj_path)
-{
-    const auto file_data = Package::load(obj_path);
-    if (file_data.size() < 4)
-    {
-        DBG_ERROR("mesh file " + obj_path + " is empty or does not exist");
-        return { };
-    }
-
-    if (strncmp(reinterpret_cast<const char*>(file_data.data()), "HBMR", 4) == 0)
-    {
-        DBG_WARNING("mesh file " + obj_path + " is a binary mesh, not an OBJ file");
-        return file_data;
-    }
-
-    vector<Vertex> verts;
-    vector<uint16_t> inds;
-
-    if (!readOBJ(file_data, verts, inds))
-    {
-        DBG_ERROR("mesh file " + obj_path + " could not be read");
-        return { };
-    }
-
-    return encodeBinaryMesh(verts, inds);
-}
-
-void Mesh::updateData(const vector<Vertex>& vertices, const vector<uint16_t>& indices, size_t vertex_alloc, size_t index_alloc)
-{
-    if (!accessible)
-    {
-        DBG_WARNING("attempted to update mesh '" + getOrigin() + "' which is not accessible to CPU memory");
-        return;
-    }
-
-    vertex_capacity = max(vertex_alloc, vertices.size());
-    index_capacity = max(index_alloc, indices.size());
-    uploadFromArrays(vertices, indices);
-    
-    recomputeBoundingBox(vertices);
 }
 
 void Mesh::draw(WeakRef<DrawCommandBuffer> command_buffer)

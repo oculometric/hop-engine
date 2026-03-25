@@ -61,3 +61,30 @@ bool Mesh::decodeBinaryMesh(const DataBlock& data, vector<Vertex>& verts, vector
     
     return true;
 }
+
+DataBlock Mesh::convertToBinaryMesh(const string& obj_path)
+{
+    const auto file_data = Package::load(obj_path);
+    if (file_data.size() < 4)
+    {
+        DBG_ERROR("mesh file " + obj_path + " is empty or does not exist");
+        return { };
+    }
+
+    if (strncmp(reinterpret_cast<const char*>(file_data.data()), "HBMR", 4) == 0)
+    {
+        DBG_WARNING("mesh file " + obj_path + " is a binary mesh, not an OBJ file");
+        return file_data;
+    }
+
+    vector<Vertex> verts;
+    vector<uint16_t> inds;
+
+    if (!readOBJ(file_data, verts, inds))
+    {
+        DBG_ERROR("mesh file " + obj_path + " could not be read");
+        return { };
+    }
+
+    return encodeBinaryMesh(verts, inds);
+}
