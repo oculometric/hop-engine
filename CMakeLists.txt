@@ -103,7 +103,8 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/engine_resource_binary.cpp
     DEPENDS ${ENGINE_HOP} ${CMAKE_SOURCE_DIR}/bin_to_cpp.py
 )
 
-add_library(hop-engine STATIC ${SRC_FILES} ${CMAKE_BINARY_DIR}/engine_resource_binary.cpp)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+add_library(hop-engine SHARED ${SRC_FILES} ${CMAKE_BINARY_DIR}/engine_resource_binary.cpp)
 
 target_include_directories(hop-engine PRIVATE ${INC_DIRS})
 target_link_libraries(hop-engine PRIVATE ${LIBS})
@@ -147,16 +148,11 @@ set(EXPORTED_INCLUDE "${CMAKE_BINARY_DIR}/include")
 file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/builds")
 if(WIN32)
 	set(PLATFORM Windows)
-	set(EDITOR_EXE_PATH ${CMAKE_BINARY_DIR}/hop-editor.exe)
-    set(ENGINE_LIB_PATH ${CMAKE_BINARY_DIR}/hop-engine.lib)
-    set(PACKAGE_EXE_PATH ${CMAKE_BINARY_DIR}/package-tool.exe)
+    set(EXPORTS hop-editor.exe hop-engine.lib hop-engine.dll hop-engine.exp package-tool.exe)
 	set(TAR_OPTIONS -caf)
 	set(TAR_OUTPUT "${CMAKE_SOURCE_DIR}/builds/hop-engine ${PLATFORM} ${TODAY}.zip")
 else()
 	set(PLATFORM Linux)
-	set(EDITOR_EXE_PATH ${CMAKE_BINARY_DIR}/hop-editor)
-    set(ENGINE_LIB_PATH ${CMAKE_BINARY_DIR}/libhop-engine.a)
-    set(PACKAGE_EXE_PATH ${CMAKE_BINARY_DIR}/package-tool)
 	set(TAR_OPTIONS -cf)
 	set(TAR_OUTPUT "${CMAKE_SOURCE_DIR}/builds/hop-engine ${PLATFORM} ${TODAY}.tar")
 endif()
@@ -166,14 +162,10 @@ add_custom_target(OUTPUT ${EXPORTED_INCLUDE}
     COMMENT "Copying include directory"
 )
 
-cmake_path(GET EDITOR_EXE_PATH FILENAME EDITOR_EXE)
-cmake_path(GET ENGINE_LIB_PATH FILENAME ENGINE_LIB)
-cmake_path(GET PACKAGE_EXE_PATH FILENAME PACKAGE_EXE)
-
 add_custom_target(export
     DEPENDS ${EXPORTED_INCLUDE}
     DEPENDS hop-engine
     DEPENDS package-tool
     DEPENDS hop-editor
-	COMMAND ${ZIP_COMMAND} ${TAR_OPTIONS} ${TAR_OUTPUT} ${EDITOR_EXE} ${ENGINE_LIB} "include" ${PACKAGE_EXE}
+	COMMAND ${ZIP_COMMAND} ${TAR_OPTIONS} ${TAR_OUTPUT} ${EXPORTS} "include"
 )
