@@ -52,6 +52,7 @@ add_custom_command(OUTPUT ${ENGINE_HOP}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMAND package-tool res_engine -c -b -p "engine/" ${ENGINE_HOP}
     DEPENDS package-tool
+    COMMENT "Generating engine.hop"
 )
 
 # ================ STATIC LIBRARY TARGET 'hop-engine' =====================================
@@ -101,6 +102,7 @@ endif()
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/engine_resource_binary.cpp
     COMMAND python ${CMAKE_SOURCE_DIR}/bin_to_cpp.py ${ENGINE_HOP} "${CMAKE_BINARY_DIR}/engine_resource_binary.cpp" engine_hop_raw
     DEPENDS ${ENGINE_HOP} ${CMAKE_SOURCE_DIR}/bin_to_cpp.py
+    COMMENT "Converting engine.hop to CPP format"
 )
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)

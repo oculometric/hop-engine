@@ -280,7 +280,8 @@ void Scene::draw(Ref<DrawCommandBuffer> command_buffer, glm::u32vec2 viewport_si
 
 	// collect all draw calls from the scene (plus the skybox!)
 	vector<DrawCommand> draw_commands;
-	draw_commands.push_back(DrawCommand(skybox_material, RenderServer::getSkyboxCube(), skybox_uniforms).priority(1000));
+    if (skybox)
+	    draw_commands.push_back(DrawCommand(skybox_material, RenderServer::getSkyboxCube(), skybox_uniforms).priority(1000));
 	for (const auto& object : objects)
 	{
 		auto temp = object->getDrawCommands();

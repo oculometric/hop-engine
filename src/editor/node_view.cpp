@@ -33,6 +33,7 @@ void NodeView::setStyle(Ref<Style> new_style)
     material->setFloatUniform("grid_dots_modulate", new_style->grid_dots_modulate);
     material->setIntUniform("grid_scale", new_style->grid_scale);
     material->setVec3Uniform("outline_colour_highlight", new_style->outline_colour_highlight);
+    material->setVec3Uniform("background_colour", new_style->background_colour);
 
     style = new_style;
     updateMesh();

@@ -157,10 +157,10 @@ public:
 	glm::u32vec2 getViewportSize() const { return last_viewport_size; }
 	WeakRef<Object> raycast(glm::vec3 position, glm::vec3 direction) const;
 
-	void setSkybox(WeakRef<Texture> texture); // TODO
+	void setSkybox(WeakRef<Texture> texture);
 
 	void update(float delta_time);
-	void draw(Ref<DrawCommandBuffer> command_buffer, glm::u32vec2 viewport_size); // TODO: gather cameras (set their uniforms), gather lights, gather draw calls, resize and draw render graph
+	void draw(Ref<DrawCommandBuffer> command_buffer, glm::u32vec2 viewport_size);
 	void bindOutputMaterial(Ref<DrawCommandBuffer> command_buffer);
 
 	static Ref<Scene> deserialise(const std::string& name);

@@ -11,6 +11,7 @@ layout(set = 2, binding = 0) uniform MaterialUniforms
     float grid_dots_modulate;
     int grid_scale;
     vec3 outline_colour_highlight;
+    vec3 background_colour;
 };
 
 // int outline_mode;
@@ -153,7 +154,7 @@ void fragment()
         if (factor > 0.0f)
             out_colour = vec4(frag.colour.rgb * (factor > 1.0f ? grid_dots_modulate : 1.0f), 1);
         else
-            discard;
+            out_colour = vec4(background_colour, 1);
     }
     else if (render_mode == RENDER_MODE_UI)
     {

@@ -97,10 +97,15 @@ RenderServer::RenderServer()
     final_render_pass = new RenderPass(swapchain, { 0, true });
     offscreen_pass = new RenderPass({ 1, 1 }, { 3, true });
 
-    uint8_t default_image_data[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
-    default_image = new Texture({ 1, 1, 1 }, Texture::FORMAT_SRGB_8X4, default_image_data);
-    uint8_t default_3d_image_data[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-    default_3d_image = new Texture({ 1, 1, 2 }, Texture::FORMAT_SRGB_8X4, default_3d_image_data);
+    uint8_t default_image_data[4 * 2 * 2 * 2] =
+    {
+        0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0xFF,
+        0xFF, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0xFF,
+        0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0xFF,
+        0xFF, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0xFF,
+    };
+    default_image = new Texture({ 2, 2, 1 }, Texture::FORMAT_SRGB_8X4, default_image_data);
+    default_3d_image = new Texture({ 2, 2, 2 }, Texture::FORMAT_SRGB_8X4, default_image_data);
     default_sampler = new Sampler(Sampler::Builder());
 
     quad = new Mesh({
