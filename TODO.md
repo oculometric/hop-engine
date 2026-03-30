@@ -2,9 +2,9 @@
 
 # v0.54
 - general purpose text rendering (wrapping, alignment, font, underline, bold, italic, strikethrough) [M]
+- make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
 - proper font library [M]
 - make local/global transform from forward/up vectors (generally complete the transform functionality) [H]
-- generalised event dispatcher/registering system (singleton, event enums, event class with unique data slots) [M]
 
 - ui rendering refactor
     - ui management stack/static class

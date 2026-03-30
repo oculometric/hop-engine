@@ -44,6 +44,8 @@ void Engine::start()
 
     while (!RenderServer::getWindowShouldClose() && !engine->stop_requested)
     {
+        EventServer::dispatch(EVENT_TYPE_FRAME_BEGIN);
+
         if (engine->next_application)
         {
             engine->application = engine->next_application;
@@ -88,6 +90,8 @@ void Engine::start()
         engine->updateStats(stats);
         
         ++(engine->frame_index);
+
+        EventServer::dispatch(EVENT_TYPE_FRAME_END);
     }
 }
 
@@ -96,6 +100,7 @@ void Engine::setScene(const Ref<Scene> &new_scene)
     Engine::debugSelect(WeakRef<Object>());
     engine->scene = new_scene;
     RenderServer::setSingleScene(new_scene);
+    EventServer::dispatch(EVENT_TYPE_SCENE_CHANGE);
 }
 
 void Engine::stop()
@@ -134,27 +139,6 @@ void HopEngine::registerCountedRef(const char* type_name, const WeakRef<void>& r
 
 void HopEngine::unregisterCountedRef(const void* ptr)
 { Engine::unregisterCountedRef(ptr); }
-
-FrameStats Engine::getFrameStats()
-{ return engine->last_frame_stats; }
-
-float Engine::getDeltaTime()
-{ return engine->delta_time; }
-
-float Engine::getEngineTime()
-{ return engine->total_time; }
-
-float Engine::getSmoothedDeltaTime()
-{ return engine->smoothed_delta_time; }
-
-float Engine::getSmoothedFPS()
-{ return engine->smoothed_fps; }
-
-size_t Engine::getFrameCount()
-{ return engine->frame_index; }
-
-bool Engine::isWireframeMode()
-{ return engine->wireframe_view; }
 
 void Engine::setForceWireframe(const bool value)
 { engine->wireframe_view = value; }
@@ -308,25 +292,16 @@ Engine::Engine()
     engine->engine_start_timestamp = chrono::steady_clock::now();
 
     Debug::init(Debug::DEBUG_FAULT);
-    Package::init();
 
-// #if defined(_WIN32)
-//     const HRSRC res = FindResource(nullptr, MAKEINTRESOURCE(IDR_HOP1), L"HOP");
-//     const DWORD size = SizeofResource(nullptr, res);
-//     const HGLOBAL data = LoadResource(nullptr, res);
-//     vector<uint8_t> engine_package;
-//     engine_package.resize(size);
-//     memcpy(engine_package.data(), data, size);
-//     Package::loadPackageFromMemory(engine_package, "engine.hop (internal)");
-// #else
+    EventServer::init();
+
+    Package::init();
     DataBlock engine_hop(engine_hop_raw_size);
     memcpy(engine_hop.data(), engine_hop_raw, engine_hop.size());
     Package::importPackage(engine_hop);
-// #endif
+
     RenderServer::init();
-    RenderServer::setIcon("res://engine/icon.png");
-    Input::init();
-    
+    RenderServer::setIcon("res://engine/icon.png");    
     Sampler::Builder builders[6] =
     {
         { Sampler::FILTER_LINEAR,  Sampler::ADDRESS_REPEAT },
@@ -338,10 +313,16 @@ Engine::Engine()
     };
     for (Sampler::Builder s : builders)
         premade_samplers[s] = new Sampler(s);
+    
+    Input::init();
+
+    EventServer::dispatch(EVENT_TYPE_INIT_FINISH);
 }
 
 Engine::~Engine()
 {
+    EventServer::dispatch(EVENT_TYPE_DESTROY_START);
+
     Engine::debugSelect(WeakRef<Object>());
     scene = nullptr;
     application = nullptr;
@@ -352,8 +333,8 @@ Engine::~Engine()
     loaded_meshes.clear();
     premade_samplers.clear();
 
-    Package::destroy();
     Input::destroy();
+    Package::destroy();
     RenderServer::destroy();
     if (!allocated_refs.empty())
     {
@@ -362,11 +343,13 @@ Engine::~Engine()
     }
     else
         DBG_INFO("good girl for cleaning up!");
+
+    EventServer::destroy();
+
     Debug::close();
 }
 
-Engine* Engine::getEngine()
-{ return engine; }
+Engine* Engine::getEngine() { return engine; }
 
 vector<WeakRef<void>> Engine::getRefsWithType(const char* type_name)
 {

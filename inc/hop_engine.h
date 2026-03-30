@@ -20,8 +20,10 @@
 #include "node_view.h"
 
 #include "package.h"
+#include "events.h"
 #include "input.h"
 #include "debug.h"
 #include "deserialise.h"
 
 #include "engine.h"
+#include "events.h"

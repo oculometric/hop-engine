@@ -42,5 +42,6 @@ class UIContextMenu;
 class Font;
 class Application;
 class Engine;
+class EventServer;
 
 }

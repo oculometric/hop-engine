@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "texture.h"
+#include "events.h"
 
 namespace HopEngine
 {
@@ -25,6 +26,17 @@ struct FrameStats final
 
 class Engine final
 {
+public:
+    enum Events : EventServer::TypeID
+    {
+        EVENT_TYPE_INIT_FINISH        = 0x10000001,
+        EVENT_TYPE_DESTROY_START      = 0x10000002,
+        EVENT_TYPE_FRAME_BEGIN        = 0x10000003,
+        EVENT_TYPE_FRAME_END          = 0x10000004,
+        EVENT_TYPE_SCENE_CHANGE       = 0x10000005,
+        EVENT_TYPE_APPLICATION_CHANGE = 0x10000006,
+    };
+
 private:
 	Ref<Scene> scene;
 	Ref<Application> application;
@@ -58,22 +70,23 @@ public:
 	static void init();
 	static void destroy();
 	
-	template<class T> static void runApplication();
+	template<class T> static void startApplication();
 	template<class T> static void switchApplication();
-	static void setScene(const Ref<Scene>& new_scene);
 	static void stop();
-
+    
+	static void setScene(const Ref<Scene>& new_scene);
 	static Ref<Scene> getScene();
 
-	static FrameStats getFrameStats();
-	static float getDeltaTime();
-	static float getEngineTime();
-	static float getSmoothedDeltaTime();
-	static float getSmoothedFPS();
-	static size_t getFrameCount();
+	static float getDeltaTime()         { return getEngine()->delta_time; };
+	static float getEngineTime()        { return getEngine()->total_time; }
+	static float getSmoothedDeltaTime() { return getEngine()->smoothed_delta_time; }
+	static float getSmoothedFPS()       { return getEngine()->smoothed_fps; }
+	static size_t getFrameCount()       { return getEngine()->frame_index; }
+	static FrameStats getFrameStats()   { return getEngine()->last_frame_stats; }
 	
-	static bool isWireframeMode();
+	static bool isWireframeMode()       { return getEngine()->wireframe_view; }
 	static void setForceWireframe(bool value);
+    
 	static void debugSelect(const WeakRef<Object>& object);
 	static WeakRef<Object> getDebugSelection();
 	static void debugCamera(const WeakRef<Object>& selected_camera);
@@ -85,6 +98,7 @@ public:
 	static Ref<Mesh> loadMesh(const std::string& path);
 	static Ref<Sampler> makeSampler(const Sampler::Builder& builder);
 	static size_t pruneUnusedResources();
+
 	template <class T> static std::vector<WeakRef<T>> getAllRefs();
 	static void registerCountedRef(const char* type_name, const WeakRef<void>& reference);
 	static void unregisterCountedRef(const void* ptr);
@@ -105,7 +119,7 @@ private:
 };
 
 template <class T>
-inline void Engine::runApplication()
+inline void Engine::startApplication()
 {
 	static_assert(std::is_convertible_v<T*, Application*>, "T must be a HopEngine::Application subclass");
 	if (getEngine()->start_called)
@@ -114,6 +128,7 @@ inline void Engine::runApplication()
         return;
 	}
 	getEngine()->application = new T();
+    EventServer::dispatch(EVENT_TYPE_APPLICATION_CHANGE);
 	Engine::start();
 }
 
@@ -122,6 +137,7 @@ inline void Engine::switchApplication()
 {
 	static_assert(std::is_convertible_v<T*, Application*>, "T must be a HopEngine::Application subclass");
 	getEngine()->next_application = new T();
+    EventServer::dispatch(EVENT_TYPE_APPLICATION_CHANGE);
 }
 
 template <class T>
