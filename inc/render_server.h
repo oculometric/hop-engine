@@ -141,6 +141,7 @@ public:
 	static WeakRef<Texture> getDefaultTexture() { return getInstance()->default_image; }
 	static WeakRef<Texture> getDefault3DTexture() { return getInstance()->default_3d_image; }
 	static WeakRef<Sampler> getDefaultSampler() { return getInstance()->default_sampler; }
+    static WeakRef<Material> getDefaultMaterial() { return getInstance()->default_material; }
 	static WeakRef<Mesh> getSkyboxCube() { return getInstance()->skybox_cube; }
 	static WeakRef<Mesh> getQuad() { return getInstance()->quad; }
 	

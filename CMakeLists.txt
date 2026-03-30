@@ -48,10 +48,16 @@ else()
 endif()
 
 # ================ RESOURCE TARGET 'engine.hop' ===========================================
+file(GLOB RES_ENGINE
+    "res_engine/*"
+    "res_engine/*/*"
+    "res_engine/*/*/*"
+)
+
 add_custom_command(OUTPUT ${ENGINE_HOP}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMAND package-tool res_engine -c -b -p "engine/" ${ENGINE_HOP}
-    DEPENDS package-tool
+    DEPENDS package-tool ${RES_ENGINE}
     COMMENT "Generating engine.hop"
 )
 

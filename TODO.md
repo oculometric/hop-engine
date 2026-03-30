@@ -1,7 +1,6 @@
 # TODO
 
 # v0.54
-- check material not empty when deserialising (seems to still try to create pipelines?) [E]
 - general purpose text rendering (wrapping, alignment, font, underline, bold, italic, strikethrough) [M]
 - proper font library [M]
 - make local/global transform from forward/up vectors (generally complete the transform functionality) [H]

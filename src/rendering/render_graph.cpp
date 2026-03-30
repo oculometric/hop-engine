@@ -217,13 +217,15 @@ void RenderGraph::draw(WeakRef<DrawCommandBuffer> command_buffer, const std::vec
     }
 
     vector<multiset<DrawCommand, DrawCommand>> step_commands(execution_steps.size());
-    for (const auto& cmd : draw_commands)
+    for (auto cmd : draw_commands)
     {
         for (size_t i = 0; i < execution_steps.size(); ++i)
         {
             const Step& step = execution_steps[i];
             if (!step.is_camera)
                 continue;
+            if (!cmd.material)
+                cmd.material = RenderServer::getDefaultMaterial();
             if (cmd.material->getRenderPass()->isCompatible(step.render_pass) && (cmd.camera_mask & (1 << step.camera_slot)))
                 step_commands[i].insert(cmd);
         }
