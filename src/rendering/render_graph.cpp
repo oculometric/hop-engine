@@ -181,12 +181,22 @@ void RenderGraph::resizeBuffers(glm::u32vec2 new_extent)
 
 void RenderGraph::draw(WeakRef<DrawCommandBuffer> command_buffer, const std::vector<DrawCommand>& draw_commands, const std::map<size_t, std::pair<WeakRef<UniformBlock>, glm::vec4>>& cameras)
 {
+    WeakRef<UniformBlock> last_uniforms = cameras.at(0).first;
     for (const Step& step : execution_steps)
     {
         if (!step.is_camera)
         {
             SceneUniforms* uniforms = reinterpret_cast<SceneUniforms*>(step.scene_uniforms->getBuffer());
-            // TODO: put more info into the scene uniforms here, like matrices, time, etc
+            auto& first_input = execution_steps[(*step.texture_bindings.begin()).first];
+            if (first_input.is_camera)
+                last_uniforms = cameras.at(first_input.camera_slot).first;
+            else
+                last_uniforms = first_input.scene_uniforms;
+            if (last_uniforms)
+            {
+                SceneUniforms* last_uniforms_data = reinterpret_cast<SceneUniforms*>(last_uniforms->getBuffer());
+                memcpy(uniforms, last_uniforms_data, sizeof(SceneUniforms));
+            }
             uniforms->time = Engine::getEngineTime();
             uniforms->viewport_size = { step.render_pass->getExtent().x, step.render_pass->getExtent().y };
         }

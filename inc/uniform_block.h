@@ -34,6 +34,7 @@ private:
 	VkDeviceSize size;		// size of the uniform buffer
 	Shader::Layout layout;	// information about the size and offset of uniform variables
 	uint32_t set_index;
+    bool rebind_needed = true;
 
 public:
 	DELETE_CONSTRUCTORS(UniformBlock);
@@ -44,7 +45,7 @@ public:
 	UniformBlock(const Shader::Layout& layout_info);
 	~UniformBlock() override;
 	
-	void bind(WeakRef<DrawCommandBuffer> command_buffer) const;
+	void bind(WeakRef<DrawCommandBuffer> command_buffer);
 	void* getBuffer() { return live_uniform_buffer.data(); }
 	VkDeviceSize getSize() const { return size; }
 	/**
@@ -60,6 +61,7 @@ public:
 	 * @param sampler sampler to bind. if this sampler is already bound, nothing will change.
 	 */
 	void setSampler(uint32_t binding, Ref<Sampler> sampler);
+    void setTextureSampler(uint32_t binding, Ref<Texture> texture, Ref<Sampler> sampler);
 	
 	void drawImGuiDebug(const std::map<std::string, uint32_t>& texture_name_to_binding);
 

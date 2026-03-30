@@ -101,6 +101,18 @@ void Material::setSampler(const string& name, Ref<Sampler> sampler)
 		DBG_WARNING("material '" + getOrigin() + "' has no such binding '" + name + '\'');
 }
 
+void Material::setTextureSampler(uint32_t binding, Ref<Texture> texture, Ref<Sampler> sampler)
+{
+    setTexture(binding, texture);
+    setSampler(binding, sampler);
+}
+
+void Material::setTextureSampler(const string& name, Ref<Texture> texture, Ref<Sampler> sampler)
+{
+    setTexture(name, texture);
+    setSampler(name, sampler);
+}
+
 void Material::setUniform(const string& name, const void* data, size_t size)
 {
 	const auto it = variable_name_to_binding.find(name);

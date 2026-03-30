@@ -66,8 +66,13 @@ UniformBlock::~UniformBlock()
         RenderServer::free(set);
 }
 
-void UniformBlock::bind(WeakRef<DrawCommandBuffer> command_buffer) const
+void UniformBlock::bind(WeakRef<DrawCommandBuffer> command_buffer)
 {
+    if (rebind_needed)
+    {
+        applyDescriptorBindings();
+        rebind_needed = false;
+    }
     memcpy(uniform_buffers[0]->mapMemory(), live_uniform_buffer.data(), live_uniform_buffer.size());
     command_buffer->bindDescriptorSetInternal(set_index, descriptor_sets[0]);
 }
@@ -82,7 +87,7 @@ void UniformBlock::setTexture(const uint32_t binding, Ref<Texture> image)
         textures_in_use[binding].texture = layout.bindings[binding].texture_is_3d ? RenderServer::getDefault3DTexture().strong() : RenderServer::getDefaultTexture().strong();
     else
         textures_in_use[binding].texture = image;
-    applyDescriptorBindings();
+    rebind_needed = true;
 }
 
 void UniformBlock::setSampler(const uint32_t binding, Ref<Sampler> sampler)
@@ -95,7 +100,13 @@ void UniformBlock::setSampler(const uint32_t binding, Ref<Sampler> sampler)
         textures_in_use[binding].sampler = RenderServer::getDefaultSampler().strong();
     else
         textures_in_use[binding].sampler = sampler;
-    applyDescriptorBindings();
+    rebind_needed = true;
+}
+
+void UniformBlock::setTextureSampler(uint32_t binding, Ref<Texture> texture, Ref<Sampler> sampler)
+{
+    setTexture(binding, texture);
+    setSampler(binding, sampler);
 }
 
 void UniformBlock::applyDescriptorBindings()

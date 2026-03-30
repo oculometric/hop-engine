@@ -155,6 +155,8 @@ public:
 	void setSampler(uint32_t binding, Ref<Sampler> sampler);
 	void setTexture(const std::string& name, Ref<Texture> texture);
 	void setSampler(const std::string& name, Ref<Sampler> sampler);
+    void setTextureSampler(uint32_t binding, Ref<Texture> texture, Ref<Sampler> sampler);
+    void setTextureSampler(const std::string& name, Ref<Texture> texture, Ref<Sampler> sampler);
 
 	void setFloatUniform(const std::string& name, float value) { setUniform(name, &value, sizeof(value)); }
 	void setVec2Uniform(const std::string& name, glm::vec2 value) { setUniform(name, &value, sizeof(value)); }

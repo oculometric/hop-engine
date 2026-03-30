@@ -1,9 +1,14 @@
 # TODO
 
-# v0.60
+# v0.54
+- check material not empty when deserialising (seems to still try to create pipelines?) [E]
+- general purpose text rendering (wrapping, alignment, font, underline, bold, italic, strikethrough) [M]
+- proper font library [M]
+- make local/global transform from forward/up vectors (generally complete the transform functionality) [H]
+- generalised event dispatcher/registering system (singleton, event enums, event class with unique data slots) [M]
+
 - ui rendering refactor
     - ui management stack/static class
-    - general purpose text rendering (wrapping, alignment, font, underline, bold, italic, strikethrough)
     - refactor node view code somewhat
     - ui interaction toolkit
     - make nodes UI instead of a scene...
@@ -13,6 +18,7 @@
     - keydown/keyup
     - multi-element intersection testing, i.e. we end up with a stack of elements which were intersected
 
+# v0.60
 - interactive node editor
     - need to be able to move/disconnect existing links
     - dirty flag system for updating the mesh
@@ -21,7 +27,6 @@
     - box selection
     - right-click menu to allow adding more nodes
     - move overlays (temp link, right click menu, selection box) into their own mesh
-- proper font library
 - fix mouse locking not behaving correctly on linux
 - object duplicate function
 - actual editor
