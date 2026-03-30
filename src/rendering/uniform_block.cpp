@@ -1,4 +1,4 @@
-#include "uniform_block.h"
+#include "material.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -80,26 +80,26 @@ void UniformBlock::bind(WeakRef<DrawCommandBuffer> command_buffer)
 void UniformBlock::setTexture(const uint32_t binding, Ref<Texture> image)
 {
     // if the texture is already bound, skip rebinding it
-    if (textures_in_use[binding].texture == image)
+    if (std::get<0>(textures_in_use[binding]) == image)
         return;
     // update the binding
     if (!image)
-        textures_in_use[binding].texture = layout.bindings[binding].texture_is_3d ? RenderServer::getDefault3DTexture().strong() : RenderServer::getDefaultTexture().strong();
+        std::get<0>(textures_in_use[binding]) = layout.bindings[binding].texture_is_3d ? RenderServer::getDefault3DTexture().strong() : RenderServer::getDefaultTexture().strong();
     else
-        textures_in_use[binding].texture = image;
+        std::get<0>(textures_in_use[binding]) = image;
     rebind_needed = true;
 }
 
 void UniformBlock::setSampler(const uint32_t binding, Ref<Sampler> sampler)
 {
     // if same sampler, skip rebinding
-    if (textures_in_use[binding].sampler == sampler)
+    if (std::get<1>(textures_in_use[binding]) == sampler)
         return;
     // update sampler binding; use default engine sampler if null
     if (!sampler)
-        textures_in_use[binding].sampler = RenderServer::getDefaultSampler().strong();
+        std::get<1>(textures_in_use[binding]) = RenderServer::getDefaultSampler().strong();
     else
-        textures_in_use[binding].sampler = sampler;
+        std::get<1>(textures_in_use[binding]) = sampler;
     rebind_needed = true;
 }
 
@@ -147,15 +147,15 @@ void UniformBlock::applyDescriptorBindings()
                 // if the binding is a texture-sampler, give it the image view
                 // and sampler specified in the texture map
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                auto& texture = textures_in_use[binding.binding].texture;
+                auto& texture = std::get<0>(textures_in_use[binding.binding]);
                 if (texture->is3D() != binding.texture_is_3d)
                 {
                     DBG_ERROR("uniform attempted to bind an incompatible texture dimension. texture will be reset to default.");
-                    textures_in_use[binding.binding].texture = binding.texture_is_3d ? RenderServer::getDefault3DTexture().strong() : RenderServer::getDefaultTexture().strong();
-                    texture = textures_in_use[binding.binding].texture;
+                    std::get<0>(textures_in_use[binding.binding]) = binding.texture_is_3d ? RenderServer::getDefault3DTexture().strong() : RenderServer::getDefaultTexture().strong();
+                    texture = std::get<0>(textures_in_use[binding.binding]);
                 }
                 image_info.imageView = texture->getView();
-                image_info.sampler = textures_in_use[binding.binding].sampler->getSampler();
+                image_info.sampler = std::get<1>(textures_in_use[binding.binding])->getSampler();
                 descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 descriptor_write.pImageInfo = &image_info;
             }

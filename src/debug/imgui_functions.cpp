@@ -10,7 +10,6 @@
 #include "texture.h"
 #include "material.h"
 #include "input.h"
-#include "uniform_block.h"
 #include "render_graph.h"
 #include "render_server.h"
 #include "package.h"
@@ -247,8 +246,8 @@ void UniformBlock::drawImGuiDebug(const map<string, uint32_t>& texture_name_to_b
 			ImGui::PushID(static_cast<int>(tex_id));
 			ImGui::LabelText("binding", "%u", tex_id);
 			ImGui::LabelText("name", "%s", binding_to_texture_name[tex_id].c_str());
-			auto result = texturePicker(tex_bind.texture, "texture");
-			if (result != tex_bind.texture)
+			auto result = texturePicker(std::get<0>(tex_bind), "texture");
+			if (result != std::get<0>(tex_bind))
 				setTexture(tex_id, result.strong());
 			ImGui::PopID();
 		}

@@ -3,23 +3,18 @@
 namespace HopEngine
 {
 
-// core graphics classes
+// graphics classes
 class RenderServer;
 class TransientCommandBuffer;
 class DrawCommandBuffer;
-
-// presentation graphics classes
 class Swapchain;
 class RenderPass;
 class RenderGraph;
-
-// rendering graphics classes
 class Pipeline;
 class Buffer;
 class UniformBlock;
 class Shader;
-
-// resource graphics classes
+struct FrameStats;
 class Material;
 class Texture;
 class Sampler;
@@ -45,5 +40,7 @@ class UIContextMenu;
 
 // misc
 class Font;
+class Application;
+class Engine;
 
 }

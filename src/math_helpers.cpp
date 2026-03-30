@@ -4,10 +4,10 @@ using namespace HopEngine;
 using namespace std;
 
 float HopEngine::intersect(glm::vec3 ray_origin, glm::vec3 ray_direction,
-    const BoundingBox& bounding_box, Transform& transform)
+    const BoundingBox& bounding_box, glm::mat4 transform)
 {
     // transform ray into bounding box space
-    glm::mat4 world_to_model      = glm::inverse(transform.getMatrix());
+    glm::mat4 world_to_model      = glm::inverse(transform);
     glm::vec3 local_ray_origin    = world_to_model * glm::vec4(ray_origin, 1.0f);
     glm::vec3 local_ray_direction = world_to_model * glm::vec4(glm::normalize(ray_direction), 0.0f);
 

@@ -9,8 +9,6 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include "uniform_block.h"
-#include "render_pass.h"
 #include "swapchain.h"
 #include "engine.h"
 #include "material.h"

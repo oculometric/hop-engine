@@ -4,8 +4,8 @@
 #include <glm/glm.hpp>
 #include <functional>
 
-#include "draw_command.h"
 #include "common.h"
+#include "scene.h"
 
 namespace HopEngine
 {

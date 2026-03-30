@@ -8,6 +8,7 @@
 #include "scene.h"
 #include "basic_components.h"
 #include "mesh.h"
+#include "texture.h"
 
 namespace HopEngine
 {

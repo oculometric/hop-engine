@@ -3,6 +3,7 @@
 #include <glm/vec2.hpp>
 
 #include "common.h"
+#include "texture.h"
 
 namespace HopEngine
 {

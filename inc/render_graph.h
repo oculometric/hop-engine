@@ -8,10 +8,8 @@
 
 #include "common.h"
 #include "texture.h"
-#include "render_pass.h"
-#include "draw_command.h"
+#include "swapchain.h"
 #include "engine.h"
-#include "uniform_block.h"
 #include "material.h"
 
 namespace HopEngine

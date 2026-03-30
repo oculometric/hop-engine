@@ -217,7 +217,7 @@ WeakRef<Object> Scene::raycast(const glm::vec3 position, const glm::vec3 directi
 	WeakRef<Object> closest_obj;
 	for (auto& object : objects)
 	{
-		const float result = intersect(position, direction, object->getLocalBounds(), object->transform);
+		const float result = intersect(position, direction, object->getLocalBounds(), object->transform.getMatrix());
 		if (result < 0.01f)
 			continue;
 		if (result < min_dist)

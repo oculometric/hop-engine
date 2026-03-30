@@ -1,7 +1,6 @@
 #include "render_server.h"
 
 #include "material.h"
-#include "uniform_block.h"
 #include "render_graph.h"
 #include "swapchain.h"
 #include "engine.h"

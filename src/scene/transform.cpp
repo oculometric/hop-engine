@@ -1,12 +1,9 @@
-#include "transform.h"
+#include "scene.h"
 
-#include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/common.hpp>
 #include <glm/common.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
-
-#include "scene.h"
 
 using namespace HopEngine;
 

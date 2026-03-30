@@ -4,7 +4,6 @@
 
 #include "mesh.h"
 #include "material.h"
-#include "uniform_block.h"
 #include "render_server.h"
 #include "command_buffer.h"
 #include "scene.h"

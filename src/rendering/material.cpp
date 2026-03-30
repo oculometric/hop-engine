@@ -3,9 +3,7 @@
 #include "command_buffer.h"
 #include "engine.h"
 #include "render_server.h"
-#include "render_pass.h"
-#include "pipeline.h"
-#include "uniform_block.h"
+#include "swapchain.h"
 #include "texture.h"
 
 using namespace HopEngine;
