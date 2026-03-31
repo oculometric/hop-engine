@@ -1,21 +1,51 @@
 # TODO
 
 # v0.54
-- general purpose text rendering (wrapping, alignment, font, underline, bold, italic, strikethrough) [M]
-- make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
-- proper font library [M]
-- make local/global transform from forward/up vectors (generally complete the transform functionality) [H]
+- document everything
 
-- ui rendering refactor
-    - ui management stack/static class
-    - refactor node view code somewhat
-    - ui interaction toolkit
-    - make nodes UI instead of a scene...
-    - ui elements - label, button, dropdown, checkbox, textbox, slider
-- ui input event system
-    - mousedown/mouseup/mouseclick/mousedrag
-    - keydown/keyup
-    - multi-element intersection testing, i.e. we end up with a stack of elements which were intersected
+- the ui update
+    - text rendering
+        - multiline
+        - wrapping & clipping
+        - alignment (with multiline support)
+        - underline
+        - bold
+        - italic
+        - strikethrough
+    - more advanced font
+        - font serial format
+        - .otf -> baked font converter
+    - ui renderer functions return 'backing data'
+    - ui renderer allows updating of existing backing data (i.e. changing appearance/position/size without creating/destroying geometry)
+    - ui canvas
+        - canvas wraps ui renderer
+        - canvas can be in 'world' mode, or 'view' mode
+            - view mode is added to a global ui stack which is applied at composite time
+            - world mode can have world space transforms applied, exists as a component
+        - canvas can contain a tree of ui elements
+        - element classes have 'predraw' functions which add stuff to the renderer
+        - elements keep their backing data around to be able to cheaply update meshes when clicking/hovering etc
+        - elements automatically get interactions passed to them from the event system (mouse position in local space)
+        - basic elements
+            - label
+            - button
+            - dropdown
+            - checkbox
+            - radiobutton
+            - textbox
+            - slider
+        - element layouting system
+    - ui input event system
+        - mousedown/mouseup/mouseclick/mousedrag
+        - keydown/keyup
+        - multi-element intersection testing, i.e. we end up with a stack of elements which were intersected
+    - refactor nodes to use the ui renderer
+        - no longer their own scene
+        - pack everything into a single texture
+        - use the generic user interface shader
+
+- make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
+- make local/global transform from forward/up vectors (generally complete the transform functionality) [H]
 
 # v0.60
 - interactive node editor
@@ -40,7 +70,6 @@
 
 # v0.61
 - switch to glslang for shader compilation
-- document everything
 - audio loading and output
 - shader & other resource reloading at runtime
 - windowless offscreen rendering support

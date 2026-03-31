@@ -40,7 +40,7 @@ void UIRenderer::clear()
     indices.clear();
 }
 
-void UIRenderer::addQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4,
+UIRenderer::BackingData UIRenderer::addQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, float z,
     glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec4 colour, glm::vec4 normal, glm::vec4 tangent)
 {
     uint16_t v_off = static_cast<uint16_t>(vertices.size());
@@ -68,18 +68,41 @@ void UIRenderer::addQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4,
         colour, normal, tangent, uv_br
     });
 
-    indices.push_back(v_off + 0);
-    indices.push_back(v_off + 3);
-    indices.push_back(v_off + 1);
-    indices.push_back(v_off + 0);
-    indices.push_back(v_off + 2);
-    indices.push_back(v_off + 3);
+    if (!indices.contains(z))
+        indices[z] = {};
+
+    auto& _indices = indices[z];
+
+    BackingData backing;
+    backing.first_vertex = v_off;
+    backing.vertex_count = 4;
+    backing.first_index = static_cast<uint16_t>(_indices.size());
+    backing.index_count = 6;
+    backing.z = z;
+
+    _indices.push_back(v_off + 0);
+    _indices.push_back(v_off + 3);
+    _indices.push_back(v_off + 1);
+    _indices.push_back(v_off + 0);
+    _indices.push_back(v_off + 2);
+    _indices.push_back(v_off + 3);
+
+    return backing;
 }
 
-void UIRenderer::addText(const string& text, glm::vec2 position, glm::vec3 colour, int align)
+UIRenderer::BackingData UIRenderer::addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text, glm::vec3 colour)
 {
     const glm::vec2 uv_size   = style->font->getGlyphUVSize();
     const glm::vec2 char_size = style->font->getGlyphSize();
+
+    UIRenderer::BackingData backing;
+    backing.first_vertex = -1;
+    backing.vertex_count = 0;
+    backing.first_index = -1;
+    backing.index_count = 0;
+    backing.z = z;
+
+    // TODO: advanced text with multiline, wrapping, formatting
 
     glm::vec2 start = position;
     float width = ((text.size() + 1) * (style->font->getGlyphSize().x - 1.0f)) -
@@ -98,25 +121,32 @@ void UIRenderer::addText(const string& text, glm::vec2 position, glm::vec3 colou
         glm::vec2 uv_tl  = uv_base;
         uv_tl.y = 1.0f - uv_tl.y;
 
-        addQuad(top_left, top_left + glm::vec2{ char_size.x, 0 },
-            top_left + glm::vec2{ 0, char_size.y }, top_left + char_size,
+        auto back = addQuad(top_left, top_left + glm::vec2{ char_size.x, 0 },
+            top_left + glm::vec2{ 0, char_size.y }, top_left + char_size, z,
             uv_tl, uv_br, glm::vec4{ colour, 1 }, glm::vec4{ 0, 0, 0, 0 }, glm::vec4{ 0, 0, 0, 0 });
+        backing.first_vertex = std::min(backing.first_vertex, back.first_vertex);
+        backing.vertex_count += back.vertex_count;
+        backing.first_index = std::min(backing.first_index, back.first_index);
+        backing.index_count += back.index_count;
 
         top_left.x += style->font->getGlyphSize().x - 1.0f;
     }
+
+    return backing;
 }
 
-void UIRenderer::addNineSlice(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 fill)
+UIRenderer::BackingData UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec3 fill)
 {
-    addQuad(position, position + glm::vec2{ size.x, 0 },
-            position + glm::vec2{ 0, size.y }, position + size,
-            { 0, 0 }, { 1, 1 }, glm::vec4{ fill, 1 }, glm::vec4{ 1, layer, 0b1111, 0 }, glm::vec4{ size, 0, 0 });
+    return addQuad(position, position + glm::vec2{ size.x, 0 },
+            position + glm::vec2{ 0, size.y }, position + size, z,
+            { 0, 0 }, { 1, 1 },
+            glm::vec4{ fill, 1 }, glm::vec4{ 1, layer, 0b1111, 0 }, glm::vec4{ size, 0, 0 });
 }
 
-void UIRenderer::addSimple(glm::vec2 position, glm::vec2 size, glm::vec2 uv_base, glm::vec2 uv_size, int layer)
+UIRenderer::BackingData UIRenderer::addSimple(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec2 uv_base, glm::vec2 uv_size)
 {
-    addQuad(position, position + glm::vec2{ size.x, 0 },
-            position + glm::vec2{ 0, size.y }, position + size,
+    return addQuad(position, position + glm::vec2{ size.x, 0 },
+            position + glm::vec2{ 0, size.y }, position + size, z,
             uv_base, uv_base + uv_size, glm::vec4{ 1, 1, 1, 1 }, glm::vec4{ 2, layer, 0, 0 }, glm::vec4{ 0, 0, 0, 0 });
 }
 
