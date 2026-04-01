@@ -12,7 +12,6 @@
         - bold
         - italic
         - strikethrough
-    - ui renderer allows updating of existing backing data (i.e. changing appearance/position/size without creating/destroying geometry) [2]
     - ui canvas
         - canvas wraps ui renderer [4]
         - canvas can be in 'world' mode, or 'view' mode [5]

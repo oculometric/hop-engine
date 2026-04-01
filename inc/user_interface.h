@@ -106,16 +106,17 @@ public:
     ~UIRenderer() override;
 
     void               clear();
+    BackingData      addQuad(float z);
     BackingData      addQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, float z, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec4 colour, glm::vec4 normal, glm::vec4 tangent);
     BackingData      addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text, glm::vec3 colour);
     BackingData addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec3 fill);
     BackingData    addSimple(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec2 uv_base, glm::vec2 uv_size);
     void            finalise();
 
-    void          updateQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, float z, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec4 colour, glm::vec4 normal, glm::vec4 tangent, BackingData backing);
-    void          updateText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text, glm::vec3 colour, BackingData backing);
-    void     updateNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec3 fill, BackingData backing);
-    void        updateSimple(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec2 uv_base, glm::vec2 uv_size, BackingData backing);
+    void          updateQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec4 colour, glm::vec4 normal, glm::vec4 tangent, BackingData backing);
+    bool          updateText(glm::vec2 position, TextFormatting formatting, const std::string& text, glm::vec3 colour, BackingData backing);
+    void     updateNineSlice(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 fill, BackingData backing);
+    void        updateSimple(glm::vec2 position, glm::vec2 size, int layer, glm::vec2 uv_base, glm::vec2 uv_size, BackingData backing);
 
     DrawCommand draw() const { return DrawCommand(material, mesh); }
 };
