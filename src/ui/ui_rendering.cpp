@@ -273,7 +273,7 @@ void UIRenderer::updateTextSingleLine(glm::vec2 position, TextFormatting formatt
 
         updateQuad(top_left + skew, top_left + glm::vec2{ char_size.x, 0 } + skew,
             top_left + glm::vec2{ 0, char_size.y }, top_left + char_size,
-            uv_tl, uv_br, glm::vec4{ colour, 1 }, glm::vec4{ 0, static_cast<float>(flags), 0, 0 }, glm::vec4{ 0, 0, 0, 0 }, temp);
+            uv_tl, uv_br, glm::vec4{ colour, 1 }, glm::vec4{ 0, static_cast<float>(flags), 0, 0 }, glm::vec4{ char_size, 0, 0 }, temp);
         
         top_left.x += char_size.x + formatting.spacing;
 

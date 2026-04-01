@@ -6,8 +6,6 @@
 - the ui update
     - text rendering [1]
         - clipping
-        - underline
-        - strikethrough
     - ui canvas
         - canvas wraps ui renderer [2]
         - canvas can be in 'world' mode, or 'view' mode [3]
