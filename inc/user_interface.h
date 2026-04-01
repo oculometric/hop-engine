@@ -77,8 +77,10 @@ public:
     {
         TextAlign align = TEXT_ALIGN_LEFT;
         TextFlags flags = TEXT_FLAGS_NONE;
+        bool terminate_at_newline = false;
         bool wrap = false;
         glm::ivec2 clip_bounds = { 0, 0 };
+        int spacing = -1;
     };
 
     struct BackingData final
@@ -119,6 +121,9 @@ public:
     void        updateSimple(glm::vec2 position, glm::vec2 size, int layer, glm::vec2 uv_base, glm::vec2 uv_size, BackingData backing);
 
     DrawCommand draw() const { return DrawCommand(material, mesh); }
+
+private:
+    void updateTextSingleLine(glm::vec2 position, TextFormatting formatting, const std::string& text, glm::vec3 colour, BackingData backing);
 };
 
 class UIContextMenu final : public Destructible

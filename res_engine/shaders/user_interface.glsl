@@ -6,14 +6,16 @@ void vertex()
     frag.colour = in_colour;        // .rgb  -> primary detail colour
                                     // .a    -> unused
     frag.normal = in_normal;        // .x    -> draw mode (0 = text, 1 = 9-slice, 2 = simple uv)
-                                    // .y    -> texture slice (for 9-slice and simple uv modes) OR text mode (0 = regular, 1 = bold)
+                                    // .y    -> texture slice (for 9-slice and simple uv modes) OR text mode bitflags (bit 0 = bold, bit 1 = underline, bit 2 = strikethrough)
                                     // .z    -> packed border booleans (for 9-slice mode)
                                     // .w    -> unused
     frag.tangent = in_tangent;      // .xy   -> quad size (when in 9-slice mode)
                                     // .zw   -> unused
     frag.uv = in_uv;
-    // vertex coordinates are passed in in canvas space ({ 0, 0 } is top left, { width, height } is bottom right)
-    gl_Position.xy = in_position.xy / (scene.viewport_size / 2.0f);//round(in_position.xy - (scene.viewport_size / 2.0f)) / (scene.viewport_size / 2.0f);
+
+    // vertex coordinates are passed in in canvas space ({ 0, 0 } is center)
+    vec2 pixel_position = floor(in_position.xy + (scene.viewport_size / 2.0f));
+    gl_Position.xy = (pixel_position / vec2(scene.viewport_size)) * 2.0f - 1.0f;
     gl_Position.zw = vec2(0, 1);
 }
 
@@ -74,16 +76,18 @@ void fragment()
     {
         vec2 uv = frag.uv;
         int text_mode = int(frag.normal.y);
-        if (text_mode == 0)
-        {
-            if (texture(text_atlas, uv).r < 0.5f)
-                discard;
-        }
-        else if (text_mode == 1)
+        if ((text_mode & 1) > 0)
         {
             if (texture(text_bold_atlas, uv).r < 0.5f)
                 discard;
         }
+        else
+        {
+            if (texture(text_atlas, uv).r < 0.5f)
+                discard;
+        }
+
+        // TODO: underline and strikethrough!
         
         out_colour = vec4(fill_colour, 1);
     }

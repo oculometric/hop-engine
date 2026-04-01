@@ -44,6 +44,7 @@ void UIContextMenu::addButton(const std::string& text, std::function<void()> cal
 
 void UIContextMenu::done()
 {
+    renderer->clear();
     renderer->addNineSlice(top_corner - glm::vec2{ 5, 5 }, -1.0f, glm::vec2{ 220, elements.size() * 32 } + glm::vec2{ 10, 10 }, 1, glm::vec3{ 0.8f, 0.8f, 0.8f });
     size_t element_index = 0;
     for (const auto& elem : elements)
@@ -54,8 +55,16 @@ void UIContextMenu::done()
 
         ++element_index;
     }
+
+    renderer->addText(glm::vec2{ 0, 0 }, 2.0f,
+        UIRenderer::TextFormatting{
+            .align = UIRenderer::TEXT_ALIGN_CENTER,
+            .flags = UIRenderer::TEXT_FLAGS_UNDERLINE,
+            .wrap = true,
+            .clip_bounds = { 450, 0 }
+        }, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam bibendum massa ut urna laoreet vehicula.", { 0, 0, 0 });
+
     renderer->finalise();
-    renderer->clear();
 }
 
 bool UIContextMenu::checkInput()

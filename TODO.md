@@ -4,21 +4,17 @@
 - document everything
 
 - the ui update
-    - text rendering [3]
-        - multiline
-        - wrapping & clipping
-        - alignment (with multiline support)
+    - text rendering [1]
+        - clipping
         - underline
-        - bold
-        - italic
         - strikethrough
     - ui canvas
-        - canvas wraps ui renderer [4]
-        - canvas can be in 'world' mode, or 'view' mode [5]
+        - canvas wraps ui renderer [2]
+        - canvas can be in 'world' mode, or 'view' mode [3]
             - view mode is added to a global ui stack which is applied at composite time
             - world mode can have world space transforms applied, exists as a component
         - canvas can contain a tree of ui elements
-        - element classes have 'predraw' functions which add stuff to the renderer [6]
+        - element classes have 'predraw' functions which add stuff to the renderer [4]
         - elements keep their backing data around to be able to cheaply update meshes when clicking/hovering etc
         - elements automatically get interactions passed to them from the event system (mouse position in local space)
         - basic elements
@@ -30,7 +26,7 @@
             - textbox
             - slider
         - element layouting system
-    - ui input event system [7]
+    - ui input event system [5]
         - mousedown/mouseup/mouseclick/mousedrag
         - mouseenter/mouseexit/mousemove
         - keydown/keyup

@@ -32,10 +32,11 @@ void vertex()
     frag.normal = in_normal;
     frag.tangent = in_tangent;
     frag.uv = in_uv;
-    // FIXME: consider this in viewport coordinates, round it, then take it back to clip coords
-    vec2 viewport_half = floor(scene.viewport_size.xy / vec2(2, -2));
+
     vec2 camera_offset = floor(object.model_to_world[3].xy * vec2(0.5f, -0.5f)) / 0.5f;
-    gl_Position = vec4((frag.position.xy + camera_offset) / viewport_half, 0.5f, 1.0f);
+    vec2 pixel_position = floor(in_position.xy + camera_offset + (scene.viewport_size / 2.0f));
+    gl_Position = vec4((pixel_position / vec2(scene.viewport_size)) * 2.0f - 1.0f, 0.5f, 1.0f);
+    gl_Position.y *= -1;
 }
 
 #pragma DEFAULT_ATTACHMENTS
