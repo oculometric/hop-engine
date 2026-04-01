@@ -217,17 +217,22 @@ bool UIRenderer::updateText(glm::vec2 position, TextFormatting formatting,
     temp.index_count = 6;
 
     glm::vec2 top_left = position;
+    int bottom_clip = formatting.clip_bounds.y;
+    if (bottom_clip <= 0) bottom_clip = INT_MAX;
     for (const auto& line : lines)
     {
+        TextFormatting sub_format = formatting;
+        sub_format.clip_bounds.y = bottom_clip;
         if (allocated_chars < line.size())
         {
-            updateTextSingleLine(top_left, formatting, line.substr(0, allocated_chars), colour, temp);
+            updateTextSingleLine(top_left, sub_format, line.substr(0, allocated_chars), colour, temp);
             break;
         }
-        updateTextSingleLine(top_left, formatting, line, colour, temp);
+        updateTextSingleLine(top_left, sub_format, line, colour, temp);
         allocated_chars -= line.size();
 
         top_left.y += char_size.y - 2.0f;
+        bottom_clip -= static_cast<int>(char_size.y - 2.0f);
         temp.first_vertex += 4 * static_cast<uint16_t>(line.size());
         temp.first_index += 6 * static_cast<uint16_t>(line.size());
     }
@@ -269,11 +274,22 @@ void UIRenderer::updateTextSingleLine(glm::vec2 position, TextFormatting formatt
         if (formatting.flags & UIRenderer::TEXT_FLAGS_UNDERLINE)     flags |= 2;
         if (formatting.flags & UIRenderer::TEXT_FLAGS_STRIKETHROUGH) flags |= 4;
         
-        // TODO: perform clipping (skip line or truncate quads (recalc UVs!!), horizontal as well as vertical)
+        glm::vec2 tl = top_left + skew;
+        glm::vec2 tr = top_left + glm::vec2{ char_size.x, 0 } + skew;
+        glm::vec2 bl = top_left + glm::vec2{ 0, char_size.y };
+        glm::vec2 br = top_left + char_size;
 
-        updateQuad(top_left + skew, top_left + glm::vec2{ char_size.x, 0 } + skew,
-            top_left + glm::vec2{ 0, char_size.y }, top_left + char_size,
-            uv_tl, uv_br, glm::vec4{ colour, 1 }, glm::vec4{ 0, static_cast<float>(flags), 0, 0 }, glm::vec4{ char_size, 0, 0 }, temp);
+        if (char_size.y > formatting.clip_bounds.y)
+        {
+            float subtract_amount_px = glm::min(char_size.y, char_size.y - formatting.clip_bounds.y);
+            float subtract_amount_uv = (uv_size.y / char_size.y) * subtract_amount_px;
+            bl.y -= subtract_amount_px;
+            br.y -= subtract_amount_px;
+            uv_br.y += subtract_amount_uv;
+        }
+
+        updateQuad(tl, tr, bl, br, uv_tl, uv_br,
+            glm::vec4{ colour, 1 }, glm::vec4{ 0, static_cast<float>(flags), 0, 0 }, glm::vec4{ char_size, 0, 0 }, temp);
         
         top_left.x += char_size.x + formatting.spacing;
 

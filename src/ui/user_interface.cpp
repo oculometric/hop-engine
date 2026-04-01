@@ -59,9 +59,8 @@ void UIContextMenu::done()
     renderer->addText(glm::vec2{ 0, 0 }, 2.0f,
         UIRenderer::TextFormatting{
             .align = UIRenderer::TEXT_ALIGN_CENTER,
-            .flags = UIRenderer::TextFlags(UIRenderer::TEXT_FLAGS_UNDERLINE | UIRenderer::TEXT_FLAGS_STRIKETHROUGH),
             .wrap = true,
-            .clip_bounds = { 450, 0 }
+            .clip_bounds = { 250, 100 }
         }, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam bibendum massa ut urna laoreet vehicula.", { 0, 0, 0 });
 
     renderer->finalise();
