@@ -4,7 +4,7 @@
 - document everything
 
 - the ui update
-    - text rendering
+    - text rendering [3]
         - multiline
         - wrapping & clipping
         - alignment (with multiline support)
@@ -12,18 +12,14 @@
         - bold
         - italic
         - strikethrough
-    - more advanced font
-        - font serial format
-        - .otf -> baked font converter
-    - ui renderer functions return 'backing data'
-    - ui renderer allows updating of existing backing data (i.e. changing appearance/position/size without creating/destroying geometry)
+    - ui renderer allows updating of existing backing data (i.e. changing appearance/position/size without creating/destroying geometry) [2]
     - ui canvas
-        - canvas wraps ui renderer
-        - canvas can be in 'world' mode, or 'view' mode
+        - canvas wraps ui renderer [4]
+        - canvas can be in 'world' mode, or 'view' mode [5]
             - view mode is added to a global ui stack which is applied at composite time
             - world mode can have world space transforms applied, exists as a component
         - canvas can contain a tree of ui elements
-        - element classes have 'predraw' functions which add stuff to the renderer
+        - element classes have 'predraw' functions which add stuff to the renderer [6]
         - elements keep their backing data around to be able to cheaply update meshes when clicking/hovering etc
         - elements automatically get interactions passed to them from the event system (mouse position in local space)
         - basic elements
@@ -35,8 +31,9 @@
             - textbox
             - slider
         - element layouting system
-    - ui input event system
+    - ui input event system [7]
         - mousedown/mouseup/mouseclick/mousedrag
+        - mouseenter/mouseexit/mousemove
         - keydown/keyup
         - multi-element intersection testing, i.e. we end up with a stack of elements which were intersected
     - refactor nodes to use the ui renderer
@@ -73,6 +70,7 @@
 - audio loading and output
 - shader & other resource reloading at runtime
 - windowless offscreen rendering support
+- .otf -> baked font converter (font oven)
 ---
 
 ## v0.7

@@ -1,0 +1,5 @@
+// this font makes use of the IBM XGA AI font, from int10h.org
+
+Resource(texture, "res://engine/textures/font_IBM_XGA_AI_12x23.png") : regular_atlas;
+
+Atlas(regular = @regular_atlas, bold = @regular_atlas, glyph_size = [ 14, 25 ]);

@@ -7,7 +7,7 @@
 #include "mesh.h"
 #include "scene.h"
 #include "command_buffer.h"
-#include "font.h"
+#include "user_interface.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -133,7 +133,7 @@ RenderServer::RenderServer()
     debug_text_mesh = new Mesh({}, {}, true);
     debug_text_material = new Material(new Shader("res://engine/shaders/screen_space_text.glsl"),
         Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthTest(false), final_render_pass);
-    debug_text_material->setTexture(0, debug_text_font->getAtlas());
+    debug_text_material->setTexture(0, debug_text_font->getAtlas().strong());
     debug_text_material->setSampler(0, new Sampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST)));
 
     initImGui();

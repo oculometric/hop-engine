@@ -16,7 +16,7 @@
 
 #include "scene.h"
 #include "basic_components.h"
-#include "font.h"
+#include "user_interface.h"
 #include "node_view.h"
 
 #include "package.h"

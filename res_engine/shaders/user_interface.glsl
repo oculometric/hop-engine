@@ -6,7 +6,7 @@ void vertex()
     frag.colour = in_colour;        // .rgb  -> primary detail colour
                                     // .a    -> unused
     frag.normal = in_normal;        // .x    -> draw mode (0 = text, 1 = 9-slice, 2 = simple uv)
-                                    // .y    -> texture slice (for 9-slice and simple uv modes)
+                                    // .y    -> texture slice (for 9-slice and simple uv modes) OR text mode (0 = regular, 1 = bold)
                                     // .z    -> packed border booleans (for 9-slice mode)
                                     // .w    -> unused
     frag.tangent = in_tangent;      // .xy   -> quad size (when in 9-slice mode)
@@ -20,7 +20,8 @@ void vertex()
 #pragma CANVAS_ATTACHMENTS
 
 layout(set = 2, binding = 1) uniform sampler2D text_atlas;
-layout(set = 2, binding = 2) uniform sampler3D ui_atlas;
+layout(set = 2, binding = 2) uniform sampler2D text_bold_atlas;
+layout(set = 2, binding = 3) uniform sampler3D ui_atlas;
 
 vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size, bool top_border, bool bottom_border, bool left_border, bool right_border)
 {
@@ -72,8 +73,18 @@ void fragment()
     if (draw_mode == 0)         // text mode
     {
         vec2 uv = frag.uv;
-        if (texture(text_atlas, uv).r < 0.5f)
-            discard;
+        int text_mode = int(frag.normal.y);
+        if (text_mode == 0)
+        {
+            if (texture(text_atlas, uv).r < 0.5f)
+                discard;
+        }
+        else if (text_mode == 1)
+        {
+            if (texture(text_bold_atlas, uv).r < 0.5f)
+                discard;
+        }
+        
         out_colour = vec4(fill_colour, 1);
     }
     else if (draw_mode == 1)    // 9-slice mode

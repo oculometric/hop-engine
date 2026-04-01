@@ -1,30 +1,9 @@
 #include "user_interface.h"
 
 #include "engine.h"
-#include "font.h"
 #include "input.h"
 
 using namespace HopEngine;
-using namespace std;
-
-UIStyle::UIStyle()
-{
-    shader = Engine::loadShader("res://engine/shaders/user_interface.glsl");
-    font = new Font("res://engine/textures/font_IBM_XGA_AI_12x23.png", { 14, 25 });
-    ui_atlas = Engine::loadTexture3D("res://engine/textures/ui_kit_98.png", 4, 4);
-}
-
-UIStyle::~UIStyle() { }
-
-Ref<Material> UIStyle::makeMaterial()
-{
-    Ref mat = new Material(shader, Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthWrite(false));
-    mat->setTexture(1, font->getAtlas());
-    mat->setTexture(2, ui_atlas);
-    mat->setSampler(1, Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST)));
-    mat->setSampler(2, Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST)));
-    return mat;
-}
 
 UIRenderer::UIRenderer(Ref<UIStyle> _style)
 {
@@ -107,9 +86,9 @@ UIRenderer::BackingData UIRenderer::addText(glm::vec2 position, float z, TextFor
     glm::vec2 start = position;
     float width = ((text.size() + 1) * (style->font->getGlyphSize().x - 1.0f)) -
                   (-1.0f);
-    if (align > 0) start.x -= width;
-    else if (align == 0)
-        start.x -= glm::round(width / 2.0f);
+    // if (align > 0) start.x -= width;
+    // else if (align == 0)
+    //     start.x -= glm::round(width / 2.0f);
 
     glm::vec2 top_left = start;
     for (char c : text)
@@ -152,53 +131,19 @@ UIRenderer::BackingData UIRenderer::addSimple(glm::vec2 position, float z, glm::
 
 void UIRenderer::finalise()
 {
-    if (!mesh)
-        mesh = new Mesh(vertices, indices, true);
-    else
-        mesh->updateData(vertices, indices, ((vertices.size() / 256) + 1) * 256, ((indices.size() / 256) + 1) * 256 );
-}
-
-UIContextMenu::UIContextMenu(glm::vec2 position)
-{
-    top_corner = position;
-    renderer = new UIRenderer(new UIStyle());
-}
-
-void UIContextMenu::addText(const string& text)
-{
-    elements.emplace_back(text, false, nullptr);
-}
-
-void UIContextMenu::addButton(const string& text, function<void()> callback)
-{
-    elements.emplace_back(text, true, callback);
-}
-
-void UIContextMenu::done()
-{
-    renderer->addNineSlice(top_corner - glm::vec2{ 5, 5 }, glm::vec2{ 220, elements.size() * 32 } + glm::vec2{ 10, 10 }, 1, glm::vec3{ 0.8f, 0.8f, 0.8f });
-    size_t element_index = 0;
-    for (const auto& elem : elements)
+    std::vector<uint16_t> final_indices;
+    size_t total_indices = 0;
+    for (const auto& arr : indices)
+        total_indices += arr.second.size();
+    final_indices.resize(total_indices);
+    size_t offset = 0;
+    for (const auto& arr : indices)
     {
-        if (std::get<bool>(elem))
-            renderer->addNineSlice(top_corner + glm::vec2{ 0, (element_index * 32) + 0 }, glm::vec2{ 220, 32 }, 0, glm::vec3{ 0.8f, 0.8f, 0.8f });
-        renderer->addText(std::get<std::string>(elem), top_corner + glm::vec2{ 5, (element_index * 32) + 5 }, glm::vec3{ 0, 0, 0 }, -1);
-
-        ++element_index;
+        memcpy(final_indices.data() + offset, arr.second.data(), arr.second.size() * sizeof(uint16_t));
+        offset +=  arr.second.size();
     }
-    renderer->finalise();
-    renderer->clear();
-}
-
-bool UIContextMenu::checkInput()
-{
-    glm::vec2 bounds_min = top_corner;
-    glm::vec2 bounds_max = top_corner + glm::vec2{ 220, (elements.size() * 32) };
-    glm::vec2 mouse_pos = Input::getMousePosition();
-
-    if (mouse_pos.x < bounds_min.x || mouse_pos.x > bounds_max.x
-     || mouse_pos.y < bounds_min.y || mouse_pos.y > bounds_max.y)
-        return false;
-
-    return true;
+    if (!mesh)
+        mesh = new Mesh(vertices, final_indices, true);
+    else
+        mesh->updateData(vertices, final_indices, ((vertices.size() / 256) + 1) * 256, ((final_indices.size() / 256) + 1) * 256 );
 }

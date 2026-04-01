@@ -10,7 +10,35 @@
 namespace HopEngine
 {
 
-// TODO: move font in here
+/**
+ * @brief contains information for rendering text from a font atlas
+ */
+class Font final : public Destructible
+{
+private:
+	Ref<Texture> atlas = nullptr;	// texture containing glyph bitmaps
+	Ref<Texture> bold_atlas = nullptr;	// texture containing glyph bitmaps
+	glm::ivec2 glyph_size;			// size of each glyph in pixels
+	glm::ivec2 chars_resolution;	// number of glyphs in the texture
+	glm::vec2 char_uv_size;			// size of a glyph, as a fraction of the texture
+
+public:
+	DELETE_CONSTRUCTORS(Font);
+	Font(const std::string& atlas_name, glm::ivec2 glyph_size_pixels, const std::string& bold_atlas_name = "");
+	Font(std::vector<Ref<Texture>> atlases, glm::ivec2 glyph_size_pixels);
+	~Font() override;
+	
+	WeakRef<Texture> getAtlas() const { return atlas; }
+	WeakRef<Texture> getBoldAtlas() const { return bold_atlas; }
+	glm::vec2 getGlyphSize() const { return glyph_size; }
+	glm::vec2 getGlyphUVOffset(char c) const;
+	glm::vec2 getGlyphUVSize() const { return char_uv_size; }
+
+    static Ref<Font> deserialise(const std::string& path);
+
+private:
+    void createFromAtlases(const std::vector<Ref<Texture>>& atlases, glm::ivec2 glyph_size_pixels);
+};
 
 class UIStyle final : public Destructible
 {
@@ -31,24 +59,24 @@ class UIRenderer final : public Destructible
 public:
     enum TextAlign : int8_t
     {
-        LEFT   = -1,
-        CENTER =  0,
-        RIGHT  =  1
+        TEXT_ALIGN_LEFT   = -1,
+        TEXT_ALIGN_CENTER =  0,
+        TEXT_ALIGN_RIGHT  =  1
     };
 
     enum TextFlags : uint8_t
     {
-        NONE          = 0,
-        BOLD          = 1,
-        ITALIC        = 2,
-        UNDERLINE     = 4,
-        STRIKETHROUGH = 8
+        TEXT_FLAGS_NONE          = 0,
+        TEXT_FLAGS_BOLD          = 1,
+        TEXT_FLAGS_ITALIC        = 2,
+        TEXT_FLAGS_UNDERLINE     = 4,
+        TEXT_FLAGS_STRIKETHROUGH = 8
     };
 
     struct TextFormatting final
     {
-        TextAlign align = LEFT;
-        TextFlags flags = NONE;
+        TextAlign align = TEXT_ALIGN_LEFT;
+        TextFlags flags = TEXT_FLAGS_NONE;
         bool wrap = false;
         glm::ivec2 clip_bounds = { 0, 0 };
     };
@@ -88,8 +116,6 @@ public:
     void          updateText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text, glm::vec3 colour, BackingData backing);
     void     updateNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec3 fill, BackingData backing);
     void        updateSimple(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec2 uv_base, glm::vec2 uv_size, BackingData backing);
-
-    // TODO: return structures to be able to update colour, size, position, etc, at later point without clearing and recreating vertices
 
     DrawCommand draw() const { return DrawCommand(material, mesh); }
 };
