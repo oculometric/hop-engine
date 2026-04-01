@@ -106,5 +106,3 @@ private:
 };
 
 }
-
-// TODO: build a graphical node editor for this....

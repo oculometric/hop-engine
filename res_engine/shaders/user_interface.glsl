@@ -105,8 +105,6 @@ void fragment()
         if (tex_value < 0.5f)
             discard;
 
-        // TODO: underline and strikethrough!
-        
         out_colour = vec4(fill_colour, 1);
     }
     else if (draw_mode == 1)    // 9-slice mode
