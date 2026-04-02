@@ -31,7 +31,7 @@ public:
 		uint8_t pin_type = 0;
 		bool pin_solid = true;
 		
-		NodeElement(const std::string& _text, const NodeElementType _type, const int _pin_type = 0, const bool _pin_solid = true)
+		NodeElement(const std::string& _text, const NodeElementType _type, const uint8_t _pin_type = 0, const bool _pin_solid = true)
 			: text(_text), type(_type), pin_type(_pin_type), pin_solid(_pin_solid) { }
 		NodeElement()
 			: text("text"), type(ELEMENT_INPUT), pin_type(0), pin_solid(true) { }

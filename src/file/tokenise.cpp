@@ -420,7 +420,7 @@ glm::vec4 TokenReader::deserialiseVectorToken(const string& str, const size_t of
     
     try
     {
-        size_t next_comma = -1;
+        size_t next_comma = SIZE_MAX;
         do
         {
             const size_t last_comma = next_comma + 1;
@@ -569,5 +569,5 @@ size_t TokenReader::reportError(const string& err, const size_t off, const strin
                         "\n\t-> '... {} ...'"
                         "\n\t->{}      ^ here (ln {}, col {})", err, extract, string(static_cast<int32_t>(off) - extract_start, ' '), ln + 1, col + 1);
     DBG_ERROR(error);
-    return -1;
+    return SIZE_MAX;
 }

@@ -30,7 +30,7 @@ private:
     std::vector<VkSemaphore> image_available_semaphores;
 	std::vector<VkSemaphore> render_finished_semaphores;
 	std::vector<VkFence> in_flight_fences;
-    size_t frame_index = -1;
+    size_t frame_index = SIZE_MAX;
 
 public:
 	DELETE_CONSTRUCTORS(Swapchain);

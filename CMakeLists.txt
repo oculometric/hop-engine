@@ -119,6 +119,12 @@ target_link_libraries(hop-engine PRIVATE ${LIBS})
 set_property(TARGET hop-engine PROPERTY LINKER_LANGUAGE CXX)
 set_property(TARGET hop-engine PROPERTY CXX_STANDARD 20)
 
+if (MSVC)
+    target_compile_options(hop-engine PRIVATE /W4 /wd4100 /wd4101)
+else()
+    target_compile_options(hop-engine PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
 if(WIN32)
 else()
     target_compile_options(hop-engine PRIVATE

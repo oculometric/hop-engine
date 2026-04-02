@@ -135,7 +135,7 @@ void UniformBlock::applyDescriptorBindings()
                 // of the corresponding GPU buffer. offset is incremented
                 // according to the buffer size of this particular uniform
                 // block
-                buffer_info.buffer = uniform_buffers[i]->getHandle();
+                buffer_info.buffer = static_cast<VkBuffer>(uniform_buffers[i]->getHandle());
                 buffer_info.offset = offset;
                 buffer_info.range = binding.buffer_size;
                 descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;

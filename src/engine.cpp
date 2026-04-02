@@ -279,7 +279,7 @@ size_t Engine::pruneUnusedResources()
 
 void Engine::drawImGuiDebug()
 {
-    engine->_drawImGuiDebug(getDeltaTime());
+    engine->_drawImGuiDebug();
 }
 
 extern unsigned char engine_hop_raw[];
