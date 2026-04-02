@@ -134,7 +134,7 @@ std::vector<uint8_t> Texture::download()
 
     Ref<TransientCommandBuffer> cmd_buf = new TransientCommandBuffer();
 
-    vkCmdCopyImageToBuffer(cmd_buf->getHandle(), image, toVulkanLayout(current_layout), buffer->getHandle(), 1, &image_copy);
+    vkCmdCopyImageToBuffer(cmd_buf->getHandle(), image, toVulkanLayout(current_layout), static_cast<VkBuffer>(buffer->getHandle()), 1, &image_copy);
 
     cmd_buf->submit();
 
@@ -167,7 +167,7 @@ void Texture::copyBufferToImage(Ref<Buffer> buffer) const
 
     Ref<TransientCommandBuffer> cmd_buf = new TransientCommandBuffer();
 
-    vkCmdCopyBufferToImage(cmd_buf->getHandle(), buffer->getHandle(), image, toVulkanLayout(current_layout), 1, &image_copy);
+    vkCmdCopyBufferToImage(cmd_buf->getHandle(), static_cast<VkBuffer>(buffer->getHandle()), image, toVulkanLayout(current_layout), 1, &image_copy);
 
     cmd_buf->submit();
 }

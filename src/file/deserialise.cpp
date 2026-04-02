@@ -367,14 +367,14 @@ bool Deserialiser::errorCheckNamed(const TokenReader::Statement& statement,
             output[name] = token;
     }
     // check if all args are present
-    for (const auto& [name, spec] : spec.expected_named_args)
+    for (const auto& [name, conf] : spec.expected_named_args)
     {
-        if (spec.second)
+        if (conf.second)
         {
             auto is_found = output.find(name);
             if (is_found == output.end())
             {
-                DBG_ERROR(error + ": argument '" + name + "' is required for '" + statement.keyword + "' statement, must be a(n) " + TokenReader::typeToString(spec.first));
+                DBG_ERROR(error + ": argument '" + name + "' is required for '" + statement.keyword + "' statement, must be a(n) " + TokenReader::typeToString(conf.first));
                 return false;
             }
         }

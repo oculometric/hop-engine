@@ -115,7 +115,7 @@ private:
 	void updateStats(const FrameStats& stats);
 	static void summariseTrackedObjects();
 	
-	void _drawImGuiDebug(float delta_time) const;
+	void _drawImGuiDebug() const;
 };
 
 template <class T>

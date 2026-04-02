@@ -32,7 +32,6 @@ public:
 	void submit();
 };
 
-typedef void* GPUHandle;
 struct FrameStats;
 
 class DrawCommandBuffer final : public Destructible

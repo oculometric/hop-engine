@@ -30,6 +30,8 @@ public:
     virtual ~Destructible() { }
 };
 
+typedef void* GPUHandle;
+
 /**
  * @brief execute a system command and capture the output.
  * @param command command to execute.

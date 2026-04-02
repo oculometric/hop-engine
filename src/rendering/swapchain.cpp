@@ -79,17 +79,17 @@ uint32_t Swapchain::acquireNextImage()
     CHECK_RESULT(
         vkWaitForFences, (RenderServer::getDevice(), 1, &in_flight_fences[frame_index % in_flight_fences.size()], VK_TRUE, 10000000),
         WARNING,
-        return -1);
+        return UINT32_MAX);
     CHECK_RESULT(
         vkResetFences, (RenderServer::getDevice(), 1, &in_flight_fences[frame_index % in_flight_fences.size()]),
         ERROR,
-        return -1);
+        return UINT32_MAX);
 
     uint32_t image_index;
     CHECK_RESULT(
         vkAcquireNextImageKHR, (RenderServer::getDevice(), swapchain, UINT64_MAX, image_available_semaphores[frame_index % in_flight_fences.size()], VK_NULL_HANDLE, &image_index),
         WARNING,
-        return -1);
+        return UINT32_MAX);
     DBG_BABBLE("acquired image " + ::to_string(image_index));
 
     return image_index;

@@ -127,8 +127,6 @@ bool RenderServer::resize(bool force_resize)
 
         return true;
     }
-
-    return false;
 }
 
 FrameStats RenderServer::drawFrame()
@@ -139,8 +137,7 @@ FrameStats RenderServer::drawFrame()
     if (resize())
         return { };
 
-    size_t frame_index = Engine::getFrameCount();
-    DBG_BABBLE("drawing frame " + ::to_string(frame_index));
+    DBG_BABBLE("drawing frame " + ::to_string(Engine::getFrameCount()));
 
     FrameStats stats{ };
 

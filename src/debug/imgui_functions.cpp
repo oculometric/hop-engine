@@ -327,7 +327,7 @@ WeakRef<Object> Engine::getDebugSelection()
 	return selected_object;
 }
 
-void Engine::_drawImGuiDebug(float delta_time) const
+void Engine::_drawImGuiDebug() const
 {
 	static bool show_imgui = true;
 	static unsigned int align_windows = 3;
