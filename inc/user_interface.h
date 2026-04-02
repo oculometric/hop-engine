@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "scene.h"
+#include "input.h"
 
 namespace HopEngine
 {
@@ -125,6 +126,98 @@ public:
 private:
     void updateTextSingleLine(glm::vec2 position, TextFormatting formatting, const std::string& text, glm::vec3 colour, BackingData backing);
 };
+
+struct UITransform final
+{
+    enum Anchor
+    {
+        ANCHOR_TOP_LEFT,
+        ANCHOR_TOP_CENTER,
+        ANCHOR_TOP_RIGHT,
+        ANCHOR_MIDDLE_LEFT,
+        ANCHOR_MIDDLE_CENTER,
+        ANCHOR_MIDDLE_RIGHT,
+        ANCHOR_BOTTOM_LEFT,
+        ANCHOR_BOTTOM_CENTER,
+        ANCHOR_BOTTOM_RIGHT
+    };
+
+    enum Scaling
+    {
+        SCALING_NONE,
+        SCALING_FILL_HORIZONTAL,
+        SCALING_FILL_VERTICAL,
+        SCALING_FILL_BOTH
+    };
+
+    glm::vec2 offset = { 0, 0 };
+    Anchor external_anchor = ANCHOR_TOP_LEFT;
+    Anchor internal_anchor = ANCHOR_TOP_LEFT;
+
+    glm::vec2 size = { 10, 10 };
+    Scaling scaling = SCALING_NONE;
+    
+    bool use_array_layout = false;
+};
+
+class UICanvasElement : public Destructible
+{
+    friend class UICanvas;
+private:
+    bool needs_rebuild = true;
+
+protected:
+    WeakRef<UIRenderer> last_renderer;
+    UITransform transform;
+
+protected:
+    UICanvasElement() = default;
+    ~UICanvasElement() = default;
+
+    bool getNeedsRebuild() const { return needs_rebuild; }
+    void setNeedsRebuild() { needs_rebuild = true; }
+    UITransform getLayoutInfo() const { return transform; }
+
+    virtual void buildGeometry(WeakRef<UIRenderer> renderer, glm::mat3 transform) {};
+    virtual void  onMouseEnter() {};
+    virtual void   onMouseMove(glm::vec2 local_pos, glm::vec2 delta) {};
+    virtual void   onMouseExit() {};
+    virtual void   onMouseDown(Input::MouseButton button, glm::vec2 local_pos) {};
+    virtual void   onMouseDrag(Input::MouseButton button, glm::vec2 local_pos, glm::vec2 delta) {};
+    virtual void     onMouseUp(Input::MouseButton button, glm::vec2 local_pos) {};
+    virtual void  onMouseClick(Input::MouseButton button, glm::vec2 local_pos) {};
+    virtual void     onKeyDown(Input::KeyboardKey key) {};
+    virtual void       onKeyUp(Input::KeyboardKey key) {};
+};
+
+class UICanvas final : public Destructible
+{
+private:
+    struct Hierarchy final : public Destructible
+    {
+        Ref<UICanvasElement> element;
+        WeakRef<Hierarchy> parent;
+        std::vector<Ref<Hierarchy>> children;
+    };
+
+private:
+    Ref<UIRenderer> renderer;
+    Ref<Hierarchy> hierarchy;
+    std::map<WeakRef<UICanvasElement>, WeakRef<Hierarchy>> elements;
+
+public:
+    void build();
+    template<class T> WeakRef<T> addElement();
+    template<class T, class Q> WeakRef<T> addChild(WeakRef<Q> parent);
+
+    bool checkInput();
+    DrawCommand draw() const { return renderer->draw(); }
+};
+
+
+
+
+
 
 class UIContextMenu final : public Destructible
 {
