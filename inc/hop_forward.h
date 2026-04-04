@@ -3,26 +3,45 @@
 namespace HopEngine
 {
 
-class Window;
+// graphics classes
 class RenderServer;
 class TransientCommandBuffer;
 class DrawCommandBuffer;
 class Swapchain;
 class RenderPass;
+class RenderGraph;
 class Pipeline;
 class Buffer;
 class UniformBlock;
 class Shader;
+struct FrameStats;
+class Material;
 class Texture;
 class Sampler;
 class Mesh;
-class Material;
-class Object;
-class Camera;
-class Scene;
-class Font;
-class NodeView;
+
+// scene tree classes
 struct DrawCommand;
-class RenderGraph;
+class Scene;
+class Object;
+class Component;
+
+// component subclasses
+class CameraComponent;
+class StaticMeshComponent;
+class LightComponent;
+class TextComponent;
+class NodeView;
+
+// ui classes
+class UIRenderer;
+class UIStyle;
+class UIContextMenu;
+
+// misc
+class Font;
+class Application;
+class Engine;
+class EventServer;
 
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 // this file provides sufficient type definitions to allow header
 // files to NOT include the vulkan headers (only in the CPP files).
 // that means that the headers can be used without the vulkan SDK
@@ -15,6 +17,8 @@ struct VkVertexInputBindingDescription;
 struct VkPipelineShaderStageCreateInfo;
 struct VkSurfaceFormatKHR;
 struct VkSwapchainCreateInfoKHR;
+struct VkSurfaceCapabilitiesKHR;
+struct VkSurfaceFormatKHR;
 
 union VkClearValue;
 

@@ -3,6 +3,7 @@
 #include <glm/vec2.hpp>
 
 #include "common.h"
+#include "texture.h"
 
 namespace HopEngine
 {
@@ -10,7 +11,7 @@ namespace HopEngine
 /**
  * @brief contains information for rendering text from a font atlas
  */
-class Font : public Destructible
+class Font final : public Destructible
 {
 private:
 	Ref<Texture> atlas = nullptr;	// texture containing glyph bitmaps

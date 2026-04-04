@@ -1,34 +1,63 @@
 # TODO
 
-## v0.6
-- get debug builds working again (release mode, but with optimisation disabled)
-- simplify sampler (incorporate into texture)
-- remove default texture
-- refactor swapchain code
-- overhaul some interfaces (ref project placeholder) (uniform creation, pipeline creation, draw calls, uniform updating happens during command buffer build)
-- get/set whole window size
-- fix weird mouse delta behaviour in small window
-- fix crashing with renderdoc
-- fix multi-pass rendering not working
-- make the behaviour of cameras and scene drawing more sensible
-- change the way refs work, and the way `new`ing works
-- separate vulkan code from generic code e.g. OBJ loading
+# v0.54
+- general purpose text rendering (wrapping, alignment, font, underline, bold, italic, strikethrough) [M]
+- make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
+- proper font library [M]
+- make local/global transform from forward/up vectors (generally complete the transform functionality) [H]
+
+- ui rendering refactor
+    - ui management stack/static class
+    - refactor node view code somewhat
+    - ui interaction toolkit
+    - make nodes UI instead of a scene...
+    - ui elements - label, button, dropdown, checkbox, textbox, slider
+- ui input event system
+    - mousedown/mouseup/mouseclick/mousedrag
+    - keydown/keyup
+    - multi-element intersection testing, i.e. we end up with a stack of elements which were intersected
+
+# v0.60
 - interactive node editor
-- audio loading and output
-- actual editor (separate project)
-- shader & other resource reloading at runtime [H]
-- frustrum culling [M]
-- improved text block rendering with wrapping, alignment, font, etc
-- object duplicate function [L]
+    - need to be able to move/disconnect existing links
+    - dirty flag system for updating the mesh
+    - auto-size nodes horizontally
+    - fix rendering behaviour when header is at bottom/node order is flipped
+    - box selection
+    - right-click menu to allow adding more nodes
+    - move overlays (temp link, right click menu, selection box) into their own mesh
+- fix mouse locking not behaving correctly on linux
+- object duplicate function
+- actual editor
+    - resizeable/swappable views
+    - editor build target
+    - full-screen-node file/project manager
+    - full-screen-node properties view
+    - full-screen-node log view
+    - transform gizmos
+    - debug meshes for cameras, lights
 ---
+
+# v0.61
+- switch to glslang for shader compilation
+- document everything
+- audio loading and output
+- shader & other resource reloading at runtime
+- windowless offscreen rendering support
+---
+
 ## v0.7
+- hover tooltips for nodes....
+- frustrum culling [M]
+- texture upload/download of data
 - shader node editor
 - render graph node editor
+- animation timeline using nodes
 - shadows
 - textures should be loadable in linear mode?
 - a proper procedural shading art workflow
----
-- more scene control using ImGui (modify the render graph, material uniforms) [M]
-- improved gizmo, better control, rotation and scale support [M]
+- data blocks should know which package they came from
 - bytecode node language
-- tux-racer ripoff demo game [L]
+- VR interfaces
+- Steamworks integration
+- 3D editor

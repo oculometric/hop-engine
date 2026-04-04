@@ -2,17 +2,18 @@
 
 #include <glm/vec2.hpp>
 #include <set>
+#include <array>
 #include <map>
 
 #include "common.h"
-#include "window.h"
 
 struct GLFWwindow;
+struct GLFWcursor;
 
 namespace HopEngine
 {
 	
-class Input
+class Input final
 {
 public:
 	enum GamepadButton
@@ -132,40 +133,64 @@ public:
 		KEY_MENU          = 348
 	};
 	
-	struct GamepadState
+	struct GamepadState final
 	{
 		bool buttons[14] = { false };
 		float axes[9] = { 0.0f };
 	};
 	
+    enum CursorType
+    {
+        CURSOR_NORMAL,
+        CURSOR_RESIZE_HORIZONTAL,
+        CURSOR_RESIZE_VERTICAL,
+        CURSOR_TEXT,
+        CURSOR_CROSSHAIR,
+        CURSOR_HAND,
+        CURSOR_BUSY,
+        CURSOR_MAX_ENUM
+    };
+
 private:
-	Ref<Window> window;
+	GLFWwindow* window;
+    std::array<GLFWcursor*, CURSOR_MAX_ENUM> cursors;
 	std::set<int> pressed_since_checked;
 	std::set<MouseButton> pressed_since_checked_mouse;
 	std::map<int, GamepadState> gamepad_states;
+	glm::vec2 mouse_delta;
+	glm::vec2 mouse_position;
+    glm::vec2 mouse_lock_min;
+    glm::vec2 mouse_lock_max;
+    bool lock_mouse = false;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Input);
 
-	static void init(const Ref<Window>& window);
+	static void init();
 	static void destroy();
+
+	static void pollInput();
+	static void applyCallbackBindings();
 
 	static bool isKeyDown(int key);
 	static bool wasKeyPressed(int key);
 	static float getAxis(int key_negative, int key_positive);
+
 	static bool isMouseDown(MouseButton button);
 	static bool wasMousePressed(MouseButton button);
 	static glm::vec2 getMouseDelta();
 	static glm::vec2 getMousePosition();
-	static void pollGamepads();
+    static void lockMouseToRectangle(glm::vec2 min, glm::vec2 max);
+    static void unlockMouse();
+	static void setCursorVisible(bool visible);
+    static void setCursorImage(CursorType type);
+
 	static bool isGamepadButtonDown(GamepadButton button, int controller = 0);
 	static float getGamepadAxis(GamepadAxis axis, int controller = 0);
-	static void resetMouseDelta();
-	static void setCursorVisible(bool visible);
 
 private:
-	Input(const Ref<Window>& _window);
-	~Input();
+	Input();
+	~Input() = default;
 	
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);

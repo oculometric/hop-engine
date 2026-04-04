@@ -1,24 +1,23 @@
-#include "pipeline.h"
+#include "material.h"
 
 #include <array>
 #include <vulkan//vulkan.hpp>
 
 #include "command_buffer.h"
 #include "render_server.h"
-#include "shader.h"
 #include "mesh.h"
-#include "render_pass.h"
+#include "swapchain.h"
 
 using namespace HopEngine;
 using namespace std;
 
-TO_STRING_DEF(CullMode, 4, VARGS("NONE", "FRONT", "BACK", "BOTH"));
+TO_STRING_DEF(Pipeline::CullMode, 4, VARGS("NONE", "FRONT", "BACK", "BOTH"));
 
-TO_STRING_DEF(PolygonMode, 3, VARGS("FILL", "LINE", "BACK"));
+TO_STRING_DEF(Pipeline::PolygonMode, 3, VARGS("FILL", "LINE", "BACK"));
 
-TO_STRING_DEF(CompareOp, 8, VARGS("NEVER", "LESS", "EQUAL", "LESS_EQUAL", "GREATER", "NOT_EQUAL", "GREATER_EQUAL", "ALWAYS"));
+TO_STRING_DEF(Pipeline::CompareOp, 8, VARGS("NEVER", "LESS", "EQUAL", "LESS_EQUAL", "GREATER", "NOT_EQUAL", "GREATER_EQUAL", "ALWAYS"));
 
-Pipeline::Pipeline(const Ref<Shader>& shader, const PipelineBuilder& config, const Ref<RenderPass>& render_pass)
+Pipeline::Pipeline(const Ref<Shader>& shader, const Builder& config, const Ref<RenderPass>& render_pass)
 {
     pipeline_config = config;
     array<VkDynamicState, 2> dynamic_states =
@@ -101,7 +100,7 @@ Pipeline::Pipeline(const Ref<Shader>& shader, const PipelineBuilder& config, con
     colour_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
     colour_attachment_blends.push_back(colour_blend_attachment);
 
-    auto [additional_attachments, has_depth_attachment] = render_pass->getOutputConfig();
+    auto [additional_attachments, has_depth_attachment, main_colour_format] = render_pass->getOutputConfig();
     for (size_t i = 0; i < additional_attachments; ++i)
     {
         VkPipelineColorBlendAttachmentState blend_attachment{ };
@@ -143,10 +142,10 @@ Pipeline::Pipeline(const Ref<Shader>& shader, const PipelineBuilder& config, con
 Pipeline::~Pipeline()
 {
     DBG_VERBOSE("destroying pipeline " + PTR(this));
-    vkDestroyPipeline(RenderServer::getDevice(), pipeline, nullptr);
+    RenderServer::free(pipeline);
 }
 
-void Pipeline::bind(Ref<DrawCommandBuffer> command_buffer)
+void Pipeline::bind(WeakRef<DrawCommandBuffer> command_buffer)
 {
     command_buffer->bindPipelineInternal(pipeline);
 }

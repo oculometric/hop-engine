@@ -7,474 +7,400 @@
 using namespace HopEngine;
 using namespace std;
 
-static Package* application_package = nullptr;
+static Package* instance = nullptr;
 
 void Package::init()
 {
 	DBG_INFO("initialising package manager");
-	if (application_package == nullptr)
-		application_package = new Package();
+	if (instance == nullptr)
+		instance = new Package();
 }
 
 void Package::destroy()
 {
 	DBG_INFO("destroying package manager");
-	if (application_package != nullptr)
+	if (instance != nullptr)
 	{
-		delete application_package;
-		application_package = nullptr;
+		delete instance;
+		instance = nullptr;
 	}
+}
+
+DataBlock Package::load(const string& path)
+{
+    string real_path;
+	if (isResPath(path, real_path))
+	{
+		if (!instance)
+		Package::init();
+
+		DBG_VERBOSE("loading '" + real_path + "'");
+		const auto redirector = instance->alias_table.find(real_path);
+		map<string, vector<uint8_t>>::iterator it;
+		if (redirector == instance->alias_table.end())
+			it = instance->database.find(real_path);
+		else
+			it = instance->database.find(redirector->second);
+
+		if (it != instance->database.end())
+			return it->second;
+
+		if (redirector == instance->alias_table.end())
+			DBG_WARNING("found no data associated with '" + real_path + "'");
+		else
+			DBG_WARNING("found no data associated with '" + real_path + "' (redirected to '" + redirector->second + "')");
+
+		return { };
+	}
+	else
+		return loadFromDisk(path);
+}
+
+DataBlock Package::loadFromDisk(const string& path)
+{
+	DBG_VERBOSE("loading '" + path + "' from file");
+	// load file data
+	ifstream file(path, ios::ate | ios::binary);
+	if (!file.is_open())
+	{
+		DBG_WARNING("failed to load '" + path + "'; file not found");
+		return { };
+	}
+
+	vector<uint8_t> content(file.tellg());
+	file.seekg(ios::beg);
+	file.read(reinterpret_cast<char*>(content.data()), static_cast<streamsize>(content.size()));
+	file.close();
+
+	return content;
+}
+
+bool Package::store(const string& path, const DataBlock& data)
+{
+	string real_path;
+	if (isResPath(path, real_path))
+	{
+		DBG_VERBOSE("storing '" + path + "'; " + to_string(data.size()) + " bytes");
+		instance->database[real_path] = data;
+		return true;
+	}
+	else
+		return storeToDisk(path, data);
+}
+
+bool Package::storeToDisk(const string& path, const DataBlock& data)
+{
+    DBG_VERBOSE("storing '" + path + "' to file; " + to_string(data.size()) + " bytes");
+	ofstream file(path, ios::binary);
+	if (!file.is_open())
+	{
+		DBG_ERROR("failed to store '" + path + "'; file not accessible");
+		return false;
+	}
+	file.write(reinterpret_cast<const char*>(data.data()), static_cast<streamsize>(data.size()));
+	file.close();
+	return true;
+}
+
+bool Package::exportPackage(const string& path, bool compressed)
+{
+	DBG_VERBOSE("storing package: " + path);
+	DataBlock data = exportPackage(compressed);
+    return storeToDisk(path, data);
+}
+
+bool Package::importPackage(const string& path)
+{
+	DBG_VERBOSE("loading package: " + path);
+    DataBlock data = loadFromDisk(path);
+	if (data.empty())
+		return false;
+	return importPackage(data);
 }
 
 constexpr uint32_t SIGNATURE = 0xCA55E77E;
 
 struct PackageHeader
 {
-	uint32_t signature;
-	uint32_t version;
-	uint64_t file_size;
-	uint32_t package_entries;
+	uint32_t signature_version;
+	uint32_t file_size;
 	uint32_t alias_entries;
-};
-
-struct PackageEntry
-{
-	size_t data_header_offset;
-	size_t data_total_size;
+	uint32_t package_entries;
 };
 
 struct AliasEntry
 {
-	size_t a_string_length;
-	size_t b_string_length;
+	uint32_t a_string_length;
+	uint32_t b_string_length;
 };
 
-struct PackageDataHeader
+struct DataBlockEntry
 {
-	size_t name_size;
-	size_t data_size;
+	uint32_t name_size;
+	uint32_t data_size;
 };
 
-bool Package::loadPackageFromMemory(vector<uint8_t>& content, const string& load_path)
+DataBlock Package::exportPackage(bool compressed)
 {
-	size_t size = content.size();
+	DBG_VERBOSE("exporting version 4 package");
+	PackageHeader header;
+	header.signature_version = SIGNATURE + 4;
+	header.package_entries = static_cast<uint32_t>(instance->database.size());
+	header.alias_entries = static_cast<uint32_t>(instance->alias_table.size());
+	header.file_size = sizeof(PackageHeader);
+	for (const auto& alias : instance->alias_table)
+		header.file_size += static_cast<uint32_t>(sizeof(AliasEntry) + alias.first.size() + alias.second.size());
+	for (const auto& block : instance->database)
+		header.file_size += static_cast<uint32_t>(sizeof(DataBlockEntry) + block.first.size() + block.second.size());
 
-	if (size < sizeof(PackageHeader))
+	DataBlock data; data.resize(header.file_size);
+	uint8_t* write_point = data.data();
+
+	memcpy(write_point, &header, sizeof(PackageHeader));
+	write_point += sizeof(PackageHeader);
+
+	for (const auto& alias : instance->alias_table)
 	{
-		DBG_ERROR("failed to load package: " + load_path + "; corrupted file");
-		return false;
+		AliasEntry entry = { static_cast<uint32_t>(alias.first.size()), static_cast<uint32_t>(alias.second.size()) };
+		memcpy(write_point, &entry, sizeof(AliasEntry));
+		write_point += sizeof(AliasEntry);
+		memcpy(write_point, alias.first.data(), alias.first.size());
+		write_point += alias.first.size();
+		memcpy(write_point, alias.second.data(), alias.second.size());
+		write_point += alias.second.size();
 	}
 
-	PackageHeader header = *reinterpret_cast<PackageHeader*>(content.data());
-	if (header.signature != SIGNATURE)
+	for (const auto& block : instance->database)
 	{
-		DBG_ERROR("failed to load package: " + load_path + "; invalid signature");
-		return false;
+		DataBlockEntry entry = { static_cast<uint32_t>(block.first.size()), static_cast<uint32_t>(block.second.size()) };
+		memcpy(write_point, &entry, sizeof(DataBlockEntry));
+		write_point += sizeof(DataBlockEntry);
+		memcpy(write_point, block.first.data(), block.first.size());
+		write_point += block.first.size();
+		memcpy(write_point, block.second.data(), block.second.size());
+		write_point += block.second.size();
 	}
-	if (header.file_size != size)
+
+	DBG_INFO("stored " + to_string(header.package_entries) + " items to package");
+
+	if (compressed)
 	{
-		DBG_ERROR("failed to load package: " + load_path + "; invalid file size");
-		return false;
-	}
-	if (header.version == 2)
-	{
-		content = loadCompressedPackage(content);
-		if (content.empty())
+		DBG_VERBOSE("storing compressed (version 2) package");
+		string command;
+#if defined(_WIN32)
+		command = "zip.exe -j ";
+#else
+		command = "zip -rj ";
+#endif
+
+		filesystem::create_directories(Package::getTempPath());
+		string temp_hop_address = Package::getTempPath() + "hop_package_tmp" + PTR(instance);
+		if (!storeToDisk(temp_hop_address, data))
 		{
-			DBG_ERROR("failed to load package: " + load_path + "; error during decompression");
-			return false;
+			DBG_ERROR("failed to store package to temp: " + temp_hop_address);
+			return data;
 		}
-	}
-	else if (header.version != 3)
-	{
-		DBG_ERROR("failed to load package: " + load_path + "; invalid version");
-		return false;
-	}
+		string temp_zip_address = temp_hop_address + ".zip";
+		command = command + temp_zip_address + ' ' + temp_hop_address;
+		string output;
 
-	header = *reinterpret_cast<PackageHeader*>(content.data());
-
-	vector<PackageEntry> entries(header.package_entries);
-	memcpy(entries.data(), content.data() + sizeof(PackageHeader), sizeof(PackageEntry) * entries.size());
-
-	for (const auto& [data_header_offset, data_total_size] : entries)
-	{
-		PackageDataHeader data_header = *reinterpret_cast<PackageDataHeader*>(content.data() + data_header_offset);
-		if (data_header.data_size + data_header.name_size + sizeof(PackageDataHeader) != data_total_size)
+		int result = exec(command, output);
+		if (result != 0)
 		{
-			DBG_ERROR("error loading package: " + load_path + "; invalid data entry size");
-			return false;
+			DBG_ERROR("error compressing package: " + output);
+			filesystem::remove(temp_hop_address);
+			return data;
 		}
-		string name(data_header.name_size, ' ');
-		memcpy((char*)(name.data()), (content.data() + data_header_offset + sizeof(PackageDataHeader)), name.size());
-		vector<uint8_t> data(data_header.data_size);
-		memcpy(data.data(), (content.data() + data_header_offset + sizeof(PackageDataHeader) + name.size()), data.size());
-		application_package->database[name] = data;
-	}
-	
-	size_t offset = sizeof(PackageHeader) + (sizeof(PackageEntry) * entries.size());
-	for (size_t i = 0; i < header.alias_entries; ++i)
-	{
-		AliasEntry alias_header = *reinterpret_cast<AliasEntry*>(content.data() + offset);
-		string a_string(alias_header.a_string_length, ' ');
-		string b_string(alias_header.b_string_length, ' ');
-		memcpy(a_string.data(), content.data() + offset + sizeof(AliasEntry), alias_header.a_string_length);
-		memcpy(b_string.data(), content.data() + offset + sizeof(AliasEntry) + alias_header.a_string_length, alias_header.b_string_length);
-		application_package->alias_table[a_string] = b_string;
-		
-		offset += sizeof(AliasEntry) + alias_header.a_string_length + alias_header.b_string_length;
+		filesystem::remove(temp_hop_address);
+
+		ifstream file(temp_zip_address, ios::ate | ios::binary);
+		if (!file.is_open())
+		{
+			DBG_ERROR("failed to generate compressed package; unable to open zip file");
+			filesystem::remove(temp_zip_address);
+			return data;
+		}
+
+		size_t size = static_cast<size_t>(file.tellg());
+		PackageHeader header2;
+		header2.signature_version = SIGNATURE + 2;
+		header2.package_entries = 0;
+		header2.alias_entries = 0;
+		header2.file_size = sizeof(PackageHeader) + static_cast<uint32_t>(size);
+
+		data.resize(header2.file_size);
+		memcpy(data.data(), &header2, sizeof(PackageHeader));
+
+		file.seekg(0);
+		file.read(reinterpret_cast<char*>(data.data() + sizeof(PackageHeader)), static_cast<streamsize>(size));
+		file.close();
+		filesystem::remove(temp_zip_address);
+
+		DBG_INFO("generated compressed package");
 	}
 
-	DBG_INFO("loaded " + to_string(header.package_entries) + " items from package: " + load_path);
-	return true;
+	return data;
 }
 
-bool Package::loadPackage(const string& load_path)
+bool Package::importPackage(const DataBlock& data)
 {
-	if (!application_package)
-		Package::init();
-
-	DBG_VERBOSE("loading package: " + load_path);
-	ifstream file(load_path, ios::ate | ios::binary);
-	if (!file.is_open())
+	if (data.size() < sizeof(PackageHeader))
 	{
-		DBG_ERROR("failed to load package: " + load_path + "; file not accessible");
+		DBG_ERROR("failed to load package; corrupted file");
 		return false;
 	}
 
-	const size_t size = file.tellg();
-	vector<uint8_t> content(size);
-	file.seekg(ios::beg);
-	file.read(reinterpret_cast<char*>(content.data()), static_cast<streamsize>(size));
-	file.close();
+	PackageHeader header = *reinterpret_cast<const PackageHeader*>(data.data());
+	if (header.file_size != static_cast<uint32_t>(data.size()))
+	{
+		DBG_ERROR("failed to load package; invalid file size");
+		return false;
+	}
+	if (header.signature_version == SIGNATURE + 2)
+	{
+		DBG_VERBOSE("loading compressed package");
 
-	return loadPackageFromMemory(content, load_path);
+		filesystem::create_directories(Package::getTempPath());
+		string temp_zip_address = Package::getTempPath() + "hop_package_tmp" + PTR(instance) + ".zip";
+		DataBlock trimmed(data.begin() + sizeof(PackageHeader), data.end());
+		if (!storeToDisk(temp_zip_address, trimmed))
+		{
+			DBG_ERROR("failed to load package; error during decompression");
+			return false;
+		}
+		trimmed.clear();
+
+		string command;
+#if defined(_WIN32)
+		command = "tar.exe -x -f ";
+#else
+		command = "unzip ";
+#endif
+		string unpack_dir = Package::getTempPath() + "hop";
+		filesystem::create_directory(unpack_dir);
+		command = command + temp_zip_address + 
+#if defined(_WIN32)
+				" -C "
+#else
+				" -d "
+#endif
+				+ unpack_dir;
+		string output;
+
+		int result = exec(command, output);
+		filesystem::remove(temp_zip_address);
+		if (result != 0)
+		{
+			DBG_ERROR("error decompressing package; " + output);
+			return false;
+		}
+
+		auto it = filesystem::directory_iterator(unpack_dir);
+		if (!it->exists())
+		{
+			DBG_ERROR("error decompressing package; no package file found");
+			filesystem::remove(unpack_dir);
+			return false;
+		}
+
+		DataBlock decompressed = loadFromDisk(it->path().string());
+		filesystem::remove_all(unpack_dir);
+
+		if (!importPackage(decompressed))
+		{
+			DBG_ERROR("failed to load package; error during decompression");
+			return false;
+		}
+		return true;
+	}
+	if (header.signature_version != SIGNATURE + 4)
+	{
+		DBG_ERROR("failed to load package; invalid signature/version");
+		return false;
+	}
+
+	const uint8_t* data_end = data.data() + data.size();
+	const uint8_t* read_point = data.data() + sizeof(PackageHeader);
+
+	vector<pair<string, string>> aliases;
+	for (uint32_t i = 0; i < header.alias_entries; ++i)
+	{
+		if (read_point + sizeof(AliasEntry) > data_end)
+		{
+			DBG_ERROR("error reading package; truncated file");
+			return false;
+		}
+		AliasEntry alias = *reinterpret_cast<const AliasEntry*>(read_point);
+		read_point += sizeof(AliasEntry);
+		if (read_point + alias.a_string_length + alias.b_string_length > data_end)
+		{
+			DBG_ERROR("error reading package; truncated file");
+			return false;
+		}
+		string string_a(alias.a_string_length, ' ');
+		memcpy(string_a.data(), read_point, string_a.size());
+		read_point += string_a.size();
+		string string_b(alias.b_string_length, ' ');
+		memcpy(string_b.data(), read_point, string_b.size());
+		read_point += string_b.size();
+
+		aliases.emplace_back(string_a, string_b);
+	}
+
+	vector<pair<string, DataBlock>> blocks;
+	for (uint32_t i = 0; i < header.package_entries; ++i)
+	{
+		if (read_point + sizeof(DataBlockEntry) > data_end)
+		{
+			DBG_ERROR("error reading package; truncated file");
+			return false;
+		}
+		DataBlockEntry block = *reinterpret_cast<const DataBlockEntry*>(read_point);
+		read_point += sizeof(DataBlockEntry);
+		if (read_point + block.name_size + block.data_size > data_end)
+		{
+			DBG_ERROR("error reading package; truncated file");
+			return false;
+		}
+		string name(block.name_size, ' ');
+		memcpy(name.data(), read_point, name.size());
+		read_point += name.size();
+		DataBlock data_block(block.data_size, ' ');
+		memcpy(data_block.data(), read_point, data_block.size());
+		read_point += data_block.size();
+
+		blocks.emplace_back(name, data_block);
+	}
+
+	instance->alias_table.insert(aliases.begin(), aliases.end());
+	instance->database.insert(blocks.begin(), blocks.end());
+	DBG_INFO("loaded " + to_string(header.package_entries) + " items from package");
+
+    return true;
 }
 
 vector<string> Package::listLoadedEntries()
 {
 	vector<string> names;
-	names.reserve(application_package->database.size());
-	for (const auto& [identifier, _] : application_package->database)
+	names.reserve(instance->database.size());
+	for (const auto& [identifier, _] : instance->database)
 		names.push_back(identifier);
 	return names;
 }
 
-vector<uint8_t> Package::loadData(const string& identifier)
-{
-	if (!application_package)
-		Package::init();
-
-	DBG_VERBOSE("loading '" + identifier + "'");
-	const auto redirector = application_package->alias_table.find(identifier);
-	map<string, vector<uint8_t>>::iterator it;
-	if (redirector == application_package->alias_table.end())
-		it = application_package->database.find(identifier);
-	else
-		it = application_package->database.find(redirector->second);
-	if (it != application_package->database.end())
-		return it->second;
-	if (redirector == application_package->alias_table.end())
-		DBG_WARNING("found no data associated with '" + identifier + "'");
-	else
-		DBG_WARNING("found no data associated with '" + identifier + "' (redirected to '" + redirector->second + "')");
-	return { };
-}
-
-vector<uint8_t> Package::tryLoadFile(const string& path_or_identifier)
-{
-	if (!application_package)
-		Package::init();
-
-	const static string res_prefix = "res://";
-	if (path_or_identifier.starts_with(res_prefix))
-	{
-		// load package resource
-		return Package::loadData(path_or_identifier.substr(res_prefix.size()));
-	}
-	else
-	{
-		DBG_VERBOSE("loading '" + path_or_identifier + "' from file");
-		// load file data
-		ifstream file(path_or_identifier, ios::ate | ios::binary);
-		if (!file.is_open())
-		{
-			DBG_WARNING("failed to load '" + path_or_identifier + "'; file not accessible");
-			return { };
-		}
-
-		const size_t size = file.tellg();
-		vector<uint8_t> content(size);
-		file.seekg(0);
-		file.read(reinterpret_cast<char*>(content.data()), static_cast<streamsize>(size));
-		file.close();
-
-		return content;
-	}
-}
-
-bool Package::storePackage(const string& store_path)
-{
-	if (!application_package)
-		Package::init();
-
-	DBG_VERBOSE("storing package: " + store_path);
-	ofstream file(store_path, ios::binary);
-	if (!file.is_open())
-	{
-		DBG_ERROR("failed to store package: " + store_path + "; file not accessible");
-		return false;
-	}
-
-	PackageHeader header;
-	header.signature = SIGNATURE;
-	header.package_entries = static_cast<uint32_t>(application_package->database.size());
-	header.alias_entries = static_cast<uint32_t>(application_package->alias_table.size());
-	header.version = 3;
-	
-	vector<vector<uint8_t>> data_blocks;
-	size_t offset = sizeof(PackageHeader);
-	for (const auto& [a, b] : application_package->alias_table)
-	{
-		const AliasEntry entry = { a.size(), b.size() };
-		vector<uint8_t> data_block(sizeof(AliasEntry) + entry.a_string_length + entry.b_string_length);
-		memcpy(data_block.data(), &entry, sizeof(AliasEntry));
-		memcpy(data_block.data() + sizeof(AliasEntry), a.data(), entry.a_string_length);
-		memcpy(data_block.data() + sizeof(AliasEntry) + entry.a_string_length, b.data(), entry.b_string_length);
-		data_blocks.push_back(data_block);
-		offset += data_block.size();
-	}
-	
-	vector<PackageEntry> entries;
-	offset += (application_package->database.size() * sizeof(PackageEntry));
-	for (auto [identifier, object_data] : application_package->database)
-	{
-		PackageDataHeader data_header;
-		data_header.name_size = identifier.size();
-		data_header.data_size = object_data.size();
-		vector<uint8_t> data_block(sizeof(PackageDataHeader) + data_header.name_size + data_header.data_size);
-		memcpy(data_block.data(), &data_header, sizeof(PackageDataHeader));
-		memcpy(data_block.data() + sizeof(PackageDataHeader), identifier.data(), data_header.name_size);
-		memcpy(data_block.data() + sizeof(PackageDataHeader) + data_header.name_size, object_data.data(), data_header.data_size);
-		data_blocks.push_back(data_block);
-
-		PackageEntry entry;
-		entry.data_total_size = data_block.size();
-		entry.data_header_offset = offset;
-		entries.push_back(entry);
-
-		offset += entry.data_total_size;
-	}
-
-	header.file_size = offset;
-	file.write(reinterpret_cast<char*>(&header), sizeof(PackageHeader));
-	file.write(reinterpret_cast<char*>(entries.data()), static_cast<streamsize>(entries.size() * sizeof(PackageEntry)));
-	for (const vector<uint8_t>& data_block : data_blocks)
-		file.write(reinterpret_cast<const char*>(data_block.data()), static_cast<streamsize>(data_block.size()));
-	file.close();
-
-	DBG_INFO("stored " + to_string(header.package_entries) + " items to package: " + store_path);
-	return true;
-}
-
-bool Package::storeCompressedPackage(const string& store_path)
-{
-	if (!application_package)
-		Package::init();
-
-	DBG_VERBOSE("storing compressed package: " + store_path);
-	if (!storePackage(store_path))
-	{
-		DBG_ERROR("failed to generate version 1 package: " + store_path);
-		return false;
-	}
-
-	string command = "zip -rj ";
-#if defined(_WIN32)
-	command = "zip.exe -j ";
-#endif
-
-	string temp_address = Package::getTempPath() + "hop_package_tmp" + PTR(application_package) + ".zip";
-	filesystem::create_directories(Package::getTempPath());
-	command = command + temp_address + ' ' + store_path;
-	string output;
-
-	int result = exec(command, output);
-	if (result != 0)
-	{
-		DBG_ERROR("error compressing package: " + store_path + "; " + output);
-		return false;
-	}
-
-	ifstream file(temp_address, ios::ate | ios::binary);
-	if (!file.is_open())
-	{
-		//filesystem::remove(temp_address);
-		DBG_ERROR("failed to generate compressed package: " + store_path + "; unable to open zip file");
-		return false;
-	}
-
-	size_t size = (size_t)file.tellg();
-	vector<uint8_t> content(size);
-	file.seekg(0);
-	file.read(reinterpret_cast<char*>(content.data()), static_cast<streamsize>(size));
-	file.close();
-	//filesystem::remove(temp_address);
-
-	PackageHeader header;
-	header.signature = SIGNATURE;
-	header.package_entries = 0;
-	header.alias_entries = 0;
-	header.file_size = sizeof(PackageHeader) + size;
-	header.version = 2;
-
-	ofstream outfile(store_path, ios::binary);
-	if (!outfile.is_open())
-	{
-		DBG_ERROR("failed to generate compressed package: " + store_path + "; file not accessible");
-		return false;
-	}
-	outfile.write(reinterpret_cast<char*>(&header), sizeof(PackageHeader));
-	outfile.write(reinterpret_cast<char*>(content.data()), static_cast<streamsize>(size));
-	outfile.close();
-
-	DBG_INFO("stored compressed package: " + store_path);
-	return true;
-}
-
-void Package::storeData(const string& identifier, const vector<uint8_t>& data)
-{
-	if (!application_package)
-		Package::init();
-
-	DBG_VERBOSE("storing '" + identifier + "'; " + to_string(data.size()) + " bytes");
-	application_package->database[identifier] = data;
-}
-
-void Package::tryWriteFile(const string& path, const vector<uint8_t>& data)
-{
-	if (!application_package)
-		Package::init();
-
-	DBG_VERBOSE("storing '" + path + "' to file; " + to_string(data.size()) + " bytes");
-	ofstream file(path, ios::binary);
-	if (!file.is_open())
-	{
-		DBG_ERROR("failed to store '" + path + "'; file not accessible");
-		return;
-	}
-	file.write(reinterpret_cast<const char*>(data.data()), static_cast<streamsize>(data.size()));
-	file.close();
-}
-
 void Package::setAlias(const std::string& a, const std::string& b)
-{ application_package->alias_table[a] = b; }
+{ instance->alias_table[a] = b; }
 
 void Package::clearAlias(const std::string& a)
-{ application_package->alias_table.erase(a); }
+{ instance->alias_table.erase(a); }
 
-Package::~Package()
+bool Package::isResPath(const string& path, string& trimmed)
 {
-	database.clear();
-}
-
-vector<uint8_t> Package::loadCompressedPackage(const vector<uint8_t>& data)
-{
-	if (!application_package)
-		Package::init();
-
-	PackageHeader header = *reinterpret_cast<const PackageHeader*>(data.data());
-	DBG_VERBOSE("loading compressed package");
-
-	if (header.signature != SIGNATURE)
+	const static string res_prefix = "res://";
+	if (path.starts_with(res_prefix))
 	{
-		DBG_ERROR("failed to load compressed package; invalid signature");
-		return { };
+		trimmed = path.substr(res_prefix.size());
+		return true;
 	}
-	if (header.file_size != data.size())
-	{
-		DBG_ERROR("failed to load compressed package; invalid file size");
-		return { };
-	}
-	if (header.version != 2)
-	{
-		DBG_ERROR("failed to load compressed package; invalid version");
-		return { };
-	}
-
-	string temp_address = Package::getTempPath() + "hop_package_tmp.zip";
-	filesystem::create_directories(Package::getTempPath());
-	ofstream file(temp_address, ios::binary);
-	if (!file.is_open())
-	{
-		DBG_ERROR("error decompressing package; file not accessible");
-		return { };
-	}
-	file.write(reinterpret_cast<const char*>(data.data()) + sizeof(PackageHeader), static_cast<streamsize>(header.file_size - sizeof(PackageHeader)));
-	file.close();
-
-	string command = "unzip ";
-#if defined(_WIN32)
-	command = "tar.exe -x -f ";
-#endif
-	
-	string unpack_dir = Package::getTempPath() + "hop";
-	filesystem::create_directory(unpack_dir);
-	command = command + temp_address + 
-#if defined(_WIN32)
-	          " -C "
-#else
-	          " -d "
-#endif
-	          + unpack_dir;
-	string output;
-
-	int result = exec(command, output);
-	filesystem::remove(temp_address);
-	if (result != 0)
-	{
-		DBG_ERROR("error decompressing package; " + output);
-		return { };
-	}
-
-	auto it = filesystem::directory_iterator(unpack_dir);
-	if (!it->exists())
-	{
-		DBG_ERROR("error decompressing package; no package file found");
-		filesystem::remove(unpack_dir);
-		return { };
-	}
-
-	ifstream infile(it->path().string(), ios::ate | ios::binary);
-	if (!infile.is_open())
-	{
-		DBG_ERROR("error decompressing package; file not accessible");
-		filesystem::remove(unpack_dir);
-		return { };
-	}
-	size_t size = infile.tellg();
-	vector<uint8_t> content(size);
-	infile.seekg(0);
-	infile.read(reinterpret_cast<char*>(content.data()), static_cast<streamsize>(size));
-	infile.close();
-	filesystem::remove_all(unpack_dir);
-
-	header = *reinterpret_cast<PackageHeader*>(content.data());
-	if (header.signature != SIGNATURE)
-	{
-		DBG_ERROR("failed to load package; invalid signature");
-		return { };
-	}
-	if (header.file_size != content.size())
-	{
-		DBG_ERROR("failed to load package; invalid file size");
-		return { };
-	}
-	if (header.version != 3)
-	{
-		DBG_ERROR("failed to load package; invalid version");
-		return { };
-	}
-
-	DBG_VERBOSE("unpacked compressed package");
-	return content;
+    return false;
 }

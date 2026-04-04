@@ -1,6 +1,7 @@
 #pragma once
 
-#include "transform.h"
+#include <glm/glm.hpp>
+#include "common.h"
 
 namespace HopEngine
 {
@@ -8,7 +9,7 @@ namespace HopEngine
 /**
  * @brief encapsulates a 3D bounding box defined by center and half-extent
  */
-struct BoundingBox
+struct BoundingBox final
 {
     glm::vec3 center;
     glm::vec3 half_extent;
@@ -23,6 +24,14 @@ struct BoundingBox
  * @return closest distance (t) to the OBB if there was a hit; 0 if the ray origin
  * was inside the OBB; or INFINITY if there was no intersection.
  */
-float intersect(glm::vec3 ray_origin, glm::vec3 ray_direction, const BoundingBox& bounding_box, Transform& transform);
+float intersect(glm::vec3 ray_origin, glm::vec3 ray_direction, const BoundingBox& bounding_box, glm::mat4 transform);
+
+struct Spline
+{
+	std::vector<glm::vec3> points;
+	bool loop = false;
+
+	glm::vec3 operator[](float t) const;
+};
 
 }

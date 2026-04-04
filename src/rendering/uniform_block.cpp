@@ -1,4 +1,4 @@
-#include "uniform_block.h"
+#include "material.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -6,14 +6,14 @@
 #include "buffer.h"
 #include "command_buffer.h"
 #include "texture.h"
-#include "sampler.h"
 
 using namespace HopEngine;
 using namespace std;
 
-UniformBlock::UniformBlock(const ShaderLayout& layout_info)
+UniformBlock::UniformBlock(const Shader::Layout& layout_info)
 {
     layout = layout_info;
+    set_index = layout_info.set_index;
     // calculate the total size of the required buffer for the uniforms
     // we use one big buffer regardless of if there are multiple uniform blocks,
     // and just map sections of the buffer when we apply the descriptor set
@@ -21,20 +21,23 @@ UniformBlock::UniformBlock(const ShaderLayout& layout_info)
     size = 0;
     for (const auto& binding : layout_info.bindings)
     {
-        if (binding.type == UNIFORM)
+        if (binding.type == Shader::UNIFORM)
             size += binding.buffer_size;
-        else if (binding.type == TEXTURE)
+        else if (binding.type == Shader::TEXTURE)
         {
-            const auto [texture, sampler] = RenderServer::getDefaultTextureSampler();
-            textures_in_use[binding.binding] = { texture, sampler, false };
+            textures_in_use[binding.binding] =
+            {
+                binding.texture_is_3d ? RenderServer::getDefault3DTexture().strong() : RenderServer::getDefaultTexture().strong(),
+                RenderServer::getDefaultSampler().strong()
+            };
         }
     }
 
     // create uniform buffers for each frame-in-flight to avoid updating
     // a buffer currently being used by the GPU
-    uniform_buffers.resize(RenderServer::getFramesInFlight());
+    uniform_buffers.resize(1);
     for (auto& uniform_buffer : uniform_buffers)
-        uniform_buffer = new Buffer(size + 4, BUFFER_USAGE_UNIFORM, MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
+        uniform_buffer = new Buffer(size + 4, Buffer::BUFFER_USAGE_UNIFORM, MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
 
     // allocate descriptor sets from the pool
     const vector<VkDescriptorSetLayout> set_layouts(uniform_buffers.size(), layout_info.layout);
@@ -59,63 +62,62 @@ UniformBlock::UniformBlock(const ShaderLayout& layout_info)
 UniformBlock::~UniformBlock()
 {
     DBG_VERBOSE("destroying uniform block " + PTR(this));
-    RenderServer::waitIdle();
-    vkFreeDescriptorSets(RenderServer::getDevice(), RenderServer::getDescriptorPool(), static_cast<uint32_t>(descriptor_sets.size()), descriptor_sets.data());
-    textures_in_use.clear();
-    descriptor_sets.clear();
-    uniform_buffers.clear();
-    live_uniform_buffer.clear();
+    for (VkDescriptorSet set : descriptor_sets)
+        RenderServer::free(set);
 }
 
-void UniformBlock::bind(Ref<DrawCommandBuffer> command_buffer, size_t set) const
+void UniformBlock::bind(WeakRef<DrawCommandBuffer> command_buffer)
 {
-    command_buffer->bindDescriptorSetInternal(set, descriptor_sets[command_buffer->getImageIndex()]);
+    if (rebind_needed)
+    {
+        applyDescriptorBindings();
+        rebind_needed = false;
+    }
+    memcpy(uniform_buffers[0]->mapMemory(), live_uniform_buffer.data(), live_uniform_buffer.size());
+    command_buffer->bindDescriptorSetInternal(set_index, descriptor_sets[0]);
 }
 
-void UniformBlock::setTexture(const uint32_t binding, const Ref<Texture>& image, const bool use_stencil)
+void UniformBlock::setTexture(const uint32_t binding, Ref<Texture> image)
 {
     // if the texture is already bound, skip rebinding it
-    if (textures_in_use[binding].texture == image && textures_in_use[binding].use_stencil == use_stencil)
+    if (std::get<0>(textures_in_use[binding]) == image)
         return;
     // update the binding
-    textures_in_use[binding].texture = image;
-    textures_in_use[binding].use_stencil = use_stencil;
     if (!image)
-    {
-        // if the specified image was null, use the default engine texture
-        textures_in_use[binding].texture = RenderServer::getDefaultTextureSampler().first;
-        textures_in_use[binding].use_stencil = false;
-    }
-    applyDescriptorBindings();
+        std::get<0>(textures_in_use[binding]) = layout.bindings[binding].texture_is_3d ? RenderServer::getDefault3DTexture().strong() : RenderServer::getDefaultTexture().strong();
+    else
+        std::get<0>(textures_in_use[binding]) = image;
+    rebind_needed = true;
 }
 
-void UniformBlock::setSampler(const uint32_t binding, const Ref<Sampler>& sampler)
+void UniformBlock::setSampler(const uint32_t binding, Ref<Sampler> sampler)
 {
     // if same sampler, skip rebinding
-    if (textures_in_use[binding].sampler == sampler)
+    if (std::get<1>(textures_in_use[binding]) == sampler)
         return;
     // update sampler binding; use default engine sampler if null
-    textures_in_use[binding].sampler = sampler;
     if (!sampler)
-        textures_in_use[binding].sampler = RenderServer::getDefaultTextureSampler().second;
-    applyDescriptorBindings();
+        std::get<1>(textures_in_use[binding]) = RenderServer::getDefaultSampler().strong();
+    else
+        std::get<1>(textures_in_use[binding]) = sampler;
+    rebind_needed = true;
 }
 
-void UniformBlock::pushToDescriptorSet(const size_t index)
+void UniformBlock::setTextureSampler(uint32_t binding, Ref<Texture> texture, Ref<Sampler> sampler)
 {
-    memcpy(uniform_buffers[index]->mapMemory(), live_uniform_buffer.data(), live_uniform_buffer.size());
+    setTexture(binding, texture);
+    setSampler(binding, sampler);
 }
 
 void UniformBlock::applyDescriptorBindings()
 {
     // updating the descriptor set bindings so that they correctly connect
     // to our specified textures, and our uniform buffers
-    RenderServer::waitIdle();
     DBG_BABBLE("uniform block " + PTR(this) + " updating " + ::to_string(layout.bindings.size()) + " descriptor bindings");
     for (size_t i = 0; i < descriptor_sets.size(); ++i)
     {
         VkDeviceSize offset = 0;
-        for (const DescriptorBinding& binding : layout.bindings)
+        for (const Shader::DescriptorBinding& binding : layout.bindings)
         {
             // standard write command for our specified descriptor set and binding
             VkWriteDescriptorSet descriptor_write{ };
@@ -127,26 +129,33 @@ void UniformBlock::applyDescriptorBindings()
 
             VkDescriptorBufferInfo buffer_info{ };
             VkDescriptorImageInfo image_info{ };
-            if (binding.type == UNIFORM)
+            if (binding.type == Shader::UNIFORM)
             {
                 // if the binding is a uniform buffer, point it to a section
                 // of the corresponding GPU buffer. offset is incremented
                 // according to the buffer size of this particular uniform
                 // block
-                buffer_info.buffer = uniform_buffers[i]->getBuffer();
+                buffer_info.buffer = static_cast<VkBuffer>(uniform_buffers[i]->getHandle());
                 buffer_info.offset = offset;
                 buffer_info.range = binding.buffer_size;
                 descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 descriptor_write.pBufferInfo = &buffer_info;
                 offset += binding.buffer_size;
             }
-            else if (binding.type == TEXTURE)
+            else if (binding.type == Shader::TEXTURE)
             {
                 // if the binding is a texture-sampler, give it the image view
                 // and sampler specified in the texture map
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = textures_in_use[binding.binding].texture->getView(textures_in_use[binding.binding].use_stencil);
-                image_info.sampler = textures_in_use[binding.binding].sampler->getSampler();
+                auto& texture = std::get<0>(textures_in_use[binding.binding]);
+                if (texture->is3D() != binding.texture_is_3d)
+                {
+                    DBG_ERROR("uniform attempted to bind an incompatible texture dimension. texture will be reset to default.");
+                    std::get<0>(textures_in_use[binding.binding]) = binding.texture_is_3d ? RenderServer::getDefault3DTexture().strong() : RenderServer::getDefaultTexture().strong();
+                    texture = std::get<0>(textures_in_use[binding.binding]);
+                }
+                image_info.imageView = texture->getView();
+                image_info.sampler = std::get<1>(textures_in_use[binding.binding])->getSampler();
                 descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 descriptor_write.pImageInfo = &image_info;
             }

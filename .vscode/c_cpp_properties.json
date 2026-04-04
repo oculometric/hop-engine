@@ -1,15 +1,27 @@
 {
     "configurations": [
         {
+            "name": "Win32",
+            "includePath": [
+                "C:/VulkanSDK/1.4.313.0/Include/**",
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/lib/**",
+                "${workspaceFolder}/inc"
+            ],
+            "cppStandard": "c++20",
+            "intelliSenseMode": "windows-msvc-x64"
+        },
+        {
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/lib/**",
+                "${workspaceFolder}/inc"
             ],
             "defines": [],
-            "cStandard": "c20",
             "cppStandard": "c++20",
-            "intelliSenseMode": "linux-clang-x64"
+            "intelliSenseMode": "linux-clang-x64",
+            "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],
     "version": 4
