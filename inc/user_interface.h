@@ -114,13 +114,14 @@ public:
     BackingData      addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text, glm::vec3 colour);
     BackingData addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec3 fill);
     BackingData    addSimple(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec2 uv_base, glm::vec2 uv_size);
-    void            finalise();
-
+    
     void          updateQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec4 colour, glm::vec4 normal, glm::vec4 tangent, BackingData backing);
     bool          updateText(glm::vec2 position, TextFormatting formatting, const std::string& text, glm::vec3 colour, BackingData backing);
     void     updateNineSlice(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 fill, BackingData backing);
     void        updateSimple(glm::vec2 position, glm::vec2 size, int layer, glm::vec2 uv_base, glm::vec2 uv_size, BackingData backing);
-
+    
+    void            finalise();
+    
     DrawCommand draw() const { return DrawCommand(material, mesh); }
 
 private:
@@ -144,69 +145,99 @@ struct UITransform final
 
     enum Scaling
     {
-        SCALING_NONE,
-        SCALING_FILL_HORIZONTAL,
-        SCALING_FILL_VERTICAL,
-        SCALING_FILL_BOTH
+        SCALING_NONE            = 0b00,
+        SCALING_FILL_HORIZONTAL = 0b01,
+        SCALING_FILL_VERTICAL   = 0b10,
+        SCALING_FILL_BOTH       = 0b11
     };
 
-    glm::vec2 offset = { 0, 0 };
+    glm::vec2 offset       = { 0, 0 };
     Anchor external_anchor = ANCHOR_TOP_LEFT;
     Anchor internal_anchor = ANCHOR_TOP_LEFT;
 
-    glm::vec2 size = { 10, 10 };
+    glm::vec2 size  = { 10, 10 };
     Scaling scaling = SCALING_NONE;
+
+    float rotation         = 0;
+    Anchor rotation_anchor = ANCHOR_MIDDLE_CENTER;
     
-    bool use_array_layout = false;
+    glm::mat3 transform = glm::mat3(1);
+};
+
+struct UIHierarchy final : public Destructible
+{
+    Ref<UICanvasElement> element;
+    WeakRef<UIHierarchy> parent;
+    std::vector<Ref<UIHierarchy>> children;
 };
 
 class UICanvasElement : public Destructible
 {
     friend class UICanvas;
 private:
+    UITransform transform;
+    WeakRef<UIRenderer> renderer;
+    WeakRef<UIHierarchy> hierarchy;
+    glm::vec2 last_parent_size;
+    glm::mat3 last_parent_transform;
     bool needs_rebuild = true;
 
-protected:
-    WeakRef<UIRenderer> last_renderer;
-    UITransform transform;
-
-protected:
+public:
     UICanvasElement() = default;
-    ~UICanvasElement() = default;
+    ~UICanvasElement() override = default;
 
-    bool getNeedsRebuild() const { return needs_rebuild; }
+    void setPosition(glm::vec2 position) { transform.offset = position; layout(last_parent_size, last_parent_transform); }
+    glm::vec2 getPosition() const { return transform.offset; }
+    void setSize(glm::vec2 size) { transform.size = size; layout(last_parent_size, last_parent_transform); }
+    glm::vec2 getSize() const { return transform.size; }
+    void setRotation(float degrees) { transform.rotation = degrees; layout(last_parent_size, last_parent_transform); }
+    float getRotation() const { return transform.rotation; }
+    void setExternalAnchor(UITransform::Anchor anchor) { transform.external_anchor = anchor; layout(last_parent_size, last_parent_transform); }
+    UITransform::Anchor getExternalAnchor() const { return transform.external_anchor; }
+    void setInternalAnchor(UITransform::Anchor anchor) { transform.internal_anchor = anchor; layout(last_parent_size, last_parent_transform); }
+    UITransform::Anchor getInternalAnchor() const { return transform.internal_anchor; }
+    void setScaling(UITransform::Scaling scaling) { transform.scaling = scaling; layout(last_parent_size, last_parent_transform); }
+    UITransform::Scaling getScaling() const { return transform.scaling; }
+    void setRotationAnchor(UITransform::Anchor anchor) { transform.rotation_anchor = anchor; layout(last_parent_size, last_parent_transform); }
+    UITransform::Anchor getRotationAnchor() const { return transform.rotation_anchor; }
+
+protected:
     void setNeedsRebuild() { needs_rebuild = true; }
-    UITransform getLayoutInfo() const { return transform; }
+    glm::mat3 getTransform() const { return transform.transform; }
+    void layout(glm::vec2 parent_size, glm::mat3 parent_transform);
 
-    virtual void buildGeometry(WeakRef<UIRenderer> renderer, glm::mat3 transform) {};
-    virtual void  onMouseEnter() {};
-    virtual void   onMouseMove(glm::vec2 local_pos, glm::vec2 delta) {};
-    virtual void   onMouseExit() {};
-    virtual void   onMouseDown(Input::MouseButton button, glm::vec2 local_pos) {};
-    virtual void   onMouseDrag(Input::MouseButton button, glm::vec2 local_pos, glm::vec2 delta) {};
-    virtual void     onMouseUp(Input::MouseButton button, glm::vec2 local_pos) {};
-    virtual void  onMouseClick(Input::MouseButton button, glm::vec2 local_pos) {};
-    virtual void     onKeyDown(Input::KeyboardKey key) {};
-    virtual void       onKeyUp(Input::KeyboardKey key) {};
+    // TODO: figure this out. each element needs to layout its children, and that needs to be updated when you modify the transform (set position, rotation, )
+    // TODO: build vs update geometry - there should only really be one function, but we need to specify how much to allocate
+    // TODO: as much of that as possible should be enclosed, only the draw and interaction functions should be exposed, and the renderer should be accessible any time
+
+    virtual void        build() {};
+    virtual void onMouseEnter() {};
+    virtual void  onMouseMove(glm::vec2 local_pos, glm::vec2 delta) {};
+    virtual void  onMouseExit() {};
+    virtual void  onMouseDown(Input::MouseButton button, glm::vec2 local_pos) {};
+    virtual void  onMouseDrag(Input::MouseButton button, glm::vec2 local_pos, glm::vec2 delta) {};
+    virtual void    onMouseUp(Input::MouseButton button, glm::vec2 local_pos) {};
+    virtual void onMouseClick(Input::MouseButton button, glm::vec2 local_pos) {};
+    virtual void    onKeyDown(Input::KeyboardKey key) {};
+    virtual void      onKeyUp(Input::KeyboardKey key) {};
+
 };
 
 class UICanvas final : public Destructible
 {
 private:
-    struct Hierarchy final : public Destructible
-    {
-        Ref<UICanvasElement> element;
-        WeakRef<Hierarchy> parent;
-        std::vector<Ref<Hierarchy>> children;
-    };
-
-private:
     Ref<UIRenderer> renderer;
-    Ref<Hierarchy> hierarchy;
-    std::map<WeakRef<UICanvasElement>, WeakRef<Hierarchy>> elements;
+    Ref<UIHierarchy> hierarchy;
+    std::map<WeakRef<UICanvasElement>, WeakRef<UIHierarchy>> elements;
+    glm::vec2 canvas_size;
 
 public:
+    DELETE_CONSTRUCTORS(UICanvas);
+    UICanvas(glm::vec2 size);
+    ~UICanvas() override = default;
+
     void build();
+    void layout();
     template<class T> WeakRef<T> addElement();
     template<class T, class Q> WeakRef<T> addChild(WeakRef<Q> parent);
 
@@ -214,10 +245,43 @@ public:
     DrawCommand draw() const { return renderer->draw(); }
 };
 
+template<class T> inline WeakRef<T> UICanvas::addElement()
+{
+    static_assert(std::is_convertible_v<T*, UICanvasElement*>, "T must be a HopEngine::UICanvasElement subclass");
+    return addChild<T>(hierarchy->element);
+}
+
+template<class T, class Q> inline WeakRef<T> UICanvas::addChild(WeakRef<Q> parent)
+{
+    static_assert(std::is_convertible_v<T*, UICanvasElement*>, "T must be a HopEngine::UICanvasElement subclass");
+    static_assert(std::is_convertible_v<Q*, UICanvasElement*>, "Q must be a HopEngine::UICanvasElement subclass");
+    
+    if (!elements.contains(parent))
+    {
+        DBG_ERROR("UICanvas hierarchy does not contain the specified parent!");
+        return nullptr;
+    }
+
+    // create new element of specified type
+    Ref<T> element = new T();
+    element->renderer = renderer;
+    element->layout(parent->transform.size, parent->transform.transform);
+    // assign element into new hierarchy, as a child of the root hierarchy
+    Ref<UIHierarchy> h = new UIHierarchy();
+    h->element = element;
+    element->hierarchy = h;
+    h->parent = elements[parent];
+    elements[parent]->children.push_back(h);
+    // add to mapping
+    elements.insert(element.cast<UICanvasElement>(), h);
+
+    return element;
+}
 
 
 
 
+/////
 
 class UIContextMenu final : public Destructible
 {
@@ -239,4 +303,5 @@ public:
     bool checkInput();
 };
 
-}
+
+} // namespace HopEngine

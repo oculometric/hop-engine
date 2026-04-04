@@ -176,7 +176,7 @@ bool UIRenderer::updateText(glm::vec2 position, TextFormatting formatting,
         while (base < text.size())
         {
             size_t split = std::min(base + chars_wide, text.size());
-            size_t new_base;
+            size_t new_base = split;
             size_t newline = text.find('\n', base);
             if (newline <= split)
             {

@@ -1,5 +1,7 @@
 #include "user_interface.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/matrix_transform_2d.hpp>
 #include "engine.h"
 #include "input.h"
 
@@ -25,6 +27,109 @@ Ref<Material> UIStyle::makeMaterial()
     mat->setSampler(3, Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST)));
     return mat;
 }
+
+void UICanvasElement::layout(glm::vec2 parent_size, glm::mat3 parent_transform)
+{
+    last_parent_size = parent_size;
+    last_parent_transform = parent_transform;
+
+    glm::vec2 parent_anchor_pos = { 0, 0 };
+    switch (transform.external_anchor)
+    {
+        case UITransform::ANCHOR_TOP_LEFT:      parent_anchor_pos = { 0,                    0 }; break;
+        case UITransform::ANCHOR_TOP_CENTER:    parent_anchor_pos = { parent_size.x / 2.0f, 0 }; break;
+        case UITransform::ANCHOR_TOP_RIGHT:     parent_anchor_pos = { parent_size.x,        0 }; break;
+        case UITransform::ANCHOR_MIDDLE_LEFT:   parent_anchor_pos = { 0, parent_size.y / 2.0f }; break;
+        case UITransform::ANCHOR_MIDDLE_CENTER: parent_anchor_pos = parent_size / 2.0f; break;
+        case UITransform::ANCHOR_MIDDLE_RIGHT:  parent_anchor_pos = { parent_size.x, parent_size.y / 2.0f }; break;
+        case UITransform::ANCHOR_BOTTOM_LEFT:   parent_anchor_pos = { 0,                    parent_size.y }; break;
+        case UITransform::ANCHOR_BOTTOM_CENTER: parent_anchor_pos = { parent_size.x / 2.0f, parent_size.y }; break;
+        case UITransform::ANCHOR_BOTTOM_RIGHT:  parent_anchor_pos = parent_size; break;
+    }
+
+    if (transform.scaling & UITransform::SCALING_FILL_HORIZONTAL)
+        transform.size.x = parent_size.x;
+    if (transform.scaling & UITransform::SCALING_FILL_VERTICAL)
+        transform.size.y = parent_size.y;
+    
+    glm::vec2 self_anchor_pos = { 0, 0 };
+    switch (transform.internal_anchor)
+    {
+        case UITransform::ANCHOR_TOP_LEFT:      self_anchor_pos = { 0,                       0 }; break;
+        case UITransform::ANCHOR_TOP_CENTER:    self_anchor_pos = { transform.size.x / 2.0f, 0 }; break;
+        case UITransform::ANCHOR_TOP_RIGHT:     self_anchor_pos = { transform.size.x,        0 }; break;
+        case UITransform::ANCHOR_MIDDLE_LEFT:   self_anchor_pos = { 0, transform.size.y / 2.0f }; break;
+        case UITransform::ANCHOR_MIDDLE_CENTER: self_anchor_pos = transform.size / 2.0f; break;
+        case UITransform::ANCHOR_MIDDLE_RIGHT:  self_anchor_pos = { transform.size.x, transform.size.y / 2.0f }; break;
+        case UITransform::ANCHOR_BOTTOM_LEFT:   self_anchor_pos = { 0,                       transform.size.y }; break;
+        case UITransform::ANCHOR_BOTTOM_CENTER: self_anchor_pos = { transform.size.x / 2.0f, transform.size.y }; break;
+        case UITransform::ANCHOR_BOTTOM_RIGHT:  self_anchor_pos = transform.size; break;
+    }
+
+    glm::vec2 translation = (parent_anchor_pos - self_anchor_pos) + transform.offset;
+
+    glm::vec2 rotation_anchor_pos = { 0, 0 };
+    switch (transform.rotation_anchor)
+    {
+        case UITransform::ANCHOR_TOP_LEFT:      rotation_anchor_pos = { 0,                       0 }; break;
+        case UITransform::ANCHOR_TOP_CENTER:    rotation_anchor_pos = { transform.size.x / 2.0f, 0 }; break;
+        case UITransform::ANCHOR_TOP_RIGHT:     rotation_anchor_pos = { transform.size.x,        0 }; break;
+        case UITransform::ANCHOR_MIDDLE_LEFT:   rotation_anchor_pos = { 0, transform.size.y / 2.0f }; break;
+        case UITransform::ANCHOR_MIDDLE_CENTER: rotation_anchor_pos = transform.size / 2.0f; break;
+        case UITransform::ANCHOR_MIDDLE_RIGHT:  rotation_anchor_pos = { transform.size.x, transform.size.y / 2.0f }; break;
+        case UITransform::ANCHOR_BOTTOM_LEFT:   rotation_anchor_pos = { 0,                       transform.size.y }; break;
+        case UITransform::ANCHOR_BOTTOM_CENTER: rotation_anchor_pos = { transform.size.x / 2.0f, transform.size.y }; break;
+        case UITransform::ANCHOR_BOTTOM_RIGHT:  rotation_anchor_pos = transform.size; break;
+    }
+
+    glm::mat3 matrix = glm::mat3(1);
+    matrix = glm::translate(matrix, translation);
+    matrix = glm::translate(matrix, rotation_anchor_pos);
+    matrix = glm::rotate(matrix, transform.rotation);
+    matrix = glm::translate(matrix, -rotation_anchor_pos);
+
+    transform.transform = parent_transform * matrix;
+
+    if (hierarchy)
+    {
+        for (const auto& child : hierarchy->children)
+        {
+            child->element->layout(transform.size, transform.transform);
+            child->element->build();
+        }
+    }
+
+    this->build();
+}
+
+UICanvas::UICanvas(glm::vec2 size)
+{
+    renderer = new UIRenderer(new UIStyle());
+    hierarchy = new UIHierarchy();
+    hierarchy->element = new UICanvasElement();
+    hierarchy->element->hierarchy = hierarchy;
+    hierarchy->element->transform.scaling = UITransform::SCALING_FILL_BOTH;
+    elements[hierarchy->element] = hierarchy;
+    canvas_size = size;
+}
+
+void UICanvas::build()
+{
+    bool rebuild_needed = false;
+    for (const auto& [elem, hier] : elements)
+    {
+        rebuild_needed |= elem->needs_rebuild;
+        elem->needs_rebuild = false;
+    }
+
+    if (rebuild_needed)
+        renderer->clear();
+
+    for (const auto& [elem, hier] : elements)
+        elem->build();
+}
+
+void UICanvas::layout() { hierarchy->element->layout(canvas_size, glm::mat3(1)); }
 
 UIContextMenu::UIContextMenu(glm::vec2 position)
 {
