@@ -239,7 +239,7 @@ void RenderServer::updateTextMesh()
         position.x = 0;
         position.y += char_size.y;
     }
-    debug_text_mesh->updateData(vertices, indices, (vertices.size() / 512) * 512, (indices.size() / 512) * 512);
+    debug_text_mesh->updateData(vertices, indices, ((vertices.size() / 1024) + 1) * 1024, ((indices.size() / 1024) + 1) * 1024);
 }
 
 void RenderServer::tryFreeResources(bool force)

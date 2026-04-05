@@ -8,8 +8,6 @@
         - canvas can be in 'world' mode, or 'view' mode [2]
             - view mode is added to a global ui stack which is applied at composite time
             - world mode can have world space transforms applied, exists as a component
-        - canvas can contain a tree of ui elements
-        - elements keep their backing data around to be able to cheaply update meshes when clicking/hovering etc
         - elements automatically get interactions passed to them from the event system (mouse position in local space)
         - basic elements
             - label
@@ -20,7 +18,6 @@
             - textbox
             - slider
             - panel
-        - element layouting system
     - ui input event system [4]
         - mousedown/mouseup/mouseclick/mousedrag
         - mouseenter/mouseexit/mousemove

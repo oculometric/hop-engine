@@ -88,6 +88,14 @@ public:
     {
         friend class UIRenderer;
     private:
+        uint32_t id = 0;
+    };
+
+private:
+    struct BackingDataInternal final
+    {
+        friend class UIRenderer;
+    private:
         uint16_t first_vertex;
         uint16_t vertex_count;
 
@@ -102,30 +110,35 @@ private:
     Ref<Material> material;
     std::vector<Mesh::Vertex> vertices;
     std::map<float, std::vector<uint16_t>> indices;
+    std::map<uint32_t, BackingDataInternal> backing_datas;
+    uint32_t next_id = 0;
 
 public:
     DELETE_CONSTRUCTORS(UIRenderer);
     UIRenderer(Ref<UIStyle> style);
     ~UIRenderer() override;
 
-    void               clear();
-    BackingData      addQuad(float z);
-    BackingData      addQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, float z, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec4 colour, glm::vec4 normal, glm::vec4 tangent);
-    BackingData      addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text, glm::vec3 colour);
-    BackingData addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec3 fill);
-    BackingData    addSimple(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec2 uv_base, glm::vec2 uv_size);
-    
-    void          updateQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec4 colour, glm::vec4 normal, glm::vec4 tangent, BackingData backing);
-    bool          updateText(glm::vec2 position, TextFormatting formatting, const std::string& text, glm::vec3 colour, BackingData backing);
-    void     updateNineSlice(glm::vec2 position, glm::vec2 size, int layer, glm::vec3 fill, BackingData backing);
-    void        updateSimple(glm::vec2 position, glm::vec2 size, int layer, glm::vec2 uv_base, glm::vec2 uv_size, BackingData backing);
-    
-    void            finalise();
+    void        clear();
+    void      addQuad(float z, BackingData& backing_ref);
+    void      addQuad(float z);
+    void      addQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, float z, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec4 colour, glm::vec4 normal, glm::vec4 tangent, BackingData& backing_ref);
+    void      addQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, float z, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec4 colour, glm::vec4 normal, glm::vec4 tangent);
+    void      addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text, glm::vec3 colour, BackingData& backing);
+    void      addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text, glm::vec3 colour);
+    void addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec3 fill, BackingData& backing);
+    void addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec3 fill);
+    void    addSimple(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec2 uv_base, glm::vec2 uv_size, BackingData& backing);
+    void    addSimple(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec2 uv_base, glm::vec2 uv_size);
+    void     finalise();
     
     DrawCommand draw() const { return DrawCommand(material, mesh); }
 
 private:
-    void updateTextSingleLine(glm::vec2 position, TextFormatting formatting, const std::string& text, glm::vec3 colour, BackingData backing);
+    bool isBackingValid(const BackingData& backing_ref);
+    void addBacking(BackingData& backing_ref, BackingDataInternal backing);
+    void updateTextSingleLine(glm::vec2 position, TextFormatting formatting, const std::string& text, glm::vec3 colour, BackingDataInternal backing);
+    void updateQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 uv_tl, glm::vec2 uv_br, glm::vec4 colour, glm::vec4 normal, glm::vec4 tangent, BackingDataInternal backing);
+
 };
 
 struct UITransform final
@@ -163,6 +176,8 @@ struct UITransform final
     
     glm::mat3 transform = glm::mat3(1);
 };
+
+class UICanvasElement;
 
 struct UIHierarchy final : public Destructible
 {
@@ -205,10 +220,6 @@ protected:
     void setNeedsRebuild() { needs_rebuild = true; }
     glm::mat3 getTransform() const { return transform.transform; }
     void layout(glm::vec2 parent_size, glm::mat3 parent_transform);
-
-    // TODO: figure this out. each element needs to layout its children, and that needs to be updated when you modify the transform (set position, rotation, )
-    // TODO: build vs update geometry - there should only really be one function, but we need to specify how much to allocate
-    // TODO: as much of that as possible should be enclosed, only the draw and interaction functions should be exposed, and the renderer should be accessible any time
 
     virtual void        build() {};
     virtual void onMouseEnter() {};

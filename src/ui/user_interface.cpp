@@ -127,6 +127,8 @@ void UICanvas::build()
 
     for (const auto& [elem, hier] : elements)
         elem->build();
+
+    renderer->finalise();
 }
 
 void UICanvas::layout() { hierarchy->element->layout(canvas_size, glm::mat3(1)); }
