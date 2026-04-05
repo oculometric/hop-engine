@@ -10,3 +10,4 @@ engine.hop
 .idea/.idea.hop-engine/.idea/workspace.xml
 /out
 /builds
+*.kra~

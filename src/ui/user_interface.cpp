@@ -90,6 +90,8 @@ void UICanvasElement::layout(glm::vec2 parent_size, glm::mat3 parent_transform)
 
     transform.transform = parent_transform * matrix;
 
+    this->build();
+
     if (hierarchy)
     {
         for (const auto& child : hierarchy->children)
@@ -98,8 +100,6 @@ void UICanvasElement::layout(glm::vec2 parent_size, glm::mat3 parent_transform)
             child->element->build();
         }
     }
-
-    this->build();
 }
 
 UICanvas::UICanvas(glm::vec2 size)
@@ -131,7 +131,12 @@ void UICanvas::build()
     renderer->finalise();
 }
 
-void UICanvas::layout() { hierarchy->element->layout(canvas_size, glm::mat3(1)); }
+void UICanvas::layout()
+{
+    hierarchy->element->layout(canvas_size,
+        glm::translate(glm::mat3(1), canvas_size / -2.0f)
+    );
+}
 
 UIContextMenu::UIContextMenu(glm::vec2 position)
 {

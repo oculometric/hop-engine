@@ -64,9 +64,9 @@ void RenderServer::createWindow()
 
 bool RenderServer::resize(bool force_resize)
 {
-    RenderServer::waitIdle();
     if (wants_fullscreen_update)
     {
+        RenderServer::waitIdle();
         destroyImGui();
         swapchain = nullptr;
         vkDestroySurfaceKHR(instance, surface, nullptr);

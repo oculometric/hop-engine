@@ -35,7 +35,7 @@ UniformBlock::UniformBlock(const Shader::Layout& layout_info)
 
     // create uniform buffers for each frame-in-flight to avoid updating
     // a buffer currently being used by the GPU
-    uniform_buffers.resize(1);
+    uniform_buffers.resize(RenderServer::getFramesInFlight());
     for (auto& uniform_buffer : uniform_buffers)
         uniform_buffer = new Buffer(size + 4, Buffer::BUFFER_USAGE_UNIFORM, MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
 
@@ -73,8 +73,9 @@ void UniformBlock::bind(WeakRef<DrawCommandBuffer> command_buffer)
         applyDescriptorBindings();
         rebind_needed = false;
     }
-    memcpy(uniform_buffers[0]->mapMemory(), live_uniform_buffer.data(), live_uniform_buffer.size());
-    command_buffer->bindDescriptorSetInternal(set_index, descriptor_sets[0]);
+    uint32_t index = command_buffer->getImageIndex() % uniform_buffers.size();
+    memcpy(uniform_buffers[index]->mapMemory(), live_uniform_buffer.data(), live_uniform_buffer.size());
+    command_buffer->bindDescriptorSetInternal(set_index, descriptor_sets[index]);
 }
 
 void UniformBlock::setTexture(const uint32_t binding, Ref<Texture> image)

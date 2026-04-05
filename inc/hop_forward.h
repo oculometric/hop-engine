@@ -36,6 +36,8 @@ class NodeView;
 // ui classes
 class UIRenderer;
 class UIStyle;
+class UICanvas;
+class UICanvasElement;
 class UIContextMenu;
 
 // misc

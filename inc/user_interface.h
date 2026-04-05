@@ -177,8 +177,6 @@ struct UITransform final
     glm::mat3 transform = glm::mat3(1);
 };
 
-class UICanvasElement;
-
 struct UIHierarchy final : public Destructible
 {
     Ref<UICanvasElement> element;
