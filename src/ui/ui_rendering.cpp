@@ -75,7 +75,12 @@ void UIRenderer::addQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4,
     addQuad(p1, p2, p3, p4, z, uv_tl, uv_br, colour, normal, tangent, backing);
 }
 
-void UIRenderer::addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text, glm::vec3 colour, BackingData& backing_ref)
+float calculateTextWidth(const std::string& text, UIRenderer::TextFormatting formatting, WeakRef<Font> font)
+{
+    return static_cast<float>((static_cast<int>(text.size()) * (static_cast<int>(font->getGlyphSize().x) + formatting.spacing)) - formatting.spacing);
+}
+
+glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text, glm::vec3 colour, BackingData& backing_ref)
 {
     BackingDataInternal backing;
     if (!isBackingValid(backing_ref))
@@ -198,17 +203,27 @@ void UIRenderer::addText(glm::vec2 position, float z, TextFormatting formatting,
         updateTextSingleLine(top_left, sub_format, line, colour, temp);
         allocated_chars -= line.size();
 
-        top_left.y += char_size.y - 2.0f;
-        bottom_clip -= static_cast<int>(char_size.y - 2.0f);
+        top_left.y += char_size.y;
+        bottom_clip -= static_cast<int>(char_size.y);
         temp.first_vertex += 4 * static_cast<uint16_t>(line.size());
         temp.first_index += 6 * static_cast<uint16_t>(line.size());
     }
+
+    float longest = 0;
+    for (const auto& line : lines)
+    {
+        float length = calculateTextWidth(line, formatting, style->font);
+        if (length > longest)
+            longest = length;
+    }
+
+    return char_size * glm::vec2{ longest, static_cast<float>(lines.size()) };
 }
 
-void UIRenderer::addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text, glm::vec3 colour)
+glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text, glm::vec3 colour)
 {
     BackingData backing;
-    addText(position, z, formatting, text, colour, backing);
+    return addText(position, z, formatting, text, colour, backing);
 }
 
 void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec3 fill, BackingData& backing_ref)
@@ -257,11 +272,6 @@ void UIRenderer::finalise()
         mesh = new Mesh(vertices, final_indices, true);
     else
         mesh->updateData(vertices, final_indices, ((vertices.size() / 256) + 1) * 256, ((final_indices.size() / 256) + 1) * 256 );
-}
-
-float calculateTextWidth(const std::string& text, UIRenderer::TextFormatting formatting, WeakRef<Font> font)
-{
-    return static_cast<float>((static_cast<int>(text.size()) * (static_cast<int>(font->getGlyphSize().x) + formatting.spacing)) - formatting.spacing);
 }
 
 bool UIRenderer::isBackingValid(const BackingData& backing_ref)

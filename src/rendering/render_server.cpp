@@ -136,11 +136,6 @@ RenderServer::RenderServer()
     auto debug_ui_style = new UIStyle();
     debug_ui_style->font = debug_text_font;
     debug_text_renderer = new UIRenderer(debug_ui_style);
-    // debug_text_mesh = new Mesh({}, {}, true);
-    //debug_text_material = new Material(new Shader("res://engine/shaders/screen_space_text.glsl"),
-    //    Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthTest(false), final_render_pass);
-    //debug_text_material->setTexture(0, debug_text_font->getAtlas().strong());
-    //debug_text_material->setSampler(0, new Sampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST)));
 
     initImGui();
 
@@ -192,12 +187,9 @@ void RenderServer::updateTextMesh()
     auto lines = Debug::queryLines(32);
 
     debug_text_renderer->clear();
-    glm::vec2 position = { 0, 0 };
+    glm::vec2 position = -glm::vec2(swapchain->getExtent()) / 2.0f;
     for (const auto& line : lines)
-    {
-        debug_text_renderer->addText(position, 0, UIRenderer::TextFormatting(), line, { 1, 1, 1 });
-        position.y += debug_text_font->getGlyphSize().y;
-    }
+        position.y += debug_text_renderer->addText(position, 0, UIRenderer::TextFormatting(), line, { 1, 1, 1 }).y;
     debug_text_renderer->finalise();
 }
 
