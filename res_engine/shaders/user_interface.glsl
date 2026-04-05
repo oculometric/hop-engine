@@ -6,21 +6,24 @@ void vertex()
     frag.colour = in_colour;        // .rgb  -> primary detail colour
                                     // .a    -> unused
     frag.normal = in_normal;        // .x    -> draw mode (0 = text, 1 = 9-slice, 2 = simple uv)
-                                    // .y    -> texture slice (for 9-slice and simple uv modes)
+                                    // .y    -> texture slice (for 9-slice and simple uv modes) OR text mode bitflags (bit 0 = bold, bit 1 = underline, bit 2 = strikethrough)
                                     // .z    -> packed border booleans (for 9-slice mode)
                                     // .w    -> unused
-    frag.tangent = in_tangent;      // .xy   -> quad size (when in 9-slice mode)
+    frag.tangent = in_tangent;      // .xy   -> quad size (when in 9-slice mode or text mode)
                                     // .zw   -> unused
     frag.uv = in_uv;
-    // vertex coordinates are passed in in canvas space ({ 0, 0 } is top left, { width, height } is bottom right)
-    gl_Position.xy = in_position.xy / (scene.viewport_size / 2.0f);//round(in_position.xy - (scene.viewport_size / 2.0f)) / (scene.viewport_size / 2.0f);
+
+    // vertex coordinates are passed in in canvas space ({ 0, 0 } is center)
+    vec2 pixel_position = floor(in_position.xy + (scene.viewport_size / 2.0f));
+    gl_Position.xy = (pixel_position / vec2(scene.viewport_size)) * 2.0f - 1.0f;
     gl_Position.zw = vec2(0, 1);
 }
 
 #pragma CANVAS_ATTACHMENTS
 
 layout(set = 2, binding = 1) uniform sampler2D text_atlas;
-layout(set = 2, binding = 2) uniform sampler3D ui_atlas;
+layout(set = 2, binding = 2) uniform sampler2D text_bold_atlas;
+layout(set = 2, binding = 3) uniform sampler3D ui_atlas;
 
 vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size, bool top_border, bool bottom_border, bool left_border, bool right_border)
 {
@@ -72,8 +75,36 @@ void fragment()
     if (draw_mode == 0)         // text mode
     {
         vec2 uv = frag.uv;
-        if (texture(text_atlas, uv).r < 0.5f)
+        int text_mode = int(frag.normal.y);
+        bool underline_flag = (text_mode & 2) > 0;
+        bool strikethrough_flag = (text_mode & 4) > 0;
+        vec2 quad_size = frag.tangent.xy;
+        vec2 uv_size = quad_size / vec2(textureSize(text_atlas, 0));
+
+        float local_uv = mod(uv.y, uv_size.y) / uv_size.y;
+        float underline_start     = 0.1f;
+        float underline_end       = 0.2f;
+        float strikethrough_start = 0.45f;
+        float strikethrough_end   = 0.55f;
+
+        float tex_value = 0.0f;
+        if ((text_mode & 1) > 0) tex_value = texture(text_bold_atlas, uv).r;
+        else                     tex_value = texture(text_atlas, uv).r;
+        
+        if (underline_flag)
+        {
+            if (local_uv >= underline_start && local_uv <= underline_end)
+                tex_value = 1.0f;
+        }
+        if (strikethrough_flag)
+        {
+            if (local_uv >= strikethrough_start && local_uv <= strikethrough_end)
+                tex_value = 1.0f;
+        }
+
+        if (tex_value < 0.5f)
             discard;
+
         out_colour = vec4(fill_colour, 1);
     }
     else if (draw_mode == 1)    // 9-slice mode

@@ -19,7 +19,7 @@ static glm::vec2 flipUV(glm::vec2 v) { return { v.x, 1.0f - v.y }; }
 
 void NodeView::setStyle(Ref<Style> new_style)
 {
-    material->setTexture("text_atlas", new_style->font->getAtlas());
+    material->setTexture("text_atlas", new_style->font->getAtlas().strong());
     material->setTexture("node_atlas", new_style->node_atlas);
     material->setTexture("extra_atlas", new_style->extra_atlas);
     material->setTexture("ui_atlas", new_style->ui_atlas);

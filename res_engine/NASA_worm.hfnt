@@ -1,0 +1,3 @@
+Resource(texture, "res://engine/textures/font_NASA_worm.png") : regular_atlas;
+
+Atlas(regular = @regular_atlas, bold = @regular_atlas, glyph_size = [ 24, 24 ]);

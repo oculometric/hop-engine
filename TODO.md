@@ -1,21 +1,35 @@
 # TODO
 
 # v0.54
-- general purpose text rendering (wrapping, alignment, font, underline, bold, italic, strikethrough) [M]
-- make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
-- proper font library [M]
-- make local/global transform from forward/up vectors (generally complete the transform functionality) [H]
+- document everything
 
-- ui rendering refactor
-    - ui management stack/static class
-    - refactor node view code somewhat
-    - ui interaction toolkit
-    - make nodes UI instead of a scene...
-    - ui elements - label, button, dropdown, checkbox, textbox, slider
-- ui input event system
-    - mousedown/mouseup/mouseclick/mousedrag
-    - keydown/keyup
-    - multi-element intersection testing, i.e. we end up with a stack of elements which were intersected
+- the ui update
+    - ui canvas
+        - canvas can be in 'world' mode, or 'view' mode [2]
+            - view mode is added to a global ui stack which is applied at composite time
+            - world mode can have world space transforms applied, exists as a component
+        - elements automatically get interactions passed to them from the event system (mouse position in local space)
+        - basic elements
+            - label
+            - button
+            - dropdown
+            - checkbox
+            - radiobutton
+            - textbox
+            - slider
+            - panel
+    - ui input event system [4]
+        - mousedown/mouseup/mouseclick/mousedrag
+        - mouseenter/mouseexit/mousemove
+        - keydown/keyup
+        - multi-element intersection testing, i.e. we end up with a stack of elements which were intersected
+    - refactor nodes to use the ui renderer
+        - no longer their own scene
+        - pack everything into a single texture
+        - use the generic user interface shader
+
+- make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
+- make local/global transform from forward/up vectors (generally complete the transform functionality) [H]
 
 # v0.60
 - interactive node editor
@@ -28,6 +42,7 @@
     - move overlays (temp link, right click menu, selection box) into their own mesh
 - fix mouse locking not behaving correctly on linux
 - object duplicate function
+- input actions
 - actual editor
     - resizeable/swappable views
     - editor build target
@@ -40,10 +55,10 @@
 
 # v0.61
 - switch to glslang for shader compilation
-- document everything
 - audio loading and output
 - shader & other resource reloading at runtime
 - windowless offscreen rendering support
+- .otf -> baked font converter (font oven)
 ---
 
 ## v0.7

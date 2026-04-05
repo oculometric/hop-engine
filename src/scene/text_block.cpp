@@ -2,7 +2,7 @@
 
 #include "engine.h"
 #include "mesh.h"
-#include "font.h"
+#include "user_interface.h"
 #include "material.h"
 #include "texture.h"
 
@@ -14,7 +14,7 @@ void TextComponent::awake()
     StaticMeshComponent::awake();
     font = new Font("res://engine/font.bmp", glm::ivec2{ 10, 18 });
     material = new Material(Engine::loadShader("res://engine/shaders/text.glsl"));
-    material->setTexture(0, font->getAtlas());
+    material->setTexture(0, font->getAtlas().strong());
     material->setSampler(0, Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST)));
     
     setText("Sample text");

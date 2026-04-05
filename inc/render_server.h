@@ -84,9 +84,8 @@ private:
 	Ref<Mesh> quad;					// full screen quad mesh
     Ref<Mesh> tri;
     
-    Ref<Material> debug_text_material;
-    Ref<Mesh> debug_text_mesh;
     Ref<Font> debug_text_font;
+    Ref<UIRenderer> debug_text_renderer;
 	
 	Ref<UniformBlock> final_pass_uniforms;
     Ref<Material> spinner_material;
@@ -145,6 +144,7 @@ public:
 	static WeakRef<Mesh> getSkyboxCube() { return getInstance()->skybox_cube; }
 	static WeakRef<Mesh> getQuad() { return getInstance()->quad; }
 	
+    static uint32_t getFramesInFlight();
 	static GLFWwindow* getWindow() { return getInstance()->window; }
 	static glm::vec2 getFramebufferSize();
 	static bool getWindowShouldClose();

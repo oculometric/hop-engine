@@ -63,7 +63,7 @@ public:
 	void bind(WeakRef<DrawCommandBuffer> command_buffer);
 	
 	std::vector<VkPipelineShaderStageCreateInfo> getShaderStageCreateInfos() const;
-	bool reloadShader(); // TODO: shader reload
+	bool reloadShader();
 
 private:
 	static std::vector<DescriptorBinding> mergeBindings(const std::vector<DescriptorBinding>& list_a, const std::vector<DescriptorBinding>& list_b);
