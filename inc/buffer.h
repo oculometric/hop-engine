@@ -92,10 +92,11 @@ public:
     /**
      * @brief binds the buffer for rendering in a command buffer, either as a vertex or
      * index buffer.
+     * // TODO: eliminate type, look at usage bits to figure it out!
      * @param command_buffer command buffer to issue a bind command into.
      * @param type 0 to bind as a vertex buffer, 1 to bind as an index buffer.
      */
-    void bind(WeakRef<DrawCommandBuffer> command_buffer, int type); // TODO: eliminate type, look at usage bits to figure it out!
+    void bind(WeakRef<DrawCommandBuffer> command_buffer, int type);
 };
 
 ENUM_OPERATOR(Buffer::Usage)

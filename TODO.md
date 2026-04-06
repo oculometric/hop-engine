@@ -2,33 +2,55 @@
 
 # v0.54
 - document everything
+    - basic_components.h
+    - command_buffer.h
+    - debug.h
+    - deserialise.h
+    - editor.h
+    - engine.h
+    - events.h
+    - input.h
+    - material.h
+    - math_helpers.h
+    - mesh.h
+    - package.h
+    - render_graph.h
+    - render_server.h
+    - scene.h
+    - swapchain.h
+    - texture.h
+    - user_interface.h
+    - eliminate vulkan_typedefs.h
+    - license (happy bunny license) and copyright
+- make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
+- input actions
+- switch to glslang for shader compilation
 
 - the ui update
     - ui canvas
         - canvas can be in 'world' mode, or 'view' mode [2]
             - view mode is added to a global ui stack which is applied at composite time
             - world mode can have world space transforms applied, exists as a component
-        - elements automatically get interactions passed to them from the event system (mouse position in local space)
-        - basic elements
-            - label
-            - button
-            - dropdown
-            - checkbox
-            - radiobutton
-            - textbox
-            - slider
-            - panel
+    - basic elements
+        - label
+        - button
+        - dropdown
+        - checkbox
+        - radiobutton
+        - textbox
+        - slider
+        - panel
     - ui input event system [4]
         - mousedown/mouseup/mouseclick/mousedrag
         - mouseenter/mouseexit/mousemove
         - keydown/keyup
+        - elements automatically get interactions passed to them from the event system (mouse position in local space)
         - multi-element intersection testing, i.e. we end up with a stack of elements which were intersected
     - refactor nodes to use the ui renderer
         - no longer their own scene
         - pack everything into a single texture
         - use the generic user interface shader
 
-- make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
 - make local/global transform from forward/up vectors (generally complete the transform functionality) [H]
 
 # v0.60
@@ -42,7 +64,6 @@
     - move overlays (temp link, right click menu, selection box) into their own mesh
 - fix mouse locking not behaving correctly on linux
 - object duplicate function
-- input actions
 - actual editor
     - resizeable/swappable views
     - editor build target
@@ -54,7 +75,6 @@
 ---
 
 # v0.61
-- switch to glslang for shader compilation
 - audio loading and output
 - shader & other resource reloading at runtime
 - windowless offscreen rendering support

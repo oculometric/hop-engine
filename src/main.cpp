@@ -6,8 +6,6 @@ using namespace HopEngine;
 int main()
 {
     Engine::init();
-
-    Package::importPackage("resources.hop");
     
     Engine::startApplication<Editor>();
 

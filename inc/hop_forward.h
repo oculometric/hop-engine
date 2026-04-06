@@ -1,9 +1,12 @@
 #pragma once
 
+// provides early forward definitions for most outward-facing classes
+
 namespace HopEngine
 {
 
 // graphics classes
+
 class RenderServer;
 class TransientCommandBuffer;
 class DrawCommandBuffer;
@@ -21,12 +24,14 @@ class Sampler;
 class Mesh;
 
 // scene tree classes
+
 struct DrawCommand;
 class Scene;
 class Object;
 class Component;
 
 // component subclasses
+
 class CameraComponent;
 class StaticMeshComponent;
 class LightComponent;
@@ -34,6 +39,8 @@ class TextComponent;
 class NodeView;
 
 // ui classes
+
+class Font;
 class UIRenderer;
 class UIStyle;
 class UICanvas;
@@ -41,7 +48,7 @@ class UICanvasElement;
 class UIContextMenu;
 
 // misc
-class Font;
+
 class Application;
 class Engine;
 class EventServer;
