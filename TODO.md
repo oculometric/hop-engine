@@ -3,17 +3,14 @@
 # v0.54
 - document everything
     - basic_components.h
-    - command_buffer.h
     - debug.h
     - deserialise.h
     - editor.h
     - engine.h
-    - events.h
     - input.h
     - material.h
     - math_helpers.h
     - mesh.h
-    - package.h
     - render_graph.h
     - render_server.h
     - scene.h
@@ -25,6 +22,7 @@
 - make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
 - input actions
 - switch to glslang for shader compilation
+- enforce proper error checking
 
 - the ui update
     - ui canvas
@@ -91,7 +89,12 @@
 - shadows
 - textures should be loadable in linear mode?
 - a proper procedural shading art workflow
-- data blocks should know which package they came from
+- package manager improvements
+    - data blocks should know which package they came from
+    - package manager should not have to load the entire file from disk at once
+    - package manager should reduce copying of data blocks
+    - needs ability to create directories (including automatically when writing a file)
+- remove framebuffer_extent parameter from setScissorViewport function
 - bytecode node language
 - VR interfaces
 - Steamworks integration

@@ -32,7 +32,7 @@ DataBlock Package::load(const string& path)
 	if (isResPath(path, real_path))
 	{
 		if (!instance)
-		Package::init();
+            Package::init();
 
 		DBG_VERBOSE("loading '" + real_path + "'");
 		const auto redirector = instance->alias_table.find(real_path);
@@ -80,6 +80,9 @@ bool Package::store(const string& path, const DataBlock& data)
 	string real_path;
 	if (isResPath(path, real_path))
 	{
+        if (!instance)
+            Package::init();
+            
 		DBG_VERBOSE("storing '" + path + "'; " + to_string(data.size()) + " bytes");
 		instance->database[real_path] = data;
 		return true;

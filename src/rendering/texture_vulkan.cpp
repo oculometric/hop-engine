@@ -106,7 +106,7 @@ void Texture::transitionLayout(const Layout new_layout)
 
     Ref<TransientCommandBuffer> cmd_buf = new TransientCommandBuffer();
 
-    vkCmdPipelineBarrier(cmd_buf->getHandle(), src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &memory_barrier);
+    vkCmdPipelineBarrier(static_cast<VkCommandBuffer>(cmd_buf->getHandle()), src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &memory_barrier);
 
     cmd_buf->submit();
     current_layout = new_layout;
@@ -134,7 +134,7 @@ std::vector<uint8_t> Texture::download()
 
     Ref<TransientCommandBuffer> cmd_buf = new TransientCommandBuffer();
 
-    vkCmdCopyImageToBuffer(cmd_buf->getHandle(), image, toVulkanLayout(current_layout), static_cast<VkBuffer>(buffer->getHandle()), 1, &image_copy);
+    vkCmdCopyImageToBuffer(static_cast<VkCommandBuffer>(cmd_buf->getHandle()), image, toVulkanLayout(current_layout), static_cast<VkBuffer>(buffer->getHandle()), 1, &image_copy);
 
     cmd_buf->submit();
 
@@ -167,7 +167,7 @@ void Texture::copyBufferToImage(Ref<Buffer> buffer) const
 
     Ref<TransientCommandBuffer> cmd_buf = new TransientCommandBuffer();
 
-    vkCmdCopyBufferToImage(cmd_buf->getHandle(), static_cast<VkBuffer>(buffer->getHandle()), image, toVulkanLayout(current_layout), 1, &image_copy);
+    vkCmdCopyBufferToImage(static_cast<VkCommandBuffer>(cmd_buf->getHandle()), static_cast<VkBuffer>(buffer->getHandle()), image, toVulkanLayout(current_layout), 1, &image_copy);
 
     cmd_buf->submit();
 }

@@ -15,6 +15,10 @@ void registerCountedRef(const char* type_name, const WeakRef<void>& reference);
 void unregisterCountedRef(const void* ptr);
 #define UNREGISTER unregisterCountedRef(payload)
 
+/**
+ * @brief featureful reference counted template class. should be used for most, if not all, engine
+ * types. registers itself with the engine singleton allowing tracking of allocated objects.
+ */
 template<typename T> class Ref final
 {
     friend class WeakRef<T>;
@@ -196,13 +200,17 @@ private:
     }
 };
 
+/**
+ * @brief templated weak reference observer class. freely convertible to/from an active (strong)
+ * reference counter instance. useful for handling data where ownership is not needed/appropriate.
+ */
 template<typename T> class WeakRef final
 {
     friend class Ref<T>;
 
 private:
-    T* payload          = nullptr;
-    size_t* ref_counter = nullptr;
+    T* payload          = nullptr; // internal raw pointer which this `Ref` owns
+    size_t* ref_counter = nullptr; // shared reference counter reflecting the number of owners
 
 public:
     WeakRef() {}

@@ -132,7 +132,7 @@ void Buffer::copyToBuffer(const Ref<Buffer>& other) const
     buffer_copy.srcOffset = 0;
     buffer_copy.dstOffset = 0;
     buffer_copy.size      = buffer_size;
-    vkCmdCopyBuffer(cmd_buf->getHandle(), static_cast<VkBuffer>(buffer), static_cast<VkBuffer>(other->buffer), 1, &buffer_copy);
+    vkCmdCopyBuffer(static_cast<VkCommandBuffer>(cmd_buf->getHandle()), static_cast<VkBuffer>(buffer), static_cast<VkBuffer>(other->buffer), 1, &buffer_copy);
 
     cmd_buf->submit();
 }

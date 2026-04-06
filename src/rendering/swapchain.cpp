@@ -105,7 +105,7 @@ bool Swapchain::submitCommands(WeakRef<DrawCommandBuffer> command_buffer, uint32
     submit_info.pWaitSemaphores = wait_semaphores;
     submit_info.pWaitDstStageMask = wait_stages;
     submit_info.commandBufferCount = 1;
-    VkCommandBuffer cmd_buf = command_buffer->getCommandBuffer();
+    VkCommandBuffer cmd_buf = static_cast<VkCommandBuffer>(command_buffer->getCommandBuffer());
     submit_info.pCommandBuffers = &cmd_buf;
     const VkSemaphore signal_semaphores[] = { render_finished_semaphores[image_index] };
     submit_info.signalSemaphoreCount = 1;
