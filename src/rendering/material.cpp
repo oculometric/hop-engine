@@ -65,13 +65,13 @@ void Material::bind(WeakRef<DrawCommandBuffer> command_buffer, bool wireframe_al
 
 void Material::setTexture(const uint32_t binding, Ref<Texture> texture)
 {
-	DBG_BABBLE("material '" + getOrigin() + "' assigned texture '" + texture->getOrigin() + "' to binding " + ::to_string(binding));
+	DBG_VERBOSE("material '" + getOrigin() + "' assigned texture '" + texture->getOrigin() + "' to binding " + ::to_string(binding));
 	uniforms->setTexture(binding, texture);
 }
 
 void Material::setSampler(const uint32_t binding, Ref<Sampler> sampler)
 {
-	DBG_BABBLE("material '" + getOrigin() + "' assigned sampler " + PTR(sampler.get()) + " to binding " + ::to_string(binding));
+	DBG_VERBOSE("material '" + getOrigin() + "' assigned sampler " + PTR(sampler.get()) + " to binding " + ::to_string(binding));
 	uniforms->setSampler(binding, sampler);
 }
 
@@ -80,7 +80,7 @@ void Material::setTexture(const string& name, Ref<Texture> texture)
 	const auto it = texture_name_to_binding.find(name);
 	if (it != texture_name_to_binding.end())
 	{
-		DBG_BABBLE("material '" + getOrigin() + "' assigned texture '" + texture->getOrigin() + "' to binding '" + name + '\'');
+		DBG_VERBOSE("material '" + getOrigin() + "' assigned texture '" + texture->getOrigin() + "' to binding '" + name + '\'');
 		uniforms->setTexture(it->second, texture);
 	}
 	else
@@ -92,7 +92,7 @@ void Material::setSampler(const string& name, Ref<Sampler> sampler)
 	const auto it = texture_name_to_binding.find(name);
 	if (it != texture_name_to_binding.end())
 	{
-		DBG_BABBLE("material '" + getOrigin() + "' assigned sampler " + PTR(sampler.get()) + " to binding '" + name + '\'');
+		DBG_VERBOSE("material '" + getOrigin() + "' assigned sampler " + PTR(sampler.get()) + " to binding '" + name + '\'');
 		uniforms->setSampler(it->second, sampler);
 	}
 	else
@@ -124,5 +124,5 @@ void Material::setUniform(const string& name, const void* data, size_t size)
 		DBG_WARNING("material '" + getOrigin() + "' uniform '" + name + "' size mismatch (given " + ::to_string(size) + ", expected " + ::to_string(var.size) + ")");
 	const size_t clamped_size = min(size, var.size);
 	memcpy(static_cast<uint8_t*>(uniforms->getBuffer()) + var.offset, data, clamped_size);
-	DBG_BABBLE("material '" + getOrigin() + "' updated uniform '" + name + '\'');
+	DBG_VERBOSE("material '" + getOrigin() + "' updated uniform '" + name + '\'');
 }

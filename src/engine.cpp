@@ -291,7 +291,7 @@ Engine::Engine()
 
     engine->engine_start_timestamp = chrono::steady_clock::now();
 
-    Debug::init(Debug::DEBUG_FAULT);
+    Debug::init();
 
     EventServer::init();
 

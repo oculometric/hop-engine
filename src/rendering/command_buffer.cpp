@@ -27,14 +27,14 @@ TransientCommandBuffer::TransientCommandBuffer()
     begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
     vkBeginCommandBuffer(static_cast<VkCommandBuffer>(buffer), &begin_info);
-    DBG_BABBLE("started transient command buffer " + PTR(this));
+    DBG_VERBOSE("started transient command buffer " + PTR(this));
 }
 
 TransientCommandBuffer::~TransientCommandBuffer()
 {
     if (!already_submitted)
         DBG_WARNING("command buffer " + PTR(this) + " being destructed without being submitted");
-    DBG_BABBLE("destroying command buffer " + PTR(this));
+    DBG_VERBOSE("destroying command buffer " + PTR(this));
     vkFreeCommandBuffers(RenderServer::getDevice(), RenderServer::getCommandPool(), 1, reinterpret_cast<VkCommandBuffer*>(&buffer));
 }
 
@@ -48,7 +48,7 @@ void TransientCommandBuffer::submit()
     }
     already_submitted = true;
 
-    DBG_BABBLE("submitting transient command buffer " + PTR(this));
+    DBG_VERBOSE("submitting transient command buffer " + PTR(this));
     vkEndCommandBuffer(static_cast<VkCommandBuffer>(buffer));
 
     VkSubmitInfo submit_info{ };
@@ -107,7 +107,7 @@ void DrawCommandBuffer::begin(uint32_t index, FrameStats* frame_stats)
     current_vertex_buffer = nullptr;
     current_index_buffer = nullptr;
     
-    DBG_BABBLE("recording command buffer");
+    DBG_VERBOSE("recording command buffer");
     VkCommandBufferBeginInfo cmd_buffer_begin_info{ };
     cmd_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     if (vkBeginCommandBuffer(static_cast<VkCommandBuffer>(buffer), &cmd_buffer_begin_info) != VK_SUCCESS)

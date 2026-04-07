@@ -137,7 +137,7 @@ FrameStats RenderServer::drawFrame()
     if (resize())
         return { };
 
-    DBG_BABBLE("drawing frame " + ::to_string(Engine::getFrameCount()));
+    DBG_VERBOSE("drawing frame " + ::to_string(Engine::getFrameCount()));
 
     FrameStats stats{ };
 

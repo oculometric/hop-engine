@@ -36,7 +36,7 @@ VkImageLayout HopEngine::toVulkanLayout(Texture::Layout layout) { return vulkan_
 
 void Texture::transitionLayout(const Layout new_layout)
 {
-    DBG_BABBLE("transitioning image '" + getOrigin() + "' layout from " + vk::to_string((vk::ImageLayout)current_layout) + " to " + vk::to_string((vk::ImageLayout)new_layout));
+    DBG_VERBOSE("transitioning image '" + getOrigin() + "' layout from " + vk::to_string((vk::ImageLayout)current_layout) + " to " + vk::to_string((vk::ImageLayout)new_layout));
 
     VkImageMemoryBarrier memory_barrier{ };
     memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -147,7 +147,7 @@ std::vector<uint8_t> Texture::download()
 
 void Texture::copyBufferToImage(Ref<Buffer> buffer) const
 {
-    DBG_BABBLE("copying buffer " + PTR(buffer.get()) + " to image '" + getOrigin() + '\'');
+    DBG_VERBOSE("copying buffer " + PTR(buffer.get()) + " to image '" + getOrigin() + '\'');
 
     if (!(usage & IMAGE_USAGE_TRANSFER_DST))
         DBG_WARNING("attempt to copy to an image which does not support being a transfer destination");

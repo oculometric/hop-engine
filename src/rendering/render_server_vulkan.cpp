@@ -48,16 +48,16 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
     switch (message_severity)
     {
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-        Debug::write("[ VALIDATION ]: " + string(callback_data->pMessage), Debug::DEBUG_VERBOSE);
+        DBG_VERBOSE("[ VALIDATION ]: " + string(callback_data->pMessage));
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-        Debug::write("[ VALIDATION ]: " + string(callback_data->pMessage), Debug::DEBUG_INFO);
+        DBG_INFO("[ VALIDATION ]: " + string(callback_data->pMessage));
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-        Debug::write("[ VALIDATION ]: " + string(callback_data->pMessage), Debug::DEBUG_WARNING);
+        DBG_WARNING("[ VALIDATION ]: " + string(callback_data->pMessage));
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-        Debug::write("[ VALIDATION ]: " + string(callback_data->pMessage), Debug::DEBUG_ERROR);
+        DBG_ERROR("[ VALIDATION ]: " + string(callback_data->pMessage));
         break;
     default: break;
     }
@@ -356,7 +356,7 @@ void RenderServer::createVulkan()
                     score += 400;
             }
 
-            DBG_BABBLE("found device " + string(properties.deviceName) + ", scored " + ::to_string(score));
+            DBG_VERBOSE("found device " + string(properties.deviceName) + ", scored " + ::to_string(score));
             device_scores.insert({ score, test_device });
         }
         // check if any of the devices were suitable, and if so,

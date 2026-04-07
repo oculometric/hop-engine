@@ -15,9 +15,7 @@ using namespace HopEngine;
 using namespace std;
 
 RenderGraph::Step::~Step()
-{
-    DBG_BABBLE("destroying render step " + PTR(this));
-}
+{ }
 
 RenderGraph::Builder& RenderGraph::Builder::addCamera(const size_t slot)
 {

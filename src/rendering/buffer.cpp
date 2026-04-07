@@ -60,7 +60,7 @@ Buffer::Buffer(size_t size, const Usage usage, const MemoryProperties properties
     // and bind it to our buffer
     vkBindBufferMemory(RenderServer::getDevice(), static_cast<VkBuffer>(buffer), static_cast<VkDeviceMemory>(memory), 0);
 
-    DBG_BABBLE("created buffer of size " + ::to_string(size) + " with usage " + to_string(usage) +
+    DBG_VERBOSE("created buffer of size " + ::to_string(size) + " with usage " + to_string(usage) +
                " and memory properties " + to_string(properties));
 
     buffer_size = size;
@@ -68,7 +68,7 @@ Buffer::Buffer(size_t size, const Usage usage, const MemoryProperties properties
 
 Buffer::~Buffer()
 {
-    DBG_BABBLE("destroying buffer " + PTR(this));
+    DBG_VERBOSE("destroying buffer " + PTR(this));
     // make sure the buffer is unmapped
     unmapMemory();
 
@@ -123,7 +123,7 @@ void Buffer::unmapMemory()
 
 void Buffer::copyToBuffer(const Ref<Buffer>& other) const
 {
-    DBG_BABBLE("copying from " + PTR(this) + " to buffer " + PTR(other.get()));
+    DBG_VERBOSE("copying from " + PTR(this) + " to buffer " + PTR(other.get()));
     Ref<TransientCommandBuffer> cmd_buf = new TransientCommandBuffer();
 
     // perform vulkan buffer-to-buffer copy on an immediate command buffer

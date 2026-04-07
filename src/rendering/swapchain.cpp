@@ -97,7 +97,7 @@ uint32_t Swapchain::acquireNextImage()
             static_cast<VkSemaphore>(image_available_semaphores[frame_index % in_flight_fences.size()]),
             VK_NULL_HANDLE, &image_index),
         WARNING, return UINT32_MAX);
-    DBG_BABBLE("acquired image " + ::to_string(image_index));
+    DBG_VERBOSE("acquired image " + ::to_string(image_index));
 
     return image_index;
 }
