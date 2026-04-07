@@ -7,10 +7,8 @@
 - remove type parameter from buffer bind function
 - document everything
     - basic_components.h
-    - debug.h
     - deserialise.h
     - engine.h
-    - input.h
     - material.h
     - mesh.h
     - render_graph.h
@@ -21,7 +19,7 @@
     - eliminate vulkan_typedefs.h
     - license (happy bunny license) and copyright
 - make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
-- input actions
+- input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - switch to glslang for shader compilation
 - package manager improvements
     - data blocks should know which package they came from

@@ -309,7 +309,7 @@ void Engine::debugCamera(const WeakRef<Object>& selected_camera)
 	const glm::mat4 camera_matrix = selected_camera->transform.getMatrix();
 	glm::vec3 local_move_vector = glm::vec3{
 		                              Input::getAxis('A', 'D') + Input::getGamepadAxis(Input::GAMEPAD_LX),
-		                              Input::getAxis('Q', 'E') + Input::getGamepadAxis(Input::GAMEPAD_BUTTONS),
+		                              Input::getAxis('Q', 'E') + Input::getGamepadAxis(Input::GAMEPAD_BUMPERS),
 		                              Input::getAxis('W', 'S') + Input::getGamepadAxis(Input::GAMEPAD_LY)
 	                              } * Engine::getDeltaTime() * 1.5f;
 	if (Input::isKeyDown(Input::KEY_LEFT_SHIFT) || Input::isGamepadButtonDown(Input::GAMEPAD_B))
