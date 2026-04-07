@@ -22,32 +22,42 @@ public:
      * @brief enumerates all possible types of tokens found in the text representation of the syntax
      * tree.
      */
-    enum TokenType
+    enum TokenType : uint8_t
     {
-        TEXT,
-        OPEN_ROUND,
-        CLOSE_ROUND,
-        OPEN_CURLY,
-        CLOSE_CURLY,
-        NEWLINE,
-        COLON,
-        SEMICOLON,
-        STRING,
-        INT,
-        FLOAT,
-        COMMA,
-        VECTOR,
-        END_VECTOR,
-        EQUALS,
-        IDENTIFIER,
-        COMMENT,
-        INVALID,
-        WHITESPACE
+        TOKEN_TEXT,
+        TOKEN_STRING,
+        TOKEN_INT,
+        TOKEN_FLOAT,
+        TOKEN_VECTOR,
+        TOKEN_IDENTIFIER
+    };
+
+    enum TokenTypeInternal : uint8_t
+    {
+        TOKEN_INTERNAL_TEXT       = TOKEN_TEXT,
+        TOKEN_INTERNAL_STRING     = TOKEN_STRING,
+        TOKEN_INTERNAL_INT        = TOKEN_INT,
+        TOKEN_INTERNAL_FLOAT      = TOKEN_FLOAT,
+        TOKEN_INTERNAL_VECTOR     = TOKEN_VECTOR,
+        TOKEN_INTERNAL_IDENTIFIER = TOKEN_IDENTIFIER,
+        TOKEN_INTERNAL_OPEN_ROUND,
+        TOKEN_INTERNAL_CLOSE_ROUND,
+        TOKEN_INTERNAL_OPEN_CURLY,
+        TOKEN_INTERNAL_CLOSE_CURLY,
+        TOKEN_INTERNAL_NEWLINE,
+        TOKEN_INTERNAL_COLON,
+        TOKEN_INTERNAL_SEMICOLON,
+        TOKEN_INTERNAL_COMMA,
+        TOKEN_INTERNAL_END_VECTOR,
+        TOKEN_INTERNAL_EQUALS,
+        TOKEN_INTERNAL_COMMENT,
+        TOKEN_INTERNAL_INVALID,
+        TOKEN_INTERNAL_WHITESPACE
     };
 
     struct Token final
     {
-        TokenType type = INT;
+        TokenType type = TOKEN_INT;
         union
         {
             glm::vec4 c_value = { 0, 0, 0, 0 };
@@ -60,64 +70,9 @@ public:
         Token() {}
 
         Token(const TokenType _type) { type = _type; }
-
-        Token(const Token& other)
-        {
-            type         = other.type;
-            start_offset = other.start_offset;
-
-            switch (type)
-            {
-            case TEXT:
-            case STRING:
-            case IDENTIFIER:
-            case COMMENT:    s_value = other.s_value; break;
-            case VECTOR:     c_value = other.c_value; break;
-            case INT:        i_value = other.i_value; break;
-            case FLOAT:      f_value = other.f_value; break;
-            default:         break;
-            }
-        }
-
-        Token operator=(const Token& other)
-        {
-            type         = other.type;
-            start_offset = other.start_offset;
-
-            switch (type)
-            {
-            case IDENTIFIER:
-            case TEXT:
-            case STRING:
-            case COMMENT:    s_value = other.s_value; break;
-            case VECTOR:     c_value = other.c_value; break;
-            case INT:        i_value = other.i_value; break;
-            case FLOAT:      f_value = other.f_value; break;
-            default:         break;
-            }
-
-            return *this;
-        }
-
-        Token operator=(Token&& other) noexcept
-        {
-            type         = other.type;
-            start_offset = other.start_offset;
-
-            switch (type)
-            {
-            case IDENTIFIER:
-            case TEXT:
-            case STRING:
-            case COMMENT:    s_value = other.s_value; break;
-            case VECTOR:     c_value = other.c_value; break;
-            case INT:        i_value = other.i_value; break;
-            case FLOAT:      f_value = other.f_value; break;
-            default:         break;
-            }
-
-            return *this;
-        }
+        Token(const Token& other);
+        Token operator=(const Token& other);
+        Token operator=(Token&& other) noexcept;
     };
 
     struct Statement final
@@ -126,31 +81,34 @@ public:
         std::string identifier;
         std::vector<std::pair<std::string, Token>> arguments;
         std::vector<Statement> children;
+        size_t start_offset = 0;
     };
 
 public:
     DELETE_CONSTRUCTORS(TokenReader);
 
-    static std::vector<Token> tokenise(
-        const std::string& content, bool trim_comments = true, bool trim_whitespace = true);
+    static std::vector<Token> tokenise(const std::string& content, bool trim_comments = true,
+        bool trim_whitespace = true);
     static std::vector<Token>::const_iterator findClosingBrace(const std::vector<Token>& tokens,
         const std::vector<Token>::const_iterator open_index, const std::string& original_content);
-    static std::vector<Statement> extractSyntaxTree(
-        const std::vector<Token>& tokens, const std::string& original_content);
+    static std::vector<Statement> extractSyntaxTree(const std::vector<Token>& tokens,
+        const std::string& original_content);
 
     static constexpr std::string typeToString(const TokenType t)
     {
         switch (t)
         {
-        case TEXT:       return "keyword";
-        case STRING:     return "string";
-        case INT:        return "int";
-        case IDENTIFIER: return "identifier";
-        case VECTOR:     return "vector";
-        case FLOAT:      return "float";
-        default:         return "";
+        case TOKEN_TEXT:       return "keyword";
+        case TOKEN_STRING:     return "string";
+        case TOKEN_INT:        return "int";
+        case TOKEN_FLOAT:      return "float";
+        case TOKEN_VECTOR:     return "vector";
+        case TOKEN_IDENTIFIER: return "identifier";
+        default:               return "";
         }
     }
+
+    static std::string generateError(size_t offset, const std::string& str);
 
 private:
     static bool isAlphabetic(const char c)
@@ -161,49 +119,49 @@ private:
         return false;
     }
 
-    static constexpr bool isSeparator(const TokenType t)
+    static constexpr bool isSeparator(const TokenTypeInternal t)
     {
         switch (t)
         {
-        case TEXT:
-        case STRING:
-        case INT:
-        case IDENTIFIER:
-        case END_VECTOR: return false;
-        default:         return true;
+        case TOKEN_INTERNAL_TEXT:
+        case TOKEN_INTERNAL_STRING:
+        case TOKEN_INTERNAL_INT:
+        case TOKEN_INTERNAL_IDENTIFIER:
+        case TOKEN_INTERNAL_END_VECTOR: return false;
+        default:                        return true;
         }
     }
 
-    static TokenType getType(const char c)
+    static TokenTypeInternal getType(const char c)
     {
-        if (isAlphabetic(c)) return TEXT;
-        if (c == '-' || (c >= '0' && c <= '9')) return INT;
+        if (isAlphabetic(c)) return TOKEN_INTERNAL_TEXT;
+        if (c == '-' || (c >= '0' && c <= '9')) return TOKEN_INTERNAL_INT;
         switch (c)
         {
-        case '@':  return IDENTIFIER;
-        case '(':  return OPEN_ROUND;
-        case ')':  return CLOSE_ROUND;
-        case '{':  return OPEN_CURLY;
-        case '}':  return CLOSE_CURLY;
-        case '\"': return STRING;
+        case '@':  return TOKEN_INTERNAL_IDENTIFIER;
+        case '(':  return TOKEN_INTERNAL_OPEN_ROUND;
+        case ')':  return TOKEN_INTERNAL_CLOSE_ROUND;
+        case '{':  return TOKEN_INTERNAL_OPEN_CURLY;
+        case '}':  return TOKEN_INTERNAL_CLOSE_CURLY;
+        case '\"': return TOKEN_INTERNAL_STRING;
         case '\r':
-        case '\n': return NEWLINE;
-        case ':':  return COLON;
-        case '=':  return EQUALS;
-        case ',':  return COMMA;
-        case '[':  return VECTOR;
-        case ']':  return END_VECTOR;
-        case '.':  return FLOAT;
-        case '/':  return COMMENT;
-        case ';':  return SEMICOLON;
+        case '\n': return TOKEN_INTERNAL_NEWLINE;
+        case ':':  return TOKEN_INTERNAL_COLON;
+        case '=':  return TOKEN_INTERNAL_EQUALS;
+        case ',':  return TOKEN_INTERNAL_COMMA;
+        case '[':  return TOKEN_INTERNAL_VECTOR;
+        case ']':  return TOKEN_INTERNAL_END_VECTOR;
+        case '.':  return TOKEN_INTERNAL_FLOAT;
+        case '/':  return TOKEN_INTERNAL_COMMENT;
+        case ';':  return TOKEN_INTERNAL_SEMICOLON;
         case ' ':
-        case '\t': return WHITESPACE;
-        default:   return INVALID;
+        case '\t': return TOKEN_INTERNAL_WHITESPACE;
+        default:   return TOKEN_INTERNAL_INVALID;
         }
     }
 
-    static glm::vec4 deserialiseVectorToken(
-        const std::string& str, size_t offset, const std::string& original_content);
+    static glm::vec4 deserialiseVectorToken(const std::string& str, size_t offset,
+        const std::string& original_content);
     static std::vector<std::pair<std::string, Token>> parseArguments(
         std::vector<Token>::const_iterator start, std::vector<Token>::const_iterator end,
         const std::string& original_content);
@@ -267,6 +225,7 @@ public:
         TokenReader::Statement statement;
         std::vector<TokenReader::Token> arguments;
 
+        size_t offsetOf(size_t index);
         void read(size_t index, float& destination) const;
         void read(size_t index, int& destination) const;
         void read(size_t index, uint32_t& destination) const;
@@ -277,8 +236,8 @@ public:
         void read(size_t index, glm::vec4& destination) const;
         void read(size_t index, std::string& destination) const;
         bool read(size_t index, bool& destination) const;
-        template<typename T> bool read(
-            size_t index, T& destination, std::function<bool(const std::string&, T&)> converter) const
+        template<typename T> bool read(size_t index, T& destination,
+            std::function<bool(const std::string&, T&)> converter) const
         { return converter(arguments[index].s_value, destination); }
     };
 
@@ -287,6 +246,7 @@ public:
         TokenReader::Statement statement;
         std::map<std::string, TokenReader::Token> arguments;
 
+        size_t offsetOf(const std::string& name);
         void read(const std::string& name, float& destination) const;
         void read(const std::string& name, int& destination) const;
         void read(const std::string& name, uint32_t& destination) const;
@@ -322,22 +282,22 @@ public:
     Deserialiser(std::string error_base) : error(error_base) {}
     ~Deserialiser() = default;
 
-    void addStatementAnonymous(
-        const AnonymousStatementSpec& spec, std::function<bool(AnonymousStatementResult)> handler)
+    void addStatementAnonymous(const AnonymousStatementSpec& spec,
+        std::function<bool(AnonymousStatementResult)> handler)
     { anonymous_statement_types[spec.keyword_name] = { spec, handler }; }
-    void addStatementNamed(
-        const NamedStatementSpec& spec, std::function<bool(NamedStatementResult)> handler)
+    void addStatementNamed(const NamedStatementSpec& spec,
+        std::function<bool(NamedStatementResult)> handler)
     { named_statement_types[spec.keyword_name] = { spec, handler }; }
 
-    bool execute(const std::vector<TokenReader::Statement>& statements);
+    bool execute(const std::vector<TokenReader::Statement>& statements, const std::string& token_str);
     bool emitError(const std::string& error);
-    // TODO: better emitError where you can specify the statement or token
+    bool emitError(const std::string& error, size_t offset, const std::string& token_str);
 
 private:
     bool errorCheckAnonymous(const TokenReader::Statement& statement,
-        const AnonymousStatementSpec& spec, std::vector<TokenReader::Token>& output);
+        const AnonymousStatementSpec& spec, std::vector<TokenReader::Token>& output, const std::string& token_str);
     bool errorCheckNamed(const TokenReader::Statement& statement, const NamedStatementSpec& spec,
-        std::map<std::string, TokenReader::Token>& output);
+        std::map<std::string, TokenReader::Token>& output, const std::string& token_str);
 };
 
 } // namespace HopEngine
