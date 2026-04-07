@@ -1,7 +1,6 @@
 # TODO
 
 # v0.54
-- remove framebuffer_extent parameter from setScissorViewport function
 - clean up token-type vs internal-token-type (there are some tokens which don't exist in the processed syntax tree, like close_curly etc)
 - split framebuffer from render pass?? merge image creation from swapchain to render pass
 - enforce proper error checking

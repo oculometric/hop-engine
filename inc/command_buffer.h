@@ -50,12 +50,13 @@ private:
 
     // various currently-active states, to eliminate duplication of GPU commands where possible
 
-    GPUHandle current_render_pass        = nullptr;
-    GPUHandle current_descriptor_sets[3] = { nullptr };
-    GPUHandle current_pipeline_layout    = nullptr;
-    GPUHandle current_pipeline           = nullptr;
-    GPUHandle current_vertex_buffer      = nullptr;
-    GPUHandle current_index_buffer       = nullptr;
+    GPUHandle current_render_pass         = nullptr;
+    glm::u32vec2 current_framebuffer_size = { 0, 0 };
+    GPUHandle current_descriptor_sets[3]  = { nullptr };
+    GPUHandle current_pipeline_layout     = nullptr;
+    GPUHandle current_pipeline            = nullptr;
+    GPUHandle current_vertex_buffer       = nullptr;
+    GPUHandle current_index_buffer        = nullptr;
 
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(DrawCommandBuffer);
@@ -88,7 +89,8 @@ public:
      * @param transparent if `true` the colour buffer will be treated as transparent and will be cleared
      * accordingly.
      */
-    void startRenderPassInternal(GPUHandle render_pass, GPUHandle framebuffer, glm::u32vec2 extent, const RenderPass::ClearValues& clear_values);
+    void startRenderPassInternal(GPUHandle render_pass, GPUHandle framebuffer, glm::u32vec2 extent,
+        const RenderPass::ClearValues& clear_values);
     /**
      * @brief internal function to issue a command to bind a pipeline. should be called when the active
      * material and/or shader changes.
@@ -125,9 +127,8 @@ public:
      * only a portion of the screen (specified in 0-1 UV coordinates from top-left) to be drawn to.
      * @param offset offset of the start of the viewport in 0-1 UV coordinates.
      * @param size size of the viewport in 0-1 UV coordinates.
-     * @param framebuffer_extent size of the currently bound framebuffer within which to render.
      */
-    void setScissorViewport(glm::vec2 offset, glm::vec2 size, glm::u32vec2 framebuffer_extent) const;
+    void setScissorViewport(glm::vec2 offset, glm::vec2 size) const;
     /**
      * @brief internal function to issue a command to draw the currently bound vertex and index buffers.
      * @param indices size of the index buffer to be drawn (should already be bound).
