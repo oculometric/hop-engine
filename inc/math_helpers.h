@@ -1,13 +1,14 @@
 #pragma once
 
-#include <glm/glm.hpp>
 #include "common.h"
+
+#include <glm/glm.hpp>
 
 namespace HopEngine
 {
 
 /**
- * @brief encapsulates a 3D bounding box defined by center and half-extent
+ * @brief encapsulates a 3D bounding box defined by center and half-extent.
  */
 struct BoundingBox final
 {
@@ -21,17 +22,28 @@ struct BoundingBox final
  * @param ray_direction world space ray origin direction.
  * @param bounding_box bounding box described in the local space of the transform.
  * @param transform information which transforms the bounding box into world space.
- * @return closest distance (t) to the OBB if there was a hit; 0 if the ray origin
+ * @returns closest distance (t) to the OBB if there was a hit; 0 if the ray origin
  * was inside the OBB; or INFINITY if there was no intersection.
  */
-float intersect(glm::vec3 ray_origin, glm::vec3 ray_direction, const BoundingBox& bounding_box, glm::mat4 transform);
+float intersect(glm::vec3 ray_origin, glm::vec3 ray_direction, const BoundingBox& bounding_box,
+    glm::mat4 transform);
 
+/**
+ * @brief encapsulates a spline, defined by an array of points.
+ */
 struct Spline
 {
-	std::vector<glm::vec3> points;
-	bool loop = false;
+    std::vector<glm::vec3> points; // points defining the spline's shape
+    bool loop = false;             // whether or not the spline interpolation should repeat
 
-	glm::vec3 operator[](float t) const;
+    /**
+     * @brief operator which allows indexing/interpolating into spline via a fraction. uses Catmull-Romm
+     * interpolation.
+     * @param t 0-1 floating point value which interpolates along the points in the spline. values
+     * outside the 0-1 range are either looped or clamped, depending on whether `loop` is enabled.
+     * @returns 3D vector representing the position in space for the specified interpolation fraction.
+     */
+    glm::vec3 operator[](float t) const;
 };
 
-}
+} // namespace HopEngine

@@ -119,7 +119,7 @@ void DrawCommandBuffer::begin(uint32_t index, FrameStats* frame_stats)
     begun = true;
 }
 
-void DrawCommandBuffer::startRenderPassInternal(GPUHandle render_pass, GPUHandle framebuffer, glm::u32vec2 extent, vector<VkClearValue> clear_values, glm::vec3 clear_colour, bool transparent)
+void DrawCommandBuffer::startRenderPassInternal(GPUHandle render_pass, GPUHandle framebuffer, glm::u32vec2 extent, const RenderPass::ClearValues& clear_values)
 {
     if (!begun)
     {
@@ -147,12 +147,37 @@ void DrawCommandBuffer::startRenderPassInternal(GPUHandle render_pass, GPUHandle
     render_pass_begin_info.framebuffer = static_cast<VkFramebuffer>(framebuffer);
     render_pass_begin_info.renderArea.offset = { 0, 0 };
     render_pass_begin_info.renderArea.extent = { extent.x, extent.y };
-    if (transparent)
-        clear_values[0].color = { 0, 0, 0, 0 };
-    else
-        clear_values[0].color = { clear_colour.r, clear_colour.g, clear_colour.b, 1.0f };
-    render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
-    render_pass_begin_info.pClearValues = clear_values.data();
+    std::vector<VkClearValue> actual_clears;
+    VkClearColorValue main_colour_clear;
+    main_colour_clear.float32[0] = clear_values.transparent ? 0.0f : clear_values.colour.r;
+    main_colour_clear.float32[1] = clear_values.transparent ? 0.0f : clear_values.colour.g;
+    main_colour_clear.float32[2] = clear_values.transparent ? 0.0f : clear_values.colour.b;
+    VkClearValue temp;
+    temp.color = main_colour_clear;
+    main_colour_clear.float32[3] = clear_values.transparent ? 0.0f : 1.0f;
+    actual_clears.push_back(temp);
+    for (glm::vec4 value : clear_values.additionals)
+    {
+        VkClearColorValue additional_clear;
+        additional_clear.float32[0] = value.r;
+        additional_clear.float32[1] = value.g;
+        additional_clear.float32[2] = value.b;
+        additional_clear.float32[3] = value.a;
+        temp = VkClearValue{ };
+        temp.color = additional_clear;
+        actual_clears.push_back(temp);
+    }
+    if (clear_values.depth_present)
+    {
+        VkClearDepthStencilValue depth_clear;
+        depth_clear.depth = clear_values.depth;
+        depth_clear.stencil = 0;
+        temp = VkClearValue{ };
+        temp.depthStencil = depth_clear;
+        actual_clears.push_back(temp);
+    }
+    render_pass_begin_info.clearValueCount = static_cast<uint32_t>(actual_clears.size());
+    render_pass_begin_info.pClearValues = actual_clears.data();
 
     vkCmdBeginRenderPass(static_cast<VkCommandBuffer>(buffer), &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
     writeTimestamp(false);

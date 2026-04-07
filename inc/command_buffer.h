@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.h"
-#include "vulkan_typedefs.h"
+#include "swapchain.h"
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -88,8 +88,7 @@ public:
      * @param transparent if `true` the colour buffer will be treated as transparent and will be cleared
      * accordingly.
      */
-    void startRenderPassInternal(GPUHandle render_pass, GPUHandle framebuffer, glm::u32vec2 extent,
-        std::vector<VkClearValue> clear_values, glm::vec3 clear_colour, bool transparent);
+    void startRenderPassInternal(GPUHandle render_pass, GPUHandle framebuffer, glm::u32vec2 extent, const RenderPass::ClearValues& clear_values);
     /**
      * @brief internal function to issue a command to bind a pipeline. should be called when the active
      * material and/or shader changes.

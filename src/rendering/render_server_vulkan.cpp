@@ -350,8 +350,10 @@ void RenderServer::createVulkan()
             if (score != 0)
             {
                 auto swapchain_info = Swapchain::getSwapchainSupportInfo(test_device);
-                if (swapchain_info.surface_formats.empty())
-                    score = 0;
+                if (swapchain_info.supports_immediate_present)
+                    score += 300;
+                if (swapchain_info.supports_premultiplied_alpha_composite)
+                    score += 400;
             }
 
             DBG_BABBLE("found device " + string(properties.deviceName) + ", scored " + ::to_string(score));
@@ -485,7 +487,7 @@ void RenderServer::initImGui()
     init_info.MinImageCount = Swapchain::computeImageCount();
     init_info.ImageCount = Swapchain::computeImageCount();
     init_info.Allocator = nullptr;
-    init_info.PipelineInfoMain.RenderPass = final_render_pass->getRenderPass();
+    init_info.PipelineInfoMain.RenderPass = static_cast<VkRenderPass>(final_render_pass->getRenderPass());
     init_info.PipelineInfoMain.Subpass = 0;
     init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     ImGui_ImplVulkan_Init(&init_info);

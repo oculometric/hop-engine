@@ -130,7 +130,7 @@ Pipeline::Pipeline(const Ref<Shader>& shader, const Builder& config, const Ref<R
     pipeline_create_info.pColorBlendState = &color_blending;
     pipeline_create_info.pDynamicState = &dynamic_state_create_info;
     pipeline_create_info.layout = shader->getPipelineLayout();
-    pipeline_create_info.renderPass = render_pass->getRenderPass();
+    pipeline_create_info.renderPass = static_cast<VkRenderPass>(render_pass->getRenderPass());
     pipeline_create_info.subpass = 0;
 
     if (vkCreateGraphicsPipelines(RenderServer::getDevice(), VK_NULL_HANDLE, 1, &pipeline_create_info, nullptr, &pipeline) != VK_SUCCESS)
