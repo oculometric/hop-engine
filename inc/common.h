@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <cstdint>
 
 // automatically generates deleters for basic constructors, and copy/move constructors/operators.
 // these should be used for any engine type which should be handled exclusively as a pointer (i.e. a

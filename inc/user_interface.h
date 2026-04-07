@@ -282,7 +282,7 @@ template<class T, class Q> inline WeakRef<T> UICanvas::addChild(WeakRef<Q> paren
     h->parent = elements[parent];
     elements[parent]->children.push_back(h);
     // add to mapping
-    elements.insert(element.cast<UICanvasElement>(), h);
+    elements.insert(element.template cast<UICanvasElement>(), h);
 
     return element;
 }

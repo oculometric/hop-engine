@@ -3,6 +3,7 @@
 #include "common.h"
 
 #include <functional>
+#include <cstdint>
 #include <map>
 
 namespace HopEngine

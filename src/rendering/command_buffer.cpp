@@ -160,9 +160,9 @@ void DrawCommandBuffer::startRenderPassInternal(GPUHandle render_pass, GPUHandle
     main_colour_clear.float32[0] = clear_values.transparent ? 0.0f : clear_values.colour.r;
     main_colour_clear.float32[1] = clear_values.transparent ? 0.0f : clear_values.colour.g;
     main_colour_clear.float32[2] = clear_values.transparent ? 0.0f : clear_values.colour.b;
+    main_colour_clear.float32[3] = clear_values.transparent ? 0.0f : 1.0f;
     VkClearValue temp;
     temp.color                   = main_colour_clear;
-    main_colour_clear.float32[3] = clear_values.transparent ? 0.0f : 1.0f;
     actual_clears.push_back(temp);
     for (glm::vec4 value : clear_values.additionals)
     {
@@ -192,6 +192,7 @@ void DrawCommandBuffer::startRenderPassInternal(GPUHandle render_pass, GPUHandle
     writeTimestamp(false);
     stats->passes++;
     current_render_pass = render_pass;
+    current_framebuffer_size = extent;
 
     VkRect2D scissor{};
     scissor.offset = { 0, 0 };

@@ -134,6 +134,9 @@ else()
     target_compile_options(hop-engine PRIVATE
         -fno-delete-null-pointer-checks
         -Wno-tautological-undefined-compare
+        -Wno-unused-parameter
+        -Wno-unused-variable
+        -Wno-missing-field-initializers
     )
 endif()
 
@@ -148,7 +151,11 @@ if(WIN32)
 else()
 	target_compile_options(hop-editor PRIVATE
         -fno-delete-null-pointer-checks
-        -Wno-tautological-undefined-compare)
+        -Wno-tautological-undefined-compare
+        -Wno-unused-parameter
+        -Wno-unused-variable
+        -Wno-missing-field-initializers
+    )
 endif()
 
 target_include_directories(hop-editor PRIVATE

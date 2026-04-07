@@ -259,14 +259,14 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
             scene.scene->bindOutputMaterial(command_buffer);
             final_pass_uniforms->bind(command_buffer);
         
-            command_buffer->setScissorViewport(scene.start_uv, scene.size_uv, swapchain->getExtent());
+            command_buffer->setScissorViewport(scene.start_uv, scene.size_uv);
             tri->draw(command_buffer);
         }
     }
     
     if (overlay_logs)
     {
-        command_buffer->setScissorViewport({ 0, 0 }, { 1, 1 }, swapchain->getExtent());
+        command_buffer->setScissorViewport({ 0, 0 }, { 1, 1 });
         auto command = debug_text_renderer->draw();
         if (command.mesh)
         {

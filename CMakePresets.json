@@ -34,27 +34,32 @@
         "HOP_BUILD_DEBUG": "Debug"
       }
     },
+    
+    {
+        "name": "linux-base",
+        "hidden": true,
+        "generator": "Ninja",
+        "binaryDir": "${sourceDir}/bin/build/${presetName}",
+        "installDir": "${sourceDir}/bin/install/${presetName}",
+        "cacheVariables": {
+          "CMAKE_C_COMPILER": "/usr/bin/clang",
+          "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+          "CMAKE_INSTALL_PREFIX": "${sourceDir}/bin/install/${presetName}"
+        }
+      },
     {
         "name": "x64-debug-lin",
         "displayName": "x64 Debug (Linux)",
-        "description": "Using compilers: C = /usr/bin/clang, CXX = /usr/bin/clang++",
-        "binaryDir": "${sourceDir}/bin/build/${presetName}",
+        "inherits": "linux-base",
         "cacheVariables": {
-            "CMAKE_INSTALL_PREFIX": "${sourceDir}/bin/install/${presetName}",
-            "CMAKE_C_COMPILER": "/usr/bin/clang",
-            "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
             "CMAKE_BUILD_TYPE": "Debug"
         }
     },
     {
         "name": "x64-release-lin",
         "displayName": "x64 Release (Linux)",
-        "description": "Using compilers: C = /usr/bin/clang, CXX = /usr/bin/clang++",
-        "binaryDir": "${sourceDir}/bin/build/${presetName}",
+        "inherits": "linux-base",
         "cacheVariables": {
-            "CMAKE_INSTALL_PREFIX": "${sourceDir}/bin/install/${presetName}",
-            "CMAKE_C_COMPILER": "/usr/bin/clang",
-            "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
             "CMAKE_BUILD_TYPE": "Release"
         }
     }

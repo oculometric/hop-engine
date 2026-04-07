@@ -58,7 +58,7 @@ void RenderServer::createWindow()
     window = glfwCreateWindow(window_size.x, window_size.y, "hop-engine", fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
     if (!glfwGetWindowAttrib(window, GLFW_TRANSPARENT_FRAMEBUFFER))
         DBG_ERROR("unable to make window framebuffer transparent");
-    glfwPollEvents();
+    glfwFocusWindow(window);
     DBG_INFO("created window at " + ::to_string(window_size.x) + "x" + ::to_string(window_size.y));
 }
 
@@ -67,6 +67,7 @@ bool RenderServer::resize(bool force_resize)
     if (wants_fullscreen_update)
     {
         RenderServer::waitIdle();
+        glfwWaitEvents();
         destroyImGui();
         swapchain = nullptr;
         vkDestroySurfaceKHR(instance, surface, nullptr);
