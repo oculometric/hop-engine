@@ -6,7 +6,6 @@
 - remove type parameter from buffer bind function
 - document everything
     - basic_components.h
-    - deserialise.h
     - engine.h
     - material.h
     - mesh.h

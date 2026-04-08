@@ -282,21 +282,43 @@ private:
     static size_t reportError(const std::string& err, size_t off, const std::string& str);
 };
 
+/**
+ * @brief simplifies extraction of statements from an arbitrary syntax tree, allowing custom serial formats
+ * to be easily parsed with detailed error handling.
+ *
+ * custom statement types (e.g. `Resource`, `Pipeline`, or `Object`) can be defined, along with their
+ * expected arguments, whether those arguments should be identified by name or by order, whether they can
+ * contain child statements, and whether they need/are allowed to have identifiers.
+ * processing of statements is performed via a lambda, and usage examples can be found in
+ * `src/file/deserialise_rendering.cpp`.
+ *
+ * statements are defined by the form: `Keyword(anonymous argument, name = named argument) : identifier {
+ * };`, where the curly braces may contain child statements.
+ */
 class Deserialiser final
 {
 public:
+    /**
+     * @brief enumerates possible statement identifier availability. some statements will require
+     * identifiers (such as elements which will be referenced later), while others don't make sense to have
+     * identifiers (such as purely instructive statements).
+     */
     enum StatementIdentifierStatus
     {
-        STATEMENT_IDENTIFIER_FORBIDDEN,
-        STATEMENT_IDENTIFIER_OPTIONAL,
-        STATEMENT_IDENTIFIER_REQUIRED
+        STATEMENT_IDENTIFIER_FORBIDDEN, // statement is not allowed to have an identifier
+        STATEMENT_IDENTIFIER_OPTIONAL,  // statement may or may not have an identifier
+        STATEMENT_IDENTIFIER_REQUIRED   // statement must have an identifier
     };
 
+    /**
+     * @brief base class specification for a statement type. only the two subclasses,
+     * `AnonymousStatementSpec` and `NamedStatementSpec` should actually be used.
+     */
     struct StatementSpec
     {
-        std::string keyword_name;
-        StatementIdentifierStatus identifier_allowed;
-        bool children_permitted;
+        std::string keyword_name;                     // keyword which identifies the statement
+        StatementIdentifierStatus identifier_allowed; // whether an identifier is allowed/required
+        bool children_permitted;                      // whether the statement may have child statements
 
         StatementSpec(std::string keyword, StatementIdentifierStatus identifier, bool children) :
             keyword_name(keyword), identifier_allowed(identifier), children_permitted(children)
@@ -308,11 +330,23 @@ public:
         }
     };
 
+    /**
+     * @brief describes the characteristics of a statement which uses anonymous arguments, identified by
+     * their position in the argument list. see `StatementSpec`.
+     *
+     * for example `Resource(shader, "res://engine/shaders/psx.glsl") : shader;`.
+     */
     struct AnonymousStatementSpec final : public StatementSpec
     {
+        // array defining the expected types of the arguments to the statement
         std::vector<TokenReader::TokenType> expected_anon_args;
 
         using StatementSpec::StatementSpec;
+        /**
+         * @brief builder-style function for adding arguments without having to use brace-initialisation.
+         * @param type expected type of the next argument being added.
+         * @returns self-reference to allow chained calls.
+         */
         AnonymousStatementSpec& argument(TokenReader::TokenType type)
         {
             expected_anon_args.push_back(type);
@@ -320,11 +354,26 @@ public:
         }
     };
 
+    /**
+     * @brief describes the characteristics of a statement which uses named arguments, identified by being
+     * equated to their name/identifier. argument order is irrelevant. see `StatementSpec`.
+     *
+     * for example `Shader(resource = @shader);`.
+     */
     struct NamedStatementSpec final : public StatementSpec
     {
+        // mapping between argument name, expected argument type, and whether the argument is required
         std::map<std::string, std::pair<TokenReader::TokenType, bool>> expected_named_args;
 
         using StatementSpec::StatementSpec;
+        /**
+         * @brief builder-style function for adding arguments without having to use brace-initialisation.
+         * @param name name/identifier of the argument being added.
+         * @param type expected type of the next argument being added.
+         * @param required if `true`, then the argument is treated as mandatory and an error will be emitted
+         * if it cannot be found.
+         * @returns self-reference to allow chained calls.
+         */
         NamedStatementSpec& argument(std::string name, TokenReader::TokenType type, bool required)
         {
             expected_named_args[name] = { type, required };
@@ -332,11 +381,24 @@ public:
         }
     };
 
+    /**
+     * @brief encloses the results of parsing an anonymous statement, according to an
+     * `AnonymousStatementSpec`. provides functionality for easily querying arguments into destination
+     * variables.
+     */
     struct AnonymousStatementResult
     {
+        // original statement itself, including children
         TokenReader::Statement statement;
+        // array of parsed arguments, matching those given in the spec
         std::vector<TokenReader::Token> arguments;
 
+        /**
+         * @brief retrieves the offset of the first character of the argument at the given index. used for
+         * `emitError` debugging.
+         * @param index argument index to query the offset of.
+         * @returns character offset into the string originally used for token parsing.
+         */
         size_t offsetOf(size_t index);
         void read(size_t index, float& destination) const;
         void read(size_t index, int& destination) const;
@@ -348,16 +410,40 @@ public:
         void read(size_t index, glm::vec4& destination) const;
         void read(size_t index, std::string& destination) const;
         bool read(size_t index, bool& destination) const;
+        /**
+         * @brief reads the contents of an argument with custom conversion. usually used for reading enum
+         * values from text.
+         * @param index argument index to read.
+         * @param destination destination variable into which the value should be written.
+         * @param converter function, usually lambda, which converts the string representation of an
+         * argument into a particular type. the function should assign the resulting value to its second
+         * argument, and return `true` if successful, or `false` if the input string was invalid.
+         * @returns `true` if successful, or `false` if the input string did not constitute a valid value
+         * for `T`.
+         */
         template<typename T>
         bool read(size_t index, T& destination, std::function<bool(const std::string&, T&)> converter) const
         { return converter(arguments[index].s_value, destination); }
     };
 
+    /**
+     * @brief encloses the results of parsing a named statement, according to a `NamedStatementSpec`.
+     * provides functionality for easily querying arguments into destination variables.
+     */
     struct NamedStatementResult
     {
+        // original statement itself, including children
         TokenReader::Statement statement;
+        // map of parsed arguments, matching those given in the spec. all arguments are guaranteed to be of
+        // the correct type, although only required arguments are guaranteed to be present.
         std::map<std::string, TokenReader::Token> arguments;
 
+        /**
+         * @brief retrieves the offset of the first character of the argument with a given name. used for
+         * `emitError` debugging.
+         * @param name argument name to query the offset of.
+         * @returns character offset into the string originally used for token parsing.
+         */
         size_t offsetOf(const std::string& name);
         void read(const std::string& name, float& destination) const;
         void read(const std::string& name, int& destination) const;
@@ -369,6 +455,18 @@ public:
         void read(const std::string& name, glm::vec4& destination) const;
         void read(const std::string& name, std::string& destination) const;
         bool read(const std::string& name, bool& destination) const;
+
+        /**
+         * @brief reads the contents of an argument with custom conversion. usually used for reading enum
+         * values from text.
+         * @param name argument name to read.
+         * @param destination destination variable into which the value should be written.
+         * @param converter function, usually lambda, which converts the string representation of an
+         * argument into a particular type. the function should assign the resulting value to its second
+         * argument, and return `true` if successful, or `false` if the input string was invalid.
+         * @returns `true` if successful, or `false` if the input string did not constitute a valid value
+         * for `T` or there was no argument with the given name.
+         */
         template<typename T> bool read(const std::string& name, T& destination,
             std::function<bool(const std::string&, T&)> converter) const
         {
@@ -381,32 +479,102 @@ public:
     };
 
 private:
+    // mapping between anonymous statement keywords and their specifications/handler functions
     std::map<std::string, std::pair<AnonymousStatementSpec, std::function<bool(AnonymousStatementResult)>>>
         anonymous_statement_types;
+    // mapping between named statement keywords and their specifications/handler functions
     std::map<std::string, std::pair<NamedStatementSpec, std::function<bool(NamedStatementResult)>>>
         named_statement_types;
 
-    std::string error;
+    std::string error; // error base string for `emitError`
 
 public:
     DELETE_CONSTRUCTORS(Deserialiser);
+    /**
+     * @brief constructs a new deseraliser instance which can then be populated with supported statement
+     * types. the error string is used to emit detailed information when errors are encountered during
+     * processing.
+     * @param error_base base string prepended during `emitError`. should be used to specify the type of
+     * object and source file being decoded.
+     */
     Deserialiser(std::string error_base) : error(error_base) {}
     ~Deserialiser() = default;
 
+    /**
+     * @brief adds support for a new statement type which uses anonymous arguments.
+     * @param spec statement specification describing keyword, arguments, identifier status and child
+     * permissibility.
+     * @param handler lambda function which will be executed when a statement of this type is encountered.
+     * the lambda should return `true` if parsing was successful, or `false` if not.
+     */
     void addStatementAnonymous(const AnonymousStatementSpec& spec,
         std::function<bool(AnonymousStatementResult)> handler)
     { anonymous_statement_types[spec.keyword_name] = { spec, handler }; }
+    /**
+     * @brief adds support for a new statement type which uses named arguments.
+     * @param spec statement specification describing keyword, arguments, identifier status and child
+     * permissibility.
+     * @param handler lambda function which will be executed when a statement of this type is encountered.
+     * the lambda should return `true` if parsing was successful, or `false` if not.
+     */
     void addStatementNamed(const NamedStatementSpec& spec,
         std::function<bool(NamedStatementResult)> handler)
     { named_statement_types[spec.keyword_name] = { spec, handler }; }
 
+    /**
+     * @brief perform parsing of the syntax tree using supported statement handlers added using
+     * `addStatementAnonymous` and `addStatementNamed`.
+     * @param statements syntax tree to operate on.
+     * @param token_str original text content which was parsed to generate the syntax tree, used for
+     * error reporting.
+     * @returns `true` if processing was successful, or `false` if an error occurred.
+     */
     bool execute(const std::vector<TokenReader::Statement>& statements, const std::string& token_str);
+    /**
+     * @brief used to emit information to the terminal that an error occurred. the resulting text combines
+     * the base error string specified in the constructor with `error`.
+     * @param error string included in the output which describes what went wrong.
+     * @returns `false`. always.
+     */
     bool emitError(const std::string& error);
+    /**
+     * @brief used to emit information to the terminal that an error occurred. the resulting text combines
+     * the base error string specified in the constructor with `error`, and a detailed quote as to where in
+     * the source code the error occurred.
+     * @param error string included in the output which describes what went wrong.
+     * @param offset offset into `token_str` where the error occurred, usually based on the `start_offset`
+     * property of a token.
+     * @param token_str original text content which was parsed to generate the syntax tree for which the
+     * error is being reported.
+     * @returns `false`. always.
+     */
     bool emitError(const std::string& error, size_t offset, const std::string& token_str);
 
 private:
+    /**
+     * @brief validates a statement for anonymous arguments. checks that all arguments are actually
+     * anonymous, checks that the right number of arguments are present, and checks that all arguments are
+     * of the expected type, before extracting the arguments. emits detailed errors if needed.
+     * @param statement statement being validated.
+     * @param spec specification against which the statement is being validated.
+     * @param output location to output arguments.
+     * @param token_str original text content which was parsed to generate the statement, used for
+     * error reporting.
+     * @returns `true` if successful, or `false` if an error was encountered.
+     */
     bool errorCheckAnonymous(const TokenReader::Statement& statement, const AnonymousStatementSpec& spec,
         std::vector<TokenReader::Token>& output, const std::string& token_str);
+    /**
+     * @brief validates a statement for named arguments. checks that all arguments are actually
+     * named, checks that all required arguments are present, and checks that all arguments are
+     * of the expected type, before extracting the arguments. emits detailed errors if needed.
+     * @param statement statement being validated.
+     * @param spec specification against which the statement is being validated.
+     * @param output location to output arguments.
+     * @param token_str original text content which was parsed to generate the statement, used for
+     * error reporting.
+     * @returns `true` if successful, or `false` if an error was encountered.
+     */
     bool errorCheckNamed(const TokenReader::Statement& statement, const NamedStatementSpec& spec,
         std::map<std::string, TokenReader::Token>& output, const std::string& token_str);
 };

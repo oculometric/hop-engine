@@ -30,7 +30,7 @@ BreakInheritanceList: AfterColon
 BreakStringLiterals: 'false'
 ColumnLimit: '108'
 CompactNamespaces: 'false'
-ConstructorInitializerAllOnOneLineOrOnePerLine: 'false'
+PackConstructorInitializers: BinPack
 ConstructorInitializerIndentWidth: '4'
 ContinuationIndentWidth: '4'
 Cpp11BracedListStyle: 'false'
