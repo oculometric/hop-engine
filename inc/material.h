@@ -157,9 +157,9 @@ public:
 	Builder getConfig() const { return pipeline_config; }
 };
 
-TO_STRING_DEC(Pipeline::CompareOp);
-TO_STRING_DEC(Pipeline::PolygonMode);
-TO_STRING_DEC(Pipeline::CullMode);
+TO_STRING_DECL(Pipeline::CompareOp);
+TO_STRING_DECL(Pipeline::PolygonMode);
+TO_STRING_DECL(Pipeline::CullMode);
 
 class UniformBlock final : public Destructible
 {

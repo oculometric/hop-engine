@@ -43,11 +43,11 @@ UniformBlock::UniformBlock(const Shader::Layout& layout_info)
     const vector<VkDescriptorSetLayout> set_layouts(uniform_buffers.size(), layout_info.layout);
     VkDescriptorSetAllocateInfo descriptor_set_alloc_info{ };
     descriptor_set_alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    descriptor_set_alloc_info.descriptorPool = RenderServer::getDescriptorPool();
+    descriptor_set_alloc_info.descriptorPool = static_cast<VkDescriptorPool>(RenderServer::getDescriptorPool());
     descriptor_set_alloc_info.descriptorSetCount = static_cast<uint32_t>(uniform_buffers.size());
     descriptor_set_alloc_info.pSetLayouts = set_layouts.data();
     descriptor_sets.resize(uniform_buffers.size());
-    if (vkAllocateDescriptorSets(RenderServer::getDevice(), &descriptor_set_alloc_info, descriptor_sets.data()) != VK_SUCCESS)
+    if (vkAllocateDescriptorSets(static_cast<VkDevice>(RenderServer::getDevice()), &descriptor_set_alloc_info, descriptor_sets.data()) != VK_SUCCESS)
         DBG_FAULT("vkAllocateDescriptorSets failed");
 
     // apply descriptor writes/bindings
@@ -62,8 +62,16 @@ UniformBlock::UniformBlock(const Shader::Layout& layout_info)
 UniformBlock::~UniformBlock()
 {
     DBG_VERBOSE("destroying uniform block " + PTR(this));
-    for (VkDescriptorSet set : descriptor_sets)
-        RenderServer::free(set);
+    for (VkDescriptorSet& set : descriptor_sets)
+    {
+        auto _temp_ = set;
+        RenderServer::queueFree(
+            [_temp_]()
+            {
+                vkFreeDescriptorSets(static_cast<VkDevice>(RenderServer::getDevice()), static_cast<VkDescriptorPool>(RenderServer::getDescriptorPool()), 1, reinterpret_cast<const VkDescriptorSet*>(&_temp_));                                                                           \
+            });
+        set = VK_NULL_HANDLE;
+    }
 }
 
 void UniformBlock::bind(WeakRef<DrawCommandBuffer> command_buffer)
@@ -155,15 +163,15 @@ void UniformBlock::applyDescriptorBindings()
                     std::get<0>(textures_in_use[binding.binding]) = binding.texture_is_3d ? RenderServer::getDefault3DTexture().strong() : RenderServer::getDefaultTexture().strong();
                     texture = std::get<0>(textures_in_use[binding.binding]);
                 }
-                image_info.imageView = texture->getView();
-                image_info.sampler = std::get<1>(textures_in_use[binding.binding])->getSampler();
+                image_info.imageView = static_cast<VkImageView>(texture->getView());
+                image_info.sampler = static_cast<VkSampler>(std::get<1>(textures_in_use[binding.binding])->getSampler());
                 descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 descriptor_write.pImageInfo = &image_info;
             }
             // this could potentially be more efficient, since we could group all the
             // write commands into a sensible array and issue one big vkUpdateDescriptorSets,
             // but it's annoying to corral all the secondary structures involved
-            vkUpdateDescriptorSets(RenderServer::getDevice(), 1, &descriptor_write, 0, nullptr);
+            vkUpdateDescriptorSets(static_cast<VkDevice>(RenderServer::getDevice()), 1, &descriptor_write, 0, nullptr);
         }
     }
 }

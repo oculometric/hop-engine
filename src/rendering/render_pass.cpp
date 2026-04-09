@@ -7,7 +7,6 @@
 #include <vulkan/vulkan.hpp>
 
 using namespace HopEngine;
-using namespace std;
 
 RenderPass::RenderPass(const WeakRef<Swapchain>& target_swapchain, const Config& config)
 {
@@ -18,9 +17,9 @@ RenderPass::RenderPass(const WeakRef<Swapchain>& target_swapchain, const Config&
     createRenderPass();
     createResources();
 
-    DBG_VERBOSE(string("created render pass with colour buffer, ") +
+    DBG_VERBOSE(std::string("created render pass with colour buffer, ") +
                 (config.has_depth_attachment ? "depth buffer, " : "") + "and " +
-                ::to_string(config.additional_attachments) + " data attachments");
+                std::to_string(config.additional_attachments) + " data attachments");
 }
 
 RenderPass::RenderPass(const glm::u32vec2 image_extent, const Config& config)
@@ -36,7 +35,7 @@ RenderPass::~RenderPass()
 {
     DBG_VERBOSE("destroying render pass " + PTR(this));
     destroyResources();
-    RenderServer::free(reinterpret_cast<VkRenderPass&>(render_pass));
+    QUEUE_FREE(render_pass, VkRenderPass, vkDestroyRenderPass);
 }
 
 Ref<Texture> RenderPass::getImage(const size_t attachment) const
@@ -71,8 +70,7 @@ void RenderPass::resize(const glm::u32vec2 new_extent)
     createResources();
 }
 
-void RenderPass::begin(WeakRef<DrawCommandBuffer> command_buffer, glm::vec3 clear_colour,
-    bool transparent)
+void RenderPass::begin(WeakRef<DrawCommandBuffer> command_buffer, glm::vec3 clear_colour, bool transparent)
 {
     ClearValues clear_values;
     clear_values.colour        = clear_colour;
@@ -89,10 +87,10 @@ void RenderPass::createRenderPass()
     const Texture::Format main_colour_format =
         swapchain ? swapchain->getFormat() : output_config.main_colour_format;
     const Texture::Layout final_main_colour_layout =
-        swapchain ? Texture::LAYOUT_PRESENT_SRC : Texture::LAYOUT_SHADER_READ_ONLY;
+        swapchain ? Texture::LAYOUT_PRESENT_SRC : Texture::LAYOUT_SHADER_READ;
     const bool readable_output = swapchain ? false : true;
 
-    vector<VkAttachmentDescription> attachments;
+    std::vector<VkAttachmentDescription> attachments;
     VkAttachmentDescription colour_attachment{};
     colour_attachment.format         = toVulkanFormat(main_colour_format);
     colour_attachment.samples        = VK_SAMPLE_COUNT_1_BIT;
@@ -129,13 +127,12 @@ void RenderPass::createRenderPass()
         depth_attachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR;
         depth_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
         depth_attachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-        depth_attachment.finalLayout    = readable_output
-                                              ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-                                              : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+        depth_attachment.finalLayout    = readable_output ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+                                                          : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
         attachments.push_back(depth_attachment);
     }
 
-    vector<VkAttachmentReference> attachment_refs;
+    std::vector<VkAttachmentReference> attachment_refs;
     VkAttachmentReference colour_attachment_ref{};
     colour_attachment_ref.attachment = 0;
     colour_attachment_ref.layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -152,9 +149,8 @@ void RenderPass::createRenderPass()
     VkAttachmentReference depth_attachment_ref{};
     if (output_config.has_depth_attachment)
     {
-        depth_attachment_ref.attachment =
-            static_cast<uint32_t>(output_config.additional_attachments + 1);
-        depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        depth_attachment_ref.attachment = static_cast<uint32_t>(output_config.additional_attachments + 1);
+        depth_attachment_ref.layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     }
 
     VkSubpassDescription subpass{};
@@ -163,7 +159,7 @@ void RenderPass::createRenderPass()
     subpass.pColorAttachments    = attachment_refs.data();
     if (output_config.has_depth_attachment) subpass.pDepthStencilAttachment = &depth_attachment_ref;
 
-    vector<VkSubpassDependency> dependencies;
+    std::vector<VkSubpassDependency> dependencies;
     VkSubpassDependency dependency{};
     dependency.srcSubpass    = VK_SUBPASS_EXTERNAL;
     dependency.dstSubpass    = 0;
@@ -202,8 +198,8 @@ void RenderPass::createRenderPass()
     render_pass_create_info.dependencyCount = static_cast<uint32_t>(dependencies.size());
     render_pass_create_info.pDependencies   = dependencies.data();
 
-    if (vkCreateRenderPass(RenderServer::getDevice(), &render_pass_create_info, nullptr,
-            reinterpret_cast<VkRenderPass*>(&render_pass)) != VK_SUCCESS)
+    if (vkCreateRenderPass(static_cast<VkDevice>(RenderServer::getDevice()), &render_pass_create_info,
+            nullptr, reinterpret_cast<VkRenderPass*>(&render_pass)) != VK_SUCCESS)
         DBG_FAULT("vkCreateRenderPass failed");
 }
 
@@ -223,10 +219,10 @@ void RenderPass::createResources()
         framebuffers.resize(1);
     for (size_t i = 0; i < framebuffers.size(); ++i)
     {
-        vector<VkImageView> image_attachments;
-        if (swapchain)
-            image_attachments.push_back(static_cast<VkImageView>(swapchain->getImageView(i)));
-        for (const auto& image : textures) image_attachments.push_back(image->getView());
+        std::vector<VkImageView> image_attachments;
+        if (swapchain) image_attachments.push_back(static_cast<VkImageView>(swapchain->getImageView(i)));
+        for (const auto& image : textures)
+            image_attachments.push_back(static_cast<VkImageView>(image->getView()));
 
         VkFramebufferCreateInfo framebuffer_create_info{};
         framebuffer_create_info.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -237,15 +233,14 @@ void RenderPass::createResources()
         framebuffer_create_info.height          = extent.y;
         framebuffer_create_info.layers          = 1;
 
-        if (vkCreateFramebuffer(RenderServer::getDevice(), &framebuffer_create_info, nullptr,
-                reinterpret_cast<VkFramebuffer*>(&framebuffers[i])) != VK_SUCCESS)
+        if (vkCreateFramebuffer(static_cast<VkDevice>(RenderServer::getDevice()), &framebuffer_create_info,
+                nullptr, reinterpret_cast<VkFramebuffer*>(&framebuffers[i])) != VK_SUCCESS)
             DBG_FAULT("vkCreateFramebuffer failed");
     }
 }
 
 void RenderPass::destroyResources()
 {
-    for (GPUHandle framebuffer : framebuffers)
-        RenderServer::free(reinterpret_cast<VkFramebuffer&>(framebuffer));
+    for (GPUHandle framebuffer : framebuffers) QUEUE_FREE(framebuffer, VkFramebuffer, vkDestroyFramebuffer);
     textures.clear();
 }

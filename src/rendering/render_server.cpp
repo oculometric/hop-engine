@@ -10,7 +10,6 @@
 #include "user_interface.h"
 
 using namespace HopEngine;
-using namespace std;
 
 static RenderServer* server = nullptr;
 
@@ -34,7 +33,7 @@ void RenderServer::destroy()
 Ref<UniformBlock> RenderServer::createSceneUniforms()
 {
     return new UniformBlock(Shader::Layout{
-        server->scene_descriptor_set_layout, 
+        static_cast<VkDescriptorSetLayout>(server->scene_descriptor_set_layout), 
         {{ 0, Shader::UNIFORM, sizeof(SceneUniforms) } },
         0
     });
@@ -43,7 +42,7 @@ Ref<UniformBlock> RenderServer::createSceneUniforms()
 Ref<UniformBlock> RenderServer::createObjectUniforms()
 {
     return new UniformBlock(Shader::Layout{
-        server->object_descriptor_set_layout, 
+        static_cast<VkDescriptorSetLayout>(server->object_descriptor_set_layout), 
         {{ 0, Shader::UNIFORM, sizeof(ObjectUniforms) } },
         1
     });
@@ -78,7 +77,7 @@ void RenderServer::setSingleScene(const Ref<Scene>& scene)
     setMultiScene({ { scene, glm::vec2{ 0, 0 }, glm::vec2{ 1, 1 } } });
 }
 
-void RenderServer::setMultiScene(const vector<SceneRender>& multi_scenes)
+void RenderServer::setMultiScene(const std::vector<SceneRender>& multi_scenes)
 {
     RenderServer::waitIdle();
     server->scenes.clear();
@@ -108,7 +107,7 @@ RenderServer::RenderServer()
     };
     default_image = new Texture({ 2, 2, 1 }, Texture::FORMAT_SRGB_8X4, default_image_data);
     default_3d_image = new Texture({ 2, 2, 2 }, Texture::FORMAT_SRGB_8X4, default_image_data);
-    default_sampler = new Sampler(Sampler::Builder());
+    default_sampler = new Sampler(Sampler::FILTER_NEAREST, Sampler::ADDRESS_REPEAT);
 
     quad = new Mesh({
                         { { -1, -1, 0, 1 }, {}, {}, {}, { 0, 0 } },
@@ -130,7 +129,7 @@ RenderServer::RenderServer()
     ObjectUniforms* spinner = static_cast<ObjectUniforms*>(spinner_uniforms->getBuffer());
     spinner->model_to_world = glm::mat4(1);
     spinner_material->setTexture(0, Engine::loadTexture("res://engine/icon.png"));
-    spinner_material->setSampler(0, new Sampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST)));
+    spinner_material->setSampler(0, new Sampler(Sampler::FILTER_NEAREST, Sampler::ADDRESS_CLAMP_EDGE));
 
     debug_text_font = Font::deserialise("res://engine/NASA_worm.hfnt");
     auto debug_ui_style = new UIStyle();
@@ -204,14 +203,14 @@ void RenderServer::tryFreeResources(bool force)
         return;
 
     RenderServer::waitIdle();
-    DBG_INFO("freeing " + ::to_string(free_list.size()) + " resources");
+    DBG_INFO("freeing " + std::to_string(free_list.size()) + " resources");
     last_free_time = current_time;
     for (auto& item : free_list)
         item();
     free_list.clear();
 }
 
-void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
+WeakRef<DrawCommandBuffer> RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
 {
     SceneUniforms scene_uniforms;
     scene_uniforms.time = Engine::getEngineTime();
@@ -278,4 +277,6 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
     command_buffer->drawImGui();
 
     command_buffer->end();
+
+    return command_buffer;
 }

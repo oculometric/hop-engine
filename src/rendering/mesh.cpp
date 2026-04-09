@@ -2,6 +2,7 @@
 
 #include "buffer.h"
 #include "command_buffer.h"
+#include "package.h"
 
 using namespace HopEngine;
 

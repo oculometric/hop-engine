@@ -10,9 +10,6 @@
 namespace HopEngine
 {
 
-// typedef for a block of data, expressed as a managed byte array
-typedef std::vector<uint8_t> DataBlock;
-
 /**
  * @brief singleton class providing various functionality for loading files, loading packaged data
  * files, and loading data blocks from those packages.

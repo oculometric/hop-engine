@@ -47,7 +47,7 @@ private:
 	std::map<std::string, Ref<Material>> loaded_materials;
 	std::map<std::string, Ref<Texture>> loaded_textures;
 	std::map<std::string, Ref<Mesh>> loaded_meshes;
-	std::map<Sampler::Builder, Ref<Sampler>> premade_samplers;
+	std::map<std::pair<Sampler::Filter, Sampler::Address>, Ref<Sampler>> premade_samplers;
 
 	FrameStats last_frame_stats;
 	std::chrono::steady_clock::time_point engine_start_timestamp;
@@ -96,7 +96,9 @@ public:
 	static Ref<Texture> loadTexture(const std::string& path);
 	static Ref<Texture> loadTexture3D(const std::string& path, int layers_wide, int layers_high);
 	static Ref<Mesh> loadMesh(const std::string& path);
-	static Ref<Sampler> makeSampler(const Sampler::Builder& builder);
+	static Ref<Sampler> getSampler(Sampler::Filter filter);
+	static Ref<Sampler> getSampler(Sampler::Address address);
+	static Ref<Sampler> getSampler(Sampler::Filter filter, Sampler::Address address);
 	static size_t pruneUnusedResources();
 
 	template <class T> static std::vector<WeakRef<T>> getAllRefs();

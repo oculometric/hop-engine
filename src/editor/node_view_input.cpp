@@ -44,7 +44,7 @@ static bool checkNodeBox(WeakRef<NodeView::Node> node, glm::vec2 pos, bool exten
 
 static bool checkPinBox(WeakRef<NodeView::Node> node, int element, glm::vec2 pos, WeakRef<NodeView::Style> style, glm::vec2& selbox_min)
 {
-    if (element < 0 || element >= node->elements.size())
+    if (element < 0 || static_cast<size_t>(element) >= node->elements.size())
         return false;
     glm::vec2 selbox_max;
     int index = (style->header_at_top ? style->after_header_spacing + 1 : style->after_elements_spacing) + element;
@@ -71,7 +71,6 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
 {
     // TODO: this is not allowed to be static!!
     static InputState state = IDLE;
-    static Input::MouseButton button_upon_press;
     static glm::vec2 mouse_pos_upon_press;
     static UIElement element_type_upon_press = NONE;
     static int input_output_element_index = 0;
@@ -219,7 +218,6 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
         if (Input::wasMousePressed(Input::MOUSE_LEFT))
         {
             mouse_pos_upon_press = node_space_pos;
-            button_upon_press = Input::MOUSE_LEFT;
             state = MOUSE_PRESSING;
         }
     }

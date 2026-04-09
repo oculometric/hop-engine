@@ -11,11 +11,11 @@
 using namespace HopEngine;
 using namespace std;
 
-TO_STRING_DEF(Pipeline::CullMode, 4, VARGS("NONE", "FRONT", "BACK", "BOTH"));
+TO_STRING_IMPL(Pipeline::CullMode, 4, VARGS("NONE", "FRONT", "BACK", "BOTH"));
 
-TO_STRING_DEF(Pipeline::PolygonMode, 3, VARGS("FILL", "LINE", "BACK"));
+TO_STRING_IMPL(Pipeline::PolygonMode, 3, VARGS("FILL", "LINE", "BACK"));
 
-TO_STRING_DEF(Pipeline::CompareOp, 8, VARGS("NEVER", "LESS", "EQUAL", "LESS_EQUAL", "GREATER", "NOT_EQUAL", "GREATER_EQUAL", "ALWAYS"));
+TO_STRING_IMPL(Pipeline::CompareOp, 8, VARGS("NEVER", "LESS", "EQUAL", "LESS_EQUAL", "GREATER", "NOT_EQUAL", "GREATER_EQUAL", "ALWAYS"));
 
 Pipeline::Pipeline(const Ref<Shader>& shader, const Builder& config, const Ref<RenderPass>& render_pass)
 {
@@ -133,7 +133,7 @@ Pipeline::Pipeline(const Ref<Shader>& shader, const Builder& config, const Ref<R
     pipeline_create_info.renderPass = static_cast<VkRenderPass>(render_pass->getRenderPass());
     pipeline_create_info.subpass = 0;
 
-    if (vkCreateGraphicsPipelines(RenderServer::getDevice(), VK_NULL_HANDLE, 1, &pipeline_create_info, nullptr, &pipeline) != VK_SUCCESS)
+    if (vkCreateGraphicsPipelines(static_cast<VkDevice>(RenderServer::getDevice()), VK_NULL_HANDLE, 1, &pipeline_create_info, nullptr, &pipeline) != VK_SUCCESS)
         DBG_FAULT("vkCreateGraphicsPipelines failed");
 
     DBG_VERBOSE("created pipeline for shader " + PTR(shader.get()));
@@ -142,7 +142,7 @@ Pipeline::Pipeline(const Ref<Shader>& shader, const Builder& config, const Ref<R
 Pipeline::~Pipeline()
 {
     DBG_VERBOSE("destroying pipeline " + PTR(this));
-    RenderServer::free(pipeline);
+    QUEUE_FREE(pipeline, VkPipeline, vkDestroyPipeline);
 }
 
 void Pipeline::bind(WeakRef<DrawCommandBuffer> command_buffer)

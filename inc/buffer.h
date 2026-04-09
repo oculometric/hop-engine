@@ -16,7 +16,7 @@ enum MemoryProperties
     MEMORY_PROPERTY_HOST_CACHED   = 8,
 };
 ENUM_OPERATOR(MemoryProperties);
-TO_STRING_DEC(MemoryProperties);
+TO_STRING_DECL(MemoryProperties);
 
 /**
  * @brief encapsulates a GPU buffer object and its associated memory.
@@ -100,6 +100,6 @@ public:
 };
 
 ENUM_OPERATOR(Buffer::Usage)
-TO_STRING_DEC(Buffer::Usage);
+TO_STRING_DECL(Buffer::Usage);
 
 } // namespace HopEngine

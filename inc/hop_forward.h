@@ -51,6 +51,13 @@ class UIContextMenu;
 
 class Application;
 class Engine;
+class Package;
+class Input;
 class EventServer;
+
+// generic placeholder type for various API-specific resource handle types
+typedef void* GPUHandle;
+// typedef for a block of data, expressed as a managed byte array
+typedef std::vector<uint8_t> DataBlock;
 
 }

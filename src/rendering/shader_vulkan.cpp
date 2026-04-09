@@ -7,6 +7,7 @@
 
 #include "package.h"
 #include "render_server.h"
+#include "vulkan_helpers.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -89,7 +90,7 @@ VkShaderModule Shader::createShaderModule(const vector<uint32_t>& blob)
 	create_info.pCode = blob.data();
 
 	VkShaderModule shader_module;
-	if (vkCreateShaderModule(RenderServer::getDevice(), &create_info, nullptr, &shader_module) != VK_SUCCESS)
+	if (vkCreateShaderModule(static_cast<VkDevice>(RenderServer::getDevice()), &create_info, nullptr, &shader_module) != VK_SUCCESS)
 		DBG_FAULT("vkCreateShaderModule failed");
 
 	return shader_module;
@@ -185,15 +186,15 @@ void Shader::createDescriptorSetLayout()
 	set_layout_create_info.bindingCount = static_cast<uint32_t>(layout_bindings.size());
 	set_layout_create_info.pBindings = layout_bindings.data();
 
-	if (vkCreateDescriptorSetLayout(RenderServer::getDevice(), &set_layout_create_info, nullptr, &descriptor_set_layout) != VK_SUCCESS)
+	if (vkCreateDescriptorSetLayout(static_cast<VkDevice>(RenderServer::getDevice()), &set_layout_create_info, nullptr, &descriptor_set_layout) != VK_SUCCESS)
 		DBG_FAULT("vkCreateDescriptorSetLayout failed");
 }
 
 void Shader::destroyResources()
 {
-    RenderServer::free(pipeline_layout);
-    RenderServer::free(descriptor_set_layout);
-    
-    RenderServer::free(vert_module);
-    RenderServer::free(frag_module);
+    QUEUE_FREE(pipeline_layout, VkPipelineLayout, vkDestroyPipelineLayout);
+    QUEUE_FREE(descriptor_set_layout, VkDescriptorSetLayout, vkDestroyDescriptorSetLayout);
+
+    QUEUE_FREE(vert_module, VkShaderModule, vkDestroyShaderModule);
+    QUEUE_FREE(frag_module, VkShaderModule, vkDestroyShaderModule);
 }

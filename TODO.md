@@ -1,21 +1,25 @@
 # TODO
 
 # v0.54
+- eliminate vulkan_typedefs.h
+- make validation layers a command line option
+- clean up device selection and extension checking
+- enforce proper error checking
+
+- make UVs a vec3 not a vec2
+- eliminate 'DEFAULT_VERTEX' pragma from shader
+- draw command buffers should have a default pipeline layout (dummy descriptor set 2)
+- remove type parameter from buffer bind function
+
 - split framebuffer from render pass?? merge image creation from swapchain to render pass
 - deserialise functions should be able to take in a serial string directly
-- enforce proper error checking
-- eliminate 'DEFAULT_VERTEX' pragma from shader
-- make UVs a vec3 not a vec2
-- remove type parameter from buffer bind function
 - document everything
     - basic_components.h
     - engine.h
     - material.h
-    - render_server.h
     - scene.h
     - texture.h
     - user_interface.h
-    - eliminate vulkan_typedefs.h
     - license (happy bunny license) and copyright
 - document serial formats
     - material

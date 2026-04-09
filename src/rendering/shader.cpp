@@ -31,7 +31,7 @@ Shader::Shader(const string& base_path)
 
 	createDescriptorSetLayout();
 
-	pipeline_layout = RenderServer::createPipelineLayout(descriptor_set_layout);
+	pipeline_layout = static_cast<VkPipelineLayout>(RenderServer::createPipelineLayout(descriptor_set_layout));
 
 	DBG_VERBOSE("created shader from " + base_path);
 }

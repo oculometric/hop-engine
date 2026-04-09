@@ -2,6 +2,7 @@
 
 #include "engine.h"
 #include "render_server.h"
+#include "vulkan_helpers.h"
 
 #include <imgui/backends/imgui_impl_vulkan.h>
 #include <imgui/imgui.h>
@@ -16,10 +17,10 @@ TransientCommandBuffer::TransientCommandBuffer()
     VkCommandBufferAllocateInfo allocate_info{};
     allocate_info.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocate_info.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocate_info.commandPool        = RenderServer::getCommandPool();
+    allocate_info.commandPool        = static_cast<VkCommandPool>(RenderServer::getCommandPool());
     allocate_info.commandBufferCount = 1;
 
-    vkAllocateCommandBuffers(RenderServer::getDevice(), &allocate_info,
+    vkAllocateCommandBuffers(static_cast<VkDevice>(RenderServer::getDevice()), &allocate_info,
         reinterpret_cast<VkCommandBuffer*>(&buffer));
 
     // automatically start the command buffer so the user can just start issuing co
@@ -36,7 +37,8 @@ TransientCommandBuffer::~TransientCommandBuffer()
     if (!already_submitted)
         DBG_WARNING("command buffer " + PTR(this) + " being destructed without being submitted");
     DBG_VERBOSE("destroying command buffer " + PTR(this));
-    vkFreeCommandBuffers(RenderServer::getDevice(), RenderServer::getCommandPool(), 1,
+    vkFreeCommandBuffers(static_cast<VkDevice>(RenderServer::getDevice()),
+        static_cast<VkCommandPool>(RenderServer::getCommandPool()), 1,
         reinterpret_cast<VkCommandBuffer*>(&buffer));
 }
 
@@ -60,19 +62,19 @@ void TransientCommandBuffer::submit()
     submit_info.pCommandBuffers    = reinterpret_cast<VkCommandBuffer*>(&buffer);
 
     // submit and wait for it to be executed
-    vkQueueSubmit(RenderServer::getGraphicsQueue(), 1, &submit_info, VK_NULL_HANDLE);
-    vkQueueWaitIdle(RenderServer::getGraphicsQueue());
+    vkQueueSubmit(static_cast<VkQueue>(RenderServer::getGraphicsQueue()), 1, &submit_info, VK_NULL_HANDLE);
+    vkQueueWaitIdle(static_cast<VkQueue>(RenderServer::getGraphicsQueue()));
 }
 
 DrawCommandBuffer::DrawCommandBuffer()
 {
     VkCommandBufferAllocateInfo buffer_allocate_info{};
     buffer_allocate_info.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    buffer_allocate_info.commandPool        = RenderServer::getCommandPool();
+    buffer_allocate_info.commandPool        = static_cast<VkCommandPool>(RenderServer::getCommandPool());
     buffer_allocate_info.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     buffer_allocate_info.commandBufferCount = 1;
 
-    if (vkAllocateCommandBuffers(RenderServer::getDevice(), &buffer_allocate_info,
+    if (vkAllocateCommandBuffers(static_cast<VkDevice>(RenderServer::getDevice()), &buffer_allocate_info,
             reinterpret_cast<VkCommandBuffer*>(&buffer)) != VK_SUCCESS)
         DBG_FAULT("vkAllocateCommandBuffers failed");
 
@@ -80,16 +82,24 @@ DrawCommandBuffer::DrawCommandBuffer()
     query_pool_create_info.sType      = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
     query_pool_create_info.queryCount = 512;
     query_pool_create_info.queryType  = VK_QUERY_TYPE_TIMESTAMP;
-    if (vkCreateQueryPool(RenderServer::getDevice(), &query_pool_create_info, nullptr,
-            reinterpret_cast<VkQueryPool*>(&query_pool)) != VK_SUCCESS)
+    if (vkCreateQueryPool(static_cast<VkDevice>(RenderServer::getDevice()), &query_pool_create_info,
+            nullptr, reinterpret_cast<VkQueryPool*>(&query_pool)) != VK_SUCCESS)
         DBG_FAULT("vkCreateQueryPool failed");
 }
 
 DrawCommandBuffer::~DrawCommandBuffer()
 {
     DBG_VERBOSE("destroying command buffer " + PTR(this));
-    RenderServer::free(reinterpret_cast<VkCommandBuffer&>(buffer));
-    RenderServer::free(reinterpret_cast<VkQueryPool&>(query_pool));
+    auto temp_buffer = buffer;
+    RenderServer::queueFree(
+        [temp_buffer]()
+        {
+            vkFreeCommandBuffers(static_cast<VkDevice>(static_cast<VkDevice>(RenderServer::getDevice())),
+                static_cast<VkCommandPool>(RenderServer::getCommandPool()), 1,
+                reinterpret_cast<const VkCommandBuffer*>(&temp_buffer));
+        });
+    buffer = VK_NULL_HANDLE;
+    QUEUE_FREE(query_pool, VkQueryPool, vkDestroyQueryPool);
 }
 
 void DrawCommandBuffer::begin(uint32_t index, FrameStats* frame_stats)
@@ -115,13 +125,11 @@ void DrawCommandBuffer::begin(uint32_t index, FrameStats* frame_stats)
     DBG_VERBOSE("recording command buffer");
     VkCommandBufferBeginInfo cmd_buffer_begin_info{};
     cmd_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    if (vkBeginCommandBuffer(static_cast<VkCommandBuffer>(buffer), &cmd_buffer_begin_info) !=
-        VK_SUCCESS)
+    if (vkBeginCommandBuffer(static_cast<VkCommandBuffer>(buffer), &cmd_buffer_begin_info) != VK_SUCCESS)
         DBG_FAULT("vkBeginCommandBuffer failed");
 
     query_offset = 0;
-    vkCmdResetQueryPool(static_cast<VkCommandBuffer>(buffer), static_cast<VkQueryPool>(query_pool), 0,
-        512);
+    vkCmdResetQueryPool(static_cast<VkCommandBuffer>(buffer), static_cast<VkQueryPool>(query_pool), 0, 512);
     writeTimestamp(false);
     begun = true;
 }
@@ -162,7 +170,7 @@ void DrawCommandBuffer::startRenderPassInternal(GPUHandle render_pass, GPUHandle
     main_colour_clear.float32[2] = clear_values.transparent ? 0.0f : clear_values.colour.b;
     main_colour_clear.float32[3] = clear_values.transparent ? 0.0f : 1.0f;
     VkClearValue temp;
-    temp.color                   = main_colour_clear;
+    temp.color = main_colour_clear;
     actual_clears.push_back(temp);
     for (glm::vec4 value : clear_values.additionals)
     {
@@ -191,7 +199,7 @@ void DrawCommandBuffer::startRenderPassInternal(GPUHandle render_pass, GPUHandle
         VK_SUBPASS_CONTENTS_INLINE);
     writeTimestamp(false);
     stats->passes++;
-    current_render_pass = render_pass;
+    current_render_pass      = render_pass;
     current_framebuffer_size = extent;
 
     VkRect2D scissor{};
@@ -217,8 +225,7 @@ void DrawCommandBuffer::bindPipelineInternal(GPUHandle pipeline)
     }
     if (!current_render_pass)
     {
-        DBG_ERROR(
-            "attempt to bind a pipeline in a command buffer where no render pass is in progress!");
+        DBG_ERROR("attempt to bind a pipeline in a command buffer where no render pass is in progress!");
         return;
     }
 
@@ -283,8 +290,8 @@ void DrawCommandBuffer::bindDescriptorSetInternal(size_t set, GPUHandle descript
     current_descriptor_sets[set] = descriptor_set;
     VkDescriptorSet binding_set  = static_cast<VkDescriptorSet>(descriptor_set);
     vkCmdBindDescriptorSets(static_cast<VkCommandBuffer>(buffer), VK_PIPELINE_BIND_POINT_GRAPHICS,
-        static_cast<VkPipelineLayout>(current_pipeline_layout), static_cast<uint32_t>(set), 1,
-        &binding_set, 0, nullptr);
+        static_cast<VkPipelineLayout>(current_pipeline_layout), static_cast<uint32_t>(set), 1, &binding_set,
+        0, nullptr);
 }
 
 void DrawCommandBuffer::bindVertexBuffer(GPUHandle vertex_buffer)
@@ -346,8 +353,7 @@ void DrawCommandBuffer::setScissorViewport(glm::vec2 offset, glm::vec2 size) con
     VkRect2D scissor{};
     scissor.offset = { static_cast<int32_t>(offset.x * extent.x),
         static_cast<int32_t>(offset.y * extent.y) };
-    scissor.extent = { static_cast<uint32_t>(size.x * extent.x),
-        static_cast<uint32_t>(size.y * extent.y) };
+    scissor.extent = { static_cast<uint32_t>(size.x * extent.x), static_cast<uint32_t>(size.y * extent.y) };
     VkViewport viewport{};
     viewport.x        = offset.x * extent.x;
     viewport.y        = offset.y * extent.y;
@@ -410,9 +416,9 @@ void DrawCommandBuffer::extractTiming() const
 {
     vector<uint32_t> results_buf;
     results_buf.resize(query_offset, 0);
-    vkGetQueryPoolResults(RenderServer::getDevice(), static_cast<VkQueryPool>(query_pool), 0,
-        query_offset, results_buf.size() * sizeof(uint32_t), results_buf.data(), 4,
-        VK_QUERY_RESULT_WAIT_BIT);
+    vkGetQueryPoolResults(static_cast<VkDevice>(RenderServer::getDevice()),
+        static_cast<VkQueryPool>(query_pool), 0, query_offset, results_buf.size() * sizeof(uint32_t),
+        results_buf.data(), 4, VK_QUERY_RESULT_WAIT_BIT);
 
     const float render_time = static_cast<float>(results_buf[results_buf.size() - 1] - results_buf[0]) /
                               (1000.0f * 1000.0f * 100.0f);

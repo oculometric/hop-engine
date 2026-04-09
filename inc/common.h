@@ -1,7 +1,8 @@
 #pragma once
 
-#include <string>
 #include <cstdint>
+#include <string>
+#include <vector>
 
 // automatically generates deleters for basic constructors, and copy/move constructors/operators.
 // these should be used for any engine type which should be handled exclusively as a pointer (i.e. a
@@ -33,9 +34,6 @@ public:
     virtual ~Destructible() {}
 };
 
-// generic placeholder type for various API-specific resource handle types
-typedef void* GPUHandle;
-
 } // namespace HopEngine
 
 /**
@@ -47,34 +45,34 @@ typedef void* GPUHandle;
 int exec(const std::string& command, std::string& output);
 
 // defines a to_string function for an enum type
-#define TO_STRING_DEC(t) std::string to_string(t value)
-#define VARGS(...)       __VA_ARGS__
+#define TO_STRING_DECL(t) std::string to_string(t value)
+#define VARGS(...)        __VA_ARGS__
 // defines a function which converts a bitflag-style enum into a string
-#define TO_STRING_DEF_BITFLAGS(t, s, n)         \
-    string HopEngine::to_string(const t value)  \
-    {                                           \
-        constexpr const char* names[s] = { n }; \
-        string result;                          \
-        for (size_t i = 0; i < s; ++i)          \
-        {                                       \
-            if (value & (1 << i))               \
-            {                                   \
-                result += names[i];             \
-                result += " | ";                \
-            }                                   \
-        }                                       \
-        result.pop_back();                      \
-        result.pop_back();                      \
-        result.pop_back();                      \
-        return result;                          \
+#define TO_STRING_IMPL_BITFLAGS(t, s, n)            \
+    std::string HopEngine::to_string(const t value) \
+    {                                               \
+        constexpr const char* names[s] = { n };     \
+        std::string result;                         \
+        for (size_t i = 0; i < s; ++i)              \
+        {                                           \
+            if (value & (1 << i))                   \
+            {                                       \
+                result += names[i];                 \
+                result += " | ";                    \
+            }                                       \
+        }                                           \
+        result.pop_back();                          \
+        result.pop_back();                          \
+        result.pop_back();                          \
+        return result;                              \
     }
 
 // defines a function which converts a non-bitflag-style enum into a string
-#define TO_STRING_DEF(t, s, n)                  \
-    string HopEngine::to_string(const t value)  \
-    {                                           \
-        constexpr const char* names[s] = { n }; \
-        return names[value];                    \
+#define TO_STRING_IMPL(t, s, n)                     \
+    std::string HopEngine::to_string(const t value) \
+    {                                               \
+        constexpr const char* names[s] = { n };     \
+        return names[value];                        \
     }
 
 // defines an operator which allows bitwise-or-ing two values of a custom type together

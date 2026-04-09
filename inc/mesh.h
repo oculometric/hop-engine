@@ -2,7 +2,6 @@
 
 #include "common.h"
 #include "math_helpers.h"
-#include "package.h"
 
 #include <array>
 #include <glm/glm.hpp>
@@ -31,7 +30,7 @@ public:
     };
 
 private:
-    std::string origin; // if not empty, contains the path from which this render graph was deserialised
+    std::string origin; // if not empty, contains the path from which this mesh was loaded
     Ref<Buffer> vertex_buffer;  // GPU vertex buffer
     Ref<Buffer> index_buffer;   // GPU index buffer
     size_t vertex_capacity = 0; // capacity of the GPU vertex buffer in vertices

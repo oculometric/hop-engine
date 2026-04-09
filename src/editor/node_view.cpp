@@ -91,7 +91,7 @@ void NodeView::awake()
     StaticMeshComponent::awake();
     material             = new Material(new Shader("res://engine/shaders/node_shader.glsl"),
                     Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthWrite(false));
-    Ref<Sampler> sampler = Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST));
+    Ref<Sampler> sampler = Engine::getSampler(Sampler::FILTER_NEAREST);
     material->setSampler("node_atlas", sampler);
     material->setSampler("text_atlas", sampler);
     material->setSampler("extra_atlas", sampler);
@@ -331,23 +331,23 @@ void NodeView::drawNode(WeakRef<Node> node, int pass)
         for (auto& link : node->incoming_links)
         {
             ++out_rows_down;
-            while (out_rows_down < node->elements.size() &&
+            while (static_cast<size_t>(out_rows_down) < node->elements.size() &&
                     node->elements[out_rows_down].type != ELEMENT_INPUT)
                 ++out_rows_down;
-            if (out_rows_down >= node->elements.size()) break;
+            if (static_cast<size_t>(out_rows_down) >= node->elements.size()) break;
             if (!link.first) continue;
             auto target = link.first;
 
             int in_rows_down   = 0;
             int in_inputs_seen = 0;
-            while (in_rows_down < target->elements.size() &&
-                    !(in_inputs_seen == link.second &&
+            while (static_cast<size_t>(in_rows_down) < target->elements.size() &&
+                    !(static_cast<size_t>(in_inputs_seen) == link.second &&
                         target->elements[in_rows_down].type == ELEMENT_OUTPUT))
             {
                 if (target->elements[in_rows_down].type == ELEMENT_OUTPUT) ++in_inputs_seen;
                 ++in_rows_down;
             }
-            if (in_rows_down >= target->elements.size()) break;
+            if (static_cast<size_t>(in_rows_down) >= target->elements.size()) break;
 
             glm::vec2 link_start = node->minimised ? 
                 header_position + glm::vec2{ 0, 0.5f * style->grid_size } :

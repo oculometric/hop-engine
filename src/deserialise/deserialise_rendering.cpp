@@ -95,22 +95,20 @@ Ref<Material> Material::deserialise(const std::string& name)
     Ref<Shader> main_shader;
 
     std::vector<TokenReader::Statement> uniforms;
-    std::vector<std::tuple<Ref<Texture>, std::string, Sampler::Filter, Sampler::Address>>
-        texture_bindings;
+    std::vector<std::tuple<Ref<Texture>, std::string, Sampler::Filter, Sampler::Address>> texture_bindings;
 
     Deserialiser deserialiser("error deserialising material '" + name + "'");
-    deserialiser.addStatementAnonymous(Deserialiser::AnonymousStatementSpec("Resource",
-                                           Deserialiser::STATEMENT_IDENTIFIER_REQUIRED, false)
-                                           .argument(TokenReader::TOKEN_TEXT)
-                                           .argument(TokenReader::TOKEN_STRING),
+    deserialiser.addStatementAnonymous(
+        Deserialiser::AnonymousStatementSpec("Resource", Deserialiser::STATEMENT_IDENTIFIER_REQUIRED, false)
+            .argument(TokenReader::TOKEN_TEXT)
+            .argument(TokenReader::TOKEN_STRING),
         [&](Deserialiser::AnonymousStatementResult result) -> bool
         {
             std::string res_type;
             result.read(0, res_type);
             std::string res_addr;
             result.read(1, res_addr);
-            if (res_type == "shader")
-                shaders[result.statement.identifier] = Engine::loadShader(res_addr);
+            if (res_type == "shader") shaders[result.statement.identifier] = Engine::loadShader(res_addr);
             else if (res_type == "texture")
                 textures[result.statement.identifier] = Engine::loadTexture(res_addr);
             else
@@ -126,8 +124,8 @@ Ref<Material> Material::deserialise(const std::string& name)
         {
             if (!result.read<Pipeline::CompareOp>("operation", pipeline_builder.depth_compare_op,
                     getCompareOp))
-                return deserialiser.emitError("invalid depth operation value",
-                    result.offsetOf("operation"), token_str);
+                return deserialiser.emitError("invalid depth operation value", result.offsetOf("operation"),
+                    token_str);
             if (!result.read("test", pipeline_builder.depth_test_enable))
                 return deserialiser.emitError("invalid depth test value", result.offsetOf("test"),
                     token_str);
@@ -151,8 +149,7 @@ Ref<Material> Material::deserialise(const std::string& name)
             .argument("mode", TokenReader::TOKEN_TEXT, false),
         [&](Deserialiser::NamedStatementResult result) -> bool
         {
-            if (!result.read<Pipeline::PolygonMode>("mode", pipeline_builder.polygon_mode,
-                    getPolygonMode))
+            if (!result.read<Pipeline::PolygonMode>("mode", pipeline_builder.polygon_mode, getPolygonMode))
                 return deserialiser.emitError("invalid polygon mode value", result.offsetOf("mode"),
                     token_str);
             return true;
@@ -168,8 +165,8 @@ Ref<Material> Material::deserialise(const std::string& name)
             pipeline_builder.stencil_enable = true;
             if (!result.read<Pipeline::CompareOp>("compare", pipeline_builder.stencil_compare_op,
                     getCompareOp))
-                return deserialiser.emitError("invalid stencil operation value",
-                    result.offsetOf("compare"), token_str);
+                return deserialiser.emitError("invalid stencil operation value", result.offsetOf("compare"),
+                    token_str);
             result.read("compare_value", pipeline_builder.stencil_compare_value);
             result.read("compare_mask", pipeline_builder.stencil_compare_mask);
             result.read("write_mask", pipeline_builder.stencil_write);
@@ -189,8 +186,8 @@ Ref<Material> Material::deserialise(const std::string& name)
             main_shader = shader_it->second;
             return true;
         });
-    deserialiser.addStatementAnonymous(Deserialiser::AnonymousStatementSpec("Uniform",
-                                           Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, true),
+    deserialiser.addStatementAnonymous(
+        Deserialiser::AnonymousStatementSpec("Uniform", Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, true),
         [&](Deserialiser::AnonymousStatementResult result) -> bool
         {
             for (const TokenReader::Statement& uniform : result.statement.children)
@@ -219,8 +216,8 @@ Ref<Material> Material::deserialise(const std::string& name)
                     token_str);
             Sampler::Address address = Sampler::ADDRESS_REPEAT;
             if (!result.read<Sampler::Address>("address", address, getAddressMode))
-                return deserialiser.emitError("invalid texture address value",
-                    result.offsetOf("address"), token_str);
+                return deserialiser.emitError("invalid texture address value", result.offsetOf("address"),
+                    token_str);
             texture_bindings.emplace_back(texture_it->second, binding, filter, address);
             return true;
         });
@@ -235,15 +232,14 @@ Ref<Material> Material::deserialise(const std::string& name)
     {
         material->setTexture(std::get<std::string>(binding), std::get<Ref<Texture>>(binding));
         material->setSampler(std::get<std::string>(binding),
-            Engine::makeSampler(
-                { std::get<Sampler::Filter>(binding), std::get<Sampler::Address>(binding) }));
+            Engine::getSampler(std::get<Sampler::Filter>(binding), std::get<Sampler::Address>(binding)));
     }
 
     Deserialiser uniform_deserialiser("error deserialising material '" + name + "'");
-    uniform_deserialiser.addStatementAnonymous(Deserialiser::AnonymousStatementSpec("vec4",
-                                                   Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
-                                                   .argument(TokenReader::TOKEN_STRING)
-                                                   .argument(TokenReader::TOKEN_VECTOR),
+    uniform_deserialiser.addStatementAnonymous(
+        Deserialiser::AnonymousStatementSpec("vec4", Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
+            .argument(TokenReader::TOKEN_STRING)
+            .argument(TokenReader::TOKEN_VECTOR),
         [&](Deserialiser::AnonymousStatementResult result) -> bool
         {
             std::string binding;
@@ -253,10 +249,10 @@ Ref<Material> Material::deserialise(const std::string& name)
             material->setVec4Uniform(binding, value);
             return true;
         });
-    uniform_deserialiser.addStatementAnonymous(Deserialiser::AnonymousStatementSpec("float",
-                                                   Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
-                                                   .argument(TokenReader::TOKEN_STRING)
-                                                   .argument(TokenReader::TOKEN_FLOAT),
+    uniform_deserialiser.addStatementAnonymous(
+        Deserialiser::AnonymousStatementSpec("float", Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
+            .argument(TokenReader::TOKEN_STRING)
+            .argument(TokenReader::TOKEN_FLOAT),
         [&](Deserialiser::AnonymousStatementResult result) -> bool
         {
             std::string binding;
@@ -266,10 +262,10 @@ Ref<Material> Material::deserialise(const std::string& name)
             material->setFloatUniform(binding, value);
             return true;
         });
-    uniform_deserialiser.addStatementAnonymous(Deserialiser::AnonymousStatementSpec("float",
-                                                   Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
-                                                   .argument(TokenReader::TOKEN_STRING)
-                                                   .argument(TokenReader::TOKEN_FLOAT),
+    uniform_deserialiser.addStatementAnonymous(
+        Deserialiser::AnonymousStatementSpec("float", Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
+            .argument(TokenReader::TOKEN_STRING)
+            .argument(TokenReader::TOKEN_FLOAT),
         [&](Deserialiser::AnonymousStatementResult result) -> bool
         {
             std::string binding;
@@ -304,18 +300,17 @@ Ref<RenderGraph> RenderGraph::deserialise(const std::string& name)
     Builder builder;
 
     Deserialiser deserialiser("error deserialising render graph '" + name + "'");
-    deserialiser.addStatementAnonymous(Deserialiser::AnonymousStatementSpec("Resource",
-                                           Deserialiser::STATEMENT_IDENTIFIER_REQUIRED, false)
-                                           .argument(TokenReader::TOKEN_TEXT)
-                                           .argument(TokenReader::TOKEN_STRING),
+    deserialiser.addStatementAnonymous(
+        Deserialiser::AnonymousStatementSpec("Resource", Deserialiser::STATEMENT_IDENTIFIER_REQUIRED, false)
+            .argument(TokenReader::TOKEN_TEXT)
+            .argument(TokenReader::TOKEN_STRING),
         [&](Deserialiser::AnonymousStatementResult result) -> bool
         {
             std::string res_type;
             result.read(0, res_type);
             std::string res_addr;
             result.read(1, res_addr);
-            if (res_type == "shader")
-                shaders[result.statement.identifier] = Engine::loadShader(res_addr);
+            if (res_type == "shader") shaders[result.statement.identifier] = Engine::loadShader(res_addr);
             else
                 return deserialiser.emitError("invalid resource type", result.offsetOf(0), token_str);
             return true;
@@ -328,13 +323,11 @@ Ref<RenderGraph> RenderGraph::deserialise(const std::string& name)
         {
             bool depth_enabled;
             if (!result.read(0, depth_enabled))
-                return deserialiser.emitError(
-                    "invalid 'depth enabled' value for render pass descriptor", result.offsetOf(0),
-                    token_str);
+                return deserialiser.emitError("invalid 'depth enabled' value for render pass descriptor",
+                    result.offsetOf(0), token_str);
             uint32_t extra_buffers;
             result.read(1, extra_buffers);
-            render_passes[result.statement.identifier] =
-                RenderPass::Config{ extra_buffers, depth_enabled };
+            render_passes[result.statement.identifier] = RenderPass::Config{ extra_buffers, depth_enabled };
             return true;
         });
     deserialiser.addStatementNamed(
@@ -348,8 +341,8 @@ Ref<RenderGraph> RenderGraph::deserialise(const std::string& name)
             int slot;
             result.read("slot", slot);
             if (slot < 0)
-                return deserialiser.emitError("camera slot must be greater than 0",
-                    result.offsetOf("slot"), token_str);
+                return deserialiser.emitError("camera slot must be greater than 0", result.offsetOf("slot"),
+                    token_str);
             float scale = 1.0f;
             result.read("scale", scale);
             glm::vec2 custom_size{ -1, -1 };
@@ -366,13 +359,11 @@ Ref<RenderGraph> RenderGraph::deserialise(const std::string& name)
             {
                 auto render_pass_it = render_passes.find(render_pass_id);
                 if (render_pass_it == render_passes.end())
-                    return deserialiser.emitError("unknown render pass identifier '" + render_pass_id +
-                                                      "'",
+                    return deserialiser.emitError("unknown render pass identifier '" + render_pass_id + "'",
                         result.offsetOf("render_pass"), token_str);
                 builder.addCamera(slot, render_pass_it->second, scale, custom_size);
             }
-            builder.execution_steps[builder.execution_steps.size() - 1].name =
-                result.statement.identifier;
+            builder.execution_steps[builder.execution_steps.size() - 1].name = result.statement.identifier;
             step_identifiers[result.statement.identifier] =
                 static_cast<int>(builder.execution_steps.size()) - 1;
             return true;
@@ -417,12 +408,12 @@ Ref<RenderGraph> RenderGraph::deserialise(const std::string& name)
             return true;
         });
 
-    deserialiser.addStatementNamed(Deserialiser::NamedStatementSpec("PostProcess",
-                                       Deserialiser::STATEMENT_IDENTIFIER_REQUIRED, true)
-                                       .argument("shader", TokenReader::TOKEN_IDENTIFIER, true)
-                                       .argument("scale", TokenReader::TOKEN_FLOAT, false)
-                                       .argument("custom_size", TokenReader::TOKEN_VECTOR, false)
-                                       .argument("render_pass", TokenReader::TOKEN_IDENTIFIER, false),
+    deserialiser.addStatementNamed(
+        Deserialiser::NamedStatementSpec("PostProcess", Deserialiser::STATEMENT_IDENTIFIER_REQUIRED, true)
+            .argument("shader", TokenReader::TOKEN_IDENTIFIER, true)
+            .argument("scale", TokenReader::TOKEN_FLOAT, false)
+            .argument("custom_size", TokenReader::TOKEN_VECTOR, false)
+            .argument("render_pass", TokenReader::TOKEN_IDENTIFIER, false),
         [&](Deserialiser::NamedStatementResult result) -> bool
         {
             std::string shader_res;
@@ -450,14 +441,12 @@ Ref<RenderGraph> RenderGraph::deserialise(const std::string& name)
             {
                 auto render_pass_it = render_passes.find(render_pass_id);
                 if (render_pass_it == render_passes.end())
-                    return deserialiser.emitError("unknown render pass identifier '" + render_pass_id +
-                                                      "'",
+                    return deserialiser.emitError("unknown render pass identifier '" + render_pass_id + "'",
                         result.offsetOf("render_pass"), token_str);
                 builder.addPostProcess(shader_it->second, bindings, render_pass_it->second, scale,
                     custom_size);
             }
-            builder.execution_steps[builder.execution_steps.size() - 1].name =
-                result.statement.identifier;
+            builder.execution_steps[builder.execution_steps.size() - 1].name = result.statement.identifier;
             step_identifiers[result.statement.identifier] =
                 static_cast<int>(builder.execution_steps.size()) - 1;
             return true;

@@ -208,9 +208,19 @@ Ref<Mesh> Engine::loadMesh(const string& path)
     return it->second;
 }
 
-Ref<Sampler> Engine::makeSampler(const Sampler::Builder& builder)
+Ref<Sampler> Engine::getSampler(Sampler::Filter filter)
 {
-    return engine->premade_samplers[builder];
+    return engine->premade_samplers[{ filter, Sampler::ADDRESS_REPEAT }];
+}
+
+Ref<Sampler> Engine::getSampler(Sampler::Address address)
+{
+    return engine->premade_samplers[{ Sampler::FILTER_NEAREST, address }];
+}
+
+Ref<Sampler> Engine::getSampler(Sampler::Filter filter, Sampler::Address address)
+{
+    return engine->premade_samplers[{ filter, address }];
 }
 
 size_t Engine::pruneUnusedResources()
@@ -302,7 +312,7 @@ Engine::Engine()
 
     RenderServer::init();
     RenderServer::setIcon("res://engine/icon.png");    
-    Sampler::Builder builders[6] =
+    std::pair<Sampler::Filter, Sampler::Address> builders[6] =
     {
         { Sampler::FILTER_LINEAR,  Sampler::ADDRESS_REPEAT },
         { Sampler::FILTER_NEAREST, Sampler::ADDRESS_REPEAT },
@@ -311,8 +321,8 @@ Engine::Engine()
         { Sampler::FILTER_LINEAR,  Sampler::ADDRESS_CLAMP_EDGE },
         { Sampler::FILTER_NEAREST, Sampler::ADDRESS_CLAMP_EDGE },
     };
-    for (Sampler::Builder s : builders)
-        premade_samplers[s] = new Sampler(s);
+    for (auto s : builders)
+        premade_samplers[s] = new Sampler(s.first, s.second);
     
     Input::init();
 

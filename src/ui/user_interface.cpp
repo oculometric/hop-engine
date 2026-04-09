@@ -22,9 +22,9 @@ Ref<Material> UIStyle::makeMaterial()
     mat->setTexture(1, font->getAtlas().strong());
     mat->setTexture(2, font->getBoldAtlas().strong());
     mat->setTexture(3, ui_atlas);
-    mat->setSampler(1, Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST)));
-    mat->setSampler(2, Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST)));
-    mat->setSampler(3, Engine::makeSampler(Sampler::Builder().filter(Sampler::FILTER_NEAREST)));
+    mat->setSampler(1, Engine::getSampler(Sampler::FILTER_NEAREST));
+    mat->setSampler(2, Engine::getSampler(Sampler::FILTER_NEAREST));
+    mat->setSampler(3, Engine::getSampler(Sampler::FILTER_NEAREST));
     return mat;
 }
 

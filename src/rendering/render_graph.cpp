@@ -91,9 +91,7 @@ RenderGraph::RenderGraph(const Builder& config)
     passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough.glsl"),
         Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false),
         RenderServer::getFinalRenderPass());
-    passthrough->setSampler(0,
-        Engine::makeSampler(
-            Sampler::Builder().filter(config.screen_filtering).address(Sampler::ADDRESS_CLAMP_EDGE)));
+    passthrough->setSampler(0, Engine::getSampler(config.screen_filtering, Sampler::ADDRESS_CLAMP_EDGE));
     execution_steps = config.execution_steps;
     if (!config.execution_steps.empty())
         expected_extent = config.execution_steps[0].render_pass->getExtent();
@@ -316,8 +314,7 @@ void RenderGraph::rebuildBindings()
             }
             step.material->setTexture(texture_index, texture);
             step.material->setSampler(texture_index,
-                Engine::makeSampler(
-                    Sampler::Builder().filter(binding.filter_mode).address(binding.address_mode)));
+                Engine::getSampler(binding.filter_mode, binding.address_mode));
         }
     }
 }
