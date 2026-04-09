@@ -84,7 +84,9 @@ struct DrawCommand final
 	 * @return \code true\endcode if \code a\endcode should be ordered before
 	 * \code b\endcode, otherwise \code false\endcode.
 	 */
-	bool operator()(const DrawCommand& a, const DrawCommand& b) const;
+	static bool compare(const DrawCommand& a, const DrawCommand& b);
+
+    bool operator()(const DrawCommand& a, const DrawCommand& b) const;
 
 	DrawCommand() = default;
 	DrawCommand(const WeakRef<Material>& _material, const WeakRef<Mesh>& _mesh, const WeakRef<UniformBlock>& _uniforms = WeakRef<UniformBlock>())

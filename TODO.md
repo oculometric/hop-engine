@@ -2,6 +2,7 @@
 
 # v0.54
 - split framebuffer from render pass?? merge image creation from swapchain to render pass
+- deserialise functions should be able to take in a serial string directly
 - enforce proper error checking
 - remove type parameter from buffer bind function
 - document everything
@@ -9,13 +10,18 @@
     - engine.h
     - material.h
     - mesh.h
-    - render_graph.h
     - render_server.h
     - scene.h
     - texture.h
     - user_interface.h
     - eliminate vulkan_typedefs.h
     - license (happy bunny license) and copyright
+- document serial formats
+    - material
+    - render graph
+    - scene
+    - font
+    - node style
 - make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - switch to glslang for shader compilation

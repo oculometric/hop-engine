@@ -309,3 +309,23 @@ Scene::Scene(const string& name)
 
 	DBG_INFO("created new scene " + getOrigin());
 }
+
+bool DrawCommand::operator()(const DrawCommand& a, const DrawCommand& b) const
+{
+    return DrawCommand::compare(a, b);
+}
+
+bool DrawCommand::compare(const DrawCommand& a, const DrawCommand& b)
+{
+    if (a.draw_priority <= b.draw_priority)
+        return false;
+    if (a.material->getShader() > b.material->getShader())
+        return false;
+    if (a.material > b.material)
+        return false;
+    if (a.uniforms > b.uniforms)
+        return false;
+    if (a.mesh > b.mesh)
+        return false;
+    return true;
+}

@@ -279,18 +279,3 @@ void RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
 
     command_buffer->end();
 }
-
-bool DrawCommand::operator()(const DrawCommand& a, const DrawCommand& b) const
-{
-    if (a.draw_priority <= b.draw_priority)
-        return false;
-    if (a.material->getShader() > b.material->getShader())
-        return false;
-    if (a.material > b.material)
-        return false;
-    if (a.uniforms > b.uniforms)
-        return false;
-    if (a.mesh > b.mesh)
-        return false;
-    return true;
-}
