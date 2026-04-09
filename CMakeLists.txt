@@ -25,11 +25,11 @@ set(ENGINE_HOP "${CMAKE_BINARY_DIR}/engine.hop")
 # ================ EXECUTABLE TARGET 'package-tool' =======================================
 add_executable(package-tool
     "src/package-builder/package-builder.cpp"
-    "src/file/package.cpp"
+    "src/core/package.cpp"
     "src/rendering/binmesh_loading.cpp"
     "src/rendering/obj_loading.cpp"
-    "src/exec.cpp"
-    "src/debug/debug.cpp"
+    "src/misc/exec.cpp"
+    "src/core/debug.cpp"
 )
 
 target_include_directories(package-tool PRIVATE
@@ -72,7 +72,7 @@ list(FILTER SRC_FILES EXCLUDE REGEX
     "src/package-builder/package-builder.cpp"
 )
 list(FILTER SRC_FILES EXCLUDE REGEX
-    ".*main.cpp"
+    "src/editor/main.cpp"
 )
 set(INC_DIRS
     "lib/inc"
@@ -141,7 +141,7 @@ else()
 endif()
 
 # ================ EXECUTABLE TARGET 'hop-editor' =========================================
-add_executable(hop-editor "src/main.cpp")
+add_executable(hop-editor "src/editor/main.cpp")
 
 target_link_libraries(hop-editor hop-engine)
 
