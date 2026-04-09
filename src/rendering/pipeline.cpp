@@ -1,11 +1,11 @@
 #include "material.h"
 
 #include <array>
-#include <vulkan//vulkan.hpp>
+#include <vulkan/vulkan.hpp>
 
 #include "command_buffer.h"
 #include "render_server.h"
-#include "mesh.h"
+#include "vulkan_helpers.h"
 #include "swapchain.h"
 
 using namespace HopEngine;
@@ -33,10 +33,10 @@ Pipeline::Pipeline(const Ref<Shader>& shader, const Builder& config, const Ref<R
 
     VkPipelineVertexInputStateCreateInfo vertex_input_create_info{ };
     vertex_input_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    auto binding_description = Mesh::getBindingDescription();
+    auto binding_description = getVertexBindingDescription();
     vertex_input_create_info.vertexBindingDescriptionCount = 1;
     vertex_input_create_info.pVertexBindingDescriptions = &binding_description;
-    auto attribute_descriptions = Mesh::getAttributeDescriptions();
+    auto attribute_descriptions = getVertexAttributeDescriptions();
     vertex_input_create_info.vertexAttributeDescriptionCount = static_cast<uint32_t>(attribute_descriptions.size());
     vertex_input_create_info.pVertexAttributeDescriptions = attribute_descriptions.data();
 

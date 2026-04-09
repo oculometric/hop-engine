@@ -1,24 +1,30 @@
 #include "mesh.h"
-
-#include <sstream>
 #include "package.h"
 
-using namespace HopEngine;
-using namespace std;
+#include <sstream>
 
-struct FaceCorner { uint16_t co; uint16_t uv; uint16_t vn; };
+using namespace HopEngine;
+
+struct FaceCorner
+{
+    uint16_t co;
+    uint16_t uv;
+    uint16_t vn;
+};
 
 // splits a formatted OBJ face corner into its component indices
-static FaceCorner splitOBJFaceCorner(const string& str)
+static FaceCorner splitOBJFaceCorner(const std::string& str)
 {
-    FaceCorner fci = { 0,0,0 };
+    FaceCorner fci               = { 0, 0, 0 };
     const size_t first_break_ind = str.find('/');
-    fci.co = static_cast<uint16_t>(stoi(str.substr(0, first_break_ind)) - 1);
-    if (first_break_ind == string::npos) return fci;
+    fci.co                       = static_cast<uint16_t>(stoi(str.substr(0, first_break_ind)) - 1);
+    if (first_break_ind == std::string::npos) return fci;
     const size_t second_break_ind = str.find('/', first_break_ind + 1);
     if (second_break_ind != first_break_ind + 1)
-        fci.uv = static_cast<uint16_t>(stoi(str.substr(first_break_ind + 1, second_break_ind - first_break_ind)) - 1);
-    fci.vn = static_cast<uint16_t>(stoi(str.substr(second_break_ind + 1, str.find('/', second_break_ind + 1) - second_break_ind)) - 1);
+        fci.uv = static_cast<uint16_t>(
+            stoi(str.substr(first_break_ind + 1, second_break_ind - first_break_ind)) - 1);
+    fci.vn = static_cast<uint16_t>(
+        stoi(str.substr(second_break_ind + 1, str.find('/', second_break_ind + 1) - second_break_ind)) - 1);
 
     return fci;
 }
@@ -30,7 +36,8 @@ struct FaceCornerReference
     uint16_t transferred_vert_index;
 };
 
-static glm::vec3 computeTangent(glm::vec3 co_a, glm::vec3 co_b, glm::vec3 co_c, glm::vec2 uv_a, glm::vec2 uv_b, glm::vec2 uv_c)
+static glm::vec3 computeTangent(glm::vec3 co_a, glm::vec3 co_b, glm::vec3 co_c, glm::vec2 uv_a,
+    glm::vec2 uv_b, glm::vec2 uv_c)
 {
     // vector from the target vertex to the second vertex
     glm::vec3 ab = { co_b.x - co_a.x, co_b.y - co_a.y, co_b.z - co_a.z };
@@ -43,48 +50,49 @@ static glm::vec3 computeTangent(glm::vec3 co_a, glm::vec3 co_b, glm::vec3 co_c, 
     // matrix representing UVs
     glm::mat3 uv_mat = glm::mat3(glm::vec3(uv_ab, 0), glm::vec3(uv_ac, 0), { 0, 0, 1 });
     // matrix representing vectors between vertices
-    glm::mat3 vec_mat = glm::mat3(ab, ac, { 0,0,0 });
+    glm::mat3 vec_mat = glm::mat3(ab, ac, { 0, 0, 0 });
 
-    // we should be able to express the vectors from A->B and A->C with reference to the difference in UV coordinate and the tangent and bitangent:
+    // we should be able to express the vectors from A->B and A->C with reference to the difference in UV
+    // coordinate and the tangent and bitangent:
     //
     // AB = (duv_ab.x * T) + (duv_ab.y * B)
     // AC = (duv_ac.x * T) + (duv_ac.y * B)
-    // 
+    //
     // this gives us 6 simultaneous equations for the XYZ coordinates of the tangent and bitangent
     // these can be expressed and solved with matrices:
-    // 
+    //
     // [ AB.x  AC.x  0 ]     [ T.x  B.x  N.x ]   [ duv_ab.x  duv_ac.x  0 ]
     // [ AB.y  AC.y  0 ]  =  [ T.y  B.y  N.y ] * [ duv_ab.y  duv_ac.y  0 ]
     // [ AB.z  AC.z  0 ]     [ T.z  B.z  N.z ]   [ 0         0         1 ]
     //
 
-    vec_mat = (vec_mat) * glm::inverse((uv_mat));
+    vec_mat = (vec_mat)*glm::inverse((uv_mat));
 
     return glm::normalize(glm::vec3{ vec_mat[0] }); // extract tangent
 }
 
-bool Mesh::readOBJ(const DataBlock& data, vector<Vertex>& verts, vector<uint16_t>& inds)
+bool Mesh::readOBJ(const DataBlock& data, std::vector<Vertex>& verts, std::vector<uint16_t>& inds)
 {
-    const auto string_data = string(reinterpret_cast<const char*>(data.data()), data.size());
-    auto stream = stringstream(string_data);
+    const auto string_data = std::string(reinterpret_cast<const char*>(data.data()), data.size());
+    auto stream            = std::stringstream(string_data);
 
     // vectors to load data into
-    vector<glm::vec3> tmp_co;
-    vector<glm::vec3> tmp_cl;
-    vector<FaceCorner> tmp_fc;
-    vector<glm::vec2> tmp_uv;
-    vector<glm::vec3> tmp_vn;
+    std::vector<glm::vec3> tmp_co;
+    std::vector<glm::vec3> tmp_cl;
+    std::vector<FaceCorner> tmp_fc;
+    std::vector<glm::vec2> tmp_uv;
+    std::vector<glm::vec3> tmp_vn;
 
     // temporary locations for reading data to
-    string tmps;
+    std::string tmps;
     glm::vec3 tmp3;
     glm::vec3 tmp2;
 
     // repeat for every line in the file
-    string line;
+    std::string line;
     while (getline(stream, line))
     {
-        auto file = stringstream(line);
+        auto file = std::stringstream(line);
         file >> tmps;
         if (tmps == "v")
         {
@@ -133,9 +141,12 @@ bool Mesh::readOBJ(const DataBlock& data, vector<Vertex>& verts, vector<uint16_t
         }
     }
 
-    // for each coordinate, stores a list of all the times it has been used by a face corner, and what the normal/uv index was for that face corner
-    // this allows us to tell when we should split a vertex (i.e. if it has already been used by another face corner but which had a different normal and/or a different uv)
-    vector<vector<FaceCornerReference>> fc_normal_uses(tmp_co.size(), vector<FaceCornerReference>());
+    // for each coordinate, stores a list of all the times it has been used by a face corner, and what the
+    // normal/uv index was for that face corner this allows us to tell when we should split a vertex (i.e.
+    // if it has already been used by another face corner but which had a different normal and/or a
+    // different uv)
+    std::vector<std::vector<FaceCornerReference>> fc_normal_uses(tmp_co.size(),
+        std::vector<FaceCornerReference>());
 
     verts.clear();
     inds.clear();
@@ -143,28 +154,25 @@ bool Mesh::readOBJ(const DataBlock& data, vector<Vertex>& verts, vector<uint16_t
     for (auto [co, uv, vn] : tmp_fc)
     {
         bool found_matching_vertex = false;
-        uint16_t match = 0;
+        uint16_t match             = 0;
         for (auto [normal_index, uv_index, transferred_vert_index] : fc_normal_uses[co])
         {
             if (normal_index == vn && uv_index == uv)
             {
                 found_matching_vertex = true;
-                match = transferred_vert_index;
+                match                 = transferred_vert_index;
                 break;
             }
         }
 
-        if (found_matching_vertex)
-            inds.push_back(match);
+        if (found_matching_vertex) inds.push_back(match);
         else
         {
             Vertex new_vert;
             new_vert.position = glm::vec4(tmp_co[co], 1);
-            new_vert.colour = glm::vec4(tmp_cl[co], 0);
-            if (vn < tmp_vn.size())
-                new_vert.normal = glm::vec4(tmp_vn[vn], 0);
-            if (uv < tmp_uv.size())
-                new_vert.uv = tmp_uv[uv];
+            new_vert.colour   = glm::vec4(tmp_cl[co], 0);
+            if (vn < tmp_vn.size()) new_vert.normal = glm::vec4(tmp_vn[vn], 0);
+            if (uv < tmp_uv.size()) new_vert.uv = tmp_uv[uv];
 
             uint16_t new_index = static_cast<uint16_t>(verts.size());
             fc_normal_uses[co].push_back(FaceCornerReference{ vn, uv, new_index });
@@ -186,8 +194,8 @@ bool Mesh::readOBJ(const DataBlock& data, vector<Vertex>& verts, vector<uint16_t
             const glm::vec3 v1 = verts[i1].position;
             const glm::vec3 v2 = verts[i2].position;
 
-            glm::vec3 e01 = v1 - v0;
-            glm::vec3 e02 = v2 - v0;
+            glm::vec3 e01    = v1 - v0;
+            glm::vec3 e02    = v2 - v0;
             glm::vec4 normal = glm::vec4(glm::cross(e01, e02), 0);
 
             verts[i0].normal += normal;
@@ -195,31 +203,41 @@ bool Mesh::readOBJ(const DataBlock& data, vector<Vertex>& verts, vector<uint16_t
             verts[i2].normal += normal;
         }
 
-        for (Vertex& vert : verts)
-            vert.normal = glm::normalize(vert.normal);
+        for (Vertex& vert : verts) vert.normal = glm::normalize(vert.normal);
     }
 
     // compute tangents
-    vector<bool> touched = vector<bool>(verts.size(), false);
+    std::vector<bool> touched = std::vector<bool>(verts.size(), false);
     for (uint32_t tri = 0; tri < inds.size() / 3; tri++)
     {
-        uint16_t v0 = inds[(tri * 3) + 0]; Vertex f0 = verts[v0];
-        uint16_t v1 = inds[(tri * 3) + 1]; Vertex f1 = verts[v1];
-        uint16_t v2 = inds[(tri * 3) + 2]; Vertex f2 = verts[v2];
+        uint16_t v0 = inds[(tri * 3) + 0];
+        Vertex f0   = verts[v0];
+        uint16_t v1 = inds[(tri * 3) + 1];
+        Vertex f1   = verts[v1];
+        uint16_t v2 = inds[(tri * 3) + 2];
+        Vertex f2   = verts[v2];
 
-        if (!touched[v1]) verts[v1].tangent = glm::vec4(computeTangent(f1.position, f0.position, f2.position, f1.uv, f0.uv, f2.uv), 1);
-        if (!touched[v2]) verts[v2].tangent = glm::vec4(computeTangent(f2.position, f0.position, f1.position, f2.uv, f0.uv, f1.uv), 1);
-        if (!touched[v0]) verts[v0].tangent = glm::vec4(computeTangent(f0.position, f1.position, f2.position, f0.uv, f1.uv, f2.uv), 1);
+        if (!touched[v1])
+            verts[v1].tangent =
+                glm::vec4(computeTangent(f1.position, f0.position, f2.position, f1.uv, f0.uv, f2.uv), 1);
+        if (!touched[v2])
+            verts[v2].tangent =
+                glm::vec4(computeTangent(f2.position, f0.position, f1.position, f2.uv, f0.uv, f1.uv), 1);
+        if (!touched[v0])
+            verts[v0].tangent =
+                glm::vec4(computeTangent(f0.position, f1.position, f2.position, f0.uv, f1.uv, f2.uv), 1);
 
-        touched[v0] = true; touched[v1] = true; touched[v2] = true;
+        touched[v0] = true;
+        touched[v1] = true;
+        touched[v2] = true;
     }
 
     // transform from Z back Y up space into Z up Y forward space
     for (Vertex& fv : verts)
     {
         fv.position = { fv.position.x, -fv.position.z, fv.position.y, 1 };
-        fv.normal = { fv.normal.x, -fv.normal.z, fv.normal.y, 0 };
-        fv.tangent = { fv.tangent.x, -fv.tangent.z, fv.tangent.y, 0 };
+        fv.normal   = { fv.normal.x, -fv.normal.z, fv.normal.y, 0 };
+        fv.tangent  = { fv.tangent.x, -fv.tangent.z, fv.tangent.y, 0 };
     }
 
     return true;

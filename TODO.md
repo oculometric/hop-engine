@@ -4,12 +4,13 @@
 - split framebuffer from render pass?? merge image creation from swapchain to render pass
 - deserialise functions should be able to take in a serial string directly
 - enforce proper error checking
+- eliminate 'DEFAULT_VERTEX' pragma from shader
+- make UVs a vec3 not a vec2
 - remove type parameter from buffer bind function
 - document everything
     - basic_components.h
     - engine.h
     - material.h
-    - mesh.h
     - render_server.h
     - scene.h
     - texture.h
@@ -31,6 +32,7 @@
     - package manager should reduce copying of data blocks
     - needs ability to create directories (including automatically when writing a file)
 
+# v0.55
 - the ui update
     - ui canvas
         - canvas can be in 'world' mode, or 'view' mode [2]
