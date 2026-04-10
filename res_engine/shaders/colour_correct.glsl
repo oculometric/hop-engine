@@ -23,7 +23,7 @@ layout(set = 2, binding = 2) uniform Params
 
 void fragment()
 {
-    vec3 colour = texture(tex, frag.uv).rgb;
+    vec3 colour = texture(tex, frag.uv.xy).rgb;
     if (use_lut > 0.5f)
     colour = sampleLut(colour, lut);
     out_colour = vec4(gammaAdjust(colour, gamma, exposure, offset), 1);

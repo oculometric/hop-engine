@@ -28,7 +28,7 @@ float[81] gaussian_kernel_9 = float[](
     kernel_factor_inv = 1.0f / kernel_factor_inv; \
      \
     vec4 colour = vec4(0, 0, 0, 0); \
-    vec2 uv = frag.uv - (off * floor(kernel_size / 2)); \
+    vec2 uv = frag.uv.xy - (off * floor(kernel_size / 2)); \
     vec2 uv_start = uv; \
     int i = 0; \
     for (int x = 0; x < kernel_size; ++x) \

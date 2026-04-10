@@ -15,7 +15,7 @@ layout(set = 2, binding = 0) uniform sampler2D image;
 
 void fragment()
 {
-    vec2 uv = frag.uv;
+    vec2 uv = frag.uv.xy;
     if (texture(image, uv).a < 0.5f)
         discard;
 

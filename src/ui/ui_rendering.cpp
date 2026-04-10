@@ -353,24 +353,24 @@ void UIRenderer::updateQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 
     // top left
     vertices[backing.first_vertex + 0] = Mesh::Vertex{
         { p1.x, p1.y, 0, 1 },
-        colour, normal, tangent, uv_tl
+        colour, normal, tangent, { uv_tl, 0 }
     };
     // top right
     vertices[backing.first_vertex + 1] = Mesh::Vertex{
         { p2.x, p2.y, 0, 1 },
         colour, normal, tangent,
-        glm::vec2{ uv_br.x, uv_tl.y }
+        { uv_br.x, uv_tl.y, 0 }
     };
     // bottom left
     vertices[backing.first_vertex + 2] = Mesh::Vertex{
         { p3.x, p3.y, 0, 1 },
         colour, normal, tangent,
-        glm::vec2{ uv_tl.x, uv_br.y }
+        { uv_tl.x, uv_br.y, 0 }
     };
     // bottom right
     vertices[backing.first_vertex + 3] = Mesh::Vertex{
         { p4.x, p4.y, 0, 1 },
-        colour, normal, tangent, uv_br
+        colour, normal, tangent, { uv_br, 0 }
     };
 
     auto& _indices = indices[backing.z];

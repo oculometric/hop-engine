@@ -13,7 +13,7 @@ layout(set = 2, binding = 0) uniform sampler2D text_atlas;
 
 void fragment()
 {
-    vec2 uv = frag.uv;
+    vec2 uv = frag.uv.xy;
     if (texture(text_atlas, uv).r < 0.5f)
         discard;
 

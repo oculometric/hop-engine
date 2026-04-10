@@ -121,24 +121,24 @@ void NodeView::addQuadRaw(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4
     // top left
     vertices.push_back(Mesh::Vertex{
         { p1.x, -p1.y, 0, 1 },
-        colour_value, normal_value, tangent_value, uv_tl
+        colour_value, normal_value, tangent_value, { uv_tl, 0 }
     });
     // top right
     vertices.push_back(Mesh::Vertex{
         { p2.x, -p2.y, 0, 1 },
         colour_value, normal_value, tangent_value,
-        glm::vec2{ uv_br.x, uv_tl.y }
+        { uv_br.x, uv_tl.y, 0 }
     });
     // bottom left
     vertices.push_back(Mesh::Vertex{
         { p3.x, -p3.y, 0, 1 },
         colour_value, normal_value, tangent_value,
-        glm::vec2{ uv_tl.x, uv_br.y }
+        { uv_tl.x, uv_br.y, 0 }
     });
     // bottom right
     vertices.push_back(Mesh::Vertex{
         { p4.x, -p4.y, 0, 1 },
-        colour_value, normal_value, tangent_value, uv_br
+        colour_value, normal_value, tangent_value, { uv_br, 0 }
     });
 
     indices.push_back(v_off + 0);

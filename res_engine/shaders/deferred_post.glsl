@@ -18,16 +18,16 @@ layout(set = 2, binding = 4) uniform sampler2D depth_tex;
 
 void fragment()
 {
-    vec4 colour_val = texture(colour_tex, frag.uv);
-    vec4 param_val = texture(param_tex, frag.uv);
+    vec4 colour_val = texture(colour_tex, frag.uv.xy);
+    vec4 param_val = texture(param_tex, frag.uv.xy);
     if (param_val.w < 0.5f)
     {
         out_colour = colour_val;
         return;
     }
-    vec4 normal_val = texture(normal_tex, frag.uv);
-    vec4 specular_val = texture(custom_tex, frag.uv);
-    float z = texture(depth_tex, frag.uv).r;
+    vec4 normal_val = texture(normal_tex, frag.uv.xy);
+    vec4 specular_val = texture(custom_tex, frag.uv.xy);
+    float z = texture(depth_tex, frag.uv.xy).r;
     vec4 clip_position = vec4(frag.position.xy, z, 1.0f);
     vec4 view_position = scene.clip_to_view * clip_position;
     view_position /= view_position.w;

@@ -29,7 +29,7 @@ const vec3 shadow = vec3(0.194f, 0.129f, 0.076f);
 
 void fragment()
 {
-    vec4 col = texture(albedo, frag.uv);
+    vec4 col = texture(albedo, frag.uv.xy);
     if (col.a < 0.5f)
         discard;
 

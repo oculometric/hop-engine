@@ -26,7 +26,7 @@ public:
         glm::vec4 colour;
         glm::vec4 normal;
         glm::vec4 tangent;
-        glm::vec2 uv;
+        glm::vec3 uv;
     };
 
 private:

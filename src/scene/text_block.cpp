@@ -44,10 +44,10 @@ void TextComponent::updateGeometry()
         glm::vec2 uv_base = font->getGlyphUVOffset(c);
         glm::vec2 uv_size = font->getGlyphUVSize();
 
-        glm::vec2 uv_bl = flipUV(uv_base + glm::vec2{ 0, uv_size.y });
-        glm::vec2 uv_br = flipUV(uv_base + uv_size);
-        glm::vec2 uv_tl = flipUV(uv_base);
-        glm::vec2 uv_tr = flipUV(uv_base + glm::vec2{ uv_size.x, 0 });
+        glm::vec3 uv_bl = { flipUV(uv_base + glm::vec2{ 0, uv_size.y }), 0 };
+        glm::vec3 uv_br = { flipUV(uv_base + uv_size), 0 };
+        glm::vec3 uv_tl = { flipUV(uv_base), 0 };
+        glm::vec3 uv_tr = { flipUV(uv_base + glm::vec2{ uv_size.x, 0 }), 0 };
 
         glm::vec2 char_size = font->getGlyphSize() * 0.02f;
         float top_inset = 0;

@@ -74,7 +74,7 @@ void fragment()
 
     if (draw_mode == 0)         // text mode
     {
-        vec2 uv = frag.uv;
+        vec2 uv = frag.uv.xy;
         int text_mode = int(frag.normal.y);
         bool underline_flag = (text_mode & 2) > 0;
         bool strikethrough_flag = (text_mode & 4) > 0;
@@ -113,7 +113,7 @@ void fragment()
         vec3 atlas_size = vec3(textureSize(ui_atlas, 0));
         uint borders = uint(frag.normal.z);
         int slice = int(frag.normal.y);
-        vec2 uv = nineSliceUV(frag.uv, quad_size, atlas_size.xy, bool(borders & 1), bool(borders & 2), bool(borders & 4), bool(borders & 8));
+        vec2 uv = nineSliceUV(frag.uv.xy, quad_size, atlas_size.xy, bool(borders & 1), bool(borders & 2), bool(borders & 4), bool(borders & 8));
         vec4 colour = texture(ui_atlas, vec3(uv, float(slice) / atlas_size.z));
         if (colour.a < 0.5f)
             discard;
@@ -125,7 +125,7 @@ void fragment()
     else if (draw_mode == 2)    // simple uv mode
     {
         vec3 atlas_size = vec3(textureSize(ui_atlas, 0));
-        vec2 uv = frag.uv;
+        vec2 uv = frag.uv.xy;
         int slice = int(frag.normal.y);
         vec4 colour = texture(ui_atlas, vec3(uv, float(slice) / atlas_size.z));
         if (colour.a < 0.5f)

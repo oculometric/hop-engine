@@ -37,7 +37,7 @@ vec3 calculateMappedNormal(vec3 normal, vec3 tangent, vec4 normal_from_texture)
 #include "dither.glsl"
 
 #define PBR_SETUP \
-    vec2 uv = use_triplanar > 0 ? calculateTriplanar(frag.position.xyz, frag.normal.xyz) * triplanar_scale : frag.uv; \
+    vec2 uv = use_triplanar > 0 ? calculateTriplanar(frag.position.xyz, frag.normal.xyz) * triplanar_scale : frag.uv.xy; \
     vec4 albedo_val = texture(albedo_tex, uv); \
     if (dither_4x4(albedo_val.a, pixelCoord((gl_FragCoord.xy * 0.5f) + 0.5f, scene.viewport_size)) < 1) \
         discard; \

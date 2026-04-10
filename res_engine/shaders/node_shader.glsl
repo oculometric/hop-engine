@@ -96,7 +96,7 @@ vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size, bool top_border, bool
 
 void fragment()
 {
-    vec2 uv = frag.uv;
+    vec2 uv = frag.uv.xy;
     float render_mode = frag.normal.z;
     vec2 quad_size = frag.normal.xy;
 

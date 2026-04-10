@@ -40,7 +40,7 @@ std::array<VkVertexInputAttributeDescription, 5> HopEngine::getVertexAttributeDe
 
     attributes[4].binding  = 0;
     attributes[4].location = 4;
-    attributes[4].format   = VK_FORMAT_R32G32_SFLOAT;
+    attributes[4].format   = VK_FORMAT_R32G32B32_SFLOAT;
     attributes[4].offset   = offsetof(Mesh::Vertex, uv);
 
     return attributes;

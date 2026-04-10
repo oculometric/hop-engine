@@ -172,7 +172,7 @@ bool Mesh::readOBJ(const DataBlock& data, std::vector<Vertex>& verts, std::vecto
             new_vert.position = glm::vec4(tmp_co[co], 1);
             new_vert.colour   = glm::vec4(tmp_cl[co], 0);
             if (vn < tmp_vn.size()) new_vert.normal = glm::vec4(tmp_vn[vn], 0);
-            if (uv < tmp_uv.size()) new_vert.uv = tmp_uv[uv];
+            if (uv < tmp_uv.size()) new_vert.uv = glm::vec3{ tmp_uv[uv], 0 };
 
             uint16_t new_index = static_cast<uint16_t>(verts.size());
             fc_normal_uses[co].push_back(FaceCornerReference{ vn, uv, new_index });

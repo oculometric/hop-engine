@@ -20,5 +20,5 @@ layout(set = 2, binding = 2) uniform AOParams
 
 void fragment()
 {
-    out_colour = vec4(vec3(computeSSAO(1.0f, 2.0f, 0.025f, frag.uv, frag.position.xy, normal_texture, depth_texture, samples)), 1);
+    out_colour = vec4(vec3(computeSSAO(1.0f, 2.0f, 0.025f, frag.uv.xy, frag.position.xy, normal_texture, depth_texture, samples)), 1);
 }

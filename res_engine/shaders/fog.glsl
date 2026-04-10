@@ -22,7 +22,7 @@ layout(set = 2, binding = 2) uniform MaterialUniforms
 
 void fragment()
 {
-    vec3 scene_colour = texture(screen_texture, frag.uv).rgb;
+    vec3 scene_colour = texture(screen_texture, frag.uv.xy).rgb;
     if (fog_start == fog_end || fog_exponent == 0)
     {
         out_colour = vec4(scene_colour, 1);

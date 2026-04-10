@@ -2,23 +2,21 @@
 
 # v0.54
 - eliminate vulkan_typedefs.h
-- make validation layers a command line option
 - clean up device selection and extension checking
 - enforce proper error checking
+- make validation layers a command line option
 
-- make UVs a vec3 not a vec2
 - eliminate 'DEFAULT_VERTEX' pragma from shader
 - draw command buffers should have a default pipeline layout (dummy descriptor set 2)
 - remove type parameter from buffer bind function
+- make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
+- deserialise functions should be able to take in a serial string directly
 
 - split framebuffer from render pass?? merge image creation from swapchain to render pass
-- deserialise functions should be able to take in a serial string directly
 - document everything
-    - basic_components.h
     - engine.h
     - material.h
     - scene.h
-    - texture.h
     - user_interface.h
     - license (happy bunny license) and copyright
 - document serial formats
@@ -27,7 +25,6 @@
     - scene
     - font
     - node style
-- make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - switch to glslang for shader compilation
 - package manager improvements
@@ -63,6 +60,7 @@
         - use the generic user interface shader
 
 - make local/global transform from forward/up vectors (generally complete the transform functionality) [H]
+- 3D scene gizmos (camera, light, mesh bounds, etc)
 
 # v0.60
 - interactive node editor

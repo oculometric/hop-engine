@@ -18,6 +18,6 @@ layout(set = 2, binding = 0) uniform sampler2D tex;
 
 void fragment()
 {
-    out_colour = vec4(texture(tex, frag.uv).rgb, 1);
+    out_colour = vec4(texture(tex, frag.uv.xy).rgb, 1);
     out_params.w = 0.0f;
 }

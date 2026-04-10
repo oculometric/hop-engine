@@ -230,7 +230,7 @@ layout(set = 0, binding = 0) uniform SceneUniforms
 	vec4 colour;
 	vec4 normal;
 	vec4 tangent;
-	vec2 uv;
+	vec3 uv;
 };
 
 )VOGON";
@@ -252,7 +252,7 @@ string Shader::preprocessVertex(const string& common_code, const string& path)
 layout(location = 1) in vec4 in_colour;
 layout(location = 2) in vec4 in_normal;
 layout(location = 3) in vec4 in_tangent;
-layout(location = 4) in vec2 in_uv;)VOGON";
+layout(location = 4) in vec3 in_uv;)VOGON";
 	static const string vertex_input_pragma = "#pragma DEFAULT_VERTEX";
 	size_t vertex_input_pragma_pos = result_code.find(vertex_input_pragma);
 	if (vertex_input_pragma_pos > vert_func_pos && vertex_input_pragma_pos != string::npos)

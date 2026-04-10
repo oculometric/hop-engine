@@ -20,15 +20,15 @@ void fragment()
 {
     if (display_depth == 1)
     {
-        float d = texture(screen_texture, frag.uv).r;
+        float d = texture(screen_texture, frag.uv.xy).r;
         float depth = scene.near_far.x * scene.near_far.y / (scene.near_far.y + d * (scene.near_far.x - scene.near_far.y));
         out_colour = vec4(vec3(depth), 1);
     }
     else if (display_depth == 2)
     {
-        float d = texture(stencil_texture, frag.uv).r * 16.0f;
+        float d = texture(stencil_texture, frag.uv.xy).r * 16.0f;
         out_colour = vec4(vec3(d), 1);
     }
     else
-    out_colour = vec4(texture(screen_texture, frag.uv).rgb, 1);
+    out_colour = vec4(texture(screen_texture, frag.uv.xy).rgb, 1);
 }
