@@ -63,8 +63,8 @@ Ref<Mesh> Mesh::loadMesh(const std::string& path)
 void Mesh::draw(WeakRef<DrawCommandBuffer> command_buffer)
 {
     if (!vertex_buffer || !index_buffer) return;
-    vertex_buffer->bind(command_buffer, 0);
-    index_buffer->bind(command_buffer, 1);
+    vertex_buffer->bind(command_buffer);
+    index_buffer->bind(command_buffer);
     command_buffer->drawMeshInternal(getIndexCount());
 }
 

@@ -37,8 +37,9 @@ public:
     };
 
 private:
-    GPUHandle buffer   = nullptr; // actual GPU buffer object
-    GPUHandle memory   = nullptr; // GPU object for the memory allocated to the buffer
+    GPUHandle buffer = nullptr;   // actual GPU buffer object
+    GPUHandle memory = nullptr;   // GPU object for the memory allocated to the buffer
+    Usage usage;                  // usage flags passed at initialisation
     size_t buffer_size = 0;       // size of the buffer in bytes
     void* mapped       = nullptr; // pointer to host-accessible version of device memory
 
@@ -49,11 +50,12 @@ public:
      * for the specified usage type and properties. these values must be set correctly
      * or you will receive Vulkan validation errors and other bad omens.
      * @param size required size of the buffer. final buffer may be bigger due to alignment.
-     * @param usage intended usage. multiple may be specified.
+     * @param buffer_usage intended usage. multiple may be specified, although `BUFFER_USAGE_VERTEX` and
+     * `BUFFER_USAGE_INDEX` are incompatible.
      * @param properties required properties, such as being accessible from the CPU. multiple
      * may be specified.
      */
-    Buffer(size_t size, Usage usage, MemoryProperties properties);
+    Buffer(size_t size, Usage buffer_usage, MemoryProperties properties);
     ~Buffer();
 
     /**
@@ -91,12 +93,11 @@ public:
 
     /**
      * @brief binds the buffer for rendering in a command buffer, either as a vertex or
-     * index buffer.
-     * // TODO: eliminate type, look at usage bits to figure it out!
+     * index buffer. usage bits are used to determine whether the buffer is bound as a vertex or index
+     * buffer.
      * @param command_buffer command buffer to issue a bind command into.
-     * @param type 0 to bind as a vertex buffer, 1 to bind as an index buffer.
      */
-    void bind(WeakRef<DrawCommandBuffer> command_buffer, int type);
+    void bind(WeakRef<DrawCommandBuffer> command_buffer);
 };
 
 ENUM_OPERATOR(Buffer::Usage)

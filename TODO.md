@@ -7,7 +7,6 @@
 - make validation layers a command line option
 
 - draw command buffers should have a default pipeline layout (dummy descriptor set 2)
-- remove type parameter from buffer bind function
 - make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
 - deserialise functions should be able to take in a serial string directly
 

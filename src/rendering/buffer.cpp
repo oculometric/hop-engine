@@ -23,12 +23,20 @@ static constexpr VkMemoryPropertyFlagBits vulkan_memory_props[4] = { VK_MEMORY_P
 TO_STRING_IMPL_BITFLAGS(MemoryProperties, 4,
     VARGS("DEVICE_LOCAL", "HOST_VISIBLE", "HOST_COHERENT", "HOST_CACHED"));
 
-Buffer::Buffer(size_t size, const Usage usage, const MemoryProperties properties)
+Buffer::Buffer(size_t size, const Usage buffer_usage, const MemoryProperties properties)
 {
     if (size == 0)
     {
         DBG_ERROR("buffer size was zero, this is not allowed");
         size = 1;
+    }
+
+    usage = buffer_usage;
+    if ((usage & BUFFER_USAGE_VERTEX) && (usage & BUFFER_USAGE_INDEX))
+    {
+        DBG_ERROR(
+            "buffers cannot have both vertex and index usage flags, defaulting to BUFFER_USAGE_VERTEX");
+        usage = static_cast<Usage>(usage & (~BUFFER_USAGE_INDEX));
     }
 
     // vulkan buffer creation
@@ -141,9 +149,11 @@ void Buffer::copyToBuffer(const Ref<Buffer>& other) const
     cmd_buf->submit();
 }
 
-void Buffer::bind(WeakRef<DrawCommandBuffer> command_buffer, int type)
+void Buffer::bind(WeakRef<DrawCommandBuffer> command_buffer)
 {
-    if (type == 0) command_buffer->bindVertexBuffer(buffer);
-    else if (type == 1)
+    if (usage & BUFFER_USAGE_VERTEX) command_buffer->bindVertexBuffer(buffer);
+    else if (usage & BUFFER_USAGE_INDEX)
         command_buffer->bindIndexBuffer(buffer);
+    else
+        DBG_ERROR("attempt to bind buffer, but it had neither vertex nor index usage bits set");
 }
