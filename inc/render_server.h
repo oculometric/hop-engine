@@ -6,7 +6,6 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <optional>
-#include <set>
 #include <vector>
 
 struct GLFWwindow;
@@ -261,6 +260,20 @@ private:
      * physical device to use.
      */
     void createVulkan();
+    /**
+     * @brief creates Vulkan instance.
+     * @param debug if `true` attempts to enable validation layers and the debug messenger extension.
+     */
+    void createInstance(bool debug);
+    /**
+     * @brief queries and scores a physical device based on its capabilities, properties, extensions, etc.
+     * devices with score of 0 should not be used, as they do not meet requirements.
+     */
+    static int queryPhysicalDevice(GPUHandle device, std::vector<const char*> extensions);
+    /**
+     * @brief selects a physical device and creates the logical device on top of it. also extracts queues.
+     */
+    void createDevice();
     /**
      * @brief requests information from the specified physical device about which queues are available on
      * the device, and what their indices are.

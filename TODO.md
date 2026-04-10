@@ -2,7 +2,6 @@
 
 # v0.54
 - eliminate vulkan_typedefs.h
-- clean up device selection and extension checking
 - enforce proper error checking
 - make validation layers a command line option
 

@@ -15,25 +15,8 @@
 
 #include <GLFW/glfw3.h>
 
-#define VK_DEBUG
-
 using namespace HopEngine;
 
-static const std::vector<const char*> required_validation_layers = {
-#if defined(VK_DEBUG)
-    "VK_LAYER_KHRONOS_validation"
-#endif
-};
-
-static const std::vector<const char*> required_instance_extensions = {
-#if defined(VK_DEBUG)
-    VK_EXT_DEBUG_UTILS_EXTENSION_NAME
-#endif
-};
-
-static const std::vector<const char*> required_extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-
-#if defined(VK_DEBUG)
 static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type,
     const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void* user_data)
@@ -57,7 +40,6 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
 
     return VK_FALSE;
 }
-#endif
 
 void RenderServer::waitIdle() { vkDeviceWaitIdle(static_cast<VkDevice>(getInstance()->device)); }
 
@@ -121,207 +103,15 @@ void RenderServer::queueFree(std::function<void()> destructor)
 
 void RenderServer::createVulkan()
 {
-    {
-        // application info
-        VkApplicationInfo app_info{};
-        app_info.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        app_info.pApplicationName   = "HopEngine";
-        app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        app_info.pEngineName        = "HopEngine";
-        app_info.engineVersion      = VK_MAKE_VERSION(0, 3, 0);
-        app_info.apiVersion         = VK_API_VERSION_1_4;
+    createInstance(true);
 
-        // use extensions required by GLFW
-        VkInstanceCreateInfo create_info{};
-        create_info.sType            = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        create_info.pApplicationInfo = &app_info;
-        uint32_t extension_count;
-        auto glfw_extensions = glfwGetRequiredInstanceExtensions(&extension_count);
-        std::vector<const char*> extensions_to_enable(extension_count);
-        memcpy(extensions_to_enable.data(), glfw_extensions,
-            extensions_to_enable.size() * sizeof(const char*));
-        extensions_to_enable.insert(extensions_to_enable.end(), required_instance_extensions.begin(),
-            required_instance_extensions.end());
-        create_info.enabledExtensionCount   = static_cast<uint32_t>(extensions_to_enable.size());
-        create_info.ppEnabledExtensionNames = extensions_to_enable.data();
+    CHECK_RESULT(glfwCreateWindowSurface,
+        (static_cast<VkInstance>(instance), window, nullptr, reinterpret_cast<VkSurfaceKHR*>(&surface)),
+        FAULT,
+        ;);
 
-        // apply validation layers for debug
-#if defined(VK_DEBUG)
-        uint32_t validation_layer_count;
-        vkEnumerateInstanceLayerProperties(&validation_layer_count, nullptr);
-        std::vector<VkLayerProperties> available_validation_layers(validation_layer_count);
-        vkEnumerateInstanceLayerProperties(&validation_layer_count, available_validation_layers.data());
-        // check if all the required validation layers exist
-        std::set<std::string> required_layers_unmet(required_validation_layers.begin(),
-            required_validation_layers.end());
-        std::vector<const char*> enabled_layers;
-        for (const VkLayerProperties& layer : available_validation_layers)
-        {
-            if (required_layers_unmet.erase(layer.layerName)) enabled_layers.push_back(layer.layerName);
-        }
-        if (!required_layers_unmet.empty())
-            DBG_WARNING("validation layer not found: " + *(required_layers_unmet.begin()) +
-                        ", we will continue without it.");
-        create_info.enabledLayerCount   = static_cast<uint32_t>(enabled_layers.size());
-        create_info.ppEnabledLayerNames = enabled_layers.data();
-#else
-        create_info.enabledLayerCount = 0;
-#endif
-        DBG_VERBOSE("enabling " + std::to_string(create_info.enabledExtensionCount) + " extensions:");
-        for (size_t i = 0; i < create_info.enabledExtensionCount; ++i)
-            DBG_VERBOSE(create_info.ppEnabledExtensionNames[i]);
-        DBG_VERBOSE("enabling " + std::to_string(create_info.enabledLayerCount) + " layers:");
-        for (size_t i = 0; i < create_info.enabledLayerCount; ++i)
-            DBG_VERBOSE(create_info.ppEnabledLayerNames[i]);
+    createDevice();
 
-        // create the vulkan instance
-        DBG_VERBOSE("creating vulkan instance");
-        if (vkCreateInstance(&create_info, nullptr, reinterpret_cast<VkInstance*>(&instance)) != VK_SUCCESS)
-            DBG_FAULT("vkCreateInstance failed");
-
-#if defined(VK_DEBUG)
-        DBG_VERBOSE("creating debug messenger");
-        VkDebugUtilsMessengerCreateInfoEXT debug_create_info{};
-        debug_create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-        debug_create_info.messageSeverity =
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-        debug_create_info.messageType     = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-                                            VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-                                            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-        debug_create_info.pfnUserCallback = vulkanDebugCallback;
-        const auto func                   = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
-            vkGetInstanceProcAddr(static_cast<VkInstance>(instance), "vkCreateDebugUtilsMessengerEXT"));
-        if (!func)
-        {
-            DBG_FAULT("debug utils not found");
-            return;
-        }
-        if (func(static_cast<VkInstance>(instance), &debug_create_info, nullptr,
-                reinterpret_cast<VkDebugUtilsMessengerEXT*>(&debug_messenger)) != VK_SUCCESS)
-            DBG_FAULT("unable to create debug messenger");
-#endif
-    }
-
-    if (glfwCreateWindowSurface(static_cast<VkInstance>(instance), window, nullptr,
-            reinterpret_cast<VkSurfaceKHR*>(&surface)) != VK_SUCCESS)
-        DBG_FAULT("glfwCreateWindowSurface failed");
-
-    {
-        // list out physical devices which are vulkan-compatible
-        uint32_t physical_device_count = 0;
-        vkEnumeratePhysicalDevices(static_cast<VkInstance>(instance), &physical_device_count, nullptr);
-        if (physical_device_count == 0) DBG_FAULT("found no valid VkPhysicalDevice");
-        std::vector<VkPhysicalDevice> physical_devices(physical_device_count);
-        vkEnumeratePhysicalDevices(static_cast<VkInstance>(instance), &physical_device_count,
-            physical_devices.data());
-        DBG_VERBOSE("found " + std::to_string(physical_device_count) + " physical devices");
-
-        // score each device. a score of zero indicates the device
-        // is not usable for some reason
-        std::multimap<int, VkPhysicalDevice> device_scores;
-        for (const VkPhysicalDevice& test_device : physical_devices)
-        {
-            VkPhysicalDeviceProperties properties;
-            vkGetPhysicalDeviceProperties(test_device, &properties);
-            VkPhysicalDeviceFeatures features;
-            vkGetPhysicalDeviceFeatures(test_device, &features);
-
-            // discrete GPUs are preferred, etc
-            int score = 0;
-            switch (properties.deviceType)
-            {
-            case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:   score += 1000; break;
-            case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
-            case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:    score += 200; break;
-            case VK_PHYSICAL_DEVICE_TYPE_CPU:            score += 100; break;
-            default:                                     break;
-            }
-
-            score += static_cast<int>(properties.limits.maxImageDimension2D);
-
-            if (features.fillModeNonSolid == VK_FALSE || features.samplerAnisotropy == VK_FALSE ||
-                features.independentBlend == VK_FALSE)
-                score = 0;
-
-            // check that the necessary queues are present
-            auto [graphics_family, present_family] = queryQueueFamilies(test_device);
-            if (!graphics_family.has_value() || !present_family.has_value()) score = 0;
-
-            uint32_t extension_count;
-            vkEnumerateDeviceExtensionProperties(test_device, nullptr, &extension_count, nullptr);
-            std::vector<VkExtensionProperties> available_extensions(extension_count);
-            vkEnumerateDeviceExtensionProperties(test_device, nullptr, &extension_count,
-                available_extensions.data());
-            std::set<std::string> required_extensions_unmet(required_extensions.begin(),
-                required_extensions.end());
-            for (const auto& [extension_name, spec_version] : available_extensions)
-                required_extensions_unmet.erase(extension_name);
-            if (!required_extensions_unmet.empty()) score = 0;
-
-            if (score != 0)
-            {
-                auto swapchain_info = Swapchain::getSwapchainSupportInfo(test_device);
-                if (swapchain_info.supports_immediate_present) score += 300;
-                if (swapchain_info.supports_premultiplied_alpha_composite) score += 400;
-            }
-
-            DBG_VERBOSE(
-                "found device " + std::string(properties.deviceName) + ", scored " + std::to_string(score));
-            device_scores.insert({ score, test_device });
-        }
-        // check if any of the devices were suitable, and if so,
-        // use the highest scoring
-        if (device_scores.rbegin()->first > 0) physical_device = device_scores.rbegin()->second;
-        else
-            DBG_FAULT("unable to find suitable VkPhysicalDevice");
-        VkPhysicalDeviceProperties properties;
-        vkGetPhysicalDeviceProperties(static_cast<VkPhysicalDevice>(physical_device), &properties);
-        DBG_INFO("selected device: " + std::string(properties.deviceName));
-
-        // create queues, for our queue families
-        queue_families = queryQueueFamilies(static_cast<VkPhysicalDevice>(physical_device));
-        std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
-        auto unique_queue_families = getUniqueQueueIndices();
-        float queue_priority       = 1.0f;
-        for (uint32_t family : unique_queue_families)
-        {
-            VkDeviceQueueCreateInfo queue_create_info{};
-            queue_create_info.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-            queue_create_info.queueFamilyIndex = family;
-            queue_create_info.queueCount       = 1;
-            queue_create_info.pQueuePriorities = &queue_priority;
-            queue_create_infos.push_back(queue_create_info);
-        }
-
-        VkPhysicalDeviceFeatures features{};
-        features.fillModeNonSolid  = VK_TRUE;
-        features.samplerAnisotropy = VK_TRUE;
-        features.independentBlend  = VK_TRUE;
-
-        // actually create the logical device
-        VkDeviceCreateInfo device_create_info{};
-        device_create_info.sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        device_create_info.pQueueCreateInfos       = queue_create_infos.data();
-        device_create_info.queueCreateInfoCount    = static_cast<uint32_t>(queue_create_infos.size());
-        device_create_info.pEnabledFeatures        = &features;
-        device_create_info.ppEnabledExtensionNames = required_extensions.data();
-        device_create_info.enabledExtensionCount   = static_cast<uint32_t>(required_extensions.size());
-
-        DBG_VERBOSE("creating device");
-        if (vkCreateDevice(static_cast<VkPhysicalDevice>(physical_device), &device_create_info, nullptr,
-                reinterpret_cast<VkDevice*>(&device)) != VK_SUCCESS)
-            DBG_FAULT("vkCreateDevice failed");
-
-        // extract queues
-        DBG_VERBOSE("extracting queues");
-        vkGetDeviceQueue(static_cast<VkDevice>(device), getGraphicsQueueIndex(), 0,
-            reinterpret_cast<VkQueue*>(&graphics_queue));
-        vkGetDeviceQueue(static_cast<VkDevice>(device), queue_families.present_family.value(), 0,
-            reinterpret_cast<VkQueue*>(&present_queue));
-    }
-
-    Swapchain::getSwapchainSupportInfo(physical_device);
     uint32_t frames_in_flight = Swapchain::computeImageCount();
     DBG_VERBOSE("adjusted frames in flight to " + std::to_string(frames_in_flight));
 
@@ -340,9 +130,11 @@ void RenderServer::createVulkan()
 
         DBG_VERBOSE("creating descriptor pool with " + std::to_string(descriptor_pool_create_info.maxSets) +
                     " max sets");
-        if (vkCreateDescriptorPool(static_cast<VkDevice>(device), &descriptor_pool_create_info, nullptr,
-                reinterpret_cast<VkDescriptorPool*>(&descriptor_pool)) != VK_SUCCESS)
-            DBG_FAULT("vkCreateDescriptorPool failed");
+        CHECK_RESULT(vkCreateDescriptorPool,
+            (static_cast<VkDevice>(device), &descriptor_pool_create_info, nullptr,
+                reinterpret_cast<VkDescriptorPool*>(&descriptor_pool)),
+            FAULT,
+            ;);
 
         VkDescriptorSetLayoutBinding uniform_layout_binding{};
         uniform_layout_binding.binding         = 0;
@@ -355,31 +147,252 @@ void RenderServer::createVulkan()
         layout_create_info.bindingCount = 1;
         layout_create_info.pBindings    = &uniform_layout_binding;
 
-        DBG_VERBOSE("creating scene and object descriptor sets");
-        if (vkCreateDescriptorSetLayout(static_cast<VkDevice>(device), &layout_create_info, nullptr,
-                reinterpret_cast<VkDescriptorSetLayout*>(&scene_descriptor_set_layout)) != VK_SUCCESS)
-            DBG_FAULT("vkCreateDescriptorSetLayout failed");
+        CHECK_RESULT(vkCreateDescriptorSetLayout,
+            (static_cast<VkDevice>(device), &layout_create_info, nullptr,
+                reinterpret_cast<VkDescriptorSetLayout*>(&scene_descriptor_set_layout)),
+            FAULT,
+            ;);
 
-        if (vkCreateDescriptorSetLayout(static_cast<VkDevice>(device), &layout_create_info, nullptr,
-                reinterpret_cast<VkDescriptorSetLayout*>(&object_descriptor_set_layout)) != VK_SUCCESS)
-            DBG_FAULT("vkCreateDescriptorSetLayout failed");
+        CHECK_RESULT(vkCreateDescriptorSetLayout,
+            (static_cast<VkDevice>(device), &layout_create_info, nullptr,
+                reinterpret_cast<VkDescriptorSetLayout*>(&object_descriptor_set_layout)),
+            FAULT,
+            ;);
     }
 
     {
-        DBG_VERBOSE("creating command pool and buffers");
-
         VkCommandPoolCreateInfo pool_create_info{};
         pool_create_info.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
         pool_create_info.flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
         pool_create_info.queueFamilyIndex = getGraphicsQueueIndex();
 
-        if (vkCreateCommandPool(static_cast<VkDevice>(device), &pool_create_info, nullptr,
-                reinterpret_cast<VkCommandPool*>(&command_pool)) != VK_SUCCESS)
-            DBG_FAULT("vkCreateCommandPool failed");
+        CHECK_RESULT(vkCreateCommandPool,
+            (static_cast<VkDevice>(device), &pool_create_info, nullptr,
+                reinterpret_cast<VkCommandPool*>(&command_pool)),
+            FAULT,
+            ;);
 
         for (uint32_t i = 0; i < static_cast<uint32_t>(frames_in_flight); ++i)
             command_buffers.push_back(new DrawCommandBuffer());
     }
+}
+
+void RenderServer::createInstance(bool debug)
+{
+    // application info
+    VkApplicationInfo app_info{};
+    app_info.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    app_info.pApplicationName   = "HopEngine";
+    app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+    app_info.pEngineName        = "HopEngine";
+    app_info.engineVersion      = VK_MAKE_VERSION(0, 3, 0);
+    app_info.apiVersion         = VK_API_VERSION_1_4;
+
+    // use extensions required by GLFW
+    VkInstanceCreateInfo create_info{};
+    create_info.sType            = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    create_info.pApplicationInfo = &app_info;
+
+    // query which instance extensions are needed by GLFW
+    uint32_t glfw_extension_count;
+    const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
+    std::vector<const char*> extensions_to_enable(glfw_extension_count);
+    memcpy(extensions_to_enable.data(), glfw_extensions, extensions_to_enable.size() * sizeof(const char*));
+    if (debug) extensions_to_enable.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+    create_info.enabledExtensionCount   = static_cast<uint32_t>(extensions_to_enable.size());
+    create_info.ppEnabledExtensionNames = extensions_to_enable.data();
+    DBG_VERBOSE("enabling " + std::to_string(create_info.enabledExtensionCount) + " extensions:");
+    for (size_t i = 0; i < create_info.enabledExtensionCount; ++i)
+        DBG_VERBOSE(create_info.ppEnabledExtensionNames[i]);
+
+    std::vector<std::string> desired_instance_layers;
+    if (debug) desired_instance_layers.push_back("VK_LAYER_KHRONOS_validation");
+    // query available instance layers
+    uint32_t instance_layer_count;
+    CHECK_RESULT(vkEnumerateInstanceLayerProperties, (&instance_layer_count, nullptr), FAULT, ;);
+    std::vector<VkLayerProperties> available_instance_layers(instance_layer_count);
+    vkEnumerateInstanceLayerProperties(&instance_layer_count, available_instance_layers.data());
+    // check if all the required instance layers exist
+    std::vector<const char*> enabled_instance_layers;
+    for (const VkLayerProperties& layer : available_instance_layers)
+    {
+        auto it =
+            std::find(desired_instance_layers.begin(), desired_instance_layers.end(), layer.layerName);
+        if (it == desired_instance_layers.end()) continue;
+        enabled_instance_layers.push_back(layer.layerName);
+        desired_instance_layers.erase(it);
+    }
+    for (const std::string& layer : desired_instance_layers)
+        DBG_ERROR("instance layer not found: " + layer + ", we will continue without it.");
+    // enable whichever layers were selected, if available
+    create_info.enabledLayerCount   = static_cast<uint32_t>(enabled_instance_layers.size());
+    create_info.ppEnabledLayerNames = enabled_instance_layers.data();
+    DBG_VERBOSE("enabling " + std::to_string(create_info.enabledLayerCount) + " layers:");
+    for (size_t i = 0; i < create_info.enabledLayerCount; ++i)
+        DBG_VERBOSE(create_info.ppEnabledLayerNames[i]);
+
+    // create the vulkan instance
+    CHECK_RESULT(vkCreateInstance, (&create_info, nullptr, reinterpret_cast<VkInstance*>(&instance)), FAULT,
+        ;);
+
+    if (debug)
+    {
+        DBG_VERBOSE("debug enabled, creating debug messenger");
+        VkDebugUtilsMessengerCreateInfoEXT debug_create_info{};
+        debug_create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+        debug_create_info.messageSeverity =
+            VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+        debug_create_info.messageType             = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                                                    VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                                                    VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        debug_create_info.pfnUserCallback         = vulkanDebugCallback;
+        const auto vkCreateDebugUtilsMessengerExt = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
+            vkGetInstanceProcAddr(static_cast<VkInstance>(instance), "vkCreateDebugUtilsMessengerEXT"));
+        if (!vkCreateDebugUtilsMessengerExt)
+            DBG_ERROR("debug utils extension not found! debug messenger cannot be created!");
+        else
+            CHECK_RESULT(vkCreateDebugUtilsMessengerExt,
+                (static_cast<VkInstance>(instance), &debug_create_info, nullptr,
+                    reinterpret_cast<VkDebugUtilsMessengerEXT*>(&debug_messenger)),
+                FAULT,
+                ;);
+    }
+}
+
+int RenderServer::queryPhysicalDevice(GPUHandle device, std::vector<const char*> extensions)
+{
+    VkPhysicalDevice test_device = static_cast<VkPhysicalDevice>(device);
+    int score                    = 0;
+
+    VkPhysicalDeviceProperties properties;
+    vkGetPhysicalDeviceProperties(test_device, &properties);
+    VkPhysicalDeviceFeatures features;
+    vkGetPhysicalDeviceFeatures(test_device, &features);
+
+    // check that features we intend to use are present
+    if (features.fillModeNonSolid == VK_FALSE || features.samplerAnisotropy == VK_FALSE ||
+        features.independentBlend == VK_FALSE)
+        return 0;
+
+    // check that the necessary queues are present
+    auto [graphics_family, present_family] = queryQueueFamilies(test_device);
+    if (!graphics_family.has_value() || !present_family.has_value()) return 0;
+
+    // check that the necessary extensions are available
+    uint32_t available_extension_count;
+    CHECK_RESULT(vkEnumerateDeviceExtensionProperties,
+        (test_device, nullptr, &available_extension_count, nullptr), FAULT,
+        ;);
+    std::vector<VkExtensionProperties> available_extensions(available_extension_count);
+    vkEnumerateDeviceExtensionProperties(test_device, nullptr, &available_extension_count,
+        available_extensions.data());
+    std::vector<const char*> required_extensions = extensions;
+    for (const auto& [extension_name, spec_version] : available_extensions)
+    {
+        auto it = required_extensions.begin();
+        for (; it != required_extensions.end(); ++it)
+        {
+            if (strncmp(*it, extension_name, 255)) break;
+        }
+        if (it != required_extensions.end()) required_extensions.erase(it);
+    }
+    if (!required_extensions.empty()) return 0;
+
+    // score higher if the device is an actual GPU
+    switch (properties.deviceType)
+    {
+    case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:   score += 1000; break;
+    case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+    case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:    score += 200; break;
+    case VK_PHYSICAL_DEVICE_TYPE_CPU:            score += 100; break;
+    default:                                     break;
+    }
+
+    // score higher if the device can do bigger images
+    score += static_cast<int>(properties.limits.maxImageDimension2D);
+
+    // score higher if the device can do immediate presentation and alpha compositing
+    auto swapchain_info = Swapchain::getSwapchainSupportInfo(test_device);
+    if (swapchain_info.supports_immediate_present) score += 300;
+    if (swapchain_info.supports_premultiplied_alpha_composite) score += 400;
+
+    DBG_VERBOSE("found device " + std::string(properties.deviceName) + ", scored " + std::to_string(score));
+    return score;
+}
+
+void RenderServer::createDevice()
+{
+    // list out physical devices which are vulkan-compatible
+    uint32_t physical_device_count = 0;
+    CHECK_RESULT(vkEnumeratePhysicalDevices,
+        (static_cast<VkInstance>(instance), &physical_device_count, nullptr), FAULT,
+        ;);
+    if (physical_device_count == 0) DBG_FAULT("found no valid physical devices");
+    std::vector<VkPhysicalDevice> physical_devices(physical_device_count);
+    vkEnumeratePhysicalDevices(static_cast<VkInstance>(instance), &physical_device_count,
+        physical_devices.data());
+    DBG_VERBOSE("found " + std::to_string(physical_device_count) + " physical devices");
+
+    static const std::vector<const char*> required_extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+    // score each device. a score of zero indicates the device is not usable for some reason
+    VkPhysicalDevice best_device = VK_NULL_HANDLE;
+    int best_device_score        = 0;
+    for (VkPhysicalDevice test_device : physical_devices)
+    {
+        int score = queryPhysicalDevice(test_device, required_extensions);
+        if (score > best_device_score) best_device = test_device;
+    }
+    // check if any of the devices were suitable, and if so, use the highest scoring
+    if (best_device != VK_NULL_HANDLE) physical_device = best_device;
+    else
+        DBG_FAULT("unable to find suitable VkPhysicalDevice");
+
+    VkPhysicalDeviceProperties properties;
+    vkGetPhysicalDeviceProperties(static_cast<VkPhysicalDevice>(physical_device), &properties);
+    DBG_INFO("selected device: " + std::string(properties.deviceName) + ", scored " +
+             std::to_string(best_device_score));
+
+    // create queues, for our queue families
+    queue_families = queryQueueFamilies(static_cast<VkPhysicalDevice>(physical_device));
+    std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+    auto unique_queue_families = getUniqueQueueIndices();
+    float queue_priority       = 1.0f;
+    for (uint32_t family : unique_queue_families)
+    {
+        VkDeviceQueueCreateInfo queue_create_info{};
+        queue_create_info.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queue_create_info.queueFamilyIndex = family;
+        queue_create_info.queueCount       = 1;
+        queue_create_info.pQueuePriorities = &queue_priority;
+        queue_create_infos.push_back(queue_create_info);
+    }
+
+    VkPhysicalDeviceFeatures features{};
+    features.fillModeNonSolid  = VK_TRUE;
+    features.samplerAnisotropy = VK_TRUE;
+    features.independentBlend  = VK_TRUE;
+
+    // actually create the logical device
+    VkDeviceCreateInfo device_create_info{};
+    device_create_info.sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    device_create_info.pQueueCreateInfos       = queue_create_infos.data();
+    device_create_info.queueCreateInfoCount    = static_cast<uint32_t>(queue_create_infos.size());
+    device_create_info.pEnabledFeatures        = &features;
+    device_create_info.ppEnabledExtensionNames = required_extensions.data();
+    device_create_info.enabledExtensionCount   = static_cast<uint32_t>(required_extensions.size());
+
+    CHECK_RESULT(vkCreateDevice,
+        (static_cast<VkPhysicalDevice>(physical_device), &device_create_info, nullptr,
+            reinterpret_cast<VkDevice*>(&device)),
+        FAULT,
+        ;);
+
+    // extract queues
+    vkGetDeviceQueue(static_cast<VkDevice>(device), getGraphicsQueueIndex(), 0,
+        reinterpret_cast<VkQueue*>(&graphics_queue));
+    vkGetDeviceQueue(static_cast<VkDevice>(device), queue_families.present_family.value(), 0,
+        reinterpret_cast<VkQueue*>(&present_queue));
 }
 
 void RenderServer::initImGui()
@@ -421,10 +434,8 @@ void RenderServer::destroyVulkan()
 {
     tryFreeResources(true);
 
-    DBG_VERBOSE("destroying command pool");
     vkDestroyCommandPool(static_cast<VkDevice>(device), static_cast<VkCommandPool>(command_pool), nullptr);
 
-    DBG_VERBOSE("destroying descriptors");
     vkDestroyDescriptorPool(static_cast<VkDevice>(device), static_cast<VkDescriptorPool>(descriptor_pool),
         nullptr);
     vkDestroyDescriptorSetLayout(static_cast<VkDevice>(device),
@@ -432,15 +443,15 @@ void RenderServer::destroyVulkan()
     vkDestroyDescriptorSetLayout(static_cast<VkDevice>(device),
         static_cast<VkDescriptorSetLayout>(object_descriptor_set_layout), nullptr);
 
-#if defined(VK_DEBUG)
-    DBG_VERBOSE("\033[31mkilling the (debug) messenger\033[0m");
-    const auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
-        vkGetInstanceProcAddr(static_cast<VkInstance>(instance), "vkDestroyDebugUtilsMessengerEXT"));
-    func(static_cast<VkInstance>(instance), static_cast<VkDebugUtilsMessengerEXT>(debug_messenger),
-        nullptr);
-#endif
+    if (debug_messenger)
+    {
+        DBG_VERBOSE("\033[31mkilling the (debug) messenger\033[0m");
+        const auto vkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
+            vkGetInstanceProcAddr(static_cast<VkInstance>(instance), "vkDestroyDebugUtilsMessengerEXT"));
+        vkDestroyDebugUtilsMessengerEXT(static_cast<VkInstance>(instance),
+            static_cast<VkDebugUtilsMessengerEXT>(debug_messenger), nullptr);
+    }
 
-    DBG_VERBOSE("destroying device");
     vkDestroyDevice(static_cast<VkDevice>(device), nullptr);
     vkDestroySurfaceKHR(static_cast<VkInstance>(instance), static_cast<VkSurfaceKHR>(surface), nullptr);
     vkDestroyInstance(static_cast<VkInstance>(instance), nullptr);
