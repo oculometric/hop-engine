@@ -1,5 +1,3 @@
-#pragma DEFAULT_VERTEX
-
 layout(set = 2, binding = 0) uniform MaterialUniforms
 {
     float grid_size;

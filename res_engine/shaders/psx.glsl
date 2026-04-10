@@ -7,8 +7,6 @@ vec4 snap(vec4 value)
     return vec4(snapped, value.z, value.w);
 }
 
-#pragma DEFAULT_VERTEX
-
 void vertex()
 {
     frag.position = object.model_to_world * vec4(in_position.xyz, 1);

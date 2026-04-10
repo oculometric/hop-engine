@@ -6,7 +6,6 @@
 - enforce proper error checking
 - make validation layers a command line option
 
-- eliminate 'DEFAULT_VERTEX' pragma from shader
 - draw command buffers should have a default pipeline layout (dummy descriptor set 2)
 - remove type parameter from buffer bind function
 - make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)

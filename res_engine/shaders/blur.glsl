@@ -3,8 +3,6 @@
 
 layout(set = 2, binding = 0) uniform sampler2D main_tex;
 
-#pragma DEFAULT_VERTEX
-
 void vertex()
 {
     #pragma CANVAS_TRANSFORM

@@ -1,5 +1,3 @@
-#pragma DEFAULT_VERTEX
-
 void vertex()
 {
     #pragma CANVAS_TRANSFORM

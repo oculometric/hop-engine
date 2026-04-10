@@ -1,5 +1,3 @@
-#pragma DEFAULT_VERTEX
-
 void vertex()
 {
     frag.uv = in_uv;

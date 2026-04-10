@@ -1,5 +1,3 @@
-#pragma DEFAULT_VERTEX
-
 void vertex()
 {
     frag.position = in_position;    // treated as position in pixel coordinates

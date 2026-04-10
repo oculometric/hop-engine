@@ -252,20 +252,10 @@ string Shader::preprocessVertex(const string& common_code, const string& path)
 layout(location = 1) in vec4 in_colour;
 layout(location = 2) in vec4 in_normal;
 layout(location = 3) in vec4 in_tangent;
-layout(location = 4) in vec3 in_uv;)VOGON";
-	static const string vertex_input_pragma = "#pragma DEFAULT_VERTEX";
-	size_t vertex_input_pragma_pos = result_code.find(vertex_input_pragma);
-	if (vertex_input_pragma_pos > vert_func_pos && vertex_input_pragma_pos != string::npos)
-	{
-		DBG_ERROR("error preprocessing " + path + ": vertex input pragma must be placed before vertex function.");
-		return "";
-	}
-	if (vertex_input_pragma_pos != string::npos)
-	{
-		result_code.erase(vertex_input_pragma_pos, vertex_input_pragma.size());
-		result_code.insert(vertex_input_pragma_pos, vertex_input_default);
-		vert_func_pos = result_code.find(vertex_function_sig);
-	}
+layout(location = 4) in vec3 in_uv;
+)VOGON";
+    result_code.insert(vert_func_pos, vertex_input_default);
+    vert_func_pos = result_code.find(vertex_function_sig);
 	
 	// vertex outputs
 	static const string vertex_outputs = "layout(location = 0) out Frag frag;\n";
