@@ -50,6 +50,14 @@ else()
 	)
 endif()
 
+# ================ EXECUTABLE TARGET 'bin-to-cpp' =======================================
+add_executable(bin-to-cpp
+	"src/package-builder/bin_to_cpp.cpp"
+)
+
+set_property(TARGET bin-to-cpp PROPERTY LINKER_LANGUAGE CXX)
+set_property(TARGET bin-to-cpp PROPERTY CXX_STANDARD 20)
+
 # ================ RESOURCE TARGET 'engine.hop' ===========================================
 file(GLOB RES_ENGINE
 	"res_engine/*"
@@ -76,6 +84,10 @@ file(GLOB SRC_FILES
 list(FILTER SRC_FILES
 	EXCLUDE
 	REGEX "src/package-builder/package-builder.cpp"
+)
+list(FILTER SRC_FILES
+	EXCLUDE
+	REGEX "src/package-builder/bin_to_cpp.cpp"
 )
 list(FILTER SRC_FILES
 	EXCLUDE
@@ -115,11 +127,12 @@ endif()
 
 add_custom_command(
 	OUTPUT ${CMAKE_BINARY_DIR}/engine_resource_binary.cpp
-	COMMAND python ${CMAKE_SOURCE_DIR}/bin_to_cpp.py ${ENGINE_HOP}
+	COMMAND $<TARGET_FILE:bin-to-cpp> ${ENGINE_HOP}
 		"${CMAKE_BINARY_DIR}/engine_resource_binary.cpp" engine_hop_raw
 	DEPENDS
 		${ENGINE_HOP}
-		${CMAKE_SOURCE_DIR}/bin_to_cpp.py
+        bin-to-cpp
+		#${CMAKE_SOURCE_DIR}/bin_to_cpp.py
 	COMMENT "Converting engine.hop to CPP format"
 )
 

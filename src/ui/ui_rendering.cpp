@@ -2,6 +2,7 @@
 
 #include "engine.h"
 #include "input.h"
+#include "material.h"
 
 using namespace HopEngine;
 
