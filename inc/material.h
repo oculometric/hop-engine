@@ -103,7 +103,7 @@ public:
     Layout getShaderLayout() const { return { descriptor_set_layout, bindings }; }
     /**
      * @brief constructs a list describing the currently present stages within the shader. usually just
-     * vertex and fragment.
+     * vertex and fragment. used to construct a pipeline.
      * @returns list of shader/pipeline stages, described as pairing of shader stage ID and VkShaderModule.
      */
     std::vector<std::pair<Stage, GPUHandle>> getShaderStages() const;
@@ -116,10 +116,15 @@ public:
     void bind(WeakRef<DrawCommandBuffer> command_buffer);
 
 private:
+    static std::vector<Descriptor> getReflectedBindings(const std::vector<uint32_t>& blob);
     static std::vector<Descriptor> mergeBindings(const std::vector<Descriptor>& list_a,
         const std::vector<Descriptor>& list_b);
-    static std::vector<Descriptor> getReflectedBindings(const std::vector<uint32_t>& blob);
+    static bool compile(const std::string& code, Stage stage, std::vector<uint32_t>& blob,
+        const std::string& path);
+    static bool compileShaders(const std::string& path, std::vector<uint32_t>& vert_blob,
+        std::vector<uint32_t>& frag_blob);
     static GPUHandle createShaderModule(const std::vector<uint32_t>& blob);
+
     static void fixIncludes(std::string& source_code, const std::string& path_prefix, bool res_relative);
     static void preprocess(const std::string& source_code, std::string& vertex_shader_code,
         std::string& fragment_shader_code, const std::string& path);
@@ -127,10 +132,6 @@ private:
     static std::string preprocessFragment(const std::string& common_code, const std::string& path);
     static void removeFunction(std::string& code, const std::string& signature);
     static void destroyAllPragmas(std::string& code);
-    static bool compileShaders(const std::string& path, std::vector<uint32_t>& vert_blob,
-        std::vector<uint32_t>& frag_blob);
-    static bool compile(const std::string& code, Stage stage, std::vector<uint32_t>& blob,
-        const std::string& path);
 
     void destroyResources();
 };

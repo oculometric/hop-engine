@@ -2,7 +2,10 @@
 #include "render_server.h"
 #include "vulkan_helpers.h"
 
-#include <shaderc/shaderc.hpp>
+#include <format>
+#include <glslang/Public/ResourceLimits.h>
+#include <glslang/Public/ShaderLang.h>
+#include <glslang/SPIRV/GlslangToSpv.h>
 #include <spirv_reflect/spirv_reflect.h>
 #include <vulkan/vulkan.hpp>
 
@@ -91,9 +94,10 @@ std::string formatShaderCode(const std::string& code)
     std::string result  = code;
     while (insert_point != std::string::npos)
     {
-        result.insert(insert_point + 1, std::format("{:>4}| ", line_number));
+        result.insert(insert_point, std::format("{:>4}| ", line_number));
         ++line_number;
         insert_point = result.find('\n', insert_point + 1);
+        if (insert_point != std::string::npos) ++insert_point;
     }
     return result;
 }
@@ -101,18 +105,21 @@ std::string formatShaderCode(const std::string& code)
 bool Shader::compile(const std::string& code, Stage stage, std::vector<uint32_t>& blob,
     const std::string& path)
 {
-    const shaderc::Compiler compiler;
-    shaderc::CompileOptions options;
-    shaderc_shader_kind kind;
+    glslang::InitializeProcess();
+
+    EShLanguage stage_language;
+    EProfile profile        = ENoProfile;
+    int version             = 450;
+    std::string entry_point = "";
     if (stage == STAGE_VERTEX)
     {
-        options.AddMacroDefinition("vertex", "main");
-        kind = shaderc_glsl_vertex_shader;
+        entry_point    = "vertex";
+        stage_language = EShLangVertex;
     }
     else if (stage == STAGE_FRAGMENT)
     {
-        options.AddMacroDefinition("fragment", "main");
-        kind = shaderc_glsl_fragment_shader;
+        entry_point    = "fragment";
+        stage_language = EShLangFragment;
     }
     else
     {
@@ -120,15 +127,38 @@ bool Shader::compile(const std::string& code, Stage stage, std::vector<uint32_t>
         return false;
     }
 
-    auto result = compiler.CompileGlslToSpv(code.data(), code.size(), kind, path.c_str(), options);
-    if (result.GetCompilationStatus() != shaderc_compilation_status_success)
+    glslang::TShader shader(stage_language);
+    const char* shader_strings = code.data();
+    const int shader_lengths   = static_cast<int>(code.size());
+    const char* file_name      = path.c_str();
+    shader.setStringsWithLengthsAndNames(&shader_strings, &shader_lengths, &file_name, 1);
+    shader.setEntryPoint("main");
+    shader.setEnvClient(glslang::EShClientVulkan, glslang::EShTargetVulkan_1_0);
+    shader.setEnvTarget(glslang::EShTargetSpv, glslang::EShTargetSpv_1_0);
+    shader.setOverrideVersion(450);
+    bool success = shader.parse(GetDefaultResources(), 110, ENoProfile, false, false,
+        static_cast<EShMessages>(EShMsgCascadingErrors | EShMsgSpvRules | EShMsgVulkanRules));
+    if (!success)
     {
-        DBG_ERROR("error compiling vertex shader " + path + ": \n" + result.GetErrorMessage());
+        DBG_ERROR("error compiling vertex shader " + path + ": \n" + shader.getInfoLog());
         DBG_INFO("see the full shader code below: \n" + formatShaderCode(code));
         return false;
     }
 
-    blob = { result.cbegin(), result.cend() };
+    glslang::TProgram program;
+    program.addShader(&shader);
+    success = program.link(EShMsgDefault) && program.mapIO();
+    if (!success)
+    {
+        DBG_ERROR("error compiling vertex shader " + path + ": \n" + program.getInfoLog());
+        DBG_INFO("see the full shader code below: \n" + formatShaderCode(code));
+        return false;
+    }
+
+    glslang::SpvOptions options;
+    options.optimizeSize = false;
+    glslang::GlslangToSpv(*program.getIntermediate(stage_language), blob, &options);
+
     return true;
 }
 

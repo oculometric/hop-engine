@@ -12,6 +12,13 @@
     - user_interface.h
     - license (happy bunny license) and copyright
 
+- shader improvements
+    - more reliable vertex/fragment function finding
+    - custom varying support
+    - automatic uniform layouting
+    - maybe make things more object-oriented (passing arguments rather than static variables in shader code)
+    - overhaul arrangement of shader/pipeline/pipeline layout/descriptor set - maybe move some render server behaviour into this? (i dont like calling back and forth)
+
 - document serial formats
     - material
     - render graph
@@ -21,13 +28,6 @@
     - node style
 
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
-- switch to glslang for shader compilation
-    - more reliable vertex/fragment function finding
-    - custom varying support
-    - automatic uniform layouting
-    - insert a hidden main function which calls the actual correct shader!!
-    - maybe make things more object-oriented (passing arguments rather than static variables in shader code)
-    - overhaul arrangement of shader/pipeline/pipeline layout/descriptor set - maybe move some render server behaviour into this? (i dont like calling back and forth)
 - split framebuffer from render pass?? merge image creation from swapchain to render pass
 - package manager improvements
     - data blocks should know which package they came from

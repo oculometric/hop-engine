@@ -126,7 +126,6 @@ void Shader::fixIncludes(std::string& source_code_text, const std::string& path_
 static const std::string vertex_function_sig   = "void vertex()";
 static const std::string fragment_function_sig = "void fragment()";
 
-static const std::string version_str          = "#version 450\n\n";
 static const std::string descriptor_set_0_str = R"V0G0N(struct Light
 {
 	vec4 position;
@@ -206,6 +205,9 @@ static const std::string canvas_attachments  = R"VOGON(layout(location = 0) out 
 static const std::string default_attachment_pragma = "#pragma DEFAULT_ATTACHMENTS";
 static const std::string canvas_attachment_pragma  = "#pragma CANVAS_ATTACHMENTS";
 
+static const std::string vertex_main   = "void main() { vertex(); }";
+static const std::string fragment_main = "void main() { fragment(); }";
+
 void Shader::preprocess(const std::string& source_code, std::string& vertex_shader_code,
     std::string& fragment_shader_code, const std::string& path)
 {
@@ -229,13 +231,12 @@ void Shader::preprocess(const std::string& source_code, std::string& vertex_shad
     }
 
     // top-of-file version and descriptor set preprocessing
-    common_code.insert(0, version_str);
-    common_code.insert(version_str.size(), descriptor_set_0_str);
+    common_code.insert(0, descriptor_set_0_str);
     size_t omit_object_uniform_pragma_pos = common_code.find(omit_object_uniform_pragma);
     if (omit_object_uniform_pragma_pos != std::string::npos)
         common_code.erase(omit_object_uniform_pragma_pos, omit_object_uniform_pragma.size());
     else
-        common_code.insert(version_str.size() + descriptor_set_0_str.size(), descriptor_set_1_str);
+        common_code.insert(descriptor_set_0_str.size(), descriptor_set_1_str);
 
     // check if vertex and fragment funcs are present and have the correct signature
     size_t vert_func_pos = common_code.find(vertex_function_sig);
@@ -297,6 +298,8 @@ std::string Shader::preprocessVertex(const std::string& common_code, const std::
     removeFunction(result_code, fragment_function_sig);
     destroyAllPragmas(result_code);
 
+    result_code.append(vertex_main);
+
     return result_code;
 }
 
@@ -329,6 +332,8 @@ std::string Shader::preprocessFragment(const std::string& common_code, const std
 
     removeFunction(result_code, vertex_function_sig);
     destroyAllPragmas(result_code);
+
+    result_code.append(fragment_main);
 
     return result_code;
 }
