@@ -19,7 +19,7 @@ int main(const int nargs, const char** vargs)
     {
         char c;
         in_file.read(&c, 1);
-        out_file << std::format("{:#04x},", (int)c);
+        out_file << std::format("{:#04x},", (int)(unsigned char)c);
         ++size;
     }
 
