@@ -16,7 +16,7 @@ std::vector<std::pair<Shader::Stage, GPUHandle>> Shader::getShaderStages() const
     };
 }
 
-std::vector<Shader::DescriptorBinding> Shader::getReflectedBindings(const std::vector<uint32_t>& blob)
+std::vector<Shader::Descriptor> Shader::getReflectedBindings(const std::vector<uint32_t>& blob)
 {
     SpvReflectShaderModule reflected_module;
     SpvReflectResult result = spvReflectCreateShaderModule(blob.size() * 4, blob.data(), &reflected_module);
@@ -34,13 +34,13 @@ std::vector<Shader::DescriptorBinding> Shader::getReflectedBindings(const std::v
         return {};
     }
 
-    std::vector<DescriptorBinding> bindings;
+    std::vector<Descriptor> bindings;
     for (size_t i = 0; i < vert_material_set->binding_count; ++i)
     {
         SpvReflectDescriptorBinding* binding = vert_material_set->bindings[i];
         if (binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
         {
-            DescriptorBinding db;
+            Descriptor db;
             db.type        = UNIFORM;
             db.binding     = binding->binding;
             db.buffer_size = binding->block.padded_size;
@@ -54,7 +54,7 @@ std::vector<Shader::DescriptorBinding> Shader::getReflectedBindings(const std::v
         }
         else if (binding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
         {
-            DescriptorBinding db;
+            Descriptor db;
             db.type    = TEXTURE;
             db.binding = binding->binding;
             if (binding->image.dim == SpvDim::SpvDim3D) db.texture_is_3d = true;
@@ -132,11 +132,11 @@ bool Shader::compile(const std::string& code, Stage stage, std::vector<uint32_t>
     return true;
 }
 
-GPUHandle Shader::createDescriptorSetLayout(std::vector<DescriptorBinding> bindings)
+GPUHandle Shader::createDescriptorSetLayout(std::vector<Descriptor> bindings)
 {
     VkDescriptorSetLayout layout;
     std::vector<VkDescriptorSetLayoutBinding> layout_bindings;
-    for (const DescriptorBinding& binding : bindings)
+    for (const Descriptor& binding : bindings)
     {
         VkDescriptorSetLayoutBinding layout_binding{};
         layout_binding.binding            = binding.binding;

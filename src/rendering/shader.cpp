@@ -44,17 +44,10 @@ Shader::~Shader()
 void Shader::bind(WeakRef<DrawCommandBuffer> command_buffer)
 { command_buffer->bindPipelineLayoutInternal(pipeline_layout); }
 
-bool Shader::reloadShader()
+std::vector<Shader::Descriptor> Shader::mergeBindings(const std::vector<Descriptor>& list_a,
+    const std::vector<Descriptor>& list_b)
 {
-    DBG_WARNING("shader reloading is not implemented. this function does nothing.");
-
-    return true;
-}
-
-std::vector<Shader::DescriptorBinding> Shader::mergeBindings(const std::vector<DescriptorBinding>& list_a,
-    const std::vector<DescriptorBinding>& list_b)
-{
-    std::multimap<uint32_t, DescriptorBinding> bindings;
+    std::multimap<uint32_t, Descriptor> bindings;
 
     for (const auto& item : list_a) bindings.insert({ item.binding, item });
     for (const auto& item : list_b) bindings.insert({ item.binding, item });
@@ -62,12 +55,12 @@ std::vector<Shader::DescriptorBinding> Shader::mergeBindings(const std::vector<D
     if (bindings.empty()) return {};
     if (bindings.size() == 1) return { bindings.begin()->second };
 
-    std::vector<DescriptorBinding> resolved_bindings;
+    std::vector<Descriptor> resolved_bindings;
 
     auto binding_it = bindings.begin();
     while (binding_it != bindings.end())
     {
-        DescriptorBinding last_binding = binding_it->second;
+        Descriptor last_binding = binding_it->second;
         resolved_bindings.push_back(last_binding);
         ++binding_it;
         if (binding_it == bindings.end()) return resolved_bindings;

@@ -66,6 +66,8 @@ private:
     GPUHandle scene_descriptor_set_layout = nullptr;
     // universally used descriptor set layout for set 1, containing per-object information
     GPUHandle object_descriptor_set_layout = nullptr;
+    // pipeline layout describing a simple 0-1-2 pipeline, used when the actual pipeline is unknown
+    GPUHandle default_pipeline_layout = nullptr;
 
     Ref<Texture> default_image;     // default image used when none is specified
     Ref<Texture> default_3d_image;  // default image used for 3D views when none is specified
@@ -139,6 +141,7 @@ public:
      * corresponds.
      */
     static GPUHandle createPipelineLayout(GPUHandle layout_set_2);
+    static GPUHandle getDefaultPipelineLayout() { return getInstance()->default_pipeline_layout; }
 
     /**
      * @brief queues up a resource to be freed when the internal garbage collector runs. this should be used

@@ -9,7 +9,6 @@
 #include <vulkan/vulkan.hpp>
 
 using namespace HopEngine;
-using namespace std;
 
 TransientCommandBuffer::TransientCommandBuffer()
 {
@@ -159,7 +158,7 @@ void DrawCommandBuffer::startRenderPassInternal(GPUHandle render_pass, GPUHandle
     current_descriptor_sets[0] = nullptr;
     current_descriptor_sets[1] = nullptr;
     current_descriptor_sets[2] = nullptr;
-    current_pipeline_layout    = nullptr;
+    current_pipeline_layout    = RenderServer::getDefaultPipelineLayout();
     current_pipeline           = nullptr;
     current_vertex_buffer      = nullptr;
     current_index_buffer       = nullptr;
@@ -280,15 +279,10 @@ void DrawCommandBuffer::bindDescriptorSetInternal(size_t set, GPUHandle descript
             "attempt to bind a descriptor set in a command buffer where no pipeline layout is bound!");
         return;
     }
-    if (!current_pipeline)
-    {
-        DBG_ERROR("attempt to bind a descriptor set in a command buffer where no pipeline is bound!");
-        return;
-    }
     if (set > 2)
     {
         DBG_ERROR(
-            "attempt to bind a descriptor set for set " + ::to_string(set) + ", which is not allowed");
+            "attempt to bind a descriptor set for set " + std::to_string(set) + ", which is not allowed");
         return;
     }
 
@@ -421,7 +415,7 @@ void DrawCommandBuffer::drawImGui() const
 
 void DrawCommandBuffer::extractTiming() const
 {
-    vector<uint32_t> results_buf;
+    std::vector<uint32_t> results_buf;
     results_buf.resize(query_offset, 0);
     CHECK_RESULT(vkGetQueryPoolResults,
         (static_cast<VkDevice>(RenderServer::getDevice()), static_cast<VkQueryPool>(query_pool), 0,

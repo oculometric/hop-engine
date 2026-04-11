@@ -133,7 +133,7 @@ void UniformBlock::applyDescriptorBindings()
     for (size_t i = 0; i < descriptor_sets.size(); ++i)
     {
         VkDeviceSize offset = 0;
-        for (const Shader::DescriptorBinding& binding : layout.bindings)
+        for (const Shader::Descriptor& binding : layout.bindings)
         {
             // standard write command for our specified descriptor set and binding
             VkWriteDescriptorSet descriptor_write{};

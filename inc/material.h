@@ -8,59 +8,91 @@
 namespace HopEngine
 {
 
+/**
+ * @brief encapsulates a set of shader programs which will be used to render a surface by a material.
+ * essentially a 'material template', where materials apply specific values to shader uniforms, and
+ * determine how the shader will be rendered (i.e. the pipeline characteristics).
+ */
 class Shader final : public Destructible
 {
 public:
+    /**
+     * @brief enumerates supported shader stages.
+     */
     enum Stage
     {
         STAGE_VERTEX,
         STAGE_FRAGMENT
     };
 
-    enum DescriptorBindingType
+    /**
+     * @brief enumerates supported descriptor binding types. descriptor bindings can either be a block of
+     * uniform variables (individual uniforms are not supported in Vulkan), or a combined texture-sampler.
+     */
+    enum DescriptorType
     {
         UNIFORM,
         TEXTURE
     };
 
+    /**
+     * @brief describes the layout information for a uniform variable within a block, allowing it to be
+     * accessed in a uniform buffer by name later. this information is retrieved from shader reflection
+     * information.
+     */
     struct UniformVariable final
     {
-        std::string name;
-        size_t size   = 0;
-        size_t offset = 0;
+        std::string name;  // name of the variable provided in shader code
+        size_t size   = 0; // size of the variable in bytes
+        size_t offset = 0; // offset into the uniform buffer in bytes
     };
 
-    struct DescriptorBinding final
+    /**
+     * @brief describes a descriptor binding, which may be either a uniform block or a combined
+     * texture-sampler. contains important shader reflection information.
+     */
+    struct Descriptor final
     {
-        uint32_t binding           = 0;
-        DescriptorBindingType type = UNIFORM;
-        size_t buffer_size         = 0;
-        std::string name;
+        uint32_t binding    = 0;       // layout binding index within descriptor set 2
+        DescriptorType type = UNIFORM; // binding type, uniform block or texture-sampler
+        size_t buffer_size  = 0;       // total buffer size, if this is a uniform block binding
+        std::string name;              // name of the descriptor, only used for textures
+        // list of contained uniform variables, if this is a uniform block binding
         std::vector<UniformVariable> variables;
+        // if this is a texture binding, determines whether a 2D or 3D image view is expected
         bool texture_is_3d = false;
     };
 
+    /**
+     * @brief describes the layout of a descriptor set with metadata. most of the time you should only be
+     * dealing with set 2 layouts, as set 0 and set 1 are handled internally.
+     */
     struct Layout final
     {
-        GPUHandle layout = nullptr;
-        std::vector<DescriptorBinding> bindings;
-        uint32_t set_index = 2;
+        GPUHandle layout = nullptr;       // VkDescriptorSetLayout GPU handle
+        std::vector<Descriptor> bindings; // list of bindings within the DSL
+        uint32_t set_index = 2;           // index to which the DSL is meant to be bound
     };
 
 private:
-    std::string origin;
-    GPUHandle vert_module           = nullptr;
-    GPUHandle frag_module           = nullptr;
-    GPUHandle pipeline_layout       = nullptr;
-    GPUHandle descriptor_set_layout = nullptr;
-    std::vector<DescriptorBinding> bindings;
+    std::string origin; // if not empty, contains the path from which this shader was compiled
+    GPUHandle vert_module           = nullptr; // vertex shader GPU module
+    GPUHandle frag_module           = nullptr; // fragment shader GPU module
+    GPUHandle pipeline_layout       = nullptr; // pipeline layout linking together descriptor set layouts
+    GPUHandle descriptor_set_layout = nullptr; // shader-specific descriptor set 2 layout
+    std::vector<Descriptor> bindings;          // reflected descriptor bindings for set 2
 
 public:
     DELETE_CONSTRUCTORS(Shader);
     Shader(const std::string& base_path);
     ~Shader() override;
 
-    static GPUHandle createDescriptorSetLayout(std::vector<DescriptorBinding> bindings);
+    /**
+     * @brief constructs a descriptor set layout based on an array of bindings.
+     * @param bindings list of descriptor bindings present in this descriptor set. see `Shader::Descriptor`.
+     * @returns GPU handle for the VkDescriptorSetLayout.
+     */
+    static GPUHandle createDescriptorSetLayout(std::vector<Descriptor> bindings);
 
     std::string getOrigin() const
     {
@@ -69,15 +101,24 @@ public:
     }
     GPUHandle getPipelineLayout() const { return pipeline_layout; }
     Layout getShaderLayout() const { return { descriptor_set_layout, bindings }; }
+    /**
+     * @brief constructs a list describing the currently present stages within the shader. usually just
+     * vertex and fragment.
+     * @returns list of shader/pipeline stages, described as pairing of shader stage ID and VkShaderModule.
+     */
+    std::vector<std::pair<Stage, GPUHandle>> getShaderStages() const;
+
+    /**
+     * @brief makes the pipeline layout for this shader the currently active layout in a render command
+     * buffer, allowing descriptor sets to be bound.
+     * @param command_buffer draw command buffer into which the binding will be written.
+     */
     void bind(WeakRef<DrawCommandBuffer> command_buffer);
 
-    std::vector<std::pair<Stage, GPUHandle>> getShaderStages() const;
-    bool reloadShader();
-
 private:
-    static std::vector<DescriptorBinding> mergeBindings(const std::vector<DescriptorBinding>& list_a,
-        const std::vector<DescriptorBinding>& list_b);
-    static std::vector<DescriptorBinding> getReflectedBindings(const std::vector<uint32_t>& blob);
+    static std::vector<Descriptor> mergeBindings(const std::vector<Descriptor>& list_a,
+        const std::vector<Descriptor>& list_b);
+    static std::vector<Descriptor> getReflectedBindings(const std::vector<uint32_t>& blob);
     static GPUHandle createShaderModule(const std::vector<uint32_t>& blob);
     static void fixIncludes(std::string& source_code, const std::string& path_prefix, bool res_relative);
     static void preprocess(const std::string& source_code, std::string& vertex_shader_code,
@@ -88,7 +129,8 @@ private:
     static void destroyAllPragmas(std::string& code);
     static bool compileShaders(const std::string& path, std::vector<uint32_t>& vert_blob,
         std::vector<uint32_t>& frag_blob);
-    static bool compile(const std::string& code, Stage stage, std::vector<uint32_t>& blob, const std::string& path);
+    static bool compile(const std::string& code, Stage stage, std::vector<uint32_t>& blob,
+        const std::string& path);
 
     void destroyResources();
 };
@@ -97,18 +139,18 @@ class Pipeline final : public Destructible
 {
 public:
     /**
-     * @brief enumerates mesh face culling mode
+     * @brief enumerates mesh face culling mode, can be used as bitflags.
      */
     enum CullMode
     {
-        CULL_NONE  = 0,
-        CULL_FRONT = 1,
-        CULL_BACK  = 2,
-        CULL_BOTH  = 3
+        CULL_NONE  = 0b00,
+        CULL_FRONT = 0b01,
+        CULL_BACK  = 0b10,
+        CULL_BOTH  = 0b11
     };
 
     /**
-     * @brief enumerates polygon drawing mode
+     * @brief enumerates polygon drawing mode.
      */
     enum PolygonMode
     {
@@ -118,7 +160,7 @@ public:
     };
 
     /**
-     * @brief enumerates comparison operations
+     * @brief enumerates comparison operations, used for depth and stencil comparisons.
      */
     enum CompareOp
     {

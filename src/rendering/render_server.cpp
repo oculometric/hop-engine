@@ -122,9 +122,10 @@ RenderServer::RenderServer()
         0x00,
         0xFF,
     };
-    default_image    = new Texture({ 2, 2, 1 }, Texture::FORMAT_SRGB_8X4, default_image_data);
-    default_3d_image = new Texture({ 2, 2, 2 }, Texture::FORMAT_SRGB_8X4, default_image_data);
-    default_sampler  = new Sampler(Sampler::FILTER_NEAREST, Sampler::ADDRESS_REPEAT);
+    default_image           = new Texture({ 2, 2, 1 }, Texture::FORMAT_SRGB_8X4, default_image_data);
+    default_3d_image        = new Texture({ 2, 2, 2 }, Texture::FORMAT_SRGB_8X4, default_image_data);
+    default_sampler         = new Sampler(Sampler::FILTER_NEAREST, Sampler::ADDRESS_REPEAT);
+    default_pipeline_layout = RenderServer::createPipelineLayout(Shader::createDescriptorSetLayout({}));
 
     quad = new Mesh(
         {
@@ -263,9 +264,9 @@ WeakRef<DrawCommandBuffer> RenderServer::recordRenderCommands(uint32_t image_ind
 
     if (scenes.empty())
     {
-        spinner_material->bind(command_buffer, false);
         final_pass_uniforms->bind(command_buffer);
         spinner_uniforms->bind(command_buffer);
+        spinner_material->bind(command_buffer, false);
         quad->draw(command_buffer);
     }
 
@@ -273,10 +274,9 @@ WeakRef<DrawCommandBuffer> RenderServer::recordRenderCommands(uint32_t image_ind
     {
         if (scene.scene && scene.scene->render_graph)
         {
-            scene.scene->bindOutputMaterial(command_buffer);
             final_pass_uniforms->bind(command_buffer);
-
             command_buffer->setScissorViewport(scene.start_uv, scene.size_uv);
+            scene.scene->bindOutputMaterial(command_buffer);
             tri->draw(command_buffer);
         }
     }
