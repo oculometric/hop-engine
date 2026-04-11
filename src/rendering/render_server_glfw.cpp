@@ -8,6 +8,7 @@
 #include "package.h"
 #include "scene.h"
 #include "swapchain.h"
+#include "vulkan_helpers.h"
 
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
@@ -81,9 +82,10 @@ bool RenderServer::resize(bool force_resize)
 
         createWindow();
         glfwHideWindow(window);
-        if (glfwCreateWindowSurface(static_cast<VkInstance>(instance), window, nullptr,
-                reinterpret_cast<VkSurfaceKHR*>(&surface)) != VK_SUCCESS)
-            DBG_FAULT("glfwCreateWindowSurface failed");
+        CHECK_RESULT(glfwCreateWindowSurface,
+            (static_cast<VkInstance>(instance), window, nullptr, reinterpret_cast<VkSurfaceKHR*>(&surface)),
+            FAULT,
+            ;);
 
         int window_x;
         int window_y;

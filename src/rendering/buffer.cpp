@@ -46,9 +46,11 @@ Buffer::Buffer(size_t size, const Usage buffer_usage, const MemoryProperties pro
     buffer_create_info.usage = convertFlags<VkBufferUsageFlagBits, Usage, 5>(usage, vulkan_buffer_usage);
     buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (vkCreateBuffer(static_cast<VkDevice>(RenderServer::getDevice()), &buffer_create_info, nullptr,
-            reinterpret_cast<VkBuffer*>(&buffer)) != VK_SUCCESS)
-        DBG_FAULT("vkCreateBuffer failed");
+    CHECK_RESULT(vkCreateBuffer,
+        (static_cast<VkDevice>(RenderServer::getDevice()), &buffer_create_info, nullptr,
+            reinterpret_cast<VkBuffer*>(&buffer)),
+        FAULT,
+        ;);
 
     // then we need to find appropriate memory
     VkMemoryRequirements memory_requirements;
@@ -61,13 +63,18 @@ Buffer::Buffer(size_t size, const Usage buffer_usage, const MemoryProperties pro
     allocate_info.allocationSize  = memory_requirements.size;
     allocate_info.memoryTypeIndex = Buffer::findMemoryType(memory_requirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(static_cast<VkDevice>(RenderServer::getDevice()), &allocate_info, nullptr,
-            reinterpret_cast<VkDeviceMemory*>(&memory)) != VK_SUCCESS)
-        DBG_FAULT("vkAllocateMemory failed");
+    CHECK_RESULT(vkAllocateMemory,
+        (static_cast<VkDevice>(RenderServer::getDevice()), &allocate_info, nullptr,
+            reinterpret_cast<VkDeviceMemory*>(&memory)),
+        FAULT,
+        ;);
 
     // and bind it to our buffer
-    vkBindBufferMemory(static_cast<VkDevice>(RenderServer::getDevice()), static_cast<VkBuffer>(buffer),
-        static_cast<VkDeviceMemory>(memory), 0);
+    CHECK_RESULT(vkBindBufferMemory,
+        (static_cast<VkDevice>(RenderServer::getDevice()), static_cast<VkBuffer>(buffer),
+            static_cast<VkDeviceMemory>(memory), 0),
+        FAULT,
+        ;);
 
     DBG_VERBOSE("created buffer of size " + std::to_string(size) + " with usage " + to_string(usage) +
                 " and memory properties " + to_string(properties));
@@ -118,8 +125,10 @@ void* Buffer::mapMemory()
     // only map the memory if it isn't already mapped (otherwise just
     // return the already-mapped pointer)
     if (mapped == nullptr)
-        vkMapMemory(static_cast<VkDevice>(RenderServer::getDevice()), static_cast<VkDeviceMemory>(memory),
-            0, buffer_size, 0, &mapped);
+        CHECK_RESULT(vkMapMemory,
+            (static_cast<VkDevice>(RenderServer::getDevice()), static_cast<VkDeviceMemory>(memory), 0,
+                buffer_size, 0, &mapped),
+            FAULT, return nullptr;);
 
     return mapped;
 }

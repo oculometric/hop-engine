@@ -198,9 +198,11 @@ void RenderPass::createRenderPass()
     render_pass_create_info.dependencyCount = static_cast<uint32_t>(dependencies.size());
     render_pass_create_info.pDependencies   = dependencies.data();
 
-    if (vkCreateRenderPass(static_cast<VkDevice>(RenderServer::getDevice()), &render_pass_create_info,
-            nullptr, reinterpret_cast<VkRenderPass*>(&render_pass)) != VK_SUCCESS)
-        DBG_FAULT("vkCreateRenderPass failed");
+    CHECK_RESULT(vkCreateRenderPass,
+        (static_cast<VkDevice>(RenderServer::getDevice()), &render_pass_create_info, nullptr,
+            reinterpret_cast<VkRenderPass*>(&render_pass)),
+        FAULT,
+        ;);
 }
 
 void RenderPass::createResources()
@@ -233,9 +235,11 @@ void RenderPass::createResources()
         framebuffer_create_info.height          = extent.y;
         framebuffer_create_info.layers          = 1;
 
-        if (vkCreateFramebuffer(static_cast<VkDevice>(RenderServer::getDevice()), &framebuffer_create_info,
-                nullptr, reinterpret_cast<VkFramebuffer*>(&framebuffers[i])) != VK_SUCCESS)
-            DBG_FAULT("vkCreateFramebuffer failed");
+        CHECK_RESULT(vkCreateFramebuffer,
+            (static_cast<VkDevice>(RenderServer::getDevice()), &framebuffer_create_info, nullptr,
+                reinterpret_cast<VkFramebuffer*>(&framebuffers[i])),
+            FAULT,
+            ;);
     }
 }
 

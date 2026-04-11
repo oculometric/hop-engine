@@ -1,7 +1,6 @@
 # TODO
 
 # v0.54
-- enforce proper error checking
 - draw command buffers should have a default pipeline layout (dummy descriptor set 2)
 - make validation layers a command line option
 

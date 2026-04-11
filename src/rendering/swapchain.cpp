@@ -14,8 +14,11 @@ Swapchain::SupportInfo Swapchain::getSwapchainSupportInfo(const GPUHandle device
     SupportInfo si{};
 
     VkSurfaceCapabilitiesKHR capabilities{};
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(static_cast<VkPhysicalDevice>(device),
-        static_cast<VkSurfaceKHR>(RenderServer::getSurface()), &capabilities);
+    CHECK_RESULT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR,
+        (static_cast<VkPhysicalDevice>(device), static_cast<VkSurfaceKHR>(RenderServer::getSurface()),
+            &capabilities),
+        FAULT,
+        ;);
     si.current_extent    = { capabilities.currentExtent.width, capabilities.currentExtent.height };
     si.min_extent        = { capabilities.minImageExtent.width, capabilities.minImageExtent.height };
     si.max_extent        = { capabilities.maxImageExtent.width, capabilities.maxImageExtent.height };
@@ -26,8 +29,11 @@ Swapchain::SupportInfo Swapchain::getSwapchainSupportInfo(const GPUHandle device
         (capabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR);
 
     uint32_t present_mode_count;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(static_cast<VkPhysicalDevice>(device),
-        static_cast<VkSurfaceKHR>(RenderServer::getSurface()), &present_mode_count, nullptr);
+    CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR,
+        (static_cast<VkPhysicalDevice>(device), static_cast<VkSurfaceKHR>(RenderServer::getSurface()),
+            &present_mode_count, nullptr),
+        FAULT,
+        ;);
     std::vector<VkPresentModeKHR> present_modes(present_mode_count);
     vkGetPhysicalDeviceSurfacePresentModesKHR(static_cast<VkPhysicalDevice>(device),
         static_cast<VkSurfaceKHR>(RenderServer::getSurface()), &present_mode_count, present_modes.data());
@@ -48,7 +54,7 @@ glm::u32vec2 Swapchain::computeActualExtent(const glm::u32vec2 extent)
         return glm::clamp(extent, si.min_extent, si.max_extent);
 }
 
-uint32_t HopEngine::Swapchain::computeImageCount()
+uint32_t Swapchain::computeImageCount()
 {
     SupportInfo si       = getSwapchainSupportInfo(RenderServer::getPhysicalDevice());
     uint32_t image_count = si.min_image_count + 1;
@@ -210,8 +216,11 @@ void Swapchain::createImageViews()
 {
     // retrieve images
     uint32_t image_count = 0;
-    vkGetSwapchainImagesKHR(static_cast<VkDevice>(RenderServer::getDevice()),
-        static_cast<VkSwapchainKHR>(swapchain), &image_count, nullptr);
+    CHECK_RESULT(vkGetSwapchainImagesKHR,
+        (static_cast<VkDevice>(RenderServer::getDevice()), static_cast<VkSwapchainKHR>(swapchain),
+            &image_count, nullptr),
+        FAULT,
+        ;);
     images.resize(image_count);
     vkGetSwapchainImagesKHR(static_cast<VkDevice>(RenderServer::getDevice()),
         static_cast<VkSwapchainKHR>(swapchain), &image_count, reinterpret_cast<VkImage*>(images.data()));
@@ -235,9 +244,11 @@ void Swapchain::createImageViews()
         view_create_info.subresourceRange.baseArrayLayer = 0;
         view_create_info.subresourceRange.layerCount     = 1;
 
-        if (vkCreateImageView(static_cast<VkDevice>(RenderServer::getDevice()), &view_create_info, nullptr,
-                reinterpret_cast<VkImageView*>(&image_views[i])) != VK_SUCCESS)
-            DBG_FAULT("vkCreateImageView failed");
+        CHECK_RESULT(vkCreateImageView,
+            (static_cast<VkDevice>(RenderServer::getDevice()), &view_create_info, nullptr,
+                reinterpret_cast<VkImageView*>(&image_views[i])),
+            FAULT,
+            ;);
     }
 }
 
