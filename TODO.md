@@ -1,21 +1,20 @@
 # TODO
 
 # v0.54
-- eliminate vulkan_typedefs.h
 - enforce proper error checking
+- draw command buffers should have a default pipeline layout (dummy descriptor set 2)
 - make validation layers a command line option
 
-- draw command buffers should have a default pipeline layout (dummy descriptor set 2)
 - make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
 - deserialise functions should be able to take in a serial string directly
 
-- split framebuffer from render pass?? merge image creation from swapchain to render pass
 - document everything
     - engine.h
     - material.h
     - scene.h
     - user_interface.h
     - license (happy bunny license) and copyright
+
 - document serial formats
     - material
     - render graph
@@ -24,6 +23,12 @@
     - node style
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - switch to glslang for shader compilation
+    - more reliable vertex/fragment function finding
+    - custom varying support
+    - automatic uniform layouting
+    - insert a hidden main function which calls the actual correct shader!!
+    - maybe make things more object-oriented?
+- split framebuffer from render pass?? merge image creation from swapchain to render pass
 - package manager improvements
     - data blocks should know which package they came from
     - package manager should not have to load the entire file from disk at once
@@ -80,14 +85,11 @@
     - debug meshes for cameras, lights
 ---
 
-# v0.61
+# future
 - audio loading and output
 - shader & other resource reloading at runtime
 - windowless offscreen rendering support
 - .otf -> baked font converter (font oven)
----
-
-## v0.7
 - hover tooltips for nodes....
 - frustrum culling [M]
 - texture upload/download of data
@@ -101,3 +103,4 @@
 - VR interfaces
 - Steamworks integration
 - 3D editor
+- geometry shader support
