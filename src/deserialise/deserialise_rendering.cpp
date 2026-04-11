@@ -76,12 +76,17 @@ static bool getAddressMode(const std::string& str, Sampler::Address& out)
     return true;
 }
 
-Ref<Material> Material::deserialise(const std::string& name)
+Ref<Material> Material::deserialiseFile(const std::string& name)
 {
     auto raw_data = Package::load(name);
     if (raw_data.empty()) return nullptr;
+    std::string code(reinterpret_cast<char*>(raw_data.data()), raw_data.size());
+    raw_data.clear();
+    return deserialise(code, name);
+}
 
-    std::string token_str(reinterpret_cast<char*>(raw_data.data()), raw_data.size());
+Ref<Material> Material::deserialise(const std::string& token_str, const std::string& origin)
+{
     auto tokens = TokenReader::tokenise(token_str);
     if (tokens.empty()) return nullptr;
 
@@ -97,7 +102,7 @@ Ref<Material> Material::deserialise(const std::string& name)
     std::vector<TokenReader::Statement> uniforms;
     std::vector<std::tuple<Ref<Texture>, std::string, Sampler::Filter, Sampler::Address>> texture_bindings;
 
-    Deserialiser deserialiser("error deserialising material '" + name + "'");
+    Deserialiser deserialiser("error deserialising material '" + origin + "'");
     deserialiser.addStatementAnonymous(
         Deserialiser::AnonymousStatementSpec("Resource", Deserialiser::STATEMENT_IDENTIFIER_REQUIRED, false)
             .argument(TokenReader::TOKEN_TEXT)
@@ -235,7 +240,7 @@ Ref<Material> Material::deserialise(const std::string& name)
             Engine::getSampler(std::get<Sampler::Filter>(binding), std::get<Sampler::Address>(binding)));
     }
 
-    Deserialiser uniform_deserialiser("error deserialising material '" + name + "'");
+    Deserialiser uniform_deserialiser("error deserialising material '" + origin + "'");
     uniform_deserialiser.addStatementAnonymous(
         Deserialiser::AnonymousStatementSpec("vec4", Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
             .argument(TokenReader::TOKEN_STRING)
@@ -278,16 +283,21 @@ Ref<Material> Material::deserialise(const std::string& name)
 
     uniform_deserialiser.execute(uniforms, token_str);
 
-    material->origin = name;
+    material->origin = origin;
     return material;
 }
 
-Ref<RenderGraph> RenderGraph::deserialise(const std::string& name)
+Ref<RenderGraph> RenderGraph::deserialiseFile(const std::string& name)
 {
     auto raw_data = Package::load(name);
     if (raw_data.empty()) return nullptr;
+    std::string code(reinterpret_cast<char*>(raw_data.data()), raw_data.size());
+    raw_data.clear();
+    return deserialise(code, name);
+}
 
-    std::string token_str(reinterpret_cast<char*>(raw_data.data()), raw_data.size());
+Ref<RenderGraph> RenderGraph::deserialise(const std::string& token_str, const std::string& origin)
+{
     auto tokens = TokenReader::tokenise(token_str);
     if (tokens.empty()) return nullptr;
 
@@ -299,7 +309,7 @@ Ref<RenderGraph> RenderGraph::deserialise(const std::string& name)
     std::map<std::string, int> step_identifiers;
     Builder builder;
 
-    Deserialiser deserialiser("error deserialising render graph '" + name + "'");
+    Deserialiser deserialiser("error deserialising render graph '" + origin + "'");
     deserialiser.addStatementAnonymous(
         Deserialiser::AnonymousStatementSpec("Resource", Deserialiser::STATEMENT_IDENTIFIER_REQUIRED, false)
             .argument(TokenReader::TOKEN_TEXT)
@@ -369,7 +379,7 @@ Ref<RenderGraph> RenderGraph::deserialise(const std::string& name)
             return true;
         });
 
-    Deserialiser binding_deserialiser("error deserialising render graph '" + name + "'");
+    Deserialiser binding_deserialiser("error deserialising render graph '" + origin + "'");
     std::map<uint32_t, AttachmentBinding> bindings;
     binding_deserialiser.addStatementNamed(
         Deserialiser::NamedStatementSpec("Input", Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
@@ -455,6 +465,6 @@ Ref<RenderGraph> RenderGraph::deserialise(const std::string& name)
     if (!deserialiser.execute(syntax_tree, token_str)) return nullptr;
 
     auto rg    = new RenderGraph(builder);
-    rg->origin = name;
+    rg->origin = origin;
     return rg;
 }

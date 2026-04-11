@@ -370,7 +370,8 @@ public:
 
     void setUniform(const std::string& name, const void* data, size_t size);
 
-    static Ref<Material> deserialise(const std::string& name);
+    static Ref<Material> deserialiseFile(const std::string& name);
+    static Ref<Material> deserialise(const std::string& token_str, const std::string& origin = "");
 
     void drawImGuiDebug();
 };

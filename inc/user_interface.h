@@ -7,6 +7,7 @@
 #include "common.h"
 #include "scene.h"
 #include "input.h"
+#include "mesh.h"
 
 namespace HopEngine
 {

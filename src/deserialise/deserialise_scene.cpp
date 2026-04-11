@@ -19,8 +19,8 @@ struct SceneResources
     std::map<std::string, Ref<Texture>> textures;
 };
 
-static bool deserialiseStaticMesh(const Deserialiser::NamedStatementResult& result,
-    WeakRef<Object> object, const Ref<Scene>& scene, const SceneResources& resources)
+static bool deserialiseStaticMesh(const Deserialiser::NamedStatementResult& result, WeakRef<Object> object,
+    const Ref<Scene>& scene, const SceneResources& resources)
 {
     WeakRef<StaticMeshComponent> obj = object->addComponent<StaticMeshComponent>();
     std::string mesh_res;
@@ -85,8 +85,7 @@ static bool deserialiseCamera(const Deserialiser::NamedStatementResult& result, 
     result.read("slot", slot);
     if (slot >= 0) obj->camera_slot = slot;
     else
-        DBG_WARNING(
-            "deserialising a camera object without a slot binding, this camera will not render!");
+        DBG_WARNING("deserialising a camera object without a slot binding, this camera will not render!");
     result.read("clear_colour", obj->clear_colour);
     result.read("near_clip", obj->near_clip);
     result.read("far_clip", obj->far_clip);
@@ -95,8 +94,8 @@ static bool deserialiseCamera(const Deserialiser::NamedStatementResult& result, 
     return true;
 }
 
-static bool deserialiseTextBlock(const Deserialiser::NamedStatementResult& result,
-    WeakRef<Object> object, const Ref<Scene>& scene, const SceneResources& resources)
+static bool deserialiseTextBlock(const Deserialiser::NamedStatementResult& result, WeakRef<Object> object,
+    const Ref<Scene>& scene, const SceneResources& resources)
 {
     WeakRef<TextComponent> obj = object->addComponent<TextComponent>();
     std::string text           = "Text";
@@ -111,36 +110,41 @@ static bool deserialiseTextBlock(const Deserialiser::NamedStatementResult& resul
 
 struct ObjectDeserialiseConfig
 {
-    bool (*builder_function)(const Deserialiser::NamedStatementResult&, WeakRef<Object>,
-        const Ref<Scene>&, const SceneResources&);
+    bool (*builder_function)(const Deserialiser::NamedStatementResult&, WeakRef<Object>, const Ref<Scene>&,
+        const SceneResources&);
     std::map<std::string, TokenReader::TokenType> arguments;
 };
 
 static std::map<std::string, ObjectDeserialiseConfig> object_deserialisers = {
-    { "StaticMesh", { deserialiseStaticMesh, { { "mesh", TokenReader::TOKEN_IDENTIFIER },
- { "material", TokenReader::TOKEN_IDENTIFIER },
- { "camera_mask", TokenReader::TOKEN_INT } } }                             },
-    {      "Light",                               { deserialiseLight,
-                               { { "type", TokenReader::TOKEN_TEXT }, { "colour", TokenReader::TOKEN_VECTOR },
-                               { "angle", TokenReader::TOKEN_FLOAT } } }   },
-    {     "Camera",                                                                        { deserialiseCamera,
-                                                                        {
-                                                                        { "slot", TokenReader::TOKEN_INT },
-                                                                        { "clear_colour", TokenReader::TOKEN_VECTOR },
-                                                                        { "near_clip", TokenReader::TOKEN_FLOAT },
-                                                                        { "far_clip", TokenReader::TOKEN_FLOAT },
-                                                                        { "fov", TokenReader::TOKEN_FLOAT },
-                                                                        } } },
-    {  "TextBlock",       { deserialiseTextBlock, { { "text", TokenReader::TOKEN_STRING },
-       { "tint", TokenReader::TOKEN_VECTOR } } }                           }
+    { "StaticMesh",{ deserialiseStaticMesh, { { "mesh", TokenReader::TOKEN_IDENTIFIER },
+{ "material", TokenReader::TOKEN_IDENTIFIER },
+{ "camera_mask", TokenReader::TOKEN_INT } } }                                                },
+    {      "Light",
+     { deserialiseLight, { { "type", TokenReader::TOKEN_TEXT }, { "colour", TokenReader::TOKEN_VECTOR },
+     { "angle", TokenReader::TOKEN_FLOAT } } }                                                           },
+    {     "Camera",                                                                                   { deserialiseCamera,
+                                                                                   {
+                                                                                   { "slot", TokenReader::TOKEN_INT },
+                                                                                   { "clear_colour", TokenReader::TOKEN_VECTOR },
+                                                                                   { "near_clip", TokenReader::TOKEN_FLOAT },
+                                                                                   { "far_clip", TokenReader::TOKEN_FLOAT },
+                                                                                   { "fov", TokenReader::TOKEN_FLOAT },
+                                                                                   } } },
+    {  "TextBlock", { deserialiseTextBlock,
+ { { "text", TokenReader::TOKEN_STRING }, { "tint", TokenReader::TOKEN_VECTOR } } }   }
 };
 
-Ref<Scene> Scene::deserialise(const std::string& name)
+Ref<Scene> Scene::deserialiseFile(const std::string& name)
 {
     auto raw_data = Package::load(name);
     if (raw_data.empty()) return nullptr;
+    std::string code(reinterpret_cast<char*>(raw_data.data()), raw_data.size());
+    raw_data.clear();
+    return deserialise(code, name);
+}
 
-    const std::string token_str(reinterpret_cast<char*>(raw_data.data()), raw_data.size());
+Ref<Scene> Scene::deserialise(const std::string& token_str, const std::string& origin)
+{
     const auto tokens = TokenReader::tokenise(token_str);
     if (tokens.empty()) return nullptr;
 
@@ -152,13 +156,13 @@ Ref<Scene> Scene::deserialise(const std::string& name)
     std::map<std::string, Ref<Texture>> textures;
     std::map<std::string, Ref<RenderGraph>> render_graphs;
 
-    Ref<Scene> scene = Scene::create(name);
+    Ref<Scene> scene = Scene::create(origin);
 
-    Deserialiser deserialiser("error deserialising scene '" + name + "'");
-    deserialiser.addStatementAnonymous(Deserialiser::AnonymousStatementSpec("Resource",
-                                           Deserialiser::STATEMENT_IDENTIFIER_REQUIRED, false)
-                                           .argument(TokenReader::TOKEN_TEXT)
-                                           .argument(TokenReader::TOKEN_STRING),
+    Deserialiser deserialiser("error deserialising scene '" + origin + "'");
+    deserialiser.addStatementAnonymous(
+        Deserialiser::AnonymousStatementSpec("Resource", Deserialiser::STATEMENT_IDENTIFIER_REQUIRED, false)
+            .argument(TokenReader::TOKEN_TEXT)
+            .argument(TokenReader::TOKEN_STRING),
         [&](Deserialiser::AnonymousStatementResult result) -> bool
         {
             std::string res_type;
@@ -172,7 +176,7 @@ Ref<Scene> Scene::deserialise(const std::string& name)
             else if (res_type == "mesh")
                 meshes[result.statement.identifier] = Engine::loadMesh(res_addr);
             else if (res_type == "render_graph")
-                render_graphs[result.statement.identifier] = RenderGraph::deserialise(res_addr);
+                render_graphs[result.statement.identifier] = RenderGraph::deserialiseFile(res_addr);
             else
                 return deserialiser.emitError("invalid resource type", result.offsetOf(0), token_str);
             return true;
@@ -199,9 +203,9 @@ Ref<Scene> Scene::deserialise(const std::string& name)
             scene->setSkybox(texture_it->second);
             return true;
         });
-    deserialiser.addStatementNamed(Deserialiser::NamedStatementSpec("RenderGraph",
-                                       Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
-                                       .argument("resource", TokenReader::TOKEN_IDENTIFIER, true),
+    deserialiser.addStatementNamed(
+        Deserialiser::NamedStatementSpec("RenderGraph", Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
+            .argument("resource", TokenReader::TOKEN_IDENTIFIER, true),
         [&](Deserialiser::NamedStatementResult result) -> bool
         {
             std::string rg_res;
@@ -215,7 +219,7 @@ Ref<Scene> Scene::deserialise(const std::string& name)
         });
 
     std::vector<WeakRef<Object>> parent_stack;
-    Deserialiser object_deserialiser("error deserialising scene '" + name + "'");
+    Deserialiser object_deserialiser("error deserialising scene '" + origin + "'");
 
     auto object_spec =
         Deserialiser::NamedStatementSpec("Object", Deserialiser::STATEMENT_IDENTIFIER_OPTIONAL, true)

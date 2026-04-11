@@ -161,7 +161,7 @@ Ref<Material> Engine::loadMaterial(const string& path)
     const auto it = engine->loaded_materials.find(path);
     if (it == engine->loaded_materials.end())
     {
-        Ref<Material> thing = Material::deserialise(path);
+        Ref<Material> thing = Material::deserialiseFile(path);
         engine->loaded_materials[path] = thing;
         return thing;
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.h"
+#include "material.h"
 #include "scene.h"
 #include "user_interface.h"
 

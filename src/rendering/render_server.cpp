@@ -29,16 +29,19 @@ void RenderServer::destroy()
     }
 }
 
+constexpr Shader::Descriptor scene_uniform_descriptor{ 0, Shader::UNIFORM, sizeof(SceneUniforms) };
+constexpr Shader::Descriptor object_uniform_descriptor{ 0, Shader::UNIFORM, sizeof(ObjectUniforms) };
+
 Ref<UniformBlock> RenderServer::createSceneUniforms()
 {
-    return new UniformBlock(Shader::Layout{ server->scene_descriptor_set_layout,
-        { { 0, Shader::UNIFORM, sizeof(SceneUniforms) } }, 0 });
+    return new UniformBlock(
+        Shader::Layout{ server->scene_descriptor_set_layout, { scene_uniform_descriptor }, 0 });
 }
 
 Ref<UniformBlock> RenderServer::createObjectUniforms()
 {
-    return new UniformBlock(Shader::Layout{ server->object_descriptor_set_layout,
-        { { 0, Shader::UNIFORM, sizeof(ObjectUniforms) } }, 1 });
+    return new UniformBlock(
+        Shader::Layout{ server->object_descriptor_set_layout, { object_uniform_descriptor }, 1 });
 }
 
 uint32_t RenderServer::getFramesInFlight() { return server->swapchain->getImageCount(); }
@@ -122,10 +125,13 @@ RenderServer::RenderServer()
         0x00,
         0xFF,
     };
-    default_image           = new Texture({ 2, 2, 1 }, Texture::FORMAT_SRGB_8X4, default_image_data);
-    default_3d_image        = new Texture({ 2, 2, 2 }, Texture::FORMAT_SRGB_8X4, default_image_data);
-    default_sampler         = new Sampler(Sampler::FILTER_NEAREST, Sampler::ADDRESS_REPEAT);
-    default_pipeline_layout = RenderServer::createPipelineLayout(Shader::createDescriptorSetLayout({}));
+    default_image                 = new Texture({ 2, 2, 1 }, Texture::FORMAT_SRGB_8X4, default_image_data);
+    default_3d_image              = new Texture({ 2, 2, 2 }, Texture::FORMAT_SRGB_8X4, default_image_data);
+    default_sampler               = new Sampler(Sampler::FILTER_NEAREST, Sampler::ADDRESS_REPEAT);
+    scene_descriptor_set_layout   = Shader::createDescriptorSetLayout({ scene_uniform_descriptor });
+    object_descriptor_set_layout  = Shader::createDescriptorSetLayout({ object_uniform_descriptor });
+    default_descriptor_set_layout = Shader::createDescriptorSetLayout({});
+    default_pipeline_layout       = RenderServer::createPipelineLayout(default_descriptor_set_layout);
 
     quad = new Mesh(
         {

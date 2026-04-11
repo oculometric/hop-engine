@@ -1,5 +1,6 @@
 #include "deserialise.h"
 #include "engine.h"
+#include "mesh.h"
 #include "node_view.h"
 #include "package.h"
 
@@ -103,11 +104,11 @@ Ref<NodeView::Style> NodeView::Style::deserialise(const std::string& path)
                             return false;
                         return true;
                     }))
-                return deserialiser.emitError("invalid header position value",
-                    result.offsetOf("position"), token_str);
+                return deserialiser.emitError("invalid header position value", result.offsetOf("position"),
+                    token_str);
             if (!result.read("filled", style->header_fill))
-                return deserialiser.emitError("invalid boolean constant value",
-                    result.offsetOf("filled"), token_str);
+                return deserialiser.emitError("invalid boolean constant value", result.offsetOf("filled"),
+                    token_str);
             result.read("lines_after", style->after_header_spacing);
             return true;
         });

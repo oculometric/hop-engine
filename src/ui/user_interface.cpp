@@ -4,6 +4,7 @@
 #include <glm/gtx/matrix_transform_2d.hpp>
 #include "engine.h"
 #include "input.h"
+#include "material.h"
 
 using namespace HopEngine;
 

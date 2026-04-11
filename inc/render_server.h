@@ -66,6 +66,8 @@ private:
     GPUHandle scene_descriptor_set_layout = nullptr;
     // universally used descriptor set layout for set 1, containing per-object information
     GPUHandle object_descriptor_set_layout = nullptr;
+    // default descriptor set layout for set 2, with no bindings
+    GPUHandle default_descriptor_set_layout = nullptr;
     // pipeline layout describing a simple 0-1-2 pipeline, used when the actual pipeline is unknown
     GPUHandle default_pipeline_layout = nullptr;
 

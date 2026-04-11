@@ -4,7 +4,6 @@
 - make validation layers a command line option
 
 - make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
-- deserialise functions should be able to take in a serial string directly
 
 - document everything
     - engine.h
@@ -29,7 +28,6 @@
     - insert a hidden main function which calls the actual correct shader!!
     - maybe make things more object-oriented (passing arguments rather than static variables in shader code)
     - overhaul arrangement of shader/pipeline/pipeline layout/descriptor set - maybe move some render server behaviour into this? (i dont like calling back and forth)
-    - make render server descriptor set creation use shader's function + layout (etc)
 - split framebuffer from render pass?? merge image creation from swapchain to render pass
 - package manager improvements
     - data blocks should know which package they came from

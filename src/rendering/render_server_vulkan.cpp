@@ -135,29 +135,6 @@ void RenderServer::createVulkan()
                 reinterpret_cast<VkDescriptorPool*>(&descriptor_pool)),
             FAULT,
             ;);
-
-        VkDescriptorSetLayoutBinding uniform_layout_binding{};
-        uniform_layout_binding.binding         = 0;
-        uniform_layout_binding.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniform_layout_binding.descriptorCount = 1;
-        uniform_layout_binding.stageFlags      = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        VkDescriptorSetLayoutCreateInfo layout_create_info{};
-        layout_create_info.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layout_create_info.bindingCount = 1;
-        layout_create_info.pBindings    = &uniform_layout_binding;
-
-        CHECK_RESULT(vkCreateDescriptorSetLayout,
-            (static_cast<VkDevice>(device), &layout_create_info, nullptr,
-                reinterpret_cast<VkDescriptorSetLayout*>(&scene_descriptor_set_layout)),
-            FAULT,
-            ;);
-
-        CHECK_RESULT(vkCreateDescriptorSetLayout,
-            (static_cast<VkDevice>(device), &layout_create_info, nullptr,
-                reinterpret_cast<VkDescriptorSetLayout*>(&object_descriptor_set_layout)),
-            FAULT,
-            ;);
     }
 
     {
@@ -442,6 +419,10 @@ void RenderServer::destroyVulkan()
         static_cast<VkDescriptorSetLayout>(scene_descriptor_set_layout), nullptr);
     vkDestroyDescriptorSetLayout(static_cast<VkDevice>(device),
         static_cast<VkDescriptorSetLayout>(object_descriptor_set_layout), nullptr);
+    vkDestroyDescriptorSetLayout(static_cast<VkDevice>(device),
+        static_cast<VkDescriptorSetLayout>(default_descriptor_set_layout), nullptr);
+    vkDestroyPipelineLayout(static_cast<VkDevice>(device),
+        static_cast<VkPipelineLayout>(default_pipeline_layout), nullptr);
 
     if (debug_messenger)
     {

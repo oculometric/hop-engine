@@ -316,11 +316,19 @@ public:
     void drawImGuiDebug();
     /**
      * @brief constructs a render graph from a text-based serialised representation.
-     * @param name path to the target file.
+     * @param name path to the target file from which to read the text representation.
      * @returns render graph constructed based on serialised representation, or `nullptr` if an error
      * occurred during deserialisation.
      */
-    static Ref<RenderGraph> deserialise(const std::string& name);
+    static Ref<RenderGraph> deserialiseFile(const std::string& name);
+    /**
+     * @brief constructs a render graph from a text-based serialised representation.
+     * @param token_str text representation to decode.
+     * @param origin original path from which the material was loaded, may be empty.
+     * @returns render graph constructed based on serialised representation, or `nullptr` if an error
+     * occurred during deserialisation.
+     */
+    static Ref<RenderGraph> deserialise(const std::string& token_str, const std::string& origin = "");
 
 private:
     /**
