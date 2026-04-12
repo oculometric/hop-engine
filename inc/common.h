@@ -4,6 +4,18 @@
 #include <string>
 #include <vector>
 
+constexpr uint16_t HOP_ENGINE_VERSION_MAJOR = 0;
+constexpr uint16_t HOP_ENGINE_VERSION_MINOR = 54;
+constexpr uint16_t HOP_ENGINE_VERSION       = (HOP_ENGINE_VERSION_MAJOR << 8) | HOP_ENGINE_VERSION_MINOR;
+#define HOP_ENGINE_VERSION_STRING \
+    (std::to_string(HOP_ENGINE_VERSION_MAJOR) + '.' + std::to_string(HOP_ENGINE_VERSION_MINOR))
+#if !defined(HOP_ENGINE_COMMIT)
+#define HOP_ENGINE_COMMIT UNKNOWN
+#endif
+#define STRINGIFY_(arg)          #arg
+#define STRINGIFY(arg)           STRINGIFY_(arg)
+#define HOP_ENGINE_COMMIT_STRING STRINGIFY(HOP_ENGINE_COMMIT)
+
 // automatically generates deleters for basic constructors, and copy/move constructors/operators.
 // these should be used for any engine type which should be handled exclusively as a pointer (i.e. a
 // Ref<>).

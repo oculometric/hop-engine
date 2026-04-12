@@ -40,6 +40,8 @@ public:
     struct InitParams final
     {
         bool enable_vulkan_validation = false;
+        Debug::Level debug_log_level = Debug::DEBUG_INFO;
+        bool create_log_file = true;
     };
 
 private:

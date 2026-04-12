@@ -61,7 +61,7 @@ private:
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(Debug);
 
-    static void init();
+    static void init(bool create_file);
     static void close();
 
     /**
@@ -106,7 +106,7 @@ public:
     static std::vector<std::string> queryLines(size_t count);
 
 private:
-    Debug(Level crash);
+    Debug(Level crash, bool create_file);
     ~Debug();
 };
 

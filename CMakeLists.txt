@@ -21,6 +21,11 @@ if(WIN32)
 endif()
 find_package(Vulkan REQUIRED COMPONENTS SPIRV-Tools)
 set(ENGINE_HOP "${CMAKE_BINARY_DIR}/engine.hop")
+execute_process(COMMAND git log --pretty=format:%h -n 1
+  OUTPUT_VARIABLE GIT_TAG
+  ERROR_QUIET
+)
+add_compile_definitions(HOP_ENGINE_COMMIT=${GIT_TAG})
 
 # ================ EXECUTABLE TARGET 'package-tool' =======================================
 add_executable(package-tool

@@ -301,7 +301,8 @@ Engine::Engine(const InitParams& params)
 
     engine->engine_start_timestamp = chrono::steady_clock::now();
 
-    Debug::init();
+    Debug::init(params.create_log_file);
+    Debug::setLogLevel(params.debug_log_level);
 
     EventServer::init();
 

@@ -13,9 +13,9 @@ using namespace HopEngine;
 
 static Debug* instance = nullptr;
 
-void Debug::init()
+void Debug::init(bool create_file)
 {
-    if (instance == nullptr) instance = new Debug(Debug::DEBUG_FAULT);
+    if (instance == nullptr) instance = new Debug(Debug::DEBUG_FAULT, create_file);
 
     DBG_INFO("initialised debug");
 }
@@ -31,13 +31,13 @@ void Debug::close()
 
 void Debug::setLogLevel(const Level severity)
 {
-    if (!instance) Debug::init();
+    if (!instance) Debug::init(true);
     instance->log_level = severity;
 }
 
 void Debug::setCrashLevel(const Level severity)
 {
-    if (!instance) Debug::init();
+    if (!instance) Debug::init(true);
     instance->crash_level = severity;
 }
 
@@ -150,7 +150,7 @@ std::vector<std::string> Debug::queryLines(size_t count)
     return arr;
 }
 
-Debug::Debug(Level crash)
+Debug::Debug(Level crash, bool create_file)
 {
     instance = this;
 
@@ -165,16 +165,19 @@ Debug::Debug(Level crash)
     auto tmp = localtime(&time_now);
     time     = *tmp;
 #endif
-    // generate a unique name for the log file based on the time
-    const std::string file_name =
-        std::format("{}hop-engine {:0>2}_{:0>2}_{:0>2} {:0>2}.{:0>2}.{:0>2}.log", DEBUG_LOGFILE,
-            time.tm_mday, time.tm_mon, time.tm_year - 100, time.tm_hour, time.tm_min, time.tm_sec);
-    std::filesystem::create_directory(DEBUG_LOGFILE);
-    file_output.open(file_name);
-    if (!file_output.is_open())
+    if (create_file)
     {
-        DEBUG_TERMINAL << "FATAL ERROR: FAILED TO OPEN LOG FILE." << std::endl;
-        exit(-1);
+        // generate a unique name for the log file based on the time
+        const std::string file_name =
+            std::format("{}hop-engine {:0>2}_{:0>2}_{:0>2} {:0>2}.{:0>2}.{:0>2}.log", DEBUG_LOGFILE,
+                time.tm_mday, time.tm_mon, time.tm_year - 100, time.tm_hour, time.tm_min, time.tm_sec);
+        std::filesystem::create_directory(DEBUG_LOGFILE);
+        file_output.open(file_name);
+        if (!file_output.is_open())
+        {
+            DEBUG_TERMINAL << "FATAL ERROR: FAILED TO OPEN LOG FILE." << std::endl;
+            exit(-1);
+        }
     }
 }
 
