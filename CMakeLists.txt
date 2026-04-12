@@ -57,6 +57,7 @@ add_executable(bin-to-cpp
 
 set_property(TARGET bin-to-cpp PROPERTY LINKER_LANGUAGE CXX)
 set_property(TARGET bin-to-cpp PROPERTY CXX_STANDARD 20)
+target_compile_options(bin-to-cpp PRIVATE -O3)
 
 # ================ RESOURCE TARGET 'engine.hop' ===========================================
 file(GLOB RES_ENGINE

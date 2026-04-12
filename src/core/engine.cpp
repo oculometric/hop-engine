@@ -16,10 +16,10 @@ using namespace std;
 
 static Engine* engine = nullptr;
 
-void Engine::init()
+void Engine::init(const InitParams& params)
 {
     if (engine == nullptr)
-        engine = new Engine();
+        engine = new Engine(params);
 }
 
 void Engine::destroy()
@@ -295,14 +295,13 @@ void Engine::drawImGuiDebug()
 extern unsigned char engine_hop_raw[];
 extern unsigned long long engine_hop_raw_size;
 
-Engine::Engine()
+Engine::Engine(const InitParams& params)
 {
     engine = this;
 
     engine->engine_start_timestamp = chrono::steady_clock::now();
 
     Debug::init();
-    Debug::setLogLevel(Debug::DEBUG_VERBOSE);
 
     EventServer::init();
 
@@ -311,7 +310,7 @@ Engine::Engine()
     memcpy(engine_hop.data(), engine_hop_raw, engine_hop.size());
     Package::importPackage(engine_hop);
 
-    RenderServer::init();
+    RenderServer::init(params.enable_vulkan_validation);
     RenderServer::setIcon("res://engine/icon.png");    
     std::pair<Sampler::Filter, Sampler::Address> builders[6] =
     {

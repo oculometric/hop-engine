@@ -1,7 +1,6 @@
 # TODO
 
 # v0.54
-- make validation layers a command line option (also debug verbosity)
 - make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
 
 - document everything

@@ -29,22 +29,29 @@ void Debug::close()
     }
 }
 
-void Debug::setLogLevel(const Level severity) { instance->log_level = severity; }
+void Debug::setLogLevel(const Level severity)
+{
+    if (!instance) Debug::init();
+    instance->log_level = severity;
+}
 
-void Debug::setCrashLevel(const Level severity) { instance->crash_level = severity; }
+void Debug::setCrashLevel(const Level severity)
+{
+    if (!instance) Debug::init();
+    instance->crash_level = severity;
+}
 
 // generates an ANSI colour command from the given foreground and background colours
 static std::string makeANSIColour(const int fgcol, const int bgcol)
 { return "\033[" + std::to_string(fgcol + 30) + ';' + std::to_string(bgcol + 40) + 'm'; }
 
-static std::string makeANSIColour(const int fgcol)
-{ return "\033[" + std::to_string(fgcol + 30) + 'm'; }
+static std::string makeANSIColour(const int fgcol) { return "\033[" + std::to_string(fgcol + 30) + 'm'; }
 
 std::string Debug::pointerToString(const void* ptr)
 { return std::format("0x{:x}", reinterpret_cast<size_t>(ptr)); }
 
-void Debug::write(const std::string& description, Level severity, const char* file,
-    const char* function, size_t line)
+void Debug::write(const std::string& description, Level severity, const char* file, const char* function,
+    size_t line)
 {
     if (instance == nullptr)
     {

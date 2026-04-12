@@ -100,7 +100,7 @@ private:
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(RenderServer);
 
-    static void init();
+    static void init(bool enable_validation);
     static void destroy();
 
     static GPUHandle getDevice() { return getInstance()->device; }
@@ -251,7 +251,7 @@ public:
     static FrameStats draw();
 
 private:
-    RenderServer();
+    RenderServer(bool enable_validation);
     ~RenderServer();
 
     static RenderServer* getInstance();
@@ -263,8 +263,10 @@ private:
     /**
      * @brief initialises Vulkan and constructs the necessary backend resources, including selecting the
      * physical device to use.
+     * @param enable_validation if `true`, render server will attempt to start with Vulkan validation layers
+     * enabled, if available.
      */
-    void createVulkan();
+    void createVulkan(bool enable_validation);
     /**
      * @brief creates Vulkan instance.
      * @param debug if `true` attempts to enable validation layers and the debug messenger extension.

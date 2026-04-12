@@ -37,6 +37,11 @@ public:
         EVENT_TYPE_APPLICATION_CHANGE = 0x10000006,
     };
 
+    struct InitParams final
+    {
+        bool enable_vulkan_validation = false;
+    };
+
 private:
 	Ref<Scene> scene;
 	Ref<Application> application;
@@ -67,7 +72,7 @@ private:
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(Engine);
 
-	static void init();
+	static void init(const InitParams& params);
 	static void destroy();
 	
 	template<class T> static void startApplication();
@@ -108,7 +113,7 @@ public:
 	static void drawImGuiDebug();
 	
 private:
-	Engine();
+	Engine(const InitParams& params);
 	~Engine();
 	
 	static void start();
@@ -161,6 +166,39 @@ public:
 
 	virtual void update(float delta_time) { }
 	virtual void drawImGui() { }
+};
+
+class CommandLineParser final
+{
+public:
+    enum ArgumentType
+    {
+        ARGUMENT_TEXT,
+        FLAG_CHAR,
+        FLAG_TEXT
+    };
+
+    struct Argument final
+    {
+        ArgumentType type;
+        std::string value;
+    };
+
+    typedef std::vector<Argument>::const_iterator const_iterator;
+
+private:
+    std::string executable_path;
+    std::vector<std::string> arguments;
+    std::vector<Argument> arguments_parsed;
+
+public:
+    CommandLineParser() = delete;
+    CommandLineParser(int nargs, const char** cargs);
+
+    std::string getExecutablePath() const { return executable_path; }
+    
+    const_iterator begin() const { return arguments_parsed.begin(); }
+    const_iterator end() const { return arguments_parsed.end(); }
 };
 
 }

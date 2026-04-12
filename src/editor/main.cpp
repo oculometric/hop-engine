@@ -3,9 +3,19 @@
 
 using namespace HopEngine;
 
-int main()
+int main(int nargs, const char** cargs)
 {
-    Engine::init();
+    Engine::InitParams params;
+    CommandLineParser clargs(nargs, cargs);
+    for (const auto& arg : clargs)
+    {
+        if (arg.type == CommandLineParser::FLAG_TEXT && arg.value == "validation")
+            params.enable_vulkan_validation = true;
+        if (arg.type == CommandLineParser::FLAG_TEXT && arg.value == "verbose")
+            Debug::setLogLevel(Debug::DEBUG_VERBOSE);
+    }
+
+    Engine::init(params);
     
     Engine::startApplication<Editor>();
 

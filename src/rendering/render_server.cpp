@@ -13,10 +13,10 @@ using namespace HopEngine;
 
 static RenderServer* server = nullptr;
 
-void RenderServer::init()
+void RenderServer::init(bool enable_validation)
 {
     DBG_INFO("initialising graphics server");
-    if (server == nullptr) server = new RenderServer();
+    if (server == nullptr) server = new RenderServer(enable_validation);
 }
 
 void RenderServer::destroy()
@@ -78,13 +78,13 @@ void RenderServer::setMultiScene(const std::vector<SceneRender>& multi_scenes)
     for (auto& scene : multi_scenes) server->scenes.emplace_back(scene);
 }
 
-RenderServer::RenderServer()
+RenderServer::RenderServer(bool enable_validation)
 {
     server = this;
 
     createWindow();
 
-    createVulkan();
+    createVulkan(enable_validation);
 
     swapchain = new Swapchain(window_size);
 

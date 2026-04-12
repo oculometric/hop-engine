@@ -101,9 +101,9 @@ GPUHandle RenderServer::createPipelineLayout(GPUHandle set_2)
 void RenderServer::queueFree(std::function<void()> destructor)
 { getInstance()->free_list.push_back(destructor); }
 
-void RenderServer::createVulkan()
+void RenderServer::createVulkan(bool enable_validation)
 {
-    createInstance(true);
+    createInstance(enable_validation);
 
     CHECK_RESULT(glfwCreateWindowSurface,
         (static_cast<VkInstance>(instance), window, nullptr, reinterpret_cast<VkSurfaceKHR*>(&surface)),
