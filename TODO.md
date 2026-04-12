@@ -3,17 +3,17 @@
 # v0.54
 - make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
 - document everything
-    - engine.h
     - material.h
     - scene.h
     - user_interface.h
     - license (happy bunny license) and copyright
 
 - shader improvements
-    - more reliable vertex/fragment function finding
-    - custom varying support
-    - automatic uniform layouting
-    - maybe make things more object-oriented (passing arguments rather than static variables in shader code)
+    - actual lexical parser (tokens..... oh god)
+    - more reliable vertex/fragment function finding (45)
+    - maybe make things more object-oriented (passing arguments rather than static variables in shader code) (45)
+    - custom varying support (60)
+    - automatic uniform layouting (30)
     - overhaul arrangement of shader/pipeline/pipeline layout/descriptor set - maybe move some render server behaviour into this? (i dont like calling back and forth)
 
 - document serial formats
@@ -24,6 +24,7 @@
     - font
     - node style
 
+- move engine start functionality into its own start function (to allow for switchApplication)
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - split framebuffer from render pass?? merge image creation from swapchain to render pass
 - package manager improvements

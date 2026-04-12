@@ -93,6 +93,8 @@ void Engine::start()
 
         EventServer::dispatch(EVENT_TYPE_FRAME_END);
     }
+
+    engine->start_called = false;
 }
 
 void Engine::setScene(const Ref<Scene> &new_scene)
