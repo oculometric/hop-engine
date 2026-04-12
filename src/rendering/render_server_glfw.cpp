@@ -44,6 +44,7 @@ void RenderServer::setBorderless(bool borderless)
 
 void RenderServer::createWindow()
 {
+    // glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
     glfwInit();
     // appropriate hints for vulkan
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);

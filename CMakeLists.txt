@@ -19,7 +19,7 @@ if(WIN32)
 	add_compile_options("/ZI")
 	add_link_options("/DEBUG")
 endif()
-find_package(Vulkan REQUIRED COMPONENTS glslang SPIRV-Tools)
+find_package(Vulkan REQUIRED COMPONENTS SPIRV-Tools)
 set(ENGINE_HOP "${CMAKE_BINARY_DIR}/engine.hop")
 
 # ================ EXECUTABLE TARGET 'package-tool' =======================================
@@ -100,11 +100,10 @@ set(INC_DIRS
 	"lib/inc/imgui/backends"
 	"inc"
 	${Vulkan_INCLUDE_DIRS}
+	"lib/inc/glslang"
 )
 set(LIBS
 	Vulkan::Vulkan
-	Vulkan::glslang
-	Vulkan::SPIRV-Tools
 )
 
 if(WIN32)
@@ -112,10 +111,15 @@ if(WIN32)
 		"${CMAKE_SOURCE_DIR}/lib/bin/GLFW/lib-vc2019/glfw3.lib"
 		"${Vulkan_INCLUDE_DIRS}/../Lib/glslang-default-resource-limits.lib"
 		"${Vulkan_INCLUDE_DIRS}/../Lib/SPIRV-Tools-opt.lib"
+	    Vulkan::glslang
+	    Vulkan::SPIRV-Tools
 	)
 else()
 	list(APPEND LIBS
-		"${CMAKE_SOURCE_DIR}/lib/bin/libshaderc/glslang-default-resource-limits.a"
+		"${CMAKE_SOURCE_DIR}/lib/bin/glslang/libglslang-default-resource-limits.a"
+		"${CMAKE_SOURCE_DIR}/lib/bin/glslang/libglslang.a"
+		"${CMAKE_SOURCE_DIR}/lib/bin/glslang/libSPIRV-Tools-opt.a"
+		"${CMAKE_SOURCE_DIR}/lib/bin/glslang/libSPIRV-Tools.a"
 		pthread
 		glfw
 		dl

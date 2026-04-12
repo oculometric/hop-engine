@@ -1,3 +1,7 @@
 {
-    "editor.detectIndentation": false
+    "editor.detectIndentation": false,
+    "cmake.debugConfig": {
+        "args": [ "first_arg", "second_arg" ],
+        "console": "externalTerminal"
+    },
 }

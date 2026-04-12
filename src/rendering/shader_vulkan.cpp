@@ -3,9 +3,9 @@
 #include "vulkan_helpers.h"
 
 #include <format>
-#include <glslang/Public/ResourceLimits.h>
-#include <glslang/Public/ShaderLang.h>
-#include <glslang/SPIRV/GlslangToSpv.h>
+#include <Public/ResourceLimits.h>
+#include <Public/ShaderLang.h>
+#include <SPIRV/GlslangToSpv.h>
 #include <spirv_reflect/spirv_reflect.h>
 #include <vulkan/vulkan.hpp>
 

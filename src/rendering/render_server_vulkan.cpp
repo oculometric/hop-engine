@@ -179,6 +179,7 @@ void RenderServer::createInstance(bool debug)
     create_info.enabledExtensionCount   = static_cast<uint32_t>(extensions_to_enable.size());
     create_info.ppEnabledExtensionNames = extensions_to_enable.data();
     DBG_VERBOSE("enabling " + std::to_string(create_info.enabledExtensionCount) + " extensions:");
+    DBG_WARNING("found " + std::to_string(glfw_extension_count) + " GLFW extensions.");
     for (size_t i = 0; i < create_info.enabledExtensionCount; ++i)
         DBG_VERBOSE(create_info.ppEnabledExtensionNames[i]);
 
@@ -318,7 +319,11 @@ void RenderServer::createDevice()
     for (VkPhysicalDevice test_device : physical_devices)
     {
         int score = queryPhysicalDevice(test_device, required_extensions);
-        if (score > best_device_score) best_device = test_device;
+        if (score > best_device_score)
+        {
+            best_device = test_device;
+            best_device_score = score;
+        }
     }
     // check if any of the devices were suitable, and if so, use the highest scoring
     if (best_device != VK_NULL_HANDLE) physical_device = best_device;
