@@ -324,7 +324,7 @@ public:
     /**
      * @brief constructs a render graph from a text-based serialised representation.
      * @param token_str text representation to decode.
-     * @param origin original path from which the material was loaded, may be empty.
+     * @param origin original path from which the render graph was loaded, may be empty.
      * @returns render graph constructed based on serialised representation, or `nullptr` if an error
      * occurred during deserialisation.
      */

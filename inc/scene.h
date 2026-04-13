@@ -5,24 +5,30 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <map>
 #include <vector>
 
 namespace HopEngine
 {
 
+/**
+ * @brief 3D transformation structure. contains utilities for applying transformations both in local space
+ * and world space. applies transformations in a nested hierarchy. all transformation functions of the form
+ * `...Local...` operate in local space, whereas other functions operate in world space.
+ */
 struct Transform final
 {
     friend class Object;
 
 private:
-    Object* owner = nullptr;
-    glm::vec3 local_position;
-    glm::vec3 local_euler;
-    glm::vec3 local_scale;
-    glm::mat4 local_matrix;
-    glm::mat4 world_matrix;
+    Object* owner = nullptr;  // object which this transform belongs to, used to query parent
+    glm::vec3 local_position; // position within parent's local space
+    glm::vec3 local_euler;    // rotation (applied XYZ) within parent's local space
+    glm::vec3 local_scale;    // scale within parent's local space
+    glm::mat4 local_matrix;   // matrix transforming points from local space into parent's local space
+    glm::mat4 world_matrix;   // matrix transforming points from local space to world space
 
+    // TODO: need separate internal matrices for rotation, offset, scale, and simplified functions to
+    // recalculate
 public:
     Transform() : local_position({ 0, 0, 0 }), local_euler({ 0, 0, 0 }), local_scale({ 1, 1, 1 })
     { localFromVars(); };
@@ -35,7 +41,7 @@ public:
     glm::vec3 getLocalScale() const { return local_scale; }
     glm::mat4 getLocalMatrix() const { return local_matrix; }
     glm::vec3 getPosition() const { return world_matrix[3]; }
-    glm::vec3 getEuler() const; // TODO:
+    // TODO: glm::vec3 getEuler() const;
     glm::mat4 getMatrix()
     {
         worldFromLocal();
@@ -49,7 +55,7 @@ public:
     void setLocalEuler(glm::vec3 euler);
     void setLocalScale(glm::vec3 scale);
     void setPosition(glm::vec3 position);
-    void setEuler(glm::vec3 euler); // TODO:
+    // TODO: void setEuler(glm::vec3 euler);
     void setMatrix(const glm::mat4& matrix);
 
     void translateLocal(glm::vec3 offset);
@@ -57,10 +63,11 @@ public:
     void scaleLocal(glm::vec3 factor);
     void scaleLocal(float factor);
     void translate(glm::vec3 offset);
-    void rotate(glm::vec3 axis, float degrees); // TODO:
+    // TODO: void rotate(glm::vec3 axis, float degrees);
     void rotate(glm::vec3 degrees);
     void scale(float factor);
     void lookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up);
+    // TODO: void fromBasis(glm::vec3 negative_z, glm::vec3 positive_y)
 
     // TODO: quaternion support
 
@@ -129,12 +136,19 @@ struct DrawCommand final
     }
 };
 
+/**
+ * @brief scene component base class which can be attached to an object to participate in a scene. all
+ * actual behaviour happens through scene components. may be extended to provide additional functionality.
+ * components should never be constructed directly, only via `Object::addComponent`.
+ */
 class Component : public Destructible
 {
     friend class Object;
 
 private:
-    WeakRef<Object> owner;
+    WeakRef<Object> owner; // object to which this component is attached
+    // if `false`, this component will be ignored and its functions will not be called (`getDrawCommands`,
+    // `getLocalBounds`, and `update`)
     bool enabled = true;
 
 public:
@@ -143,35 +157,71 @@ public:
     ~Component() override = default;
 
     WeakRef<Object> getOwner() const { return owner; }
+    /**
+     * @brief looks for the first component of type `T` on the owning object.
+     * @returns reference to the first matching component, or `nullptr` if nothing matching was found.
+     */
     template<class T> WeakRef<T> getComponent();
     WeakRef<Scene> getScene() const;
     Transform& getTransform() const;
-    bool getEnabled() const { return enabled; }
+    /**
+     * @brief toggles whether the component participates in the scene. when `state` is `false`, the
+     * component will be ignored and its functions will not be called (`getDrawCommands`, `getLocalBounds`,
+     * and `update`) during scene operations.
+     * @param state whether or not the component will be active/enabled.
+     */
     void setEnabled(bool state) { enabled = state; }
+    bool getEnabled() const { return enabled; }
 
+    /**
+     * @brief called when the component is instantiated. may be overridden by the user to provide custom
+     * startup behaviour if desired.
+     */
     virtual void awake() {}
+    /**
+     * @brief called every frame, if the component is enabled. may be overridden by the user to provide
+     * custom per-frame behaviour if desired.
+     * @param delta_time amount of time in seconds since the last frame.
+     */
     virtual void update(float delta_time) {}
 
+    /**
+     * @brief called when rendering the scene, allowing the component to specify one or more rendering
+     * instructions (i.e. drawing a mesh). updates to uniform buffers or other similar pre-rendering tasks
+     * are also performed here. may be overridden by the user to provide custom drawing behaviour if
+     * desired.
+     * @returns array of rendering commands which will be submitted as part of rendering.
+     */
     virtual std::vector<DrawCommand> getDrawCommands() { return {}; }
+    /**
+     * @brief called to query the apparent bounding box of the component, used for selection and other
+     * debug-related behaviour. may be overridden by the user to provide custom bounding box information if
+     * desired.
+     * @returns bounding box of the component in object-local space.
+     */
     virtual BoundingBox getLocalBounds() const { return BoundingBox{}; }
 
     virtual void drawImGuiDebug();
 };
 
+/**
+ * @brief scene hierarchy participant. can have any number of components attached which implement various
+ * behaviours, although having multiple components of the same type is not fully supported.
+ */
 class Object final : public Destructible
 {
     friend class Scene;
 
 public:
-    std::string name = "object";
-    Transform transform;
+    std::string name = "object"; // name of the object for debug and searching purposes
+    Transform transform;         // 3D transformation information for the object
 
 private:
-    WeakRef<Object> self;
-    WeakRef<Scene> scene;
-    WeakRef<Object> parent;
-    std::vector<Ref<Object>> children;
-    std::vector<Ref<Component>> components;
+    WeakRef<Object> self;                   // self reference for passing to children/parents
+    WeakRef<Scene> scene;                   // scene which this object is a participant of
+    WeakRef<Object> parent;                 // parent object in the hierarchy, if any
+    std::vector<Ref<Object>> children;      // list of child objects in the hierarchy, if any
+    std::vector<Ref<Component>> components; // list of owned/attached components
 
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(Object);
@@ -180,77 +230,142 @@ public:
 
     WeakRef<Object> getSelf() const { return self; }
     WeakRef<Scene> getScene() const { return scene; }
+
     WeakRef<Object> getParent() const { return parent; }
     size_t getChildCount() const { return children.size(); }
+    /**
+     * @brief retrieves the child object at the specified index. does not perform bounds checking.
+     * @param index index of the child to retrieve, must be less than the value returned by `getChildCount`.
+     * @returns reference to the queried child object.
+     */
     WeakRef<Object> getChild(size_t index) const { return children[index]; }
-    void removeFromParent();
+    /**
+     * @brief adds a specified child object into the hierarchy. you should not attempt to call this function
+     * with objects from a different scene.
+     * @param obj object which will become a child of this object.
+     */
     void addChild(WeakRef<Object> obj);
+    /**
+     * @brief removes the object from its parent object, if there is any parent object. if the object is
+     * part of a scene, then the object will be made a child of only the scene root object.
+     */
+    void removeFromParent();
 
-    template<class T> WeakRef<T> addComponent()
-    {
-        static_assert(std::is_convertible_v<T*, Component*>,
-            "component must be a HopEngine::Component subclass");
-        Ref<T> comp = new T();
-        comp->owner = self;
-        components.push_back(comp.template cast<Component>());
-        comp->awake();
-        return comp.weak();
-    }
-    template<class T> WeakRef<T> getComponent()
-    {
-        static_assert(std::is_convertible_v<T*, Component*>,
-            "component must be a HopEngine::Component subclass");
-        for (auto& comp : components)
-        {
-            if (dynamic_cast<T*>(comp.get())) return comp.template cast<T>();
-        }
-        return WeakRef<T>();
-    }
-    template<class T> bool removeComponent()
-    {
-        static_assert(std::is_convertible_v<T*, Component*>,
-            "component must be a HopEngine::Component subclass");
-        for (auto it = components.begin(); it != components.end(); ++it)
-        {
-            if (dynamic_cast<T>((*it).get()))
-            {
-                components.erase(it);
-                return true;
-            }
-        }
-        return false;
-    }
+    /**
+     * @brief adds a new component of the specified type. the new component is constructed and initialised
+     * appropriately. you may only call this function with templates such that `T` inherits from
+     * `Component`.
+     * @returns reference to the newly created component.
+     */
+    template<class T> WeakRef<T> addComponent();
+    /**
+     * @brief searches through the list of attached components to find a matching component. only returns
+     * the first matching component. you may only call this function with templates such that `T` inherits
+     * from `Component`.
+     * @returns reference to the first component of the specified type, or `nullptr` if none could be found.
+     */
+    template<class T> WeakRef<T> getComponent();
+    /**
+     * @brief searches through the list of attached components to find a matching component, and removes it.
+     * only applied to the first matching component. you may only call this function with templates such
+     * that `T` inherits from `Component`.
+     * @returns `true` if a component was successfully found and removed, otherwise `false`.
+     */
+    template<class T> bool removeComponent();
 
+    /**
+     * @brief called once per frame, and propagated to child objects and attached components.
+     * @param delta_time time in seconds since the last frame.
+     */
     void update(float delta_time);
+    /**
+     * @brief queries attaced components for rendering commands and collates them.
+     * @returns list of drawing commands for the object.
+     */
     std::vector<DrawCommand> getDrawCommands();
+    /**
+     * @brief queries attached components for bounding boxes and combines them via a union operation to find
+     * the overall bounding box for the object.
+     * @returns overall bounding box for the object.
+     */
     BoundingBox getLocalBounds() const;
 
     void drawImGuiDebug();
 
 private:
+    /**
+     * @brief internal-use-only. use `Object::create` instead.
+     */
     Object();
 };
 
 template<class T> WeakRef<T> Component::getComponent() { return owner->getComponent<T>(); }
 
+template<class T> WeakRef<T> Object::addComponent()
+{
+    static_assert(std::is_convertible_v<T*, Component*>,
+        "component must be a HopEngine::Component subclass");
+    Ref<T> comp = new T();
+    comp->owner = self;
+    components.push_back(comp.template cast<Component>());
+    comp->awake();
+    return comp.weak();
+}
+
+template<class T> WeakRef<T> Object::getComponent()
+{
+    static_assert(std::is_convertible_v<T*, Component*>,
+        "component must be a HopEngine::Component subclass");
+    for (auto& comp : components)
+    {
+        if (dynamic_cast<T*>(comp.get())) return comp.template cast<T>();
+    }
+    return WeakRef<T>();
+}
+
+template<class T> bool Object::removeComponent()
+{
+    static_assert(std::is_convertible_v<T*, Component*>,
+        "component must be a HopEngine::Component subclass");
+    for (auto it = components.begin(); it != components.end(); ++it)
+    {
+        if (dynamic_cast<T>((*it).get()))
+        {
+            components.erase(it);
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * @brief scene system which manages a collection of hierarchically-nested objects, each of which may have
+ * one or more components providing functionality, interactivity, visuals, etc.
+ */
 class Scene final : public Destructible
 {
 public:
+    // background light colour of the scene, passed to shaders
     glm::vec3 ambient_colour = { 0.01f, 0.01f, 0.01f };
-    Ref<RenderGraph> render_graph;
+    Ref<RenderGraph> render_graph; // render graph for the scene, used to record render commands
 
 private:
-    std::string origin;
-    WeakRef<Scene> self;
-    Ref<Object> root;
-    std::vector<Ref<Object>> objects;
-    glm::u32vec2 last_viewport_size;
-    Ref<Material> skybox_material;
-    Ref<UniformBlock> skybox_uniforms;
-    WeakRef<Texture> skybox;
+    std::string origin;                // if not empty, contains the path from which this scene was loaded
+    WeakRef<Scene> self;               // self reference for passing to objects
+    Ref<Object> root;                  // invisible root object, acts as parent for all scene objects
+    std::vector<Ref<Object>> objects;  // all members of the scene
+    glm::u32vec2 last_viewport_size;   // last known size of the viewport used to render the scene
+    Ref<Material> skybox_material;     // material which renders the skybox texture
+    Ref<UniformBlock> skybox_uniforms; // object uniforms for the skybox object
+    WeakRef<Texture> skybox;           // texture used to draw the skybox, or none to skip skybox rendering
 
 public:
     DELETE_CONSTRUCTORS(Scene);
+    /**
+     * @brief creates a new empty scene with the specified name.
+     * @param name name of the scene. usually unimportant.
+     * @returns newly created scene.
+     */
     static Ref<Scene> create(const std::string& name = "scene");
     ~Scene() override;
 
@@ -260,35 +375,118 @@ public:
         return origin.empty() ? PTR(this) : origin;
     }
 
+    /**
+     * @brief fetches a list of all objects which participate in the scene.
+     * @returns list of references to scene objects, in no particular order.
+     */
     std::vector<WeakRef<Object>> getAllObjects() const;
+    /**
+     * @brief searches list of objects for the first object with a matching name.
+     * @param name object name to search for.
+     * @returns reference to the first matching object, or `nullptr` if none was found.
+     */
     WeakRef<Object> findObject(const std::string& name) const;
+    /**
+     * @brief adds an existing object to the scene, as a child of the root object. automatically removes the
+     * object from whatever scene it is already present in if needed.
+     * @param obj object to add.
+     * @returns reference to `obj`.
+     */
     WeakRef<Object> insertObject(WeakRef<Object> obj);
+    /**
+     * @brief adds a new object to the scene, constructing it and giving it a name.
+     * @param name identifier which will be assigned to the new object, allowing it to be retrieved with
+     * `findObject`.
+     * @returns reference to the new object.
+     */
     WeakRef<Object> addObject(const std::string& name);
-    template<class T> WeakRef<T> addObject(const std::string& name)
-    {
-        static_assert(std::is_convertible_v<T*, Component*>,
-            "component must be a HopEngine::Component subclass");
-        auto obj = addObject(name);
-        return obj->addComponent<T>();
-    }
+    /**
+     * @brief adds a new object to the scene, constructing it and giving it a name, and then adds a new
+     * component of the specified type `T` to the newly created object. useful shortcut for setting up
+     * scenes programmatically. you may only call this function with templates such that `T` inherits
+     * from `Component`.
+     * @param name identifier which will be assigned to the new object, allowing it to be retrieved with
+     * `findObject`.
+     * @returns reference to the component which was created on the new object.
+     */
+    template<class T> WeakRef<T> addObject(const std::string& name);
+    /**
+     * @brief removes the specified object from the scene. the object's parent will be cleared. `obj` should
+     * be a member of the current scene.
+     * @param obj object to remove.
+     */
     void removeObject(WeakRef<Object> obj);
 
     glm::u32vec2 getViewportSize() const { return last_viewport_size; }
+    /**
+     * @brief performs a raycast, in world space, against the objects in the scene using their bounding box
+     * data. a bounding box is ignored if the starting position is inside it. the object with the closest
+     * intersection with the ray is returned.
+     * @param position starting point of the ray in world space.
+     * @param direction direction of the ray in world space.
+     * @returns closest intersected object, or `nullptr`, if no objects were intersected.
+     */
     WeakRef<Object> raycast(glm::vec3 position, glm::vec3 direction) const;
 
+    /**
+     * @brief applies a new skybox texture to the scene. if the skybox is set to `nullptr`, then the skybox
+     * will not be rendered, and the clear colour will be used instead.
+     * @param texture new texture to be used for the skybox, or `nullptr` if no skybox should be rendered.
+     */
     void setSkybox(WeakRef<Texture> texture);
 
+    /**
+     * @brief called once per frame, and propagated to scene objects and their attached components.
+     * @param delta_time time in seconds since the last frame.
+     */
     void update(float delta_time);
+
+    /**
+     * @brief collects and executes scene drawing commands, via the internal render graph. if the scene does
+     * not have a render graph attached, this does nothing.
+     * @param command_buffer draw command buffer into which commands will be recorded.
+     * @param viewport_size size of the viewport into which the scene is intended to be rendered. uniform
+     * buffers and render graph attachments are updated automatically.
+     */
     void draw(Ref<DrawCommandBuffer> command_buffer, glm::u32vec2 viewport_size);
+    /**
+     * @brief binds the render graph's passthrough material allowing the rendered scene to be copied to the
+     * screen (or another render pass).
+     * @param command_buffer draw command buffer into which the command will be recorded.
+     */
     void bindOutputMaterial(Ref<DrawCommandBuffer> command_buffer);
 
+    /**
+     * @brief constructs a scene from a text-based serialised representation.
+     * @param name path to the target file from which to read the text representation.
+     * @returns scene constructed based on serialised representation, or `nullptr` if an error occurred
+     * during deserialisation.
+     */
     static Ref<Scene> deserialiseFile(const std::string& name);
+    /**
+     * @brief constructs a scene from a text-based serialised representation.
+     * @param token_str text representation to decode.
+     * @param origin original path from which the scene was loaded, may be empty.
+     * @returns scene constructed based on serialised representation, or `nullptr` if an error occurred
+     * during deserialisation.
+     */
     static Ref<Scene> deserialise(const std::string& token_str, const std::string& origin = "");
 
     void drawImGuiDebug();
 
 private:
+    /**
+     * @brief internal-use-only. use `Scene::create` instead.
+     */
     Scene(const std::string& name);
 };
+
+template<class T> WeakRef<T> Scene::addObject(const std::string& name)
+{
+    static_assert(std::is_convertible_v<T*, Component*>,
+        "component must be a HopEngine::Component subclass");
+    auto obj = addObject(name);
+    return obj->addComponent<T>();
+}
 
 } // namespace HopEngine

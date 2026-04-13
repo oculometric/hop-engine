@@ -1,10 +1,8 @@
 # TODO
 
 # v0.54
-- make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
 - document everything
     - material.h
-    - scene.h
     - user_interface.h
     - license (happy bunny license) and copyright
 
@@ -16,6 +14,13 @@
     - automatic uniform layouting (30)
     - overhaul arrangement of shader/pipeline/pipeline layout/descriptor set - maybe move some render server behaviour into this? (i dont like calling back and forth)
 
+- package manager improvements
+    - data blocks should know which package they came from
+    - package manager should not have to load the entire file from disk at once, only an index of contents
+    - when you try to load an entry, search through the indexes of loaded packages, don't keep a copy of dat
+    - you can ask for an entry to be preloaded, where a copy of it IS kept in memory, but only until a call to load it properly
+    - needs ability to create directories (including automatically when writing a file)
+
 - document serial formats
     - material
     - render graph
@@ -24,14 +29,11 @@
     - font
     - node style
 
-- move engine start functionality into its own start function (to allow for switchApplication)
+- make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
+- move application start functionality into its own start function (to allow for switchApplication)
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - split framebuffer from render pass?? merge image creation from swapchain to render pass
-- package manager improvements
-    - data blocks should know which package they came from
-    - package manager should not have to load the entire file from disk at once
-    - package manager should reduce copying of data blocks
-    - needs ability to create directories (including automatically when writing a file)
+
 
 # v0.55
 - the ui update
