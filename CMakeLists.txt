@@ -219,6 +219,7 @@ if(WIN32)
 		hop-engine.dll
 		hop-engine.exp
 		package-tool.exe
+        bin-to-cpp.exe
 	)
 	set(TAR_OPTIONS -caf)
 	set(TAR_OUTPUT
@@ -226,17 +227,24 @@ if(WIN32)
 	)
 else()
 	set(PLATFORM Linux)
-	set(TAR_OPTIONS -cf)
+    set(EXPORTS
+		hop-editor
+		libhop-engine.so
+		package-tool
+        bin-to-cpp
+	)
+	set(TAR_OPTIONS -czf)
 	set(TAR_OUTPUT
-		"${CMAKE_SOURCE_DIR}/builds/hop-engine ${PLATFORM} ${TODAY}.tar"
+		"${CMAKE_SOURCE_DIR}/builds/hop-engine ${PLATFORM} ${TODAY}.tar.gz"
 	)
 endif()
 
-add_custom_target(
-	OUTPUT
-	${EXPORTED_INCLUDE}
+add_custom_command(
+	OUTPUT ${EXPORTED_INCLUDE}
 	COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
 		"${CMAKE_SOURCE_DIR}/inc/" ${EXPORTED_INCLUDE}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+		"${CMAKE_SOURCE_DIR}/COPYING.md" "${CMAKE_BINARY_DIR}/COPYING.md"
 	COMMENT "Copying include directory"
 )
 
@@ -245,5 +253,7 @@ add_custom_target(export
 	DEPENDS hop-engine
 	DEPENDS package-tool
 	DEPENDS hop-editor
-	COMMAND ${ZIP_COMMAND} ${TAR_OPTIONS} ${TAR_OUTPUT} ${EXPORTS} "include"
+    DEPENDS bin-to-cpp
+	COMMAND ${ZIP_COMMAND} ${TAR_OPTIONS} ${TAR_OUTPUT} ${EXPORTS} "include" "COPYING.md"
+	COMMENT "Creating exported archive"
 )

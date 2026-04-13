@@ -3,8 +3,6 @@
 # v0.54
 - document everything
     - material.h
-    - user_interface.h
-    - license (happy bunny license) and copyright
 
 - shader improvements
     - actual lexical parser (tokens..... oh god)
@@ -37,6 +35,7 @@
 
 # v0.55
 - the ui update
+    - document user_interface.h
     - ui canvas
         - canvas can be in 'world' mode, or 'view' mode [2]
             - view mode is added to a global ui stack which is applied at composite time

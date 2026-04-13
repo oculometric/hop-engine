@@ -5,15 +5,22 @@
 
 using namespace HopEngine;
 
+void printLicense()
+{
+    std::cout << "        hop-engine  Copyright (C) 2026  cassette costen" << std::endl;
+    std::cout << "This program comes with ABSOLUTELY NO WARRANTY; see COPYING.md for details." << std::endl;
+    std::cout << "This is free software, and you are welcome to redistribute it" << std::endl;
+    std::cout << "under certain conditions; see COPYING.md for details." << std::endl;
+}
+
 void printVersion()
 {
-    std::cout << "hop-editor v" << HOP_ENGINE_VERSION_STRING << "-c" << HOP_ENGINE_COMMIT_STRING
+    std::cout << "        hop-editor v" << HOP_ENGINE_VERSION_STRING << "-c" << HOP_ENGINE_COMMIT_STRING
               << ", created by cassette costen." << std::endl;
 }
 
 void printUsage()
 {
-    printVersion();
     std::cout << "usage: hop-editor [OPTIONS]" << std::endl;
     std::cout << "options:" << std::endl;
     std::cout << "   -h" << std::endl;
@@ -35,6 +42,8 @@ void printUsage()
 
 int main(int nargs, const char** cargs)
 {
+    printLicense();
+    printVersion();
     Engine::InitParams params;
     CommandLineParser clargs(nargs, cargs);
     for (const auto& arg : clargs)
@@ -62,7 +71,6 @@ int main(int nargs, const char** cargs)
         else if ((arg.type == CommandLineParser::FLAG_TEXT && arg.value == "version") ||
                  (arg.type == CommandLineParser::FLAG_CHAR && arg.value == "v"))
         {
-            printVersion();
             return 0;
         }
         else
