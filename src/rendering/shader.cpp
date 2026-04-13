@@ -81,11 +81,6 @@ std::vector<Shader::Descriptor> Shader::mergeBindings(const std::vector<Descript
     return resolved_bindings;
 }
 
-struct ShaderToken
-{
-    std::string value;
-};
-
 class ShaderParser final
 {
 private:
@@ -98,6 +93,8 @@ private:
     std::string vertex_shader;
     std::string fragment_shader;
 
+    bool success = true;
+
 public:
     ShaderParser(const std::string& source, const std::string& file);
 
@@ -105,17 +102,18 @@ public:
     std::string getFragmentShader() { return fragment_shader; }
 
 private:
-    void processPragmas(std::string& source);
+    void processComments(std::string& source);
     void processIncludes(std::string& source_code_text, const std::string& path_prefix,
         const bool res_relative);
+    void processPragmas(std::string& source);
     void processUniforms(std::string& source);
     void processShaders(std::string& source);
 };
 
 ShaderParser::ShaderParser(const std::string& source, const std::string& file)
 {
-    file_path = file;
-    std::string modified_source;
+    file_path                   = file;
+    std::string modified_source = source;
     std::filesystem::path current_file_path;
     bool is_res_relative = false;
     if (file.starts_with("res://"))
@@ -127,10 +125,44 @@ ShaderParser::ShaderParser(const std::string& source, const std::string& file)
         current_file_path = file;
     const std::string current_file_location = current_file_path.remove_filename().string();
 
-    processPragmas(modified_source);
+    processComments(modified_source);
+    if (!success) return;
     processIncludes(modified_source, current_file_location, is_res_relative);
-    processUniforms(modified_source);
+    if (!success) return;
+    processPragmas(modified_source);
+    if (!success) return;
+    // processUniforms(modified_source);
+    if (!success) return;
     processShaders(modified_source);
+}
+
+void ShaderParser::processComments(std::string& source)
+{
+    {
+        size_t comment_pos = source.find("/*");
+        while (comment_pos != std::string::npos)
+        {
+            size_t comment_end = source.find("*/", comment_pos);
+            if (comment_end == std::string::npos)
+            {
+                DBG_ERROR("error parsing shader " + file_path + ": unterminated multiline comment");
+                success = false;
+                return;
+            }
+            source.erase(comment_pos, (comment_end - comment_pos) + 2);
+            comment_pos = source.find("/*", comment_pos);
+        }
+    }
+
+    {
+        size_t comment_pos = source.find("//");
+        while (comment_pos != std::string::npos)
+        {
+            size_t comment_end = source.find('\n', comment_pos);
+            source.erase(comment_pos, (comment_end - comment_pos) + 1);
+            comment_pos = source.find("//", comment_pos);
+        }
+    }
 }
 
 void ShaderParser::processIncludes(std::string& source_code_text, const std::string& path_prefix,
@@ -145,7 +177,8 @@ void ShaderParser::processIncludes(std::string& source_code_text, const std::str
         std::string include_path = source_code_text.substr(start, end - start);
         if (include_path.find(' ') != std::string::npos)
         {
-            DBG_ERROR("malformed include found!");
+            DBG_ERROR("error parsing shader " + file_path + ": malformed include found!");
+            success = false;
             return;
         }
         source_code_text.erase(offset, (end - offset) + 1);
@@ -164,7 +197,8 @@ void ShaderParser::processIncludes(std::string& source_code_text, const std::str
         auto include_data = Package::load(real_path);
         if (include_data.empty())
         {
-            DBG_WARNING("included file " + real_path + " did not exist, or contained no data!");
+            DBG_WARNING("error parsing shader " + file_path + ": included file " + real_path +
+                        " did not exist, or contained no data!");
         }
         std::string include_string(include_data.size(), ' ');
         memcpy(include_string.data(), include_data.data(), include_data.size());
@@ -175,14 +209,62 @@ void ShaderParser::processIncludes(std::string& source_code_text, const std::str
     }
 }
 
-static const std::string omit_object_uniform_pragma_str = "#pragma OMIT_OBJECT_UNIFORMS";
-static const std::string canvas_transform_pragma_str    = "#pragma CANVAS_TRANSFORM";
-static const std::string omit_transform_pragma_str      = "#pragma OMIT_TRANSFORM";
-static const std::string canvas_attachment_pragma_str   = "#pragma CANVAS_ATTACHMENTS";
+static const std::string omit_object_uniform_pragma_str = "OMIT_OBJECT_UNIFORMS";
+static const std::string canvas_transform_pragma_str    = "CANVAS_TRANSFORM";
+static const std::string omit_transform_pragma_str      = "OMIT_TRANSFORM";
+static const std::string canvas_attachment_pragma_str   = "CANVAS_ATTACHMENTS";
 
-// TODO: process pragmas
+void ShaderParser::processPragmas(std::string& source)
+{
+    static const std::string pragma_search = "#pragma ";
+    size_t offset                          = source.find(pragma_search);
+    while (offset != std::string::npos)
+    {
+        const size_t start     = offset + pragma_search.size();
+        const size_t end       = glm::min(source.find(' ', start), source.find('\n', start));
+        std::string pragma_str = source.substr(start, end - start);
+        source.erase(offset, (end - offset) + 1);
 
-// TODO: process uniforms
+        if (pragma_str == omit_object_uniform_pragma_str) no_object_uniforms = true;
+        else if (pragma_str == canvas_transform_pragma_str)
+        {
+            if (no_transform)
+            {
+                DBG_ERROR("error parsing shader " + file_path + ": " + omit_transform_pragma_str + " and " +
+                          canvas_transform_pragma_str + " cannot be used in the same shader.");
+                success = false;
+                return;
+            }
+            canvas_transform = true;
+        }
+        else if (pragma_str == omit_transform_pragma_str)
+        {
+            if (canvas_transform)
+            {
+                DBG_ERROR("error parsing shader " + file_path + ": " + omit_transform_pragma_str + " and " +
+                          canvas_transform_pragma_str + " pragmas cannot be used in the same shader.");
+                success = false;
+                return;
+            }
+            no_transform = true;
+        }
+        else if (pragma_str == canvas_attachment_pragma_str)
+            canvas_attachments = true;
+        else
+        {
+            DBG_ERROR("error parsing shader " + file_path + ": unrecognised pragma " + pragma_str);
+            success = false;
+            return;
+        }
+
+        offset = source.find(pragma_search, offset);
+    }
+}
+
+void ShaderParser::processUniforms(std::string& source)
+{
+    // TODO: process uniforms
+}
 
 static const std::string light_struct_str = R"VOGON(struct Light
 {
@@ -245,31 +327,31 @@ static const std::string vertex_struct_str = R"VOGON(struct Vertex
 
 static const std::string fragment_struct_str = R"VOGON(struct Fragment
 {
-    vec4 out_colour;
-    vec4 out_normal;
-    vec4 out_params;
-    vec4 out_custom;
+    vec4 colour;
+    vec4 normal;
+    vec4 params;
+    vec4 custom;
 };
 
 )VOGON";
 
 static const std::string vertex_main_str[6] = {
     R"VOGON(
-layout(location = 0) in vec4 in_position;
-layout(location = 1) in vec4 in_colour;
-layout(location = 2) in vec4 in_normal;
-layout(location = 3) in vec4 in_tangent;
-layout(location = 4) in vec3 in_uv;
-layout(location = 0) out Varyings __varyings;)VOGON",
+layout(location = 0) in vec4 _HEI_in_position;
+layout(location = 1) in vec4 _HEI_in_colour;
+layout(location = 2) in vec4 _HEI_in_normal;
+layout(location = 3) in vec4 _HEI_in_tangent;
+layout(location = 4) in vec3 _HEI_in_uv;
+layout(location = 0) out Varyings _HEI_varyings;)VOGON",
     R"VOGON(
 void main()
 {
     Vertex vert;
-    vert.position = in_position;
-    vert.colour = in_colour;
-    vert.normal = in_normal
-    vert.tangent = in_tangent;
-    vert.uv = in_uv;
+    vert.position = _HEI_in_position;
+    vert.colour = _HEI_in_colour;
+    vert.normal = _HEI_in_normal;
+    vert.tangent = _HEI_in_tangent;
+    vert.uv = _HEI_in_uv;
 
     Varyings vars;)VOGON",
     R"VOGON(
@@ -283,7 +365,7 @@ void main()
     vertex(vert, gl_Position, vars)VOGON",
     R"VOGON();
 
-    __varyings = vars;)VOGON",
+    _HEI_varyings = vars;)VOGON",
     R"VOGON(
 })VOGON",
 };
@@ -298,35 +380,29 @@ static const std::string vertex_main_str_2_canvas = R"VOGON(
 
 static const std::string fragment_main_str[7] = {
     R"VOGON(
-layout(location = 0) in Varyings __varyings;)VOGON",
+layout(location = 0) in Varyings _HEI_varyings;)VOGON",
     R"VOGON(
-layout(location = 0) out vec4 out_colour;)VOGON",
+layout(location = 0) out vec4 _HEI_out_colour;)VOGON",
     R"VOGON(
-layout(location = 1) out vec4 out_normal;
-layout(location = 2) out vec4 out_params;
-layout(location = 3) out vec4 out_custom;)VOGON",
+layout(location = 1) out vec4 _HEI_out_normal;
+layout(location = 2) out vec4 _HEI_out_params;
+layout(location = 3) out vec4 _HEI_out_custom;)VOGON",
     R"VOGON(
 void main()
 {
-    Fragment frag = fragment(__varyings)VOGON",
+    Fragment frag = fragment(_HEI_varyings)VOGON",
     R"VOGON();
-    out_colour = frag.out_colour;)VOGON",
+    _HEI_out_colour = frag.colour;)VOGON",
     R"VOGON(
-    out_normal = frag.out_normal;
-    out_params = frag.out_params;
-    out_custom = frag.out_custom;)VOGON",
+    _HEI_out_normal = frag.normal;
+    _HEI_out_params = frag.params;
+    _HEI_out_custom = frag.custom;)VOGON",
     R"VOGON(
 })VOGON"
 };
 
 void ShaderParser::processShaders(std::string& source)
 {
-    // TODO: check for pragmas:
-    //    - omit object uniforms
-    //    - canvas transform
-    //    - omit transform
-    //    - canvas attachments
-
     // add descriptor layouts 0 and 1 at the start
     size_t insert_point = 0;
     source.insert(insert_point, light_struct_str);
@@ -349,7 +425,8 @@ void ShaderParser::processShaders(std::string& source)
 
     std::vector<ShaderToken> tokens;
     // TODO: detect vertex and fragment functions
-    //    - detect location and isolate code (not needed?)
+    //    - detect location and check existence of vertex/fragment (insert default?)
+    //    - detect structs
     //    - detect signature, validate, and detect extra varying structs
     //    - insert appropriate main function
 
@@ -365,7 +442,7 @@ void ShaderParser::processShaders(std::string& source)
         vertex_shader.append(vertex_main_str[3]);
         // TODO: insert extra vertex arguments (structs) here
         vertex_shader.append(vertex_main_str[4]);
-        // TOOD: assign varying outputs here
+        // TOOD: assign extra varying outputs here
         vertex_shader.append(vertex_main_str[5]);
     }
 

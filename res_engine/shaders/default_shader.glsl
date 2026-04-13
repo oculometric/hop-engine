@@ -1,13 +1,11 @@
-void vertex()
+void vertex(in Vertex vert, inout vec4 pos, inout Varyings vars)
 {
-    #pragma DEFAULT_TRANSFORM
 }
 
-#pragma DEFAULT_ATTACHMENTS
-
-void fragment()
+Fragment fragment(in Varyings vars)
 {
-    out_colour = vec4(1, 0, 1, 1);
-    out_params.w = 0.0f;
-}
+    Fragment frag;
+    frag.colour = vec4(1, 0, 1, 1);
 
+    return frag;
+}
