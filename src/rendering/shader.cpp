@@ -81,7 +81,59 @@ std::vector<Shader::Descriptor> Shader::mergeBindings(const std::vector<Descript
     return resolved_bindings;
 }
 
-void Shader::fixIncludes(std::string& source_code_text, const std::string& path_prefix,
+struct ShaderToken
+{
+    std::string value;
+};
+
+class ShaderParser final
+{
+private:
+    bool no_object_uniforms = false;
+    bool canvas_transform   = false;
+    bool no_transform       = false;
+    bool canvas_attachments = false;
+
+    std::string file_path;
+    std::string vertex_shader;
+    std::string fragment_shader;
+
+public:
+    ShaderParser(const std::string& source, const std::string& file);
+
+    std::string getVertexShader() { return vertex_shader; }
+    std::string getFragmentShader() { return fragment_shader; }
+
+private:
+    void processPragmas(std::string& source);
+    void processIncludes(std::string& source_code_text, const std::string& path_prefix,
+        const bool res_relative);
+    void processUniforms(std::string& source);
+    void processShaders(std::string& source);
+};
+
+ShaderParser::ShaderParser(const std::string& source, const std::string& file)
+{
+    file_path = file;
+    std::string modified_source;
+    std::filesystem::path current_file_path;
+    bool is_res_relative = false;
+    if (file.starts_with("res://"))
+    {
+        current_file_path = file.substr(6);
+        is_res_relative   = true;
+    }
+    else
+        current_file_path = file;
+    const std::string current_file_location = current_file_path.remove_filename().string();
+
+    processPragmas(modified_source);
+    processIncludes(modified_source, current_file_location, is_res_relative);
+    processUniforms(modified_source);
+    processShaders(modified_source);
+}
+
+void ShaderParser::processIncludes(std::string& source_code_text, const std::string& path_prefix,
     const bool res_relative)
 {
     static const std::string include_search = "#include \"";
@@ -123,249 +175,229 @@ void Shader::fixIncludes(std::string& source_code_text, const std::string& path_
     }
 }
 
-static const std::string vertex_function_sig   = "void vertex()";
-static const std::string fragment_function_sig = "void fragment()";
+static const std::string omit_object_uniform_pragma_str = "#pragma OMIT_OBJECT_UNIFORMS";
+static const std::string canvas_transform_pragma_str    = "#pragma CANVAS_TRANSFORM";
+static const std::string omit_transform_pragma_str      = "#pragma OMIT_TRANSFORM";
+static const std::string canvas_attachment_pragma_str   = "#pragma CANVAS_ATTACHMENTS";
 
-static const std::string descriptor_set_0_str = R"V0G0N(struct Light
+// TODO: process pragmas
+
+// TODO: process uniforms
+
+static const std::string light_struct_str = R"VOGON(struct Light
 {
-	vec4 position;
-	vec4 direction;
-	vec4 colour;
-	float spot_angle;
-	int type;
-	bool enabled;
-	float padding;
-};
-
-layout(set = 0, binding = 0) uniform SceneUniforms
-{
-	mat4 world_to_view;
-	mat4 view_to_clip;
-	mat4 clip_to_view;
-	mat4 view_to_world;
-	ivec2 viewport_size;
-	vec3 eye_position;
-	float time;
-	vec2 near_far;
-	Light lights[8];
-	vec4 ambient_light;
-} scene;
-
-)V0G0N";
-
-static const std::string omit_object_uniform_pragma = "#pragma OMIT_OBJECT_UNIFORMS";
-static const std::string descriptor_set_1_str = R"V0G0N(layout(set = 1, binding = 0) uniform ObjectUniforms
-{
-	mat4 model_to_world;
-	int id;
-} object;
-
-)V0G0N";
-
-static const std::string vertex_fragment_varyings = R"VOGON(struct Frag
-{
-	vec4 position;
-	vec4 colour;
-	vec4 normal;
-	vec4 tangent;
-	vec3 uv;
+    vec4 position;
+    vec4 direction;
+    vec4 colour;
+    float spot_angle;
+    int type;
+    bool enabled;
+    float padding;
 };
 
 )VOGON";
 
-static const std::string vertex_input_default = R"VOGON(layout(location = 0) in vec4 in_position;
+static const std::string descriptor_set_0_str = R"VOGON(layout(set = 0, binding = 0) uniform SceneUniforms
+{
+    mat4 world_to_view;
+    mat4 view_to_clip;
+    mat4 clip_to_view;
+    mat4 view_to_world;
+    ivec2 viewport_size;
+    vec3 eye_position;
+    float time;
+    vec2 near_far;
+    Light lights[8];
+    vec4 ambient_light;
+} scene;
+
+)VOGON";
+
+static const std::string descriptor_set_1_str = R"VOGON(layout(set = 1, binding = 0) uniform ObjectUniforms
+{
+    mat4 model_to_world;
+    int id;
+} object;
+
+)VOGON";
+
+static const std::string varyings_struct_str = R"VOGON(struct Varyings
+{
+    vec4 position;
+    vec4 colour;
+    vec4 normal;
+    vec4 tangent;
+    vec3 uv;
+};
+
+)VOGON";
+
+static const std::string vertex_struct_str = R"VOGON(struct Vertex
+{
+    vec4 position;
+    vec4 colour;
+    vec4 normal;
+    vec4 tangent;
+    vec3 uv;
+};
+
+)VOGON";
+
+static const std::string fragment_struct_str = R"VOGON(struct Fragment
+{
+    vec4 out_colour;
+    vec4 out_normal;
+    vec4 out_params;
+    vec4 out_custom;
+};
+
+)VOGON";
+
+static const std::string vertex_main_str[6] = {
+    R"VOGON(
+layout(location = 0) in vec4 in_position;
 layout(location = 1) in vec4 in_colour;
 layout(location = 2) in vec4 in_normal;
 layout(location = 3) in vec4 in_tangent;
 layout(location = 4) in vec3 in_uv;
-)VOGON";
+layout(location = 0) out Varyings __varyings;)VOGON",
+    R"VOGON(
+void main()
+{
+    Vertex vert;
+    vert.position = in_position;
+    vert.colour = in_colour;
+    vert.normal = in_normal
+    vert.tangent = in_tangent;
+    vert.uv = in_uv;
 
-static const std::string vertex_outputs = "layout(location = 0) out Frag frag;\n";
+    Varyings vars;)VOGON",
+    R"VOGON(
+    vars.position = object.model_to_world * vec4(vert.position.xyz, 1);
+    vars.colour = vert.colour;
+    vars.normal = vec4(normalize((object.model_to_world * vec4(vert.normal.xyz, 0)).xyz), 0);
+    vars.tangent = vec4(normalize((object.model_to_world * vec4(vert.tangent.xyz, 0)).xyz), 0);
+    vars.uv = vert.uv;
+    gl_Position = scene.view_to_clip * scene.world_to_view * vars.position;)VOGON",
+    R"VOGON(
+    vertex(vert, gl_Position, vars)VOGON",
+    R"VOGON();
 
-static const std::string default_transform_pragma = "#pragma DEFAULT_TRANSFORM";
-static const std::string default_vertex_transform =
-    R"VOGON(frag.position = object.model_to_world * vec4(in_position.xyz, 1);
-	frag.colour = in_colour;
-	frag.normal = vec4(normalize((object.model_to_world * vec4(in_normal.xyz, 0)).xyz), 0);
-	frag.tangent = vec4(normalize((object.model_to_world * vec4(in_tangent.xyz, 0)).xyz), 0);
-	frag.uv = in_uv;
-	gl_Position = scene.view_to_clip * scene.world_to_view * frag.position;)VOGON";
-static const std::string canvas_transform_pragma = "#pragma CANVAS_TRANSFORM";
-static const std::string canvas_vertex_transform = R"VOGON(frag.position = vec4(in_position.xyz, 1);
-	frag.uv = in_uv;
-	gl_Position = vec4(in_position.xyz, 1);)VOGON";
+    __varyings = vars;)VOGON",
+    R"VOGON(
+})VOGON",
+};
 
-static const std::string fragment_inputs = "layout(location = 0) in Frag frag;\n";
+static const std::string vertex_main_str_2_canvas = R"VOGON(
+    vars.position = vec4(vert.position.xyz, 1);
+    vars.colour = vert.colour;
+    vars.normal = vert.normal;
+    vars.tangent = vert.tangent;
+    vars.uv = vert.uv;
+    gl_Position = vec4(vert.position.xyz, 1);)VOGON";
 
-static const std::string default_attachments = R"VOGON(layout(location = 0) out vec4 out_colour;
+static const std::string fragment_main_str[7] = {
+    R"VOGON(
+layout(location = 0) in Varyings __varyings;)VOGON",
+    R"VOGON(
+layout(location = 0) out vec4 out_colour;)VOGON",
+    R"VOGON(
 layout(location = 1) out vec4 out_normal;
 layout(location = 2) out vec4 out_params;
-layout(location = 3) out vec4 out_custom;)VOGON";
-static const std::string canvas_attachments  = R"VOGON(layout(location = 0) out vec4 out_colour;)VOGON";
-static const std::string default_attachment_pragma = "#pragma DEFAULT_ATTACHMENTS";
-static const std::string canvas_attachment_pragma  = "#pragma CANVAS_ATTACHMENTS";
-
-static const std::string vertex_main   = "void main() { vertex(); }";
-static const std::string fragment_main = "void main() { fragment(); }";
-
-void Shader::preprocess(const std::string& source_code, std::string& vertex_shader_code,
-    std::string& fragment_shader_code, const std::string& path)
+layout(location = 3) out vec4 out_custom;)VOGON",
+    R"VOGON(
+void main()
 {
-    std::string common_code = source_code;
+    Fragment frag = fragment(__varyings)VOGON",
+    R"VOGON();
+    out_colour = frag.out_colour;)VOGON",
+    R"VOGON(
+    out_normal = frag.out_normal;
+    out_params = frag.out_params;
+    out_custom = frag.out_custom;)VOGON",
+    R"VOGON(
+})VOGON"
+};
 
-    // remove comments
-    size_t comment_pos = common_code.find("//");
-    while (comment_pos != std::string::npos)
+void ShaderParser::processShaders(std::string& source)
+{
+    // TODO: check for pragmas:
+    //    - omit object uniforms
+    //    - canvas transform
+    //    - omit transform
+    //    - canvas attachments
+
+    // add descriptor layouts 0 and 1 at the start
+    size_t insert_point = 0;
+    source.insert(insert_point, light_struct_str);
+    insert_point += light_struct_str.size();
+    source.insert(insert_point, descriptor_set_0_str);
+    insert_point += descriptor_set_0_str.size();
+    if (!no_object_uniforms)
     {
-        size_t comment_end = common_code.find('\n', comment_pos);
-        common_code.erase(comment_pos, (comment_end - comment_pos) + 1);
-        comment_pos = common_code.find("//", comment_pos);
+        source.insert(insert_point, descriptor_set_1_str);
+        insert_point += descriptor_set_1_str.size();
     }
 
-    comment_pos = common_code.find("/*");
-    while (comment_pos != std::string::npos)
+    // add Vertex, Varyings, and Fragment structs
+    source.insert(insert_point, vertex_struct_str);
+    insert_point += vertex_struct_str.size();
+    source.insert(insert_point, varyings_struct_str);
+    insert_point += varyings_struct_str.size();
+    source.insert(insert_point, fragment_struct_str);
+    insert_point += fragment_struct_str.size();
+
+    std::vector<ShaderToken> tokens;
+    // TODO: detect vertex and fragment functions
+    //    - detect location and isolate code (not needed?)
+    //    - detect signature, validate, and detect extra varying structs
+    //    - insert appropriate main function
+
     {
-        size_t comment_end = common_code.find("*/", comment_pos);
-        common_code.erase(comment_pos, (comment_end - comment_pos) + 2);
-        comment_pos = common_code.find("/*", comment_pos);
+        vertex_shader = source;
+        vertex_shader.append(vertex_main_str[0]);
+        // TODO: insert extra varying outputs here
+        vertex_shader.append(vertex_main_str[1]);
+        // TODO: declare extra varying structs here
+        if (!canvas_transform && !no_transform) vertex_shader.append(vertex_main_str[2]);
+        else if (canvas_transform)
+            vertex_shader.append(vertex_main_str_2_canvas);
+        vertex_shader.append(vertex_main_str[3]);
+        // TODO: insert extra vertex arguments (structs) here
+        vertex_shader.append(vertex_main_str[4]);
+        // TOOD: assign varying outputs here
+        vertex_shader.append(vertex_main_str[5]);
     }
 
-    // top-of-file version and descriptor set preprocessing
-    common_code.insert(0, descriptor_set_0_str);
-    size_t omit_object_uniform_pragma_pos = common_code.find(omit_object_uniform_pragma);
-    if (omit_object_uniform_pragma_pos != std::string::npos)
-        common_code.erase(omit_object_uniform_pragma_pos, omit_object_uniform_pragma.size());
-    else
-        common_code.insert(descriptor_set_0_str.size(), descriptor_set_1_str);
-
-    // check if vertex and fragment funcs are present and have the correct signature
-    size_t vert_func_pos = common_code.find(vertex_function_sig);
-    if (vert_func_pos == std::string::npos)
     {
-        DBG_ERROR("error preprocessing " + path +
-                  ": vertex shader function is missing or has the wrong signature.");
-        return;
+        fragment_shader = source;
+        fragment_shader.append(fragment_main_str[0]);
+        // TODO: insert extra varying inputs here
+        fragment_shader.append(fragment_main_str[1]);
+        if (!canvas_attachments) fragment_shader.append(fragment_main_str[2]);
+        fragment_shader.append(fragment_main_str[3]);
+        // TODO: insert extra fragment arguments (structs) here
+        fragment_shader.append(fragment_main_str[4]);
+        if (!canvas_attachments) fragment_shader.append(fragment_main_str[5]);
+        fragment_shader.append(fragment_main_str[6]);
     }
-    size_t frag_func_pos = common_code.find(fragment_function_sig);
-    if (frag_func_pos == std::string::npos)
-    {
-        DBG_ERROR("error preprocessing " + path +
-                  ": fragment shader function is missing or has the wrong signature.");
-        return;
-    }
-
-    common_code.insert(vert_func_pos, vertex_fragment_varyings);
-
-    // TODO: format/layout uniforms
-
-    vertex_shader_code   = preprocessVertex(common_code, path);
-    fragment_shader_code = preprocessFragment(common_code, path);
 }
 
-std::string Shader::preprocessVertex(const std::string& common_code, const std::string& path)
-{
-    std::string result_code = common_code;
-    size_t vert_func_pos    = result_code.find(vertex_function_sig);
+//
+//
+//
+//
 
-    // vertex inputs
-    result_code.insert(vert_func_pos, vertex_input_default);
-    vert_func_pos = result_code.find(vertex_function_sig);
-
-    // vertex outputs
-    result_code.insert(vert_func_pos, vertex_outputs);
-
-    // TODO: custom varyings support
-
-    // default/canvas vertex transform
-    size_t default_transform_pragma_pos = result_code.find(default_transform_pragma);
-    size_t canvas_transform_pragma_pos  = result_code.find(canvas_transform_pragma);
-
-    if (default_transform_pragma_pos != std::string::npos)
-    {
-        if (canvas_transform_pragma_pos != std::string::npos)
-            DBG_WARNING(
-                "error preprocessing " + path +
-                ": only DEFAULT_TRANSFORM or CANVAS_TRANSFORM should be used in a shader, not both at once.");
-        result_code.erase(default_transform_pragma_pos, default_transform_pragma.size());
-        result_code.insert(default_transform_pragma_pos, default_vertex_transform);
-    }
-    else if (canvas_transform_pragma_pos != std::string::npos)
-    {
-        result_code.erase(canvas_transform_pragma_pos, canvas_transform_pragma.size());
-        result_code.insert(canvas_transform_pragma_pos, canvas_vertex_transform);
-    }
-
-    removeFunction(result_code, fragment_function_sig);
-    destroyAllPragmas(result_code);
-
-    result_code.append(vertex_main);
-
-    return result_code;
-}
-
-std::string Shader::preprocessFragment(const std::string& common_code, const std::string& path)
-{
-    std::string result_code = common_code;
-    size_t frag_func_pos    = result_code.find(fragment_function_sig);
-
-    // fragment inputs
-    result_code.insert(frag_func_pos, fragment_inputs);
-
-    // default/canvas fragment outputs
-    size_t default_attachment_pragma_pos = result_code.find(default_attachment_pragma);
-    size_t canvas_attachment_pragma_pos  = result_code.find(canvas_attachment_pragma);
-
-    if (default_attachment_pragma_pos != std::string::npos)
-    {
-        if (canvas_attachment_pragma_pos != std::string::npos)
-            DBG_WARNING(
-                "error preprocessing " + path +
-                ": only DEFAULT_ATTACHMENTS or CANVAS_ATTACHMENTS should be used in a shader, not both at once.");
-        result_code.erase(default_attachment_pragma_pos, default_attachment_pragma.size());
-        result_code.insert(default_attachment_pragma_pos, default_attachments);
-    }
-    else if (canvas_attachment_pragma_pos != std::string::npos)
-    {
-        result_code.erase(canvas_attachment_pragma_pos, canvas_attachment_pragma.size());
-        result_code.insert(canvas_attachment_pragma_pos, canvas_attachments);
-    }
-
-    removeFunction(result_code, vertex_function_sig);
-    destroyAllPragmas(result_code);
-
-    result_code.append(fragment_main);
-
-    return result_code;
-}
-
-void Shader::removeFunction(std::string& code, const std::string& signature)
-{
-    size_t function_start = code.find(signature);
-    size_t function_end   = function_start + signature.size();
-    size_t steps_deep     = 0;
-    while (function_end < code.size())
-    {
-        if (code[function_end] == '{') ++steps_deep;
-        else if (code[function_end] == '}')
-        {
-            --steps_deep;
-            if (steps_deep == 0) break;
-        }
-        ++function_end;
-    }
-    code.erase(function_start, (function_end - function_start) + 1);
-}
-
-void Shader::destroyAllPragmas(std::string& code)
-{
-    size_t pragma_pos = code.find("#pragma");
-    while (pragma_pos != std::string::npos)
-    {
-        size_t end_pos = code.find('\n', pragma_pos);
-        code.erase(pragma_pos, (end_pos - pragma_pos) + 1);
-        pragma_pos = code.find("#pragma", pragma_pos);
-    }
-}
+// void Shader::destroyAllPragmas(std::string& code)
+// {
+//     size_t pragma_pos = code.find("#pragma");
+//     while (pragma_pos != std::string::npos)
+//     {
+//         size_t end_pos = code.find('\n', pragma_pos);
+//         code.erase(pragma_pos, (end_pos - pragma_pos) + 1);
+//         pragma_pos = code.find("#pragma", pragma_pos);
+//     }
+// }
 
 bool Shader::compileShaders(const std::string& path, std::vector<uint32_t>& vert_blob,
     std::vector<uint32_t>& frag_blob)
@@ -378,29 +410,15 @@ bool Shader::compileShaders(const std::string& path, std::vector<uint32_t>& vert
         return false;
     }
 
-    std::filesystem::path current_file_path;
-    bool is_res_relative = false;
-    if (path.starts_with("res://"))
-    {
-        current_file_path = path.substr(6);
-        is_res_relative   = true;
-    }
-    else
-        current_file_path = path;
-    const std::string current_file_location = current_file_path.remove_filename().string();
-
     std::string shader_text;
     shader_text.resize(shader_data.size());
     memcpy(shader_text.data(), shader_data.data(), shader_data.size());
 
-    Shader::fixIncludes(shader_text, current_file_location, is_res_relative);
-    std::string vertex_text;
-    std::string fragment_text;
-    Shader::preprocess(shader_text, vertex_text, fragment_text, path);
-    if (vertex_text.empty() || fragment_text.empty()) return false;
+    ShaderParser parser(shader_text, path);
+    if (parser.getVertexShader().empty() || parser.getFragmentShader().empty()) return false;
 
-    if (!compile(vertex_text, STAGE_VERTEX, vert_blob, path)) return false;
-    if (!compile(fragment_text, STAGE_FRAGMENT, frag_blob, path)) return false;
+    if (!compile(parser.getVertexShader(), STAGE_VERTEX, vert_blob, path)) return false;
+    if (!compile(parser.getFragmentShader(), STAGE_FRAGMENT, frag_blob, path)) return false;
 
     return true;
 }
