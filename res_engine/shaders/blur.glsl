@@ -1,16 +1,17 @@
+#pragma CANVAS_TRANSFORM
+#pragma CANVAS_ATTACHMENTS
+
 #include "res://engine/shaders/common.glsl"
 #include "res://engine/shaders/effects.glsl"
 
-layout(set = 2, binding = 0) uniform sampler2D main_tex;
-
-void vertex()
+void vertex(in Vertex vert, inout vec4 clip, inout Varyings vars)
 {
-    #pragma CANVAS_TRANSFORM
 }
 
-#pragma CANVAS_ATTACHMENTS
+uniform sampler2D main_tex;
 
-void fragment()
+bool fragment(in Varyings vars, out Fragment frag)
 {
-    evaluateKernel(gaussian_kernel_9, 9, main_tex, out_colour);
+    evaluateKernel(gaussian_kernel_9, 9, main_tex, frag.colour);
+    return true;
 }

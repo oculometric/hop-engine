@@ -20,12 +20,9 @@ UIStyle::~UIStyle() { }
 Ref<Material> UIStyle::makeMaterial()
 {
     Ref mat = new Material(shader, Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthWrite(false));
-    mat->setTexture(1, font->getAtlas().strong());
-    mat->setTexture(2, font->getBoldAtlas().strong());
-    mat->setTexture(3, ui_atlas);
-    mat->setSampler(1, Engine::getSampler(Sampler::FILTER_NEAREST));
-    mat->setSampler(2, Engine::getSampler(Sampler::FILTER_NEAREST));
-    mat->setSampler(3, Engine::getSampler(Sampler::FILTER_NEAREST));
+    mat->setTextureSampler("text_atlas", font->getAtlas().strong(), Engine::getSampler(Sampler::FILTER_NEAREST));
+    mat->setTextureSampler("text_bold_atlas", font->getBoldAtlas().strong(), Engine::getSampler(Sampler::FILTER_NEAREST));
+    mat->setTextureSampler("ui_atlas", ui_atlas, Engine::getSampler(Sampler::FILTER_NEAREST));
     return mat;
 }
 

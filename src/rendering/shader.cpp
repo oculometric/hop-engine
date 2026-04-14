@@ -81,6 +81,13 @@ std::vector<Shader::Descriptor> Shader::mergeBindings(const std::vector<Descript
     return resolved_bindings;
 }
 
+struct ShaderToken
+{
+    std::string text;
+    size_t start;
+    int type;
+};
+
 class ShaderParser final
 {
 private:
@@ -108,6 +115,11 @@ private:
     void processPragmas(std::string& source);
     void processUniforms(std::string& source);
     void processShaders(std::string& source);
+
+    bool extractFunction(size_t* shader_locations, std::vector<ShaderToken>::iterator& it,
+        size_t& token_index, const std::vector<ShaderToken>::iterator begin,
+        const std::vector<ShaderToken>::iterator end, const std::string& shader,
+        const std::string& ret_type);
 };
 
 ShaderParser::ShaderParser(const std::string& source, const std::string& file)
@@ -131,7 +143,7 @@ ShaderParser::ShaderParser(const std::string& source, const std::string& file)
     if (!success) return;
     processPragmas(modified_source);
     if (!success) return;
-    // processUniforms(modified_source);
+    processUniforms(modified_source);
     if (!success) return;
     processShaders(modified_source);
 }
@@ -159,7 +171,7 @@ void ShaderParser::processComments(std::string& source)
         while (comment_pos != std::string::npos)
         {
             size_t comment_end = source.find('\n', comment_pos);
-            source.erase(comment_pos, (comment_end - comment_pos) + 1);
+            source.erase(comment_pos, comment_end - comment_pos);
             comment_pos = source.find("//", comment_pos);
         }
     }
@@ -220,8 +232,9 @@ void ShaderParser::processPragmas(std::string& source)
     size_t offset                          = source.find(pragma_search);
     while (offset != std::string::npos)
     {
-        const size_t start     = offset + pragma_search.size();
-        const size_t end       = glm::min(source.find(' ', start), source.find('\n', start));
+        const size_t start = offset + pragma_search.size();
+        const size_t end =
+            glm::min(source.find(' ', start), glm::min(source.find('\n', start), source.find('\r', start)));
         std::string pragma_str = source.substr(start, end - start);
         source.erase(offset, (end - offset) + 1);
 
@@ -263,7 +276,16 @@ void ShaderParser::processPragmas(std::string& source)
 
 void ShaderParser::processUniforms(std::string& source)
 {
-    // TODO: process uniforms
+    static const std::string uniform_search = "uniform ";
+    size_t uniform_index                    = 0;
+    size_t offset                           = source.find(uniform_search);
+    while (offset != std::string::npos)
+    {
+        std::string insert_str = std::format("layout(set = 2, binding = {}) ", uniform_index);
+        source.insert(offset, insert_str);
+        ++uniform_index;
+        offset = source.find(uniform_search, offset + uniform_search.size() + insert_str.size());
+    }
 }
 
 static const std::string light_struct_str = R"VOGON(struct Light
@@ -390,8 +412,14 @@ layout(location = 3) out vec4 _HEI_out_custom;)VOGON",
     R"VOGON(
 void main()
 {
-    Fragment frag = fragment(_HEI_varyings)VOGON",
-    R"VOGON();
+    Fragment frag;
+    frag.colour = vec4(0, 0, 0, 0);
+    frag.normal = vec4(0, 0, 0, 0);
+    frag.params = vec4(0, 0, 0, 0);
+    frag.custom = vec4(0, 0, 0, 0);
+    if (!fragment(_HEI_varyings)VOGON",
+    R"VOGON(, frag))
+        discard;
     _HEI_out_colour = frag.colour;)VOGON",
     R"VOGON(
     _HEI_out_normal = frag.normal;
@@ -400,6 +428,15 @@ void main()
     R"VOGON(
 })VOGON"
 };
+
+int getType(char c)
+{
+    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_') return -1;
+    else if (c == ' ' || c == '\n' || c == '\r' || c == '\t')
+        return -2;
+    else
+        return c;
+}
 
 void ShaderParser::processShaders(std::string& source)
 {
@@ -424,14 +461,72 @@ void ShaderParser::processShaders(std::string& source)
     insert_point += fragment_struct_str.size();
 
     std::vector<ShaderToken> tokens;
+    {
+        std::string current_token;
+        size_t token_start = 0;
+        for (size_t i = 0; i < source.size(); ++i)
+        {
+            char next = source[i];
+            if (current_token.empty())
+            {
+                current_token.push_back(next);
+                token_start = i;
+                continue;
+            }
+            int type = getType(current_token[current_token.size() - 1]);
+            if (type != getType(next))
+            {
+                if (type != -2) tokens.emplace_back(current_token, token_start, type);
+                current_token = "";
+                token_start   = i;
+            }
+            current_token.push_back(next);
+        }
+        if (!current_token.empty())
+        {
+            int type = getType(current_token[current_token.size() - 1]);
+            if (type != -2) tokens.emplace_back(current_token, token_start, type);
+        }
+    }
+
+    size_t vertex_shader_locations[4]   = { SIZE_MAX };
+    size_t fragment_shader_locations[4] = { SIZE_MAX };
+    std::vector<std::string> structs;
+    size_t token_index = 0;
+    for (auto it = tokens.begin(); it != tokens.end(); ++it, ++token_index)
+    {
+        if (it->text == "struct")
+        {
+            if ((it + 1) == tokens.end())
+            {
+                DBG_ERROR("error parsing shader " + file_path + ": trunctated struct definition");
+                success = false;
+                return;
+            }
+            if ((it + 1)->type == -1) structs.push_back(it->text);
+        }
+        else if (it->text == "vertex")
+        {
+            if (!extractFunction(vertex_shader_locations, it, token_index, tokens.begin(), tokens.end(),
+                    "vertex", "void"))
+                return;
+        }
+        else if (it->text == "fragment")
+        {
+            if (!extractFunction(fragment_shader_locations, it, token_index, tokens.begin(), tokens.end(),
+                    "fragment", "bool"))
+                return;
+        }
+    }
+
     // TODO: detect vertex and fragment functions
     //    - detect location and check existence of vertex/fragment (insert default?)
-    //    - detect structs
     //    - detect signature, validate, and detect extra varying structs
-    //    - insert appropriate main function
 
     {
         vertex_shader = source;
+        vertex_shader.erase(fragment_shader_locations[0],
+            (fragment_shader_locations[1] - fragment_shader_locations[0]) + 1);
         vertex_shader.append(vertex_main_str[0]);
         // TODO: insert extra varying outputs here
         vertex_shader.append(vertex_main_str[1]);
@@ -448,6 +543,8 @@ void ShaderParser::processShaders(std::string& source)
 
     {
         fragment_shader = source;
+        fragment_shader.erase(vertex_shader_locations[0],
+            (vertex_shader_locations[1] - vertex_shader_locations[0]) + 1);
         fragment_shader.append(fragment_main_str[0]);
         // TODO: insert extra varying inputs here
         fragment_shader.append(fragment_main_str[1]);
@@ -460,32 +557,75 @@ void ShaderParser::processShaders(std::string& source)
     }
 }
 
-//
-//
-//
-//
-
-// void Shader::destroyAllPragmas(std::string& code)
-// {
-//     size_t pragma_pos = code.find("#pragma");
-//     while (pragma_pos != std::string::npos)
-//     {
-//         size_t end_pos = code.find('\n', pragma_pos);
-//         code.erase(pragma_pos, (end_pos - pragma_pos) + 1);
-//         pragma_pos = code.find("#pragma", pragma_pos);
-//     }
-// }
+bool ShaderParser::extractFunction(size_t* shader_locations, std::vector<ShaderToken>::iterator& it,
+    size_t& token_index, const std::vector<ShaderToken>::iterator begin,
+    const std::vector<ShaderToken>::iterator end, const std::string& shader, const std::string& ret_type)
+{
+    if (it == begin) return true;
+    if ((it - 1)->text != ret_type) return true;
+    shader_locations[0] = (it - 1)->start;
+    if ((it + 1) == end)
+    {
+        DBG_ERROR("error parsing shader " + file_path + ": trunctated " + shader + " shader definition");
+        success = false;
+        return false;
+    }
+    if ((it + 1)->text != "(")
+    {
+        DBG_ERROR("error parsing shader " + file_path + ": invalid " + shader +
+                  " shader definition, expected '('");
+        success = false;
+        return false;
+    }
+    shader_locations[2] = token_index + 1;
+    int brackets        = 0;
+    for (++it, ++token_index; it != end; ++it, ++token_index)
+    {
+        if (it->text == ")") --brackets;
+        else if (it->text == "(")
+            ++brackets;
+        if (brackets == 0) break;
+    }
+    if (it == end)
+    {
+        DBG_ERROR("error parsing shader " + file_path + ": invalid " + shader +
+                  " shader definition, expected ')'");
+        success = false;
+        return false;
+    }
+    shader_locations[3] = token_index;
+    if ((it + 1) == end || (it + 1)->text != "{")
+    {
+        DBG_ERROR("error parsing shader " + file_path + ": invalid " + shader +
+                  " shader definition, expected '{'");
+        success = false;
+        return false;
+    }
+    brackets = 0;
+    for (++it, ++token_index; it != end; ++it, ++token_index)
+    {
+        if (it->text == "}") --brackets;
+        else if (it->text == "{")
+            ++brackets;
+        if (brackets == 0) break;
+    }
+    if (it == end)
+    {
+        DBG_ERROR("error parsing shader " + file_path + ": invalid " + shader +
+                  " shader definition, expected '}'");
+        success = false;
+        return false;
+    }
+    shader_locations[1] = it->start;
+    return true;
+}
 
 bool Shader::compileShaders(const std::string& path, std::vector<uint32_t>& vert_blob,
     std::vector<uint32_t>& frag_blob)
 {
     auto shader_data = Package::load(path);
 
-    if (shader_data.empty())
-    {
-        DBG_ERROR("shader " + path + " not found");
-        return false;
-    }
+    if (shader_data.empty()) return false;
 
     std::string shader_text;
     shader_text.resize(shader_data.size());

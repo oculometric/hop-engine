@@ -1,19 +1,19 @@
-void vertex()
-{
-    #pragma DEFAULT_TRANSFORM
-}
-
 #pragma CANVAS_ATTACHMENTS
 
-layout(set = 2, binding = 0) uniform MaterialUniforms
+void vertex(in Vertex vert, inout vec4 clip, inout Varyings vars)
+{
+}
+
+uniform MaterialUniforms
 {
     vec3 colour_filter;
 };
 
-void fragment()
+bool fragment(in Varyings vars, out Fragment frag)
 {
-    if (length(frag.colour.rgb - colour_filter) < 0.01f)
-        out_colour = vec4(1);
+    if (length(vars.colour.rgb - colour_filter) < 0.01f)
+        frag.colour = vec4(1);
     else
-        out_colour = vec4(frag.colour.rgb, 1);
+        frag.colour = vec4(vars.colour.rgb, 1);
+    return true;
 }

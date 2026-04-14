@@ -117,7 +117,7 @@ if(WIN32)
 		"${CMAKE_SOURCE_DIR}/lib/bin/GLFW/lib-vc2019/glfw3.lib"
 		"${Vulkan_INCLUDE_DIRS}/../Lib/glslang-default-resource-limits.lib"
 		"${Vulkan_INCLUDE_DIRS}/../Lib/SPIRV-Tools-opt.lib"
-	    Vulkan::glslang
+        "${Vulkan_INCLUDE_DIRS}/../Lib/glslang.lib"
 	    Vulkan::SPIRV-Tools
 	)
 else()

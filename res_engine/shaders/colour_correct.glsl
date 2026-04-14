@@ -1,17 +1,17 @@
-void vertex()
-{
-    #pragma CANVAS_TRANSFORM
-}
-
+#pragma CANVAS_TRANSFORM
 #pragma CANVAS_ATTACHMENTS
 
-#include "common.glsl"
-#include "effects.glsl"
+#include "res://common.glsl"
+#include "res://effects.glsl"
 
-layout(set = 2, binding = 0) uniform sampler2D tex;
-layout(set = 2, binding = 1) uniform sampler3D lut;
+void vertex(in Vertex vert, inout vec4 clip, inout Varyings vars)
+{
+}
 
-layout(set = 2, binding = 2) uniform Params
+uniform sampler2D tex;
+uniform sampler3D lut;
+
+uniform Params
 {
     float gamma;
     float exposure;
@@ -19,10 +19,10 @@ layout(set = 2, binding = 2) uniform Params
     float use_lut;
 };
 
-void fragment()
+bool fragment(in Varyings vars, out Fragment frag)
 {
-    vec3 colour = texture(tex, frag.uv.xy).rgb;
-    if (use_lut > 0.5f)
-    colour = sampleLut(colour, lut);
-    out_colour = vec4(gammaAdjust(colour, gamma, exposure, offset), 1);
+    vec3 colour = texture(tex, vars.uv.xy).rgb;
+    if (use_lut > 0.5f) colour = sampleLut(colour, lut);
+    frag.colour = vec4(gammaAdjust(colour, gamma, exposure, offset), 1);
+    return true;
 }

@@ -1,4 +1,6 @@
-layout(set = 2, binding = 0) uniform MaterialUniforms
+#pragma OMIT_TRANSFORM
+
+uniform MaterialUniforms
 {
     float grid_size;
     vec3 outline_colour;
@@ -23,26 +25,25 @@ layout(set = 2, binding = 0) uniform MaterialUniforms
 // 1 - fill use node colour
 // 2 - fill modulate node colour
 
-void vertex()
+void vertex(in Vertex vert, inout vec4 clip, inout Varyings vars)
 {
-    frag.position = vec4(in_position.xy, 0, 1);
-    frag.colour = in_colour;
-    frag.normal = in_normal;
-    frag.tangent = in_tangent;
-    frag.uv = in_uv;
+    vars.position = vec4(vert.position.xy, 0, 1);
+    vars.colour = vert.colour;
+    vars.normal = vert.normal;
+    vars.tangent = vert.tangent;
+    vars.uv = vert.uv;
 
     vec2 camera_offset = floor(object.model_to_world[3].xy * vec2(0.5f, -0.5f)) / 0.5f;
-    vec2 pixel_position = floor(in_position.xy + camera_offset + (scene.viewport_size / 2.0f));
-    gl_Position = vec4((pixel_position / vec2(scene.viewport_size)) * 2.0f - 1.0f, 0.5f, 1.0f);
-    gl_Position.y *= -1;
+    vec2 pixel_position = floor(vert.position.xy + camera_offset + (scene.viewport_size / 2.0f));
+    clip = vec4((pixel_position / vec2(scene.viewport_size)) * 2.0f - 1.0f, 0.5f, 1.0f);
+    clip.y *= -1;
+    clip.zw = vec2(0, 1);
 }
 
-#pragma DEFAULT_ATTACHMENTS
-
-layout(set = 2, binding = 1) uniform sampler2D node_atlas;
-layout(set = 2, binding = 2) uniform sampler2D text_atlas;
-layout(set = 2, binding = 3) uniform sampler2D extra_atlas;
-layout(set = 2, binding = 4) uniform sampler2D ui_atlas;
+uniform sampler2D node_atlas;
+uniform sampler2D text_atlas;
+uniform sampler2D extra_atlas;
+uniform sampler2D ui_atlas;
 
 vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size, bool top_border, bool bottom_border, bool left_border, bool right_border)
 {
@@ -92,75 +93,76 @@ vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size, bool top_border, bool
 #define RENDER_MODE_BACKGROUND 3.0f
 #define RENDER_MODE_UI 4.0f
 
-void fragment()
+bool fragment(in Varyings vars, out Fragment frag)
 {
-    vec2 uv = frag.uv.xy;
-    float render_mode = frag.normal.z;
-    vec2 quad_size = frag.normal.xy;
+    vec2 uv = vars.uv.xy;
+    float render_mode = vars.normal.z;
+    vec2 quad_size = vars.normal.xy;
 
     if (render_mode == RENDER_MODE_BOX)
     {
         // box mode
-        int unpacked = int(frag.tangent.z);
+        int unpacked = int(vars.tangent.z);
         uv = nineSliceUV(uv, quad_size, textureSize(node_atlas, 0), bool(unpacked & 1), bool(unpacked & 2), bool(unpacked & 4), bool(unpacked & 8));
 
         vec3 fill = fill_colour;
-        if      (frag.tangent.y == 1.0f) fill = frag.colour.rgb;
-        else if (frag.tangent.y == 2.0f) fill = frag.colour.rgb * fill_modulate;
-        else if (frag.tangent.y == 3.0f)
+        if      (vars.tangent.y == 1.0f) fill = vars.colour.rgb;
+        else if (vars.tangent.y == 2.0f) fill = vars.colour.rgb * fill_modulate;
+        else if (vars.tangent.y == 3.0f)
         {
-            fill = frag.colour.rgb;
-            if (mod(floor(frag.position.x / 2.0f), 2.0f) == mod(floor(frag.position.y / 2.0f), 2.0f))
-                discard;
+            fill = vars.colour.rgb;
+            if (mod(floor(vars.position.x / 2.0f), 2.0f) == mod(floor(vars.position.y / 2.0f), 2.0f))
+                return false;
         }
 
         vec3 outline = fill;
-        if (frag.tangent.x > 1.0f)
+        if (vars.tangent.x > 1.0f)
         {
             outline = outline_colour_highlight;
         }
-        else if (frag.tangent.x > 0.0f)
+        else if (vars.tangent.x > 0.0f)
         {
             if      (outline_style == 1) outline = outline_colour;
-            else if (outline_style == 2) outline = frag.colour.rgb;
-            else if (outline_style == 3) outline = frag.colour.rgb * outline_modulate;
+            else if (outline_style == 2) outline = vars.colour.rgb;
+            else if (outline_style == 3) outline = vars.colour.rgb * outline_modulate;
         }
 
         vec4 alb = texture(node_atlas, uv);
-        if (alb.a < 0.001f) discard;
-        if (alb.r > 0.9f)   out_colour = vec4(fill, 1);
-        else                out_colour = vec4(outline, 1);
+        if (alb.a < 0.001f) return false;
+        if (alb.r > 0.9f)   frag.colour = vec4(fill, 1);
+        else                frag.colour = vec4(outline, 1);
     }
     else if (render_mode == RENDER_MODE_TEXT)
     {
         // text mode
-        if (texture(text_atlas, uv).r < 0.5f) discard;
-        out_colour = vec4(frag.colour.rgb, 1);
+        if (texture(text_atlas, uv).r < 0.5f) return false;
+        frag.colour = vec4(vars.colour.rgb, 1);
     }
     else if (render_mode == RENDER_MODE_PINS)
     {
         // pins mode
         float v = texture(extra_atlas, uv).b;
-        if (v < 0.001f) discard;
-        if (v < 0.5f && frag.tangent.x < 0.5f) out_colour = vec4(fill_colour, 1);
-        else out_colour = vec4(frag.colour.rgb, 1);
+        if (v < 0.001f) return false;
+        if (v < 0.5f && vars.tangent.x < 0.5f) frag.colour = vec4(fill_colour, 1);
+        else frag.colour = vec4(vars.colour.rgb, 1);
     }
     else if (render_mode == RENDER_MODE_BACKGROUND)
     {
         // background grid mode
-        vec2 mods = mod(abs(frag.position.xy), vec2(grid_size) * grid_scale);
+        vec2 mods = mod(abs(vars.position.xy), vec2(grid_size) * grid_scale);
         float factor = float(mods.x < 1.0f) + float(mods.y < 1.0f);
         if (factor > 0.0f)
-            out_colour = vec4(frag.colour.rgb * (factor > 1.0f ? grid_dots_modulate : 1.0f), 1);
+            frag.colour = vec4(vars.colour.rgb * (factor > 1.0f ? grid_dots_modulate : 1.0f), 1);
         else
-            out_colour = vec4(background_colour, 1);
+            frag.colour = vec4(background_colour, 1);
     }
     else if (render_mode == RENDER_MODE_UI)
     {
         // ui elements
         float v = texture(ui_atlas, uv).r;
-        if (v < 0.001f) discard;
-        if (v < 0.5f) out_colour = vec4(frag.tangent.rgb, 1);
-        else out_colour = vec4(frag.colour.rgb, 1);
+        if (v < 0.001f) return false;
+        if (v < 0.5f) frag.colour = vec4(vars.tangent.rgb, 1);
+        else frag.colour = vec4(vars.colour.rgb, 1);
     }
+    return true;
 }

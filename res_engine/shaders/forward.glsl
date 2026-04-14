@@ -1,29 +1,25 @@
-void vertex()
-{
-    #pragma DEFAULT_TRANSFORM
-}
-
-#pragma DEFAULT_ATTACHMENTS
-
 #include "common.glsl"
 #include "pbr_util.glsl"
 
-layout(set = 2, binding = 0) uniform sampler2D albedo_tex;
-layout(set = 2, binding = 1) uniform sampler2D normal_tex;
-layout(set = 2, binding = 2) uniform sampler2D pbr_tex;
+void vertex(in Vertex vert, inout vec4 clip, inout Varyings vars)
+{
+}
 
-layout(set = 2, binding = 3) uniform Params
+uniform sampler2D albedo_tex;
+uniform sampler2D normal_tex;
+uniform sampler2D pbr_tex;
+
+uniform Params
 {
     PBR_PARAMS;
 };
 
-void fragment()
+bool fragment(in Varyings vars, out Fragment frag)
 {
     PBR_SETUP;
 
-    out_colour = vec4(pbrSurface(albedo_val.rgb, frag.position.xyz, perturbed_normal, specular_colour.rgb, pbr_val.r, pbr_val.g, pbr_val.b, scene.ambient_light.rgb, scene.eye_position), 1.0f);
-
-    out_normal = vec4(perturbed_normal, 1);
-    out_params = vec4(0, 0, 0, 0);
-    out_custom = vec4(0, 0, 0, 1);
+    frag.colour = vec4(pbrSurface(albedo_val.rgb, vars.position.xyz, perturbed_normal, specular_colour.rgb, pbr_val.r, pbr_val.g, pbr_val.b, scene.ambient_light.rgb, scene.eye_position), 1.0f);
+    frag.normal = vec4(perturbed_normal, 1);
+    frag.custom.w = 1;
+    return true;
 }

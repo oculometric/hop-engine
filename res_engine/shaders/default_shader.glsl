@@ -1,11 +1,9 @@
-void vertex(in Vertex vert, inout vec4 pos, inout Varyings vars)
+void vertex(in Vertex vert, inout vec4 clip, inout Varyings vars)
 {
 }
 
-Fragment fragment(in Varyings vars)
+bool fragment(in Varyings vars, out Fragment frag)
 {
-    Fragment frag;
     frag.colour = vec4(1, 0, 1, 1);
-
-    return frag;
+    return true;
 }

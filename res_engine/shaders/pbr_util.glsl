@@ -37,13 +37,13 @@ vec3 calculateMappedNormal(vec3 normal, vec3 tangent, vec4 normal_from_texture)
 #include "dither.glsl"
 
 #define PBR_SETUP \
-    vec2 uv = use_triplanar > 0 ? calculateTriplanar(frag.position.xyz, frag.normal.xyz) * triplanar_scale : frag.uv.xy; \
+    vec2 uv = use_triplanar > 0 ? calculateTriplanar(vars.position.xyz, vars.normal.xyz) * triplanar_scale : vars.uv.xy; \
     vec4 albedo_val = texture(albedo_tex, uv); \
     if (dither_4x4(albedo_val.a, pixelCoord((gl_FragCoord.xy * 0.5f) + 0.5f, scene.viewport_size)) < 1) \
-        discard; \
-    albedo_val.rgb *= base_colour.rgb * frag.colour.rgb; \
-    vec3 perturbed_normal = calculateMappedNormal(frag.normal.xyz, frag.tangent.xyz, texture(normal_tex, uv)); \
-    perturbed_normal = normalize(mix(frag.normal.xyz, perturbed_normal, normal_strength)); \
+        return false; \
+    albedo_val.rgb *= base_colour.rgb * vars.colour.rgb; \
+    vec3 perturbed_normal = calculateMappedNormal(vars.normal.xyz, vars.tangent.xyz, texture(normal_tex, uv)); \
+    perturbed_normal = normalize(mix(vars.normal.xyz, perturbed_normal, normal_strength)); \
     vec4 pbr_val = texture(pbr_tex, uv); \
     pbr_val *= vec4(roughness_factor, metallic_factor, emission_strength, 1.0f); \
     pbr_val += vec4(roughness_factor_add, metallic_factor_add, 0.0f, 0.0f)

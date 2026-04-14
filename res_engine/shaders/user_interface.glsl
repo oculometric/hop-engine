@@ -1,27 +1,28 @@
-void vertex()
+#pragma OMIT_TRANSFORM
+#pragma CANVAS_ATTACHMENTS
+
+void vertex(in Vertex vert, inout vec4 clip, inout Varyings vars)
 {
-    frag.position = in_position;    // treated as position in pixel coordinates
-    frag.colour = in_colour;        // .rgb  -> primary detail colour
+    vars.position = vert.position;    // treated as position in pixel coordinates
+    vars.colour = vert.colour;        // .rgb  -> primary detail colour
                                     // .a    -> unused
-    frag.normal = in_normal;        // .x    -> draw mode (0 = text, 1 = 9-slice, 2 = simple uv)
+    vars.normal = vert.normal;        // .x    -> draw mode (0 = text, 1 = 9-slice, 2 = simple uv)
                                     // .y    -> texture slice (for 9-slice and simple uv modes) OR text mode bitflags (bit 0 = bold, bit 1 = underline, bit 2 = strikethrough)
                                     // .z    -> packed border booleans (for 9-slice mode)
                                     // .w    -> unused
-    frag.tangent = in_tangent;      // .xy   -> quad size (when in 9-slice mode or text mode)
+    vars.tangent = vert.tangent;      // .xy   -> quad size (when in 9-slice mode or text mode)
                                     // .zw   -> unused
-    frag.uv = in_uv;
+    vars.uv = vert.uv;
 
     // vertex coordinates are passed in in canvas space ({ 0, 0 } is center)
-    vec2 pixel_position = floor(in_position.xy + (scene.viewport_size / 2.0f));
-    gl_Position.xy = (pixel_position / vec2(scene.viewport_size)) * 2.0f - 1.0f;
-    gl_Position.zw = vec2(0, 1);
+    vec2 pixel_position = floor(vert.position.xy + (scene.viewport_size / 2.0f));
+    clip.xy = (pixel_position / vec2(scene.viewport_size)) * 2.0f - 1.0f;
+    clip.zw = vec2(0, 1);
 }
 
-#pragma CANVAS_ATTACHMENTS
-
-layout(set = 2, binding = 1) uniform sampler2D text_atlas;
-layout(set = 2, binding = 2) uniform sampler2D text_bold_atlas;
-layout(set = 2, binding = 3) uniform sampler3D ui_atlas;
+uniform sampler2D text_atlas;
+uniform sampler2D text_bold_atlas;
+uniform sampler3D ui_atlas;
 
 vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size, bool top_border, bool bottom_border, bool left_border, bool right_border)
 {
@@ -65,18 +66,18 @@ vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size, bool top_border, bool
     return new_uv;
 }
 
-void fragment()
+bool fragment(in Varyings vars, out Fragment frag)
 {
-    int draw_mode = int(frag.normal.x);
-    vec3 fill_colour = frag.colour.rgb;
+    int draw_mode = int(vars.normal.x);
+    vec3 fill_colour = vars.colour.rgb;
 
     if (draw_mode == 0)         // text mode
     {
-        vec2 uv = frag.uv.xy;
-        int text_mode = int(frag.normal.y);
+        vec2 uv = vars.uv.xy;
+        int text_mode = int(vars.normal.y);
         bool underline_flag = (text_mode & 2) > 0;
         bool strikethrough_flag = (text_mode & 4) > 0;
-        vec2 quad_size = frag.tangent.xy;
+        vec2 quad_size = vars.tangent.xy;
         vec2 uv_size = quad_size / vec2(textureSize(text_atlas, 0));
 
         float local_uv = mod(uv.y, uv_size.y) / uv_size.y;
@@ -101,33 +102,34 @@ void fragment()
         }
 
         if (tex_value < 0.5f)
-            discard;
+            return false;
 
-        out_colour = vec4(fill_colour, 1);
+        frag.colour = vec4(fill_colour, 1);
     }
     else if (draw_mode == 1)    // 9-slice mode
     {
-        vec2 quad_size = frag.tangent.xy;
+        vec2 quad_size = vars.tangent.xy;
         vec3 atlas_size = vec3(textureSize(ui_atlas, 0));
-        uint borders = uint(frag.normal.z);
-        int slice = int(frag.normal.y);
-        vec2 uv = nineSliceUV(frag.uv.xy, quad_size, atlas_size.xy, bool(borders & 1), bool(borders & 2), bool(borders & 4), bool(borders & 8));
+        uint borders = uint(vars.normal.z);
+        int slice = int(vars.normal.y);
+        vec2 uv = nineSliceUV(vars.uv.xy, quad_size, atlas_size.xy, bool(borders & 1), bool(borders & 2), bool(borders & 4), bool(borders & 8));
         vec4 colour = texture(ui_atlas, vec3(uv, float(slice) / atlas_size.z));
         if (colour.a < 0.5f)
-            discard;
+            return false;
         if (colour.rgb == vec3(1, 0, 1))
-            out_colour = vec4(fill_colour, 1);
+            frag.colour = vec4(fill_colour, 1);
         else
-            out_colour = vec4(colour.rgb, 1);
+            frag.colour = vec4(colour.rgb, 1);
     }
     else if (draw_mode == 2)    // simple uv mode
     {
         vec3 atlas_size = vec3(textureSize(ui_atlas, 0));
-        vec2 uv = frag.uv.xy;
-        int slice = int(frag.normal.y);
+        vec2 uv = vars.uv.xy;
+        int slice = int(vars.normal.y);
         vec4 colour = texture(ui_atlas, vec3(uv, float(slice) / atlas_size.z));
         if (colour.a < 0.5f)
-            discard;
-        out_colour = vec4(fill_colour, 1);
+            return false;
+        frag.colour = vec4(fill_colour, 1);
     }
+    return true;
 }

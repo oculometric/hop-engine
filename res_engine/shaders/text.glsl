@@ -1,21 +1,15 @@
-void vertex()
+void vertex(in Vertex vert, inout vec4 clip, inout Varyings vars)
 {
-    #pragma DEFAULT_TRANSFORM
-    frag.colour = in_colour;
 }
 
-#pragma DEFAULT_ATTACHMENTS
+uniform sampler2D text_atlas;
 
-layout(set = 2, binding = 0) uniform sampler2D text_atlas;
-
-void fragment()
+bool fragment(in Varyings vars, out Fragment frag)
 {
-    vec2 uv = frag.uv.xy;
+    vec2 uv = vars.uv.xy;
     if (texture(text_atlas, uv).r < 0.5f)
-        discard;
+        return false;
 
-    out_colour = vec4(frag.colour.rgb, 1);
-    out_normal = vec4(0, 0, 0, 1);
-    out_custom = vec4(0, 0, 0, 1);
-    out_params = vec4(0, 0, 0, 0);
+    frag.colour = vec4(vars.colour.rgb, 1);
+    return true;
 }

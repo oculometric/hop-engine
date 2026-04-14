@@ -88,6 +88,7 @@ private:
     std::map<std::string, Ref<Material>> loaded_materials;
     // currently loaded textures, to avoid reloading when not necessary
     std::map<std::string, Ref<Texture>> loaded_textures;
+    std::map<std::string, Ref<Texture>> loaded_3d_textures;
     // currently loaded meshes, to avoid reloading when not necessary
     std::map<std::string, Ref<Mesh>> loaded_meshes;
     // all possible samplers are created automatically, to avoid duplication
