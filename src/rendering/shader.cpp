@@ -429,6 +429,20 @@ void main()
 })VOGON"
 };
 
+static const std::string vertex_function_def[2] = {
+    R"VOGON(void vertex(in Vertex vert, inout vec4 clip, inout Varyings vars))VOGON",
+    R"VOGON({}
+)VOGON"
+};
+
+static const std::string fragment_function_def[2] = {
+    R"VOGON(bool vertex(in Varyings vars, out Fragment frag))VOGON", R"VOGON({
+    frag.colour = vec4(clip.xy, 0, 1);
+    return true;
+}
+)VOGON"
+};
+
 int getType(char c)
 {
     if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_') return -1;
@@ -436,6 +450,42 @@ int getType(char c)
         return -2;
     else
         return c;
+}
+
+std::vector<std::pair<ShaderToken, ShaderToken>> getArguments(const std::vector<ShaderToken>& tokens,
+    size_t start_token, size_t end_token)
+{
+    if (start_token + 1 == end_token) return {};
+    size_t first_arg_token = start_token + 1;
+    size_t comma_or_end    = start_token + 1;
+    std::vector<std::pair<ShaderToken, ShaderToken>> pairs;
+    while (true)
+    {
+        if (first_arg_token == end_token)
+        {
+            pairs.push_back({});
+            return pairs;
+        }
+        while (tokens[comma_or_end].text != "," && comma_or_end < end_token) ++comma_or_end;
+
+        if (comma_or_end == first_arg_token) { pairs.push_back({}); }
+        else if (comma_or_end == first_arg_token + 1) { pairs.push_back({}); }
+        else if (comma_or_end == first_arg_token + 2)
+        {
+            pairs.push_back({ ShaderToken{}, tokens[first_arg_token] });
+        }
+        else
+        {
+            pairs.push_back({ tokens[first_arg_token], tokens[first_arg_token + 1] });
+        }
+
+        if (comma_or_end >= end_token) return pairs;
+        else
+        {
+            first_arg_token = comma_or_end + 1;
+            comma_or_end    = first_arg_token;
+        }
+    }
 }
 
 void ShaderParser::processShaders(std::string& source)
@@ -503,7 +553,7 @@ void ShaderParser::processShaders(std::string& source)
                 success = false;
                 return;
             }
-            if ((it + 1)->type == -1) structs.push_back(it->text);
+            if ((it + 1)->type == -1) structs.push_back((it + 1)->text);
         }
         else if (it->text == "vertex")
         {
@@ -519,25 +569,116 @@ void ShaderParser::processShaders(std::string& source)
         }
     }
 
-    // TODO: detect vertex and fragment functions
-    //    - detect location and check existence of vertex/fragment (insert default?)
-    //    - detect signature, validate, and detect extra varying structs
+    std::vector<std::string> extra_vertex_varyings;
+    std::vector<std::string> extra_fragment_varyings;
+    if (vertex_shader_locations[0] == SIZE_MAX)
+    {
+        vertex_shader_locations[0] = source.size();
+        source.append(vertex_function_def[0]);
+        source.append(vertex_function_def[1]);
+        vertex_shader_locations[1] = source.size() - 1;
+    }
+    else
+    {
+        auto result = getArguments(tokens, vertex_shader_locations[2], vertex_shader_locations[3]);
+        if (result.size() < 3 || result[0].first.text != "in" || result[0].second.text != "Vertex" ||
+            result[1].first.text != "inout" || result[1].second.text != "vec4" ||
+            result[2].first.text != "inout" || result[2].second.text != "Varyings")
+        {
+            DBG_ERROR("error parsing shader " + file_path +
+                      ": invalid vertex shader definition, the minimum definition should match: " +
+                      vertex_function_def[0]);
+            success = false;
+            return;
+        }
+        for (size_t i = 3; i < result.size(); ++i)
+        {
+            if (result[i].first.text != "out")
+            {
+                DBG_ERROR(
+                    "error parsing shader " + file_path +
+                    ": invalid vertex shader definition, additional varyings must use the 'out' keyword");
+                success = false;
+                return;
+            }
+            if (std::find(structs.begin(), structs.end(), result[i].second.text) == structs.end())
+            {
+                DBG_ERROR(
+                    "error parsing shader " + file_path +
+                    ": invalid vertex shader definition, additional varyings must use a valid struct type");
+                success = false;
+                return;
+            }
+            extra_vertex_varyings.push_back(result[i].second.text);
+        }
+    }
+
+    if (fragment_shader_locations[0] == SIZE_MAX)
+    {
+        fragment_shader_locations[0] = source.size();
+        source.append(fragment_function_def[0]);
+        source.append(fragment_function_def[1]);
+        fragment_shader_locations[1] = source.size() - 1;
+    }
+    else
+    {
+        auto result = getArguments(tokens, fragment_shader_locations[2], fragment_shader_locations[3]);
+        size_t result_last = result.size() - 1;
+        if (result.size() < 2 || result[0].first.text != "in" || result[0].second.text != "Varyings" ||
+            result[result_last].first.text != "out" || result[result_last].second.text != "Fragment")
+        {
+            DBG_ERROR("error parsing shader " + file_path +
+                      ": invalid fragment shader definition, the minimum definition should match: " +
+                      fragment_function_def[0]);
+            success = false;
+            return;
+        }
+        for (size_t i = 1; i < result_last; ++i)
+        {
+            if (result[i].first.text != "in")
+            {
+                DBG_ERROR(
+                    "error parsing shader " + file_path +
+                    ": invalid fragment shader definition, additional varyings must use the 'in' keyword");
+                success = false;
+                return;
+            }
+            if (std::find(structs.begin(), structs.end(), result[i].second.text) == structs.end())
+            {
+                DBG_ERROR(
+                    "error parsing shader " + file_path +
+                    ": invalid fragment shader definition, additional varyings must use a valid struct type");
+                success = false;
+                return;
+            }
+            extra_fragment_varyings.push_back(result[i].second.text);
+        }
+    }
+
+    constexpr size_t varyings_struct_components = 5;
 
     {
         vertex_shader = source;
         vertex_shader.erase(fragment_shader_locations[0],
             (fragment_shader_locations[1] - fragment_shader_locations[0]) + 1);
         vertex_shader.append(vertex_main_str[0]);
-        // TODO: insert extra varying outputs here
+        for (size_t i = 0; i < extra_vertex_varyings.size(); ++i)
+            vertex_shader.append(std::format("\nlayout(location = {2}) out {1} _HEI_varyings_{1}_{0};",
+                i + 1, extra_vertex_varyings[i], i + varyings_struct_components));
         vertex_shader.append(vertex_main_str[1]);
-        // TODO: declare extra varying structs here
+        for (size_t i = 0; i < extra_vertex_varyings.size(); ++i)
+            vertex_shader.append(
+                std::format("\n    {1} _internal_{1}_{0};", i + 1, extra_vertex_varyings[i]));
         if (!canvas_transform && !no_transform) vertex_shader.append(vertex_main_str[2]);
         else if (canvas_transform)
             vertex_shader.append(vertex_main_str_2_canvas);
         vertex_shader.append(vertex_main_str[3]);
-        // TODO: insert extra vertex arguments (structs) here
+        for (size_t i = 0; i < extra_vertex_varyings.size(); ++i)
+            vertex_shader.append(std::format(", _internal_{1}_{0}", i + 1, extra_vertex_varyings[i]));
         vertex_shader.append(vertex_main_str[4]);
-        // TOOD: assign extra varying outputs here
+        for (size_t i = 0; i < extra_vertex_varyings.size(); ++i)
+            vertex_shader.append(std::format("\n    _HEI_varyings_{1}_{0} = _internal_{1}_{0};", i + 1,
+                extra_vertex_varyings[i]));
         vertex_shader.append(vertex_main_str[5]);
     }
 
@@ -546,11 +687,15 @@ void ShaderParser::processShaders(std::string& source)
         fragment_shader.erase(vertex_shader_locations[0],
             (vertex_shader_locations[1] - vertex_shader_locations[0]) + 1);
         fragment_shader.append(fragment_main_str[0]);
-        // TODO: insert extra varying inputs here
+        for (size_t i = 0; i < extra_fragment_varyings.size(); ++i)
+            fragment_shader.append(std::format("\nlayout(location = {2}) in {1} _HEI_varyings_{1}_{0};",
+                i + 1, extra_fragment_varyings[i], i + varyings_struct_components));
         fragment_shader.append(fragment_main_str[1]);
         if (!canvas_attachments) fragment_shader.append(fragment_main_str[2]);
         fragment_shader.append(fragment_main_str[3]);
-        // TODO: insert extra fragment arguments (structs) here
+        for (size_t i = 0; i < extra_fragment_varyings.size(); ++i)
+            fragment_shader.append(
+                std::format(", _HEI_varyings_{1}_{0}", i + 1, extra_fragment_varyings[i]));
         fragment_shader.append(fragment_main_str[4]);
         if (!canvas_attachments) fragment_shader.append(fragment_main_str[5]);
         fragment_shader.append(fragment_main_str[6]);

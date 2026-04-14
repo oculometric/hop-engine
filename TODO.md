@@ -1,10 +1,6 @@
 # TODO
 
 # v0.54
-- shader improvements
-    - custom varying support (60)
-    - overhaul arrangement of shader/pipeline/pipeline layout/descriptor set - maybe move some render server behaviour into this? (i dont like calling back and forth)
-
 - package manager improvements
     - data blocks should know which package they came from
     - package manager should not have to load the entire file from disk at once, only an index of contents
@@ -24,7 +20,7 @@
 - move application start functionality into its own start function (to allow for switchApplication)
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - split framebuffer from render pass?? merge image creation from swapchain to render pass
-
+- overhaul arrangement of shader/pipeline/pipeline layout/descriptor set - maybe move some render server behaviour into this? (i dont like calling back and forth)
 
 # v0.55
 - the ui update
