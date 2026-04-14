@@ -93,17 +93,17 @@ void UniformBlock::bind(WeakRef<DrawCommandBuffer> command_buffer)
     command_buffer->bindDescriptorSetInternal(set_index, descriptor_sets[index]);
 }
 
-void UniformBlock::setTexture(const uint32_t binding, Ref<Texture> image)
+void UniformBlock::setTexture(const uint32_t binding, Ref<Texture> texture)
 {
     // if the texture is already bound, skip rebinding it
-    if (std::get<0>(textures_in_use[binding]) == image) return;
+    if (std::get<0>(textures_in_use[binding]) == texture) return;
     // update the binding
-    if (!image)
+    if (!texture)
         std::get<0>(textures_in_use[binding]) = layout.bindings[binding].texture_is_3d
                                                     ? RenderServer::getDefault3DTexture().strong()
                                                     : RenderServer::getDefaultTexture().strong();
     else
-        std::get<0>(textures_in_use[binding]) = image;
+        std::get<0>(textures_in_use[binding]) = texture;
     rebind_needed = true;
 }
 

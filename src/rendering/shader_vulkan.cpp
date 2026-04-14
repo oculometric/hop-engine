@@ -110,17 +110,10 @@ bool Shader::compile(const std::string& code, Stage stage, std::vector<uint32_t>
     EShLanguage stage_language;
     EProfile profile        = ENoProfile;
     int version             = 450;
-    std::string entry_point = "";
     if (stage == STAGE_VERTEX)
-    {
-        entry_point    = "vertex";
         stage_language = EShLangVertex;
-    }
     else if (stage == STAGE_FRAGMENT)
-    {
-        entry_point    = "fragment";
         stage_language = EShLangFragment;
-    }
     else
     {
         DBG_ERROR("attempted to compile a shader with an invalid shader stage parameter");

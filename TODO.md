@@ -1,15 +1,8 @@
 # TODO
 
 # v0.54
-- document everything
-    - material.h
-
 - shader improvements
-    - actual lexical parser (tokens..... oh god)
-    - more reliable vertex/fragment function finding (45)
-    - maybe make things more object-oriented (passing arguments rather than static variables in shader code) (45)
     - custom varying support (60)
-    - automatic uniform layouting (30)
     - overhaul arrangement of shader/pipeline/pipeline layout/descriptor set - maybe move some render server behaviour into this? (i dont like calling back and forth)
 
 - package manager improvements

@@ -102,6 +102,10 @@ private:
 
 public:
     DELETE_CONSTRUCTORS(Shader);
+    /**
+     * @brief loads a text shader from the specified path and compiles it.
+     * @param base_path path to the shader to load.
+     */
     Shader(const std::string& base_path);
     ~Shader() override;
 
@@ -134,26 +138,63 @@ public:
     void bind(WeakRef<DrawCommandBuffer> command_buffer);
 
 private:
+    /**
+     * @brief uses SPIRV to reflect the uniform bindings for a given blob of compiled shader code. do we
+     * need this nowadays? uh not really i guess.
+     * // TODO: eliminate this and the binding merge function, use data from shader parsing instead
+     * @param blob compiled shader binary.
+     * @returns array of descriptor bindings found, ignoring DSL0 and DSL1 (scene and object uniforms).
+     * empty if an error occurred or there were no bindings.
+     */
     static std::vector<Descriptor> getReflectedBindings(const std::vector<uint32_t>& blob);
+    /**
+     * @brief merges together and deduplicates the uniform bindings from vertex and fragment code. performs
+     * error checking.
+     * @param list_a list of descriptor bindings reflected from the vertex shader.
+     * @param list_b list of descriptor bindings reflected from the fragment shader.
+     * @returns array of deduplicated descriptor bindings. empty if an error occurred or there were no
+     * bindings.
+     */
     static std::vector<Descriptor> mergeBindings(const std::vector<Descriptor>& list_a,
         const std::vector<Descriptor>& list_b);
-    static bool compile(const std::string& code, Stage stage, std::vector<uint32_t>& blob,
-        const std::string& path);
+    /**
+     * @brief reads the text from the specified path and compiles it into vertex and fragment SPIRV
+     * shader modules.
+     * @param path path to load the shader from.
+     * @param vert_blob output location for the compiled vertex module.
+     * @param vert_blob output location for the compiled fragment module.
+     * @returns `true` if parsing and compilation were successful, otherwise `false`.
+     */
     static bool compileShaders(const std::string& path, std::vector<uint32_t>& vert_blob,
         std::vector<uint32_t>& frag_blob);
+    /**
+     * @brief compiles the given shader code using glslang, for the specified shader stage. the shader code
+     * should already have been preprocessed at this point.
+     * @param code text shader code to be compiled.
+     * @param stage shader stage to compile for.
+     * @param blob output lcation for the compiled shader module.
+     * @param path path from which the shader was loaded, for debug messages.
+     * @returns `true` if compilation was successful, otherwise `false`.
+     */
+    static bool compile(const std::string& code, Stage stage, std::vector<uint32_t>& blob,
+        const std::string& path);
+    /**
+     * @brief constructs a GPU shader for the specified shader module.
+     * @param blob compiled shader module.
+     * @returns VkShaderModule GPU handle.
+     */
     static GPUHandle createShaderModule(const std::vector<uint32_t>& blob);
 
-    static void fixIncludes(std::string& source_code, const std::string& path_prefix, bool res_relative);
-    static void preprocess(const std::string& source_code, std::string& vertex_shader_code,
-        std::string& fragment_shader_code, const std::string& path);
-    static std::string preprocessVertex(const std::string& common_code, const std::string& path);
-    static std::string preprocessFragment(const std::string& common_code, const std::string& path);
-    static void removeFunction(std::string& code, const std::string& signature);
-    static void destroyAllPragmas(std::string& code);
-
+    /**
+     * @brief destroys all internal resources (shader modules, pipeline layout, descriptor set layout).
+     */
     void destroyResources();
 };
 
+/**
+ * @brief describes a rendering pipeline, combining shader a shader with rasteriser controls such as culling
+ * and polygon mode.
+ */
 class Pipeline final : public Destructible
 {
 public:
@@ -193,6 +234,9 @@ public:
         COMPARE_ALWAYS           = 7,
     };
 
+    /**
+     * @brief pipeline parameter builder.
+     */
     struct Builder
     {
         CullMode culling_mode          = CULL_BACK;
@@ -254,14 +298,25 @@ public:
     };
 
 private:
-    GPUHandle pipeline = nullptr;
-    Builder pipeline_config;
+    GPUHandle pipeline = nullptr; // pipeline GPU handle
+    Builder pipeline_config;      // builder struct used to construct the pipeline
 
 public:
     DELETE_CONSTRUCTORS(Pipeline);
-    Pipeline(const Ref<Shader>& shader, const Builder& config, const Ref<RenderPass>& render_pass);
+    /**
+     * @brief construct a new pipeline based on a shader, rasteriser config, and render pass. the shader
+     * provides shader modules, while the render pass provides output attachments.
+     * @param shader shader providing modules to bind to the pipeline.
+     * @param config rasteriser configuration, see `PipelineBuilder` for details.
+     * @param render_pass render pass in which the pipeline will be drawn (or any compatible render pass).
+     */
+    Pipeline(WeakRef<Shader> shader, const Builder& config, WeakRef<RenderPass> render_pass);
     ~Pipeline() override;
 
+    /**
+     * @brief binds the pipeline ready for meshes to be rendered with it.
+     * @param command_buffer draw command buffer into which rendering commands will be issued.
+     */
     void bind(WeakRef<DrawCommandBuffer> command_buffer);
     Builder getConfig() const { return pipeline_config; }
 };
@@ -270,10 +325,15 @@ TO_STRING_DECL(Pipeline::CompareOp);
 TO_STRING_DECL(Pipeline::PolygonMode);
 TO_STRING_DECL(Pipeline::CullMode);
 
+/**
+ * @brief describes a descriptor set, including uniform buffers and texture-sampler bindings, with internal
+ * management of descriptor set instances. essentially implements the an array of `Shader::Binding`s,
+ * allowing it to be written to indirectly.
+ */
 class UniformBlock final : public Destructible
 {
 private:
-    // array of descriptor sets
+    // array of descriptor sets, one per frame-in-flight
     std::vector<GPUHandle> descriptor_sets;
     // array of buffers containing uniform variables, one per descriptor set
     std::vector<Ref<Buffer>> uniform_buffers;
@@ -281,10 +341,10 @@ private:
     std::map<uint32_t, std::tuple<Ref<Texture>, Ref<Sampler>>> textures_in_use;
     // CPU-accessible block of data which the program can write to
     std::vector<uint8_t> live_uniform_buffer;
-    size_t size;           // size of the uniform buffer
-    Shader::Layout layout; // information about the size and offset of uniform variables
-    uint32_t set_index;
-    bool rebind_needed = true;
+    size_t size;               // size of the uniform buffer
+    Shader::Layout layout;     // information about the size and offset of uniform variables
+    uint32_t set_index;        // index of the descriptor set layout on which this uniform block is based
+    bool rebind_needed = true; // if `true`, texture/sampler bindings have changed and need to be rebound
 
 public:
     DELETE_CONSTRUCTORS(UniformBlock);
@@ -295,48 +355,84 @@ public:
     UniformBlock(const Shader::Layout& layout_info);
     ~UniformBlock() override;
 
+    /**
+     * @brief binds the uniform block (i.e. its internally managed descriptor set) ready for shaders to be
+     * executed using it. updates descriptor set bindings if needed.
+     * @param command_buffer draw command buffer into which rendering commands will be issued.
+     */
     void bind(WeakRef<DrawCommandBuffer> command_buffer);
+    /**
+     * @brief gives access to the uniform backing buffer. unless you know the layout, down to alignment, you
+     * shouldn't use this (use the material's wrappers instead).
+     * @returns pointer to the uniform backing buffer byte array.
+     */
     void* getBuffer() { return live_uniform_buffer.data(); }
+    /**
+     * @brief queries the size of the uniform backing buffer.
+     * @returns size of the uniform backing buffer array in bytes.
+     */
     size_t getSize() const { return size; }
     /**
      * @brief update the bound texture (image view) for a given binding index.
      * @param binding descriptor binding index, matching to that specified in the shader.
-     * @param image texture to bind. if this image is already bound, nothing will change.
-     * @param use_stencil whether the stencil view aspect should be used.
+     * @param texture texture to bind. if this texture is already bound, nothing will change.
      */
-    void setTexture(uint32_t binding, Ref<Texture> image);
+    void setTexture(uint32_t binding, Ref<Texture> texture);
     /**
      * @brief update the bound sampler for a given binding index.
      * @param binding descriptor binding index, matching to that specified in the shader.
      * @param sampler sampler to bind. if this sampler is already bound, nothing will change.
      */
     void setSampler(uint32_t binding, Ref<Sampler> sampler);
+    /**
+     * @brief update the bound texture and sampler for a given binding index. useful when you know you need
+     * to modify both at once.
+     * @param binding descriptor binding index, matching to that specified in the shader.
+     * @param texture texture to bind. if this texture is already bound, nothing will change.
+     * @param sampler sampler to bind. if this sampler is already bound, nothing will change.
+     */
     void setTextureSampler(uint32_t binding, Ref<Texture> texture, Ref<Sampler> sampler);
 
     void drawImGuiDebug(const std::map<std::string, uint32_t>& texture_name_to_binding);
 
 private:
     /**
-     * @brief issues descriptor set write commands to bind the uniform buffers and
-     * textures to the appropriate places.
+     * @brief issues descriptor set write commands to bind the uniform buffers and textures to the
+     * appropriate places. only called when needed.
      */
     void applyDescriptorBindings();
 };
 
+/**
+ * @brief encapsulates a surface material used for rendering meshes. combines shader, pipeline, and uniform
+ * buffer/texture bindings. allows textures and uniforms to be written to by name, as well as by binding
+ * index.
+ */
 class Material final : public Destructible
 {
 private:
-    std::string origin;
-    Ref<Shader> shader;
-    Ref<Pipeline> pipeline;
-    Ref<Pipeline> debug_pipeline;
-    Ref<UniformBlock> uniforms;
-    Ref<RenderPass> render_pass;
+    std::string origin;           // if not empty, contains the path from which this shader was compiled
+    Ref<Shader> shader;           // shader used by the material for rendering
+    Ref<Pipeline> pipeline;       // pipeline used by the material for rendering
+    Ref<Pipeline> debug_pipeline; // debug pipeline used when force wireframe mode is enabled
+    Ref<UniformBlock> uniforms;   // uniform block providing uniform buffers and texture/sampler bindings
+    Ref<RenderPass> render_pass;  // render pass within which this material will render (or compatible)
+    // mapping from texture uniform name to its shader binding index, retrieved from shader reflection
     std::map<std::string, uint32_t> texture_name_to_binding;
+    // mapping from uniform variable name to its backing buffer offset, retrieved from shader reflection
     std::map<std::string, Shader::UniformVariable> variable_name_to_binding;
 
 public:
     DELETE_CONSTRUCTORS(Material);
+    /**
+     * @brief constructs a new material based on a shader, pipeline config, and render pass. the pipeline
+     * config and render pass are optional.
+     * @param _shader shader to base the material on. an appropriate uniform buffer will be allocated.
+     * @param config if provided, configures the pipeline (and thus rasteriser) used for the material.
+     * @param _render_pass specifies the render pass configuration; `nullptr` will cause the default
+     * offscreen render pass to be used. the material can only be rendered in this render pass, or a
+     * compatible one.
+     */
     Material(Ref<Shader> _shader, const Pipeline::Builder& config = Pipeline::Builder(),
         WeakRef<RenderPass> _render_pass = nullptr);
     ~Material() override;
@@ -348,15 +444,57 @@ public:
     }
     Ref<Shader> getShader() const;
     Ref<RenderPass> getRenderPass() const;
+    /**
+     * @brief creates a copy of the material using the same shader and render pass, but with unique pipeline
+     * and uniform buffer resources, which can be modified independently.
+     */
     Ref<Material> duplicate() const;
 
+    /**
+     * @brief binds the material ready for a mesh to be drawn using it. updates uniform buffer if needed.
+     * @param command_buffer draw command buffer into which rendering commands will be issued.
+     * @param wireframe_allowed if `true`, the `Engine::isWireframeMode` result determines whether the debug
+     * pipeline will be rendered, otherwise only the default pipeline is used.
+     */
     void bind(WeakRef<DrawCommandBuffer> command_buffer, bool wireframe_allowed = true);
 
+    /**
+     * @brief update the bound texture for a given binding index.
+     * @param binding descriptor binding index, matching to that specified in the shader.
+     * @param texture texture to bind. if this texture is already bound, nothing will change.
+     */
     void setTexture(uint32_t binding, Ref<Texture> texture);
+    /**
+     * @brief update the bound sampler for a given binding index.
+     * @param binding descriptor binding index, matching to that specified in the shader.
+     * @param sampler sampler to bind. if this sampler is already bound, nothing will change.
+     */
     void setSampler(uint32_t binding, Ref<Sampler> sampler);
+    /**
+     * @brief update the bound texture for the uniform with a given name.
+     * @param name uniform variable name, matching to that in the shader.
+     * @param texture texture to bind. if this texture is already bound, nothing will change.
+     */
     void setTexture(const std::string& name, Ref<Texture> texture);
+    /**
+     * @brief update the bound sampler for the uniform with a given name.
+     * @param name uniform variable name, matching to that in the shader.
+     * @param sampler sampler to bind. if this sampler is already bound, nothing will change.
+     */
     void setSampler(const std::string& name, Ref<Sampler> sampler);
+    /**
+     * @brief update the bound texture-sampler for a given binding index.
+     * @param binding descriptor binding index, matching to that specified in the shader.
+     * @param texture texture to bind. if this texture is already bound, nothing will change.
+     * @param sampler sampler to bind. if this sampler is already bound, nothing will change.
+     */
     void setTextureSampler(uint32_t binding, Ref<Texture> texture, Ref<Sampler> sampler);
+    /**
+     * @brief update the bound texture-sampler uniform with a given name.
+     * @param name uniform variable name, matching to that in the shader.
+     * @param texture texture to bind. if this texture is already bound, nothing will change.
+     * @param sampler sampler to bind. if this sampler is already bound, nothing will change.
+     */
     void setTextureSampler(const std::string& name, Ref<Texture> texture, Ref<Sampler> sampler);
 
     void setFloatUniform(const std::string& name, float value) { setUniform(name, &value, sizeof(value)); }
@@ -387,16 +525,37 @@ public:
     void setMat4Uniform(const std::string& name, glm::mat4 value)
     { setUniform(name, &value, sizeof(value)); }
 
+    /**
+     * @brief updates a uniform variable with a particular name. allows specifying custom data. the offset
+     * into the uniform backing buffer is determined via shader reflection. the size of the data is checked
+     * also using reflection.
+     * @param name uniform variable name, matching to that in the shader.
+     * @param data pointer to the data to fill the variable with.
+     * @param size expected size of the data (and uniform variable, if you're doing things right!).
+     */
     void setUniform(const std::string& name, const void* data, size_t size);
 
+    /**
+     * @brief constructs a material from a text-based serialised representation.
+     * @param name path to the target file from which to read the text representation.
+     * @returns material constructed based on serialised representation, or `nullptr` if an error occurred
+     * during deserialisation.
+     */
     static Ref<Material> deserialiseFile(const std::string& name);
+    /**
+     * @brief constructs a material from a text-based serialised representation.
+     * @param token_str text representation to decode.
+     * @param origin original path from which the material was loaded, may be empty.
+     * @returns material constructed based on serialised representation, or `nullptr` if an error occurred
+     * during deserialisation.
+     */
     static Ref<Material> deserialise(const std::string& token_str, const std::string& origin = "");
 
     void drawImGuiDebug();
 };
 
 /**
- * @brief describes a 3D scene light. see the \code LightComponent\endcode class.
+ * @brief describes a 3D scene light in shader terms. see the `LightComponent` class.
  */
 struct LightParams final
 {
@@ -415,8 +574,8 @@ struct LightParams final
  */
 struct ObjectUniforms final
 {
-    glm::mat4 model_to_world;
-    int id;
+    glm::mat4 model_to_world = glm::mat4(1);
+    int id                   = 0;
 };
 
 /**
@@ -425,10 +584,10 @@ struct ObjectUniforms final
  */
 struct SceneUniforms final
 {
-    glm::mat4 world_to_view;
-    glm::mat4 view_to_clip;
-    glm::mat4 clip_to_view;
-    glm::mat4 view_to_world;
+    glm::mat4 world_to_view  = glm::mat4(1);
+    glm::mat4 view_to_clip   = glm::mat4(1);
+    glm::mat4 clip_to_view   = glm::mat4(1);
+    glm::mat4 view_to_world  = glm::mat4(1);
     glm::ivec2 viewport_size = { 0, 0 };
     glm::vec2 padding        = { 0, 0 };
     glm::vec3 eye_position   = { 0, 0, 0 };
