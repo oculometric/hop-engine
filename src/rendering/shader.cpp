@@ -436,8 +436,8 @@ static const std::string vertex_function_def[2] = {
 };
 
 static const std::string fragment_function_def[2] = {
-    R"VOGON(bool vertex(in Varyings vars, out Fragment frag))VOGON", R"VOGON({
-    frag.colour = vec4(clip.xy, 0, 1);
+    R"VOGON(bool fragment(in Varyings vars, out Fragment frag))VOGON", R"VOGON({
+    frag.colour = vec4(mod(abs(vars.position.xy * 4.0f), 1.0f), 0, 1);
     return true;
 }
 )VOGON"

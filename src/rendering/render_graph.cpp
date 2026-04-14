@@ -327,18 +327,17 @@ void RenderGraph::recordCameraStep(WeakRef<DrawCommandBuffer> command_buffer,
 
     for (DrawCommand command : commands)
     {
-        if (!command.material || !command.mesh)
-        {
-            DBG_WARNING("skipping draw command with invalid mesh or material");
-            continue;
-        }
+        auto material = command.material;
+        auto mesh = command.mesh;
+        if (!material) material = RenderServer::getDefaultMaterial();
+        if (!mesh) mesh = RenderServer::getDefaultMesh();
 
         // material must be bound before we can start binding uniforms at all
-        command.material->bind(command_buffer);
+        material->bind(command_buffer);
 
         camera->bind(command_buffer);
         if (command.uniforms) command.uniforms->bind(command_buffer);
-        command.mesh->draw(command_buffer);
+        mesh->draw(command_buffer);
     }
 }
 

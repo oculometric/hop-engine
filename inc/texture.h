@@ -135,7 +135,7 @@ public:
      * @param data_ptr optionally, provides data with which to initialise the texture. must be in sRGB RGBA
      * 8bpp uint format. pixels are arranged in rows, then columns, then planes (i.e. X, then Y, then Z).
      */
-    Texture(glm::u32vec3 image_extent, Format image_format, void* data_ptr = nullptr);
+    Texture(glm::u32vec3 image_extent, Format image_format, const void* data_ptr = nullptr);
     ~Texture() override;
 
     /**
@@ -194,7 +194,7 @@ private:
      * @brief load data into the image; size is assumed based on `extent` field.
      * @param data_ptr pointer to the raw data to load onto the GPU.
      */
-    void uploadData(void* data_ptr);
+    void uploadData(const void* data_ptr);
     /**
      * @brief copies data from a buffer into the image's internal memory.
      * @param buffer target buffer to copy data from.

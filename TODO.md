@@ -92,3 +92,4 @@
 - Steamworks integration
 - 3D editor
 - geometry shader support
+- skinned mesh support

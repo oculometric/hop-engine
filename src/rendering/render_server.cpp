@@ -91,47 +91,24 @@ RenderServer::RenderServer(bool enable_validation)
     final_render_pass = new RenderPass(swapchain, { 0, true });
     offscreen_pass    = new RenderPass({ 1, 1 }, { 3, true });
 
-    uint8_t default_image_data[4 * 2 * 2 * 2] = {
-        0x00,
-        0x00,
-        0x00,
-        0xFF,
-        0xFF,
-        0x00,
-        0xFF,
-        0xFF,
-        0xFF,
-        0x00,
-        0xFF,
-        0xFF,
-        0x00,
-        0x00,
-        0x00,
-        0xFF,
-        0x00,
-        0x00,
-        0x00,
-        0xFF,
-        0xFF,
-        0x00,
-        0xFF,
-        0xFF,
-        0xFF,
-        0x00,
-        0xFF,
-        0xFF,
-        0x00,
-        0x00,
-        0x00,
-        0xFF,
-    };
-    default_image                 = new Texture({ 2, 2, 1 }, Texture::FORMAT_SRGB_8X4, default_image_data);
-    default_3d_image              = new Texture({ 2, 2, 2 }, Texture::FORMAT_SRGB_8X4, default_image_data);
-    default_sampler               = new Sampler(Sampler::FILTER_NEAREST, Sampler::ADDRESS_REPEAT);
     scene_descriptor_set_layout   = Shader::createDescriptorSetLayout({ scene_uniform_descriptor });
     object_descriptor_set_layout  = Shader::createDescriptorSetLayout({ object_uniform_descriptor });
     default_descriptor_set_layout = Shader::createDescriptorSetLayout({});
     default_pipeline_layout       = RenderServer::createPipelineLayout(default_descriptor_set_layout);
+
+    const uint32_t default_image_data[2 * 2 * 2] = {
+        0xFF000000,
+        0xFFFF00FF,
+        0xFFFF00FF,
+        0xFF000000,
+        0xFFFF00FF,
+        0xFF000000,
+        0xFF000000,
+        0xFFFF00FF,
+    };
+    default_image    = new Texture({ 2, 2, 1 }, Texture::FORMAT_SRGB_8X4, default_image_data);
+    default_3d_image = new Texture({ 2, 2, 2 }, Texture::FORMAT_SRGB_8X4, default_image_data);
+    default_sampler  = new Sampler(Sampler::FILTER_NEAREST, Sampler::ADDRESS_REPEAT);
 
     quad = new Mesh(
         {
@@ -148,7 +125,9 @@ RenderServer::RenderServer(bool enable_validation)
             { { 0, -3, 0, 1 }, {}, {}, {}, { 0.5f, -1.0f, 0 } },
     },
         { 0, 1, 2 });
-    skybox_cube = Mesh::loadMesh("res://engine/meshes/skybox.obj");
+    skybox_cube  = Mesh::loadMesh("res://engine/meshes/skybox.obj");
+    default_mesh = Mesh::loadMesh("res://engine/meshes/default_mesh.obj");
+    if (!default_mesh) DBG_FAULT("failed to load default mesh!");
 
     default_material    = new Material(new Shader("res://engine/shaders/default_shader.glsl"));
     final_pass_uniforms = createSceneUniforms();
@@ -193,6 +172,7 @@ RenderServer::~RenderServer()
     default_material    = nullptr;
     quad                = nullptr;
     tri                 = nullptr;
+    default_mesh        = nullptr;
     default_image       = nullptr;
     default_3d_image    = nullptr;
     default_sampler     = nullptr;

@@ -94,9 +94,10 @@ private:
     Ref<Sampler> default_sampler;   // default sampler used when none is specified
     Ref<Material> default_material; // default material used when none is specified
 
-    Ref<Mesh> skybox_cube; // mesh used to render skyboxes
-    Ref<Mesh> quad;        // mesh used to render quads
-    Ref<Mesh> tri;         // mesh used to render full-screen images (NOT A QUAD)
+    Ref<Mesh> default_mesh; // default mesh
+    Ref<Mesh> skybox_cube;  // mesh used to render skyboxes
+    Ref<Mesh> quad;         // mesh used to render quads
+    Ref<Mesh> tri;          // mesh used to render full-screen images (NOT A QUAD)
 
     Ref<Font> debug_text_font;           // font used for drawing debug logs on the screen
     Ref<UIRenderer> debug_text_renderer; // ui renderer used for drawing logs on the screen
@@ -181,6 +182,7 @@ public:
     static WeakRef<Texture> getDefault3DTexture() { return getInstance()->default_3d_image; }
     static WeakRef<Sampler> getDefaultSampler() { return getInstance()->default_sampler; }
     static WeakRef<Material> getDefaultMaterial() { return getInstance()->default_material; }
+    static WeakRef<Mesh> getDefaultMesh() { return getInstance()->default_mesh; }
     static WeakRef<Mesh> getSkyboxCube() { return getInstance()->skybox_cube; }
     static WeakRef<Mesh> getQuad() { return getInstance()->quad; }
 

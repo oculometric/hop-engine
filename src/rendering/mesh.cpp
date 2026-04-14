@@ -3,6 +3,7 @@
 #include "buffer.h"
 #include "command_buffer.h"
 #include "package.h"
+#include "render_server.h"
 
 using namespace HopEngine;
 
@@ -62,7 +63,11 @@ Ref<Mesh> Mesh::loadMesh(const std::string& path)
 
 void Mesh::draw(WeakRef<DrawCommandBuffer> command_buffer)
 {
-    if (!vertex_buffer || !index_buffer) return;
+    if (!vertex_buffer || !index_buffer)
+    {
+        RenderServer::getDefaultMesh()->draw(command_buffer);
+        return;
+    }
     vertex_buffer->bind(command_buffer);
     index_buffer->bind(command_buffer);
     command_buffer->drawMeshInternal(getIndexCount());

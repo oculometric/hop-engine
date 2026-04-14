@@ -19,7 +19,7 @@ TO_STRING_IMPL(Texture::Layout, 8,
     VARGS("UNDEFINED", "PRESENT_SRC", "COLOR_ATTACHMENT", "DEPTH_STENCIL_ATTACHMENT", "SHADER_READ_ONLY",
         "DEPTH_STENCIL_READ_ONLY", "TRANSFER_SRC", "TRANSFER_DST"))
 
-Texture::Texture(glm::u32vec3 image_extent, Format image_format, void* data_ptr)
+Texture::Texture(glm::u32vec3 image_extent, Format image_format, const void* data_ptr)
 {
     format = image_format;
     if (data_ptr) format = FORMAT_SRGB_8X4;
@@ -159,7 +159,7 @@ Ref<Texture> Texture::loadImage3D(const std::string& path, glm::u32vec2 segments
     return t;
 }
 
-void Texture::uploadData(void* data)
+void Texture::uploadData(const void* data)
 {
     const size_t image_length = static_cast<size_t>(extent.x * extent.y * extent.z * 4);
     Ref<Buffer> staging_buffer      = new Buffer(image_length, Buffer::BUFFER_USAGE_TRANSFER_SRC,
