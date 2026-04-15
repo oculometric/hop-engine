@@ -2,7 +2,7 @@
 
 using namespace HopEngine;
 
-Editor::Editor()
+void Editor::awake()
 {
     view_3d = Scene::create("3D View");
     {

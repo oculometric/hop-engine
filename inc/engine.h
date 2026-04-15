@@ -312,49 +312,22 @@ private:
     void _drawImGuiDebug() const;
 };
 
-template<class T> inline void Engine::startApplication()
-{
-    static_assert(std::is_convertible_v<T*, Application*>, "T must be a HopEngine::Application subclass");
-    if (getEngine()->start_called)
-    {
-        DBG_WARNING("an application is already running. did you mean to call switchApplication?");
-        return;
-    }
-    getEngine()->application = new T();
-    EventServer::dispatch(EVENT_TYPE_APPLICATION_CHANGE);
-    Engine::start();
-}
-
-template<class T> inline void Engine::switchApplication()
-{
-    static_assert(std::is_convertible_v<T*, Application*>, "T must be a HopEngine::Application subclass");
-    getEngine()->next_application = new T();
-    EventServer::dispatch(EVENT_TYPE_APPLICATION_CHANGE);
-}
-
-template<class T> std::vector<WeakRef<T>> Engine::getAllRefs()
-{
-    auto refs = getRefsWithType(typeid(T).name());
-    std::vector<WeakRef<T>> cast_refs;
-    for (auto& r : refs) cast_refs.push_back(r.cast<T>());
-    return cast_refs;
-}
-
 /**
- * @brief base class for user-defined game/application main classes. users should override the constructor,
+ * @brief base class for user-defined game/application main classes. users should override the `awake`,
  * `update`, and `drawImGui` functions to provide their own behaviour.
  */
 class Application : public Destructible
 {
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(Application);
+    Application()  = default;
+    ~Application() = default;
+
     /**
      * @brief called when the application is initialised via `Engine::startApplication` or
      * `Engine::switchApplication`. may be overriden by the user to provide startup functionality.
      */
-    Application()  = default;
-    ~Application() = default;
-
+    virtual void awake() {}
     /**
      * @brief called once per frame. may be overriden by the user to provide their own per-frame
      * functionality.
@@ -367,6 +340,34 @@ public:
      */
     virtual void drawImGui() {}
 };
+
+template<class T> inline void Engine::startApplication()
+{
+    static_assert(std::is_convertible_v<T*, Application*>, "T must be a HopEngine::Application subclass");
+    if (getEngine()->start_called)
+    {
+        DBG_WARNING("an application is already running. did you mean to call switchApplication?");
+        return;
+    }
+    getEngine()->application = new T();
+    getEngine()->application->awake();
+    EventServer::dispatch(EVENT_TYPE_APPLICATION_CHANGE);
+    Engine::start();
+}
+
+template<class T> inline void Engine::switchApplication()
+{
+    static_assert(std::is_convertible_v<T*, Application*>, "T must be a HopEngine::Application subclass");
+    getEngine()->next_application = new T();
+}
+
+template<class T> std::vector<WeakRef<T>> Engine::getAllRefs()
+{
+    auto refs = getRefsWithType(typeid(T).name());
+    std::vector<WeakRef<T>> cast_refs;
+    for (auto& r : refs) cast_refs.push_back(r.cast<T>());
+    return cast_refs;
+}
 
 /**
  * @brief utility class for parsing command line arguments/options. provides an iterator-like behaviour.

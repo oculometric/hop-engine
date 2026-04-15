@@ -8,8 +8,6 @@
     - you can ask for an entry to be preloaded, where a copy of it IS kept in memory, but only until a call to load it properly
     - needs ability to create directories (including automatically when writing a file)
 
-- move application start functionality into its own start function (to allow for switchApplication)
-
 - document serial formats
     - material
     - render graph

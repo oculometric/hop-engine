@@ -31,8 +31,7 @@ private:
     WeakRef<NodeView> node_view;
 
 public:
-    Editor();
-
+    void awake() override;
     void update(float delta_time) override;
     void drawImGui() override;
 };
