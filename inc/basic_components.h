@@ -34,7 +34,8 @@ namespace HopEngine
 class CameraComponent final : public Component
 {
 private:
-    Ref<UniformBlock> uniforms; // uniform buffer, initialised to match `SceneUniforms` for set 0
+    Ref<UniformBlock> uniforms;        // uniform buffer, initialised to match `SceneUniforms` for set 0
+    Ref<UniformBlock> object_uniforms; // uniform buffer, initialised to match `ObjectUniforms` for set 1
 
 public:
     float fov       = 90.0f;  // vertical field of view
@@ -67,6 +68,8 @@ public:
      * @returns 4x4 world-to-clip matrix.
      */
     glm::mat4 getWorldToScreenMatrix();
+
+    std::vector<DrawCommand> getDrawCommands() override;
 
     void drawImGuiDebug() override;
 };
@@ -102,6 +105,9 @@ public:
  */
 class LightComponent final : public Component
 {
+private:
+    Ref<UniformBlock> object_uniforms; // uniform buffer, initialised to match `ObjectUniforms` for set 1
+
 public:
     /**
      * @brief enumerates types of lighting behaviour.
@@ -125,6 +131,9 @@ public:
     ~LightComponent() override = default;
 
     LightParams getParamsStructure() const;
+
+    void awake() override;
+    std::vector<DrawCommand> getDrawCommands() override;
 
     void drawImGuiDebug() override;
 };

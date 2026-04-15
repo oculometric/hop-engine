@@ -11,7 +11,11 @@
 
 using namespace HopEngine;
 
-void CameraComponent::awake() { uniforms = RenderServer::createSceneUniforms(); }
+void CameraComponent::awake()
+{
+    uniforms = RenderServer::createSceneUniforms();
+    object_uniforms = RenderServer::createObjectUniforms();
+}
 
 WeakRef<UniformBlock> CameraComponent::getUniforms(glm::ivec2 viewport_size,
     const std::vector<LightParams>& lights, glm::vec4 ambient)
@@ -46,6 +50,15 @@ glm::mat4 CameraComponent::getWorldToScreenMatrix()
     return view_to_clip * world_to_view;
 }
 
+std::vector<DrawCommand> CameraComponent::getDrawCommands()
+{
+    ObjectUniforms* u = reinterpret_cast<ObjectUniforms*>(object_uniforms->getBuffer());
+    u->id             = static_cast<int>(reinterpret_cast<size_t>(this));
+    u->model_to_world = getTransform().getMatrix();
+
+    return { DrawCommand(Engine::loadMaterial("res://engine/materials/camera_gizmo.hmat"), RenderServer::getQuad(), object_uniforms).priority(-1000) };
+}
+
 void StaticMeshComponent::awake() { uniforms = RenderServer::createObjectUniforms(); }
 
 std::vector<DrawCommand> StaticMeshComponent::getDrawCommands()
@@ -74,4 +87,18 @@ LightParams LightComponent::getParamsStructure() const
     params.position   = glm::vec4(getTransform().getPosition(), 0);
     params.direction  = glm::normalize(getTransform().getMatrix() * glm::vec4{ 0, 0, -1, 0 });
     return params;
+}
+
+void LightComponent::awake()
+{
+    object_uniforms = RenderServer::createObjectUniforms();
+}
+
+std::vector<DrawCommand> LightComponent::getDrawCommands()
+{
+    ObjectUniforms* u = reinterpret_cast<ObjectUniforms*>(object_uniforms->getBuffer());
+    u->id             = static_cast<int>(reinterpret_cast<size_t>(this));
+    u->model_to_world = getTransform().getMatrix();
+
+    return { DrawCommand(Engine::loadMaterial("res://engine/materials/light_gizmo.hmat"), RenderServer::getQuad(), object_uniforms).priority(-1000) };
 }

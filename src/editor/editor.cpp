@@ -17,6 +17,14 @@ Editor::Editor()
         obj->transform.lookAt(glm::vec3(0.2f, -0.2f, 0.2f),
                               glm::vec3(0.0f, 0.0f, 0.0f),
                               glm::vec3(0.0f, 0.0f, 1.0f));
+
+        obj = view_3d->addObject("camera2");
+        obj->addComponent<CameraComponent>()->camera_slot = 1;
+        obj->transform.setPosition({ 1, 0, 0 });
+
+        obj = view_3d->addObject("lamp");
+        obj->addComponent<LightComponent>();
+        obj->transform.setPosition({ 0, 0, 2 });
     }
 
     view_nodes = Scene::create("Node Editor");

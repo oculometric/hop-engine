@@ -1,0 +1,6 @@
+Resource(shader, "res://engine/shaders/billboard.glsl") : shader;
+Resource(texture, "res://engine/textures/light_gizmo.png") : albedo;
+
+Shader(resource = @shader);
+Texture(binding = "image", resource = @albedo, filter = NEAREST);
+Depth(write = FALSE, test = FALSE);

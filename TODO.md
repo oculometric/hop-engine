@@ -8,6 +8,8 @@
     - you can ask for an entry to be preloaded, where a copy of it IS kept in memory, but only until a call to load it properly
     - needs ability to create directories (including automatically when writing a file)
 
+- move application start functionality into its own start function (to allow for switchApplication)
+
 - document serial formats
     - material
     - render graph
@@ -17,10 +19,10 @@
     - node style
 
 - make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
-- move application start functionality into its own start function (to allow for switchApplication)
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - split framebuffer from render pass?? merge image creation from swapchain to render pass
 - overhaul arrangement of shader/pipeline/pipeline layout/descriptor set - maybe move some render server behaviour into this? (i dont like calling back and forth)
+- shader & other resource reloading at runtime
 
 # v0.55
 - the ui update
@@ -44,13 +46,13 @@
         - keydown/keyup
         - elements automatically get interactions passed to them from the event system (mouse position in local space)
         - multi-element intersection testing, i.e. we end up with a stack of elements which were intersected
+        - fix mouse locking not behaving correctly on linux
     - refactor nodes to use the ui renderer
         - no longer their own scene
         - pack everything into a single texture
         - use the generic user interface shader
 
 - make local/global transform from forward/up vectors (generally complete the transform functionality) [H]
-- 3D scene gizmos (camera, light, mesh bounds, etc)
 
 # v0.60
 - interactive node editor
@@ -61,7 +63,6 @@
     - box selection
     - right-click menu to allow adding more nodes
     - move overlays (temp link, right click menu, selection box) into their own mesh
-- fix mouse locking not behaving correctly on linux
 - object duplicate function
 - actual editor
     - resizeable/swappable views
@@ -75,7 +76,6 @@
 
 # future
 - audio loading and output
-- shader & other resource reloading at runtime
 - windowless offscreen rendering support
 - .otf -> baked font converter (font oven)
 - hover tooltips for nodes....
