@@ -241,9 +241,9 @@ endif()
 
 add_custom_command(
 	OUTPUT ${EXPORTED_INCLUDE}
-	COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
 		"${CMAKE_SOURCE_DIR}/inc/" ${EXPORTED_INCLUDE}
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    COMMAND ${CMAKE_COMMAND} -E copy
 		"${CMAKE_SOURCE_DIR}/COPYING.md" "${CMAKE_BINARY_DIR}/COPYING.md"
 	COMMENT "Copying include directory"
 )
