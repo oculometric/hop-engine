@@ -13,7 +13,7 @@ using namespace HopEngine;
 
 void CameraComponent::awake()
 {
-    uniforms = RenderServer::createSceneUniforms();
+    uniforms        = RenderServer::createSceneUniforms();
     object_uniforms = RenderServer::createObjectUniforms();
 }
 
@@ -52,11 +52,15 @@ glm::mat4 CameraComponent::getWorldToScreenMatrix()
 
 std::vector<DrawCommand> CameraComponent::getDrawCommands()
 {
+    if (!Engine::getShowGizmos()) return {};
+
     ObjectUniforms* u = reinterpret_cast<ObjectUniforms*>(object_uniforms->getBuffer());
     u->id             = static_cast<int>(reinterpret_cast<size_t>(this));
     u->model_to_world = getTransform().getMatrix();
 
-    return { DrawCommand(Engine::loadMaterial("res://engine/materials/camera_gizmo.hmat"), RenderServer::getQuad(), object_uniforms).priority(-1000) };
+    return { DrawCommand(Engine::loadMaterial("res://engine/materials/camera_gizmo.hmat"),
+        RenderServer::getQuad(), object_uniforms)
+            .priority(-1000) };
 }
 
 void StaticMeshComponent::awake() { uniforms = RenderServer::createObjectUniforms(); }
@@ -89,16 +93,17 @@ LightParams LightComponent::getParamsStructure() const
     return params;
 }
 
-void LightComponent::awake()
-{
-    object_uniforms = RenderServer::createObjectUniforms();
-}
+void LightComponent::awake() { object_uniforms = RenderServer::createObjectUniforms(); }
 
 std::vector<DrawCommand> LightComponent::getDrawCommands()
 {
+    if (!Engine::getShowGizmos()) return {};
+    
     ObjectUniforms* u = reinterpret_cast<ObjectUniforms*>(object_uniforms->getBuffer());
     u->id             = static_cast<int>(reinterpret_cast<size_t>(this));
     u->model_to_world = getTransform().getMatrix();
 
-    return { DrawCommand(Engine::loadMaterial("res://engine/materials/light_gizmo.hmat"), RenderServer::getQuad(), object_uniforms).priority(-1000) };
+    return { DrawCommand(Engine::loadMaterial("res://engine/materials/light_gizmo.hmat"),
+        RenderServer::getQuad(), object_uniforms)
+            .priority(-1000) };
 }

@@ -4,6 +4,8 @@ using namespace HopEngine;
 
 void Editor::awake()
 {
+    Engine::setShowGizmos(true);
+
     view_3d = Scene::create("3D View");
     {
         auto comp = view_3d->addObject<StaticMeshComponent>("bunny");

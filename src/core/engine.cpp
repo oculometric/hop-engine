@@ -137,8 +137,6 @@ void HopEngine::registerCountedRef(const char* type_name, const WeakRef<void>& r
 
 void HopEngine::unregisterCountedRef(const void* ptr) { Engine::unregisterCountedRef(ptr); }
 
-void Engine::setForceWireframe(const bool value) { engine->wireframe_view = value; }
-
 Ref<Shader> Engine::loadShader(const string& path)
 {
     const auto it = engine->loaded_shaders.find(path);

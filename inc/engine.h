@@ -107,6 +107,8 @@ private:
 
     // if `true` all materials (except post-process materials) will render in wireframe view
     bool wireframe_view = false;
+    // if `true`, objects may draw gizmos, for editor modes
+    bool show_gizmos = false;
 
     // if `true` the engine will stop and exit the current application at the end of the frame
     bool stop_requested = false;
@@ -158,7 +160,13 @@ public:
      * @param value if `true`, materials will draw in wireframe mode, otherwise materials will draw as
      * normal.
      */
-    static void setForceWireframe(bool value);
+    static void setForceWireframe(bool value) { getEngine()->wireframe_view = value; }
+    static bool getShowGizmos() { return getEngine()->show_gizmos; }
+    /**
+     * @brief toggles gizmo visibility mode. when active, some objects will draw editor gizmos.
+     * @param value if `true`, objects can emit draw calls for gizmos.
+     */
+    static void setShowGizmos(bool value) { getEngine()->show_gizmos = value; }
 
     /**
      * @brief selects an object to be viewable in ImGui debug mode. semi-deprecated.
