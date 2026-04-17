@@ -27,6 +27,12 @@ void Editor::awake()
         obj = view_3d->addObject("lamp");
         obj->addComponent<LightComponent>();
         obj->transform.setPosition({ 0, 0, 2 });
+
+        obj = view_3d->addObject("cube");
+        cube = obj->addComponent<StaticMeshComponent>();
+        cube->mesh = Engine::loadMesh("res://engine/meshes/cube.obj");
+        cube->material = new Material(Engine::loadShader("test_shader.glsl"));
+        cube->material->setTexture("albedo", Engine::loadTexture("res://engine/icon.png"));
     }
 
     view_nodes = Scene::create("Node Editor");
@@ -103,6 +109,8 @@ void Editor::update(float delta_time)
 {
     if (!node_view->checkInput({ 0, RenderServer::getFramebufferSize().y * 0.7f }, view_nodes->getViewportSize()))
         Engine::debugCamera(view_3d->findObject("camera"));
+
+    cube->material->getShader()->reload();
 }
 
 void Editor::drawImGui()

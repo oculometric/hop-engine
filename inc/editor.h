@@ -29,6 +29,7 @@ private:
     Ref<Scene> view_3d;
     Ref<Scene> view_nodes;
     WeakRef<NodeView> node_view;
+    WeakRef<StaticMeshComponent> cube;
 
 public:
     void awake() override;

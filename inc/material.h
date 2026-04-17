@@ -99,6 +99,7 @@ private:
     GPUHandle pipeline_layout       = nullptr; // pipeline layout linking together descriptor set layouts
     GPUHandle descriptor_set_layout = nullptr; // shader-specific descriptor set 2 layout
     std::vector<Descriptor> bindings;          // reflected descriptor bindings for set 2
+    uint64_t hash = 0;                         // hash of the shader modules which are compiled
 
 public:
     DELETE_CONSTRUCTORS(Shader);
@@ -115,12 +116,22 @@ public:
      * @returns GPU handle for the VkDescriptorSetLayout.
      */
     static GPUHandle createDescriptorSetLayout(std::vector<Descriptor> bindings);
+    /**
+     * @brief recompiles the shader from the original file. if the shader does not compile successfully,
+     * nothing is changed. if the shader is different than the last time it was loaded, descriptor set
+     * layout, pipeline layout, shader stages, and the overall shader layout will be destroyed, and users
+     * should update their derived resources accordingly. if the shader is in fact recompiled, the hash is
+     * updated to reflect the new shader compilation, and the user can use this to detect successful
+     * reloads.
+     */
+    void reload();
 
     std::string getOrigin() const
     {
         if (this == nullptr) return "0x0";
         return origin.empty() ? PTR(this) : origin;
     }
+    uint64_t getHash() const { return hash; }
     GPUHandle getPipelineLayout() const { return pipeline_layout; }
     Layout getShaderLayout() const { return { descriptor_set_layout, bindings }; }
     /**
@@ -184,6 +195,13 @@ private:
      * @returns VkShaderModule GPU handle.
      */
     static GPUHandle createShaderModule(const std::vector<uint32_t>& blob);
+    /**
+     * @brief computes a hash based on the compiled shader code provided.
+     * @param blob1 vertex shader blob.
+     * @param blob2 fragment shader blob.
+     * @returns 64-bit hash of the shader.
+     */
+    static uint64_t computeHash(const std::vector<uint32_t>& blob1, const std::vector<uint32_t>& blob2);
 
     /**
      * @brief destroys all internal resources (shader modules, pipeline layout, descriptor set layout).
@@ -411,16 +429,23 @@ private:
 class Material final : public Destructible
 {
 private:
-    std::string origin;           // if not empty, contains the path from which this shader was compiled
-    Ref<Shader> shader;           // shader used by the material for rendering
-    Ref<Pipeline> pipeline;       // pipeline used by the material for rendering
-    Ref<Pipeline> debug_pipeline; // debug pipeline used when force wireframe mode is enabled
-    Ref<UniformBlock> uniforms;   // uniform block providing uniform buffers and texture/sampler bindings
-    Ref<RenderPass> render_pass;  // render pass within which this material will render (or compatible)
+    std::string origin;              // if not empty, contains the path from which this shader was compiled
+    Ref<Shader> shader;              // shader used by the material for rendering
+    uint64_t last_known_shader_hash; // last known hash of the shader, used to check if a reload is needed
+    Ref<Pipeline> pipeline;          // pipeline used by the material for rendering
+    Ref<Pipeline> debug_pipeline;    // debug pipeline used when force wireframe mode is enabled
+    Ref<UniformBlock> uniforms;      // uniform block providing uniform buffers and texture/sampler bindings
+    Ref<RenderPass> render_pass;     // render pass within which this material will render (or compatible)
     // mapping from texture uniform name to its shader binding index, retrieved from shader reflection
     std::map<std::string, uint32_t> texture_name_to_binding;
     // mapping from uniform variable name to its backing buffer offset, retrieved from shader reflection
     std::map<std::string, Shader::UniformVariable> variable_name_to_binding;
+    // list of previously applied material textures
+    std::map<std::string, Ref<Texture>> material_textures;
+    // list of previously applied material samplers
+    std::map<std::string, Ref<Sampler>> material_samplers;
+    // list of previously applied material uniforms
+    std::map<std::string, std::vector<uint8_t>> material_parameters;
 
 public:
     DELETE_CONSTRUCTORS(Material);
@@ -552,6 +577,13 @@ public:
     static Ref<Material> deserialise(const std::string& token_str, const std::string& origin = "");
 
     void drawImGuiDebug();
+
+private:
+    /**
+     * @brief actually initialises material resources, or replaces them.
+     * @param config pipeline configuration used to create the pipelines.
+     */
+    void initaliseMaterial(const Pipeline::Builder& config);
 };
 
 /**

@@ -217,7 +217,6 @@ if(WIN32)
 		hop-editor.exe
 		hop-engine.lib
 		hop-engine.dll
-		hop-engine.exp
 		package-tool.exe
         bin-to-cpp.exe
 	)

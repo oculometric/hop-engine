@@ -1,9 +1,6 @@
 # TODO
 
 # v0.54
-- shader & other resource reloading at runtime
-    - better material uniform support
-    - material needs to check when shader has changed, and reload/rebind all textures and uniform variables BY NAME
 - package manager improvements
     - data blocks should know which package they came from
     - package manager should not have to load the entire file from disk at once, only an index of contents
@@ -22,7 +19,6 @@
 - make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - split framebuffer from render pass?? merge image creation from swapchain to render pass
-- overhaul arrangement of shader/pipeline/pipeline layout/descriptor set - maybe move some render server behaviour into this? (i dont like calling back and forth)
 - Steamworks integration
 
 # v0.55
