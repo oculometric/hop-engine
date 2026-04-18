@@ -1,0 +1,11 @@
+Resource(shader, "res://unlit.glsl") : shader;
+Resource(texture, "res://david_crate.jpg") : albedo;
+
+Shader(resource = @shader);
+Culling(mode = NONE);
+
+Texture(binding = "albedo", resource = @albedo, filter = NEAREST);
+Uniform()
+{
+    vec4("material_colour", [ 1, 1, 1, 1 ]);
+};

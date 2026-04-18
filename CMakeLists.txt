@@ -209,50 +209,50 @@ target_include_directories(hop-editor
 message("Generating exported zip...")
 string(TIMESTAMP TODAY "%d_%m_%Y %H.%M.%S")
 set(ZIP_COMMAND "tar")
-set(EXPORTED_INCLUDE "${CMAKE_BINARY_DIR}/include")
-file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/builds")
 if(WIN32)
 	set(PLATFORM Windows)
-	set(EXPORTS
+	set(TOOLS
 		hop-editor.exe
-		hop-engine.lib
-		hop-engine.dll
 		package-tool.exe
         bin-to-cpp.exe
 	)
-	set(TAR_OPTIONS -caf)
+    set(LIBS
+        hop-engine.lib
+		hop-engine.dll
+    )
 	set(TAR_OUTPUT
-		"${CMAKE_SOURCE_DIR}/builds/hop-engine ${PLATFORM} ${TODAY}.zip"
+		"${CMAKE_SOURCE_DIR}/builds/hop-engine ${GIT_TAG} ${PLATFORM}.zip"
 	)
 else()
 	set(PLATFORM Linux)
-    set(EXPORTS
+    set(TOOLS
 		hop-editor
-		libhop-engine.so
 		package-tool
         bin-to-cpp
 	)
-	set(TAR_OPTIONS -czf)
+    set(LIBS
+        libhop-engine.so
+    )
 	set(TAR_OUTPUT
-		"${CMAKE_SOURCE_DIR}/builds/hop-engine ${PLATFORM} ${TODAY}.tar.gz"
+		"${CMAKE_SOURCE_DIR}/builds/hop-engine ${GIT_TAG} ${PLATFORM}.zip"
 	)
 endif()
 
-add_custom_command(
-	OUTPUT ${EXPORTED_INCLUDE}
-	COMMAND ${CMAKE_COMMAND} -E copy_directory
-		"${CMAKE_SOURCE_DIR}/inc/" ${EXPORTED_INCLUDE}
-    COMMAND ${CMAKE_COMMAND} -E copy
-		"${CMAKE_SOURCE_DIR}/COPYING.md" "${CMAKE_BINARY_DIR}/COPYING.md"
-	COMMENT "Copying include directory"
-)
-
 add_custom_target(export
-	DEPENDS ${EXPORTED_INCLUDE}
-	DEPENDS hop-engine
+    DEPENDS hop-engine
 	DEPENDS package-tool
 	DEPENDS hop-editor
     DEPENDS bin-to-cpp
-	COMMAND ${ZIP_COMMAND} ${TAR_OPTIONS} ${TAR_OUTPUT} ${EXPORTS} "include" "COPYING.md"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_SOURCE_DIR}/builds"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/staging"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/staging/tools"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/staging/lib"
+	COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/inc/" "${CMAKE_BINARY_DIR}/staging/include"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/lib/inc/glm-1.0.2/glm" "${CMAKE_BINARY_DIR}/staging/include/glm"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/template" "${CMAKE_BINARY_DIR}/staging/template"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/COPYING.md" "${CMAKE_BINARY_DIR}/staging/COPYING.md"
+    COMMAND ${CMAKE_COMMAND} -E copy ${TOOLS} "${CMAKE_BINARY_DIR}/staging/tools"
+    COMMAND ${CMAKE_COMMAND} -E copy ${LIBS} "${CMAKE_BINARY_DIR}/staging/lib"
+    COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_BINARY_DIR}/staging" ${CMAKE_COMMAND} -E tar cfv ${TAR_OUTPUT} --format=zip .
 	COMMENT "Creating exported archive"
 )
