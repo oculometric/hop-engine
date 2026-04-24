@@ -12,6 +12,7 @@
 
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
+#include <thread>
 
 using namespace HopEngine;
 
@@ -126,9 +127,13 @@ bool RenderServer::resize(bool force_resize)
     }
 }
 
-FrameStats HopEngine::RenderServer::draw()
+FrameStats RenderServer::draw()
 {
-    if (glfwGetWindowAttrib(getInstance()->window, GLFW_ICONIFIED)) return {};
+    if (glfwGetWindowAttrib(getInstance()->window, GLFW_ICONIFIED))
+    {
+        std::this_thread::sleep_for(std::chrono::duration<float>(0.125f));
+        return {};
+    }
 
     if (getInstance()->resize()) return {};
 
