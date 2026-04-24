@@ -1,7 +1,6 @@
 # TODO
 
 # v0.54
-- Steamworks integration
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 
 - package manager improvements
@@ -13,7 +12,6 @@
     - needs to be able to search a directory for res files too (we dont need to rebuild the hop file ALL the time)
 
 - document serial formats
-    - material
     - render graph
     - shader format
     - scene
@@ -92,3 +90,4 @@
 - geometry shader support
 - skinned mesh support
 - networking kit
+- Steamworks integration

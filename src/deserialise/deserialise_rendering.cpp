@@ -267,19 +267,6 @@ Ref<Material> Material::deserialise(const std::string& token_str, const std::str
             material->setFloatUniform(binding, value);
             return true;
         });
-    uniform_deserialiser.addStatementAnonymous(
-        Deserialiser::AnonymousStatementSpec("float", Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
-            .argument(TokenReader::TOKEN_STRING)
-            .argument(TokenReader::TOKEN_FLOAT),
-        [&](Deserialiser::AnonymousStatementResult result) -> bool
-        {
-            std::string binding;
-            result.read(0, binding);
-            float value;
-            result.read(1, value);
-            material->setFloatUniform(binding, value);
-            return true;
-        });
 
     uniform_deserialiser.execute(uniforms, token_str);
 

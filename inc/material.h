@@ -625,9 +625,54 @@ private:
  *     will be culled during rendering.
  *     only the most recent `Culling` statement will be acknowledged by the interpreter.
  *
- * // TODO: polygon, stencil, texture uniform
+ * - `Polygon(mode = FILL/LINE/POINT)`
+ *     controls the drawing behaviour for the material. statement uses named arguments, and forbids an
+ *     identifier.
+ *     the value of `mode` must be one of the listed enum values, and determines how geometry will be
+ *     rendered.
+ *     only the most recent `Polygon` statement will be acknowledged by the interpreter.
+ *
+ * - `Stencil(compare = ALWAYS/EQUAL/GREATER/GREATER_EQUAL/LESS/LESS_EQUAL/NEVER/NOT_EQUAL,
+ *    compare_value = 0...UINT32_MAX, compare_mask = 0...UINT32_MAX, write_mask = 0...UINT32_MAX)`
+ *     controls the stencil behaviour for the material. statement uses named arguments, all but
+ *     `write_mask` are required but and forbids an identifier.
+ *     the value of `compare` must be one of the listed enum values, and determines the stencil 
+ *     comparison condition for writing to a pixel.
+ *     the values of `compare_value`, `compare_mask`, and `write_mask` must be unsigned integers.
+ * 
+ * - `Texture(resource = @IDENTIFIER, binding = "NAME", filter = NEAREST/LINEAR,
+ *    address = REPEAT/MIRROR/CLAMP)`
+ *     binds a texture resource to a shader texture uniform. statement uses named arguments, `resource`
+ *     and `binding` are required, and forbids an identifier.
+ *     the value of `resource` must be the identifier of a previously-declared `Resource` statement.
+ *     the value of `filter` must be one of the listed enum values.
+ *     the value of `address` must be one of the listed enum values.
+ * 
+ * - `Uniform() {}`
+ *     allows you to assign values to shader uniform variables. statement has no arguments, forbids an
+ *     identifier, but allows child statements.
+ *     in order to specify uniform variables, child statements can be placed inside the curly braces.
+ *     for child statements, identifiers are forbidden and there must be two anonymous arguments. the
+ *     first argument must be the name of the variable as written in the shader (as a "STRING"); the
+ *     second argument must be the value to be assigned. there are two statements supported as children:
+ *     - `vec4`
+ *     - `float`
  * 
  * ## example
+ * 
+ * ```
+ * Resource(shader, "res://unlit.glsl") : shader;
+ * Resource(texture, "res://david_crate.jpg") : albedo;
+ * 
+ * Shader(resource = @shader);
+ * Culling(mode = NONE);
+ *
+ * Texture(binding = "albedo", resource = @albedo, filter = NEAREST);
+ * Uniform()
+ * {
+ *     vec4("material_colour", [ 1, 1, 1, 1 ]);
+ * };
+ * ```
  */
 
 /**
