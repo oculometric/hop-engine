@@ -587,6 +587,50 @@ private:
 };
 
 /**
+ * # MATERIAL SERIAL SPECIFICATION
+ *
+ * materials should use the .hmat file extension.
+ *
+ * ## supported statements
+ *
+ * - `Resource(shader/texture, "PATH") : IDENTIFIER;`
+ *     allows loading of resources to be used by the material. statement uses anonymous arguments, and
+ *     requires an identifier.
+ *     resource may either be a shader or texture, as specified by the first argument.
+ *     second argument specifies the path to the target resource (may begin "res://...").
+ *
+ * - `Shader(resource = @IDENFITIER);`
+ *     specifies the shader which will be used by the material. statement uses named arguments, and forbids
+ *     an identifier.
+ *     the value of `resource` must be the identifier of a previously-declared `Resource` statement.
+ *     only the most recent `Shader` statement will be acknowledged by the interpreter.
+ *
+ * - `Depth(operation = ALWAYS/EQUAL/GREATER/GREATER_EQUAL/LESS/LESS_EQUAL/NEVER/NOT_EQUAL, test =
+ *    TRUE/FALSE, write = TRUE/FALSE)`
+ *     controls depth buffer behaviour for the material. statement uses named arguments, all are
+ *     optional, and forbids an identifier.
+ *     the value of `operation` must be one of the listed enum values, and determines the depth comparison
+ *     condition for writing to a pixel (assuming the depth buffer is present and depth testing is
+ *     enabled).
+ *     the value of `test` must be either `TRUE` or `FALSE` and determines whether depth testing is enabled
+ *     at all. when disabled, the material will draw even if it is behind other geometry.
+ *     the value of `write` must be either `TRUE` or `FALSE` and determines whether the material will modify
+ *     the depth buffer when a pixel is drawn.
+ *     only the most recent `Depth` statement will be acknowledged by the interpreter.
+ *
+ * - `Culling(mode = NONE/FRONT/BACK)`
+ *     controls the culling behaviour for the material. statement uses named arguments, and forbids an
+ *     identifier.
+ *     the value of `mode` must be one of the listed enum values, and determines which side of the geometry
+ *     will be culled during rendering.
+ *     only the most recent `Culling` statement will be acknowledged by the interpreter.
+ *
+ * // TODO: polygon, stencil, texture uniform
+ * 
+ * ## example
+ */
+
+/**
  * @brief describes a 3D scene light in shader terms. see the `LightComponent` class.
  */
 struct LightParams final

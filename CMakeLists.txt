@@ -118,6 +118,9 @@ if(WIN32)
 		"${Vulkan_INCLUDE_DIRS}/../Lib/glslang-default-resource-limits.lib"
 		"${Vulkan_INCLUDE_DIRS}/../Lib/SPIRV-Tools-opt.lib"
         "${Vulkan_INCLUDE_DIRS}/../Lib/glslang.lib"
+        "${CMAKE_SOURCE_DIR}/lib/bin/discord-presence/discord-rpc.lib"
+        "${CMAKE_SOURCE_DIR}/lib/bin/discord-presence/fmt.lib"
+        "Ws2_32.lib"
 	    Vulkan::SPIRV-Tools
 	)
 else()

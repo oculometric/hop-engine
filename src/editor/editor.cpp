@@ -110,7 +110,7 @@ void Editor::update(float delta_time)
     if (!node_view->checkInput({ 0, RenderServer::getFramebufferSize().y * 0.7f }, view_nodes->getViewportSize()))
         Engine::debugCamera(view_3d->findObject("camera"));
 
-    cube->material->getShader()->reload();
+    //cube->material->getShader()->reload();
 }
 
 void Editor::drawImGui()
