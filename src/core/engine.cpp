@@ -8,9 +8,9 @@
 #if defined(_WIN32)
 #include <Windows.h>
 #endif
-#include <discord-presence/discord-rpc.hpp>
-
 #include "hop_engine.h"
+
+#include <discord-presence/discord-rpc.hpp>
 
 using namespace HopEngine;
 using namespace std;
@@ -312,36 +312,35 @@ Engine::Engine(const InitParams& params)
 
     Input::init();
 
+    auto discord_application_id_data = Package::loadFromDisk("discord_appid.txt");
+    std::string discord_application_id(discord_application_id_data.begin(),
+        discord_application_id_data.end());
+
     discord::RPCManager::get()
-        .setClientID("--------------------")
-        .onReady([](discord::User const& user) {
-            DBG_INFO("connected to discord user " + user.username);
-            auto presence = discord::RPCManager::get().getPresence();
-            presence.setState("running hop-engine")
-                .setActivityType(discord::ActivityType::Game)
-                .setStatusDisplayType(discord::StatusDisplayType::State)
-                .setStartTimestamp(time(nullptr))
-                .setDetails("the bunny is testing something.");
-            auto button = presence.getButton1();
-            button.set("what's it doing?", "https://github.com/oculometric/hop-engine");
-            presence.setButton1(button);
-            discord::RPCManager::get().setPresence(presence).refresh();
-        })
-        .onDisconnected([](int errcode, std::string_view message) {
-            DBG_WARNING("disconnected discord with error code " + std::string(message));
-        })
-        .onErrored([](int errcode, std::string_view message) {
-            DBG_ERROR("discord error with code " + std::string(message));
-        })
-        .onJoinGame([](std::string_view joinSecret) {
-            DBG_INFO("discord join game");
-        })
-        .onSpectateGame([](std::string_view spectateSecret) {
-            DBG_INFO("discord spectate game");
-        })
-        .onJoinRequest([](discord::User const& user) {
-            DBG_INFO("discord join game request from " + user.username);
-        })
+        .setClientID(discord_application_id)
+        .onReady(
+            [](discord::User const& user)
+            {
+                DBG_INFO("connected to discord user " + user.username);
+                auto presence = discord::RPCManager::get().getPresence();
+                presence.setState("running hop-engine")
+                    .setActivityType(discord::ActivityType::Game)
+                    .setStatusDisplayType(discord::StatusDisplayType::State)
+                    .setStartTimestamp(time(nullptr))
+                    .setDetails("the bunny is testing something.");
+                auto button = presence.getButton1();
+                button.set("what's it doing?", "https://github.com/oculometric/hop-engine");
+                presence.setButton1(button);
+                discord::RPCManager::get().setPresence(presence).refresh();
+            })
+        .onDisconnected([](int errcode, std::string_view message)
+            { DBG_WARNING("disconnected discord with error code " + std::string(message)); })
+        .onErrored([](int errcode, std::string_view message)
+            { DBG_ERROR("discord error with code " + std::string(message)); })
+        .onJoinGame([](std::string_view joinSecret) { DBG_INFO("discord join game"); })
+        .onSpectateGame([](std::string_view spectateSecret) { DBG_INFO("discord spectate game"); })
+        .onJoinRequest(
+            [](discord::User const& user) { DBG_INFO("discord join game request from " + user.username); })
         .initialize();
 
     EventServer::dispatch(EVENT_TYPE_INIT_FINISH);
