@@ -77,6 +77,15 @@ public:
         bool create_log_file          = true;              // if `true`, output will be copied to a file
     };
 
+    enum RPCActivityType : uint8_t
+    {
+        RPC_PLAYING,
+        RPC_STREAMING,
+        RPC_LISTENING,
+        RPC_WATCHING,
+        RPC_COMPETING,
+    };
+
 private:
     Ref<Scene> scene;             // currently active scene
     Ref<Application> application; // currently running application
@@ -269,6 +278,13 @@ public:
      * @returns number of resources which were successfully pruned.
      */
     static size_t pruneUnusedResources();
+
+    static void setRPCDescription(const std::string& details);
+    static void setRPCStatus(const std::string& state, int32_t party_size = 0, int32_t party_max = 0);
+    static void setRPCActivity(RPCActivityType activity);
+    static void setRPCTimestamp(std::chrono::system_clock::time_point start_time);
+    static void setRPCTimestamp(std::chrono::system_clock::time_point start_time, std::chrono::system_clock::time_point end_time);
+    static void clearRPCActivity();
 
     /**
      * @brief fetches a list of all currently loaded reference counted objects which match a given type.

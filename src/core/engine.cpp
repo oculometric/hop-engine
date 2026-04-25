@@ -277,6 +277,57 @@ size_t Engine::pruneUnusedResources()
     return pruned_refs;
 }
 
+void Engine::setRPCDescription(const std::string& details)
+{ discord::RPCManager::get().getPresence().setDetails(details).refresh(); }
+
+void Engine::setRPCStatus(const std::string& state, int32_t party_size, int32_t party_max)
+{
+    discord::RPCManager::get()
+        .getPresence()
+        .setState(state)
+        .setPartySize(party_size)
+        .setPartyMax(party_max)
+        .refresh();
+}
+
+void Engine::setRPCActivity(RPCActivityType activity)
+{
+    discord::ActivityType type;
+    switch (activity)
+    {
+    case RPC_PLAYING:   type = discord::ActivityType::Game; break;
+    case RPC_COMPETING: type = discord::ActivityType::Competing; break;
+    case RPC_LISTENING: type = discord::ActivityType::Listening; break;
+    case RPC_STREAMING: type = discord::ActivityType::Streaming; break;
+    case RPC_WATCHING:  type = discord::ActivityType::Watching; break;
+    }
+
+    discord::RPCManager::get().getPresence().setActivityType(type).refresh();
+}
+
+void Engine::setRPCTimestamp(std::chrono::system_clock::time_point start_time)
+{
+    discord::RPCManager::get()
+        .getPresence()
+        .setStartTimestamp(start_time.time_since_epoch().count() / 1000000000)
+        .refresh();
+}
+
+void Engine::setRPCTimestamp(std::chrono::system_clock::time_point start_time,
+    std::chrono::system_clock::time_point end_time)
+{
+    discord::RPCManager::get()
+        .getPresence()
+        .setStartTimestamp(start_time.time_since_epoch().count() / 1000000000)
+        .setEndTimestamp(end_time.time_since_epoch().count() / 1000000000)
+        .refresh();
+}
+
+void Engine::clearRPCActivity()
+{
+    discord::RPCManager::get().clearPresence();
+}
+
 void Engine::drawImGuiDebug() { engine->_drawImGuiDebug(); }
 
 extern unsigned char engine_hop_raw[];
@@ -326,7 +377,7 @@ Engine::Engine(const InitParams& params)
     engine = this;
 
     engine->engine_start_timestamp = chrono::steady_clock::now();
-    
+
     InitMachine::initialise(params);
 
     RenderServer::setIcon("res://engine/icon.png");
@@ -350,28 +401,10 @@ Engine::Engine(const InitParams& params)
             [](discord::User const& user)
             {
                 DBG_INFO("connected to discord user " + user.username);
-                auto presence = discord::RPCManager::get().getPresence();
-                presence.setState("running hop-engine")
-                    .setActivityType(discord::ActivityType::Game)
-                    .setStatusDisplayType(discord::StatusDisplayType::Details)
-                    .setStartTimestamp(time(nullptr))
-                    .setDetails("the bunny is testing something.");
-                
-                presence.setPartyPrivacy(discord::PartyPrivacy::Public);
-                presence.setPartyID("pid");
-                presence.setJoinSecret("secret");
-                presence.setPartySize(1);
-                presence.setPartyMax(256);
-                presence.setMatchSecret("secret2");
-                presence.setSpectateSecret("secret3");
-                presence.setEndTimestamp(time(nullptr) + 100000);
-                presence.setSmallImageText("small image");
-                presence.setLargeImageText("large image");
-                auto button = presence.getButton1();
-                button.set("what's it doing?", "https://github.com/oculometric/hop-engine");
-                presence.setButton1(button);
-                presence.setInstance(true);
-                discord::RPCManager::get().setPresence(presence).refresh();
+                setRPCActivity(RPC_PLAYING);
+                setRPCDescription("hop-engine is running.");
+                setRPCTimestamp(std::chrono::system_clock::now());
+                discord::RPCManager::get().getPresence().setStatusDisplayType(discord::StatusDisplayType::State).refresh();
             })
         .onDisconnected([](int errcode, std::string_view message)
             { DBG_WARNING("disconnected discord with error code " + std::string(message)); })
