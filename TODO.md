@@ -10,6 +10,7 @@
     - you can ask for an entry to be preloaded, where a copy of it IS kept in memory, but only until a call to load it properly
     - needs ability to create directories (including automatically when writing a file)
     - needs to be able to search a directory for res files too (we dont need to rebuild the hop file ALL the time)
+    - metadata (date/time, author)
 
 - document serial formats
     - render graph
@@ -18,7 +19,6 @@
     - font
     - node style
 
-- make specifically init/destroy functions private but exposed to the engine (clean up and make more consistent)
 - split framebuffer from render pass?? merge image creation from swapchain to render pass
 
 # v0.55

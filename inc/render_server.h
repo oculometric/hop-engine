@@ -36,6 +36,7 @@ namespace HopEngine
  */
 class RenderServer final
 {
+    friend class InitMachine;
 public:
     /**
      * @brief defines a scene-to-be-rendered, and the portion of the window it should be rendered into.
@@ -118,9 +119,6 @@ private:
 
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(RenderServer);
-
-    static void init(bool enable_validation);
-    static void destroy();
 
     static GPUHandle getDevice() { return getInstance()->device; }
     /**
@@ -273,6 +271,9 @@ public:
 private:
     RenderServer(bool enable_validation);
     ~RenderServer();
+
+    static void init(bool enable_validation);
+    static void destroy();
 
     static RenderServer* getInstance();
 

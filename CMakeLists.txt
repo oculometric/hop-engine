@@ -129,6 +129,8 @@ else()
 		"${CMAKE_SOURCE_DIR}/lib/bin/glslang/libglslang.a"
 		"${CMAKE_SOURCE_DIR}/lib/bin/glslang/libSPIRV-Tools-opt.a"
 		"${CMAKE_SOURCE_DIR}/lib/bin/glslang/libSPIRV-Tools.a"
+		"${CMAKE_SOURCE_DIR}/lib/bin/discord-presence/libdiscord-rpc.a"
+		"${CMAKE_SOURCE_DIR}/lib/bin/discord-presence/libfmt.a"
 		pthread
 		glfw
 		dl

@@ -57,6 +57,7 @@ namespace HopEngine
  */
 class Debug final
 {
+    friend class InitMachine;
 public:
     /**
      * @brief enum which describes the severity of a debug output call.
@@ -78,9 +79,6 @@ private:
 
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(Debug);
-
-    static void init(bool create_file);
-    static void close();
 
     /**
      * @brief utility function converting any pointer type into a hex string.
@@ -126,6 +124,9 @@ public:
 private:
     Debug(Level crash, bool create_file);
     ~Debug();
+
+    static void init(bool create_file);
+    static void close();
 };
 
 } // namespace HopEngine

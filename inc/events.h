@@ -32,6 +32,7 @@ namespace HopEngine
  */
 class EventServer final
 {
+    friend class InitMachine;
 public:
     typedef uint32_t TypeID;
     /**
@@ -61,9 +62,6 @@ private:
     std::multimap<TypeID, Subscriber> subscribers; // event ID to subscriber mapping
 
 public:
-    static void init();
-    static void destroy();
-
     /**
      * @brief subscribes a new callback to a given event ID.
      * subscribing to the same event multiple times with the same `instance` value is not allowed.
@@ -118,6 +116,9 @@ public:
 private:
     EventServer()  = default;
     ~EventServer() = default;
+
+    static void init();
+    static void destroy();
 
     /**
      * @brief attempts to find a subscriber to a particular event based on the event type ID and the

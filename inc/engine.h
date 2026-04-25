@@ -45,11 +45,14 @@ struct FrameStats final
     size_t cameras          = 0;   // number of camera passes executed
 };
 
+class InitMachine;
+
 /**
  * @brief encapsulates management of the overall graphics engine. provides various miscellaneous tools.
  */
 class Engine final
 {
+    friend class InitMachine;
 public:
     /**
      * @brief engine-specific event IDs which can be subscribed to via the event server.

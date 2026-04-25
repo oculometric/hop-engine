@@ -2,6 +2,7 @@
 #include "package.h"
 
 #include <filesystem>
+#include <format>
 
 using namespace HopEngine;
 

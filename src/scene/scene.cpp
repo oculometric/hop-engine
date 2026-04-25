@@ -256,6 +256,7 @@ void Scene::draw(Ref<DrawCommandBuffer> command_buffer, glm::u32vec2 viewport_si
     {
         auto camera_comp = object->getComponent<CameraComponent>();
         if (!camera_comp) continue;
+        if (!camera_sizes.contains(camera_comp->camera_slot)) continue;
         // find the first camera for each slot, and update its uniforms to be correct (and store)
         cameras[camera_comp->camera_slot] = { camera_comp->getUniforms(
                                                   camera_sizes[camera_comp->camera_slot], lights,

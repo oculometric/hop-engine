@@ -282,23 +282,53 @@ void Engine::drawImGuiDebug() { engine->_drawImGuiDebug(); }
 extern unsigned char engine_hop_raw[];
 extern unsigned long long engine_hop_raw_size;
 
+class HopEngine::InitMachine final
+{
+public:
+    static void initialise(const Engine::InitParams& params)
+    {
+        Debug::init(params.create_log_file);
+        Debug::setLogLevel(params.debug_log_level);
+
+        EventServer::init();
+
+        Package::init();
+        DataBlock engine_hop(engine_hop_raw_size);
+        memcpy(engine_hop.data(), engine_hop_raw, engine_hop.size());
+        Package::importPackage(engine_hop);
+
+        RenderServer::init(params.enable_vulkan_validation);
+        Input::init();
+    }
+
+    static void destroy()
+    {
+        Input::destroy();
+        Package::destroy();
+        RenderServer::destroy();
+        if (!engine->allocated_refs.empty())
+        {
+            DBG_ERROR(
+                "uh oh! there are objects still allocated! prepare for vulkan errors and possibly crashes! see below:");
+            Engine::summariseTrackedObjects();
+        }
+        else
+            DBG_INFO("good girl for cleaning up!");
+
+        EventServer::destroy();
+
+        Debug::close();
+    }
+};
+
 Engine::Engine(const InitParams& params)
 {
     engine = this;
 
     engine->engine_start_timestamp = chrono::steady_clock::now();
+    
+    InitMachine::initialise(params);
 
-    Debug::init(params.create_log_file);
-    Debug::setLogLevel(params.debug_log_level);
-
-    EventServer::init();
-
-    Package::init();
-    DataBlock engine_hop(engine_hop_raw_size);
-    memcpy(engine_hop.data(), engine_hop_raw, engine_hop.size());
-    Package::importPackage(engine_hop);
-
-    RenderServer::init(params.enable_vulkan_validation);
     RenderServer::setIcon("res://engine/icon.png");
     std::pair<Sampler::Filter, Sampler::Address> builders[6] = {
         {  Sampler::FILTER_LINEAR,     Sampler::ADDRESS_REPEAT },
@@ -309,8 +339,6 @@ Engine::Engine(const InitParams& params)
         { Sampler::FILTER_NEAREST, Sampler::ADDRESS_CLAMP_EDGE },
     };
     for (auto s : builders) premade_samplers[s] = new Sampler(s.first, s.second);
-
-    Input::init();
 
     auto discord_application_id_data = Package::loadFromDisk("discord_appid.txt");
     std::string discord_application_id(discord_application_id_data.begin(),
@@ -325,12 +353,24 @@ Engine::Engine(const InitParams& params)
                 auto presence = discord::RPCManager::get().getPresence();
                 presence.setState("running hop-engine")
                     .setActivityType(discord::ActivityType::Game)
-                    .setStatusDisplayType(discord::StatusDisplayType::State)
+                    .setStatusDisplayType(discord::StatusDisplayType::Details)
                     .setStartTimestamp(time(nullptr))
                     .setDetails("the bunny is testing something.");
+                
+                presence.setPartyPrivacy(discord::PartyPrivacy::Public);
+                presence.setPartyID("pid");
+                presence.setJoinSecret("secret");
+                presence.setPartySize(1);
+                presence.setPartyMax(256);
+                presence.setMatchSecret("secret2");
+                presence.setSpectateSecret("secret3");
+                presence.setEndTimestamp(time(nullptr) + 100000);
+                presence.setSmallImageText("small image");
+                presence.setLargeImageText("large image");
                 auto button = presence.getButton1();
                 button.set("what's it doing?", "https://github.com/oculometric/hop-engine");
                 presence.setButton1(button);
+                presence.setInstance(true);
                 discord::RPCManager::get().setPresence(presence).refresh();
             })
         .onDisconnected([](int errcode, std::string_view message)
@@ -363,21 +403,7 @@ Engine::~Engine()
     loaded_meshes.clear();
     premade_samplers.clear();
 
-    Input::destroy();
-    Package::destroy();
-    RenderServer::destroy();
-    if (!allocated_refs.empty())
-    {
-        DBG_ERROR(
-            "uh oh! there are objects still allocated! prepare for vulkan errors and possibly crashes! see below:");
-        Engine::summariseTrackedObjects();
-    }
-    else
-        DBG_INFO("good girl for cleaning up!");
-
-    EventServer::destroy();
-
-    Debug::close();
+    InitMachine::destroy();
 }
 
 Engine* Engine::getEngine() { return engine; }

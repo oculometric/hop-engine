@@ -37,6 +37,7 @@ namespace HopEngine
  */
 class Input final
 {
+    friend class InitMachine;
 public:
     /**
      * @brief enumerates existing gamepad button types. triggers are treated as buttons for
@@ -211,9 +212,6 @@ private:
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(Input);
 
-    static void init();
-    static void destroy();
-
     /**
      * @brief checks if there are new input events (mouse/keyboard) and queries the gamepad states. also
      * recalculates the mouse delta.
@@ -321,6 +319,9 @@ public:
 private:
     Input();
     ~Input() = default;
+
+    static void init();
+    static void destroy();
 
     static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);

@@ -17,6 +17,20 @@ vector<string>::iterator findArg(string s, vector<string>& v)
 	return it;
 }
 
+namespace HopEngine
+{
+
+class InitMachine final
+{
+public:
+    static void initialise()
+    {
+	    HopEngine::Package::init();
+    }
+};
+
+}
+
 // TODO: improve this to be much more advanced, multiple files/folders to specify, set root, etc
 int main(const int nargs, const char** vargs)
 {
@@ -56,7 +70,7 @@ int main(const int nargs, const char** vargs)
 	if (args[args.size() - 1][0] != '-')
 		output_hop = args[args.size() - 1];
 
-	HopEngine::Package::init();
+	HopEngine::InitMachine::initialise();
 	size_t entries = 0;
 	for (const auto& p : filesystem::recursive_directory_iterator(target_dir))
 	{

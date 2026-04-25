@@ -34,15 +34,13 @@ namespace HopEngine
  */
 class Package final
 {
+    friend class InitMachine;
 private:
     std::map<std::string, DataBlock> database; // map of all currently loaded data blocks
     std::map<std::string, std::string> alias_table;
 
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(Package);
-
-    static void init();
-    static void destroy();
 
     /**
      * @brief loads a block of data from the specified path. may be a res-relative package path or an
@@ -160,6 +158,9 @@ public:
 private:
     Package()  = default;
     ~Package() = default;
+
+    static void init();
+    static void destroy();
 
     /**
      * @brief checks if the specified path has the `res://` prefix.
