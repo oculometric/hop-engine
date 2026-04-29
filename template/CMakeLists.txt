@@ -66,9 +66,14 @@ else()
 endif()
 
 # compile game resources into a package file
+if(WIN32)
+	set(HOP_PACKAGE_TOOL "package-tool.exe")
+else()
+	set(HOP_PACKAGE_TOOL "package-tool")
+endif()
 add_custom_target(resources
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-	COMMAND ${HOP_ENGINE}/tools/package-tool.exe res -c -b
+	COMMAND ${HOP_ENGINE}/tools/${HOP_PACKAGE_TOOL} res -c -b
 		"${CMAKE_BINARY_DIR}/resources.hop"
 	COMMENT "Compressing resources"
 )

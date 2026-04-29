@@ -10,7 +10,7 @@ using namespace HopEngine;
 void TextComponent::awake()
 {
     StaticMeshComponent::awake();
-    font     = new Font("res://engine/font.bmp", glm::ivec2{ 10, 18 });
+    font     = Font::deserialise("res://engine/IBM_font.hfnt");
     material = new Material(Engine::loadShader("res://engine/shaders/text.glsl"));
     material->setTexture(0, font->getAtlas().strong());
     material->setSampler(0, Engine::getSampler(Sampler::FILTER_NEAREST));
