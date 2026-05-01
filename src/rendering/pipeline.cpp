@@ -16,7 +16,7 @@ TO_STRING_IMPL(Pipeline::PolygonMode, 3, VARGS("FILL", "LINE", "BACK"));
 TO_STRING_IMPL(Pipeline::CompareOp, 8,
     VARGS("NEVER", "LESS", "EQUAL", "LESS_EQUAL", "GREATER", "NOT_EQUAL", "GREATER_EQUAL", "ALWAYS"));
 
-Pipeline::Pipeline(WeakRef<Shader> shader, const Builder& config, WeakRef<RenderPass> render_pass)
+Pipeline::Pipeline(Ref<Shader> shader, const Builder& config, Ref<RenderPass> render_pass)
 {
     pipeline_config                              = config;
     std::array<VkDynamicState, 2> dynamic_states = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };

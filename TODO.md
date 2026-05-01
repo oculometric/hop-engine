@@ -19,6 +19,7 @@
     - font
     - node style
 
+- material serial spec needs to support changing the render pass
 - split framebuffer from render pass?? merge image creation from swapchain to render pass
 
 # v0.55

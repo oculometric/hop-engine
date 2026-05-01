@@ -395,26 +395,29 @@ Engine::Engine(const InitParams& params)
     std::string discord_application_id(discord_application_id_data.begin(),
         discord_application_id_data.end());
 
-    discord::RPCManager::get()
-        .setClientID(discord_application_id)
-        .onReady(
-            [](discord::User const& user)
-            {
-                DBG_INFO("connected to discord user " + user.username);
-                setRPCActivity(RPC_PLAYING);
-                setRPCDescription("hop-engine is running.");
-                setRPCTimestamp(std::chrono::system_clock::now());
-                discord::RPCManager::get().getPresence().setStatusDisplayType(discord::StatusDisplayType::State).refresh();
-            })
-        .onDisconnected([](int errcode, std::string_view message)
-            { DBG_WARNING("disconnected discord with error code " + std::string(message)); })
-        .onErrored([](int errcode, std::string_view message)
-            { DBG_ERROR("discord error with code " + std::string(message)); })
-        .onJoinGame([](std::string_view joinSecret) { DBG_INFO("discord join game"); })
-        .onSpectateGame([](std::string_view spectateSecret) { DBG_INFO("discord spectate game"); })
-        .onJoinRequest(
-            [](discord::User const& user) { DBG_INFO("discord join game request from " + user.username); })
-        .initialize();
+    if (!discord_application_id.empty())
+    {
+        discord::RPCManager::get()
+            .setClientID(discord_application_id)
+            .onReady(
+                [](discord::User const& user)
+                {
+                    DBG_INFO("connected to discord user " + user.username);
+                    setRPCActivity(RPC_PLAYING);
+                    setRPCDescription("hop-engine is running.");
+                    setRPCTimestamp(std::chrono::system_clock::now());
+                    discord::RPCManager::get().getPresence().setStatusDisplayType(discord::StatusDisplayType::State).refresh();
+                })
+            .onDisconnected([](int errcode, std::string_view message)
+                { DBG_WARNING("disconnected discord with error code " + std::string(message)); })
+            .onErrored([](int errcode, std::string_view message)
+                { DBG_ERROR("discord error with code " + std::string(message)); })
+            .onJoinGame([](std::string_view joinSecret) { DBG_INFO("discord join game"); })
+            .onSpectateGame([](std::string_view spectateSecret) { DBG_INFO("discord spectate game"); })
+            .onJoinRequest(
+                [](discord::User const& user) { DBG_INFO("discord join game request from " + user.username); })
+            .initialize();
+    }
 
     EventServer::dispatch(EVENT_TYPE_INIT_FINISH);
 }

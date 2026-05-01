@@ -115,7 +115,7 @@ void Transform::localFromWorld()
 {
 	glm::mat4 parent = glm::identity<glm::mat4>();
 	if (owner && owner->getParent())
-		parent = owner->getParent()->transform.getMatrix();
+		parent = owner->getParent()->getTransform().getMatrix();
 	local_matrix = glm::inverse(parent) * world_matrix;
 
 	glm::vec3 skew;
@@ -129,7 +129,7 @@ void Transform::worldFromLocal()
 {
 	world_matrix = glm::identity<glm::mat4>();
 	if (owner && owner->getParent())
-		world_matrix = owner->getParent()->transform.getMatrix();
+		world_matrix = owner->getParent()->getTransform().getMatrix();
 	world_matrix = world_matrix * local_matrix;
 }
 

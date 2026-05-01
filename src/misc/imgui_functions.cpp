@@ -303,10 +303,10 @@ void Engine::debugCamera(const WeakRef<Object>& selected_camera)
 		mouse_down = false;		
 	}
 	
-	selected_camera->transform.rotate({ 0, 0, -mouse_delta.x });
-	selected_camera->transform.rotateLocal({ -mouse_delta.y, 0, 0 });
+	selected_camera->getTransform().rotate({ 0, 0, -mouse_delta.x });
+	selected_camera->getTransform().rotateLocal({ -mouse_delta.y, 0, 0 });
 
-	const glm::mat4 camera_matrix = selected_camera->transform.getMatrix();
+	const glm::mat4 camera_matrix = selected_camera->getTransform().getMatrix();
 	glm::vec3 local_move_vector = glm::vec3{
 		                              Input::getAxis('A', 'D') + Input::getGamepadAxis(Input::GAMEPAD_LX),
 		                              Input::getAxis('Q', 'E') + Input::getGamepadAxis(Input::GAMEPAD_BUMPERS),
@@ -314,7 +314,7 @@ void Engine::debugCamera(const WeakRef<Object>& selected_camera)
 	                              } * Engine::getDeltaTime() * 1.5f;
 	if (Input::isKeyDown(Input::KEY_LEFT_SHIFT) || Input::isGamepadButtonDown(Input::GAMEPAD_B))
 		local_move_vector *= 3.0f;
-	selected_camera->transform.translateLocal(local_move_vector);
+	selected_camera->getTransform().translateLocal(local_move_vector);
 }
 
 void Engine::debugSelect(const WeakRef<Object>& object)

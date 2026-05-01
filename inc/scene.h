@@ -232,9 +232,9 @@ class Object final : public Destructible
 
 public:
     std::string name = "object"; // name of the object for debug and searching purposes
-    Transform transform;         // 3D transformation information for the object
-
-private:
+    
+    private:
+    Transform transform;                    // 3D transformation information for the object
     WeakRef<Object> self;                   // self reference for passing to children/parents
     WeakRef<Scene> scene;                   // scene which this object is a participant of
     WeakRef<Object> parent;                 // parent object in the hierarchy, if any
@@ -250,6 +250,7 @@ public:
     WeakRef<Scene> getScene() const { return scene; }
 
     WeakRef<Object> getParent() const { return parent; }
+    Transform& getTransform() { return transform; }
     size_t getChildCount() const { return children.size(); }
     /**
      * @brief retrieves the child object at the specified index. does not perform bounds checking.

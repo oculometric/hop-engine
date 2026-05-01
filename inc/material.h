@@ -328,7 +328,7 @@ public:
      * @param config rasteriser configuration, see `PipelineBuilder` for details.
      * @param render_pass render pass in which the pipeline will be drawn (or any compatible render pass).
      */
-    Pipeline(WeakRef<Shader> shader, const Builder& config, WeakRef<RenderPass> render_pass);
+    Pipeline(Ref<Shader> shader, const Builder& config, Ref<RenderPass> render_pass);
     ~Pipeline() override;
 
     /**
