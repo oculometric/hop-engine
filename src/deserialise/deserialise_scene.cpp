@@ -228,7 +228,7 @@ Ref<Scene> Scene::deserialise(const std::string& token_str, const std::string& o
             .argument("scale", TokenReader::TOKEN_VECTOR, false);
     auto object_handler_base = [&](Deserialiser::NamedStatementResult result) -> WeakRef<Object>
     {
-        WeakRef<Object> obj;
+        Ref<Object> obj;
         if (result.statement.identifier.empty()) obj = scene->addObject("object");
         else
             obj = scene->addObject(result.statement.identifier);

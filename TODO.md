@@ -2,6 +2,7 @@
 
 # v0.54
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
+- fix errors on frame timeout and query pool results not ready
 
 - package manager improvements
     - data blocks should know which package they came from

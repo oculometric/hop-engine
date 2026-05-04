@@ -235,32 +235,24 @@ public:
 
     WeakRef(const WeakRef& other)
     {
-        if (other.payload == payload) return;
-
         payload     = other.payload;
         ref_counter = other.ref_counter;
     }
 
     void operator=(const WeakRef& other)
     {
-        if (other.payload == payload) return;
-
         payload     = other.payload;
         ref_counter = other.ref_counter;
     }
 
     WeakRef(WeakRef&& other) noexcept
     {
-        if (other.payload == payload) return;
-
         payload     = other.payload;
         ref_counter = other.ref_counter;
     }
 
     void operator=(WeakRef&& other) noexcept
     {
-        if (other.payload == payload) return;
-
         payload     = other.payload;
         ref_counter = other.ref_counter;
     }
@@ -282,16 +274,12 @@ public:
 
     WeakRef(const Ref<T>& other)
     {
-        if (other.payload == payload) return;
-
         payload     = other.payload;
         ref_counter = other.ref_counter;
     }
 
     void operator=(const Ref<T>& other)
     {
-        if (other.payload == payload) return;
-
         payload     = other.payload;
         ref_counter = other.ref_counter;
     }
@@ -363,9 +351,9 @@ template<typename T> Ref<T> WeakRef<T>::strong()
     if (ref_counter == nullptr) return nullptr;
 
     Ref<T> strong_ref;
-    memcpy(static_cast<void*>(&strong_ref), static_cast<void*>(this), sizeof(*this));
+    memcpy(static_cast<void*>(&strong_ref), static_cast<void*>(this), sizeof(WeakRef<T>));
 
-    ++(*ref_counter);
+    ++(*(strong_ref.ref_counter));
 
     return strong_ref;
 }
@@ -373,7 +361,7 @@ template<typename T> Ref<T> WeakRef<T>::strong()
 template<typename T> WeakRef<T> Ref<T>::weak() const
 {
     WeakRef<T> weakened;
-    weakened = *this;
+    memcpy(static_cast<void*>(&weakened), static_cast<const void*>(this), sizeof(WeakRef<T>));
     return weakened;
 }
 

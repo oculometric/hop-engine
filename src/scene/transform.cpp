@@ -123,6 +123,12 @@ void Transform::localFromWorld()
 	glm::quat quat;
 	glm::decompose(local_matrix, local_scale, quat, local_position, skew, perspective);
 	local_euler = glm::degrees(glm::eulerAngles(quat));
+
+	if (owner)
+    {
+        for (size_t i = 0; i < owner->getChildCount(); ++i)
+            owner->getChild(i)->getTransform().worldFromLocal();
+    }
 }
 
 void Transform::worldFromLocal()

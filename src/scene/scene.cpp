@@ -27,7 +27,7 @@ void Object::removeFromParent()
     if (!parent) return;
     for (auto it = parent->children.begin(); it != parent->children.end(); ++it)
     {
-        if ((*it).get() == this)
+        if ((*it) == self)
         {
             parent->children.erase(it);
             parent = nullptr;
@@ -39,7 +39,7 @@ void Object::removeFromParent()
                 ", but could not be found in the parents child list.");
 }
 
-void Object::addChild(WeakRef<Object> obj)
+void Object::addChild(Ref<Object> obj)
 {
     if (obj->scene && obj->scene != scene)
     {
@@ -51,7 +51,7 @@ void Object::addChild(WeakRef<Object> obj)
         bool parent_found = false;
         for (auto it = obj->parent->children.begin(); it != obj->parent->children.end(); ++it)
         {
-            if ((*it).get() == obj.get())
+            if ((*it) == obj)
             {
                 obj->parent->children.erase(it);
                 parent_found = true;
@@ -65,7 +65,7 @@ void Object::addChild(WeakRef<Object> obj)
         }
     }
     obj->parent = self;
-    children.emplace_back(obj.strong());
+    children.push_back(obj);
     if (scene && !obj->scene) scene->insertObject(obj);
 }
 
@@ -115,7 +115,7 @@ std::vector<WeakRef<Object>> Scene::getAllObjects() const
 {
     std::vector<WeakRef<Object>> objs;
     objs.reserve(objects.size());
-    for (auto& obj : objects) objs.emplace_back(obj);
+    for (auto& obj : objects) objs.push_back(obj);
     return objs;
 }
 
@@ -128,7 +128,7 @@ WeakRef<Object> Scene::findObject(const std::string& name) const
     return nullptr;
 }
 
-WeakRef<Object> Scene::insertObject(WeakRef<Object> obj)
+Ref<Object> Scene::insertObject(Ref<Object> obj)
 {
     if (obj->scene)
     {
@@ -137,32 +137,32 @@ WeakRef<Object> Scene::insertObject(WeakRef<Object> obj)
             if (!obj->parent)
             {
                 obj->parent = root;
-                root->children.emplace_back(obj.strong());
+                root->children.push_back(obj);
                 return obj;
             }
             return obj;
         }
-        obj->scene->removeObject(obj.strong());
+        obj->scene->removeObject(obj);
     }
-    objects.emplace_back(obj.strong());
+    objects.push_back(obj);
     obj->scene = self;
     if (!obj->parent)
     {
         obj->parent = root;
-        root->children.emplace_back(obj.strong());
+        root->children.push_back(obj);
     }
     for (const auto& child : obj->children) insertObject(child);
     return obj;
 }
 
-WeakRef<Object> Scene::addObject(const std::string& name)
+Ref<Object> Scene::addObject(const std::string& name)
 {
-    Ref obj    = Object::create();
+    Ref<Object> obj    = Object::create();
     obj->name  = name;
     obj->scene = self;
-    objects.emplace_back(obj);
+    objects.push_back(obj);
     obj->parent = root;
-    root->children.emplace_back(obj);
+    root->children.push_back(obj);
     return obj;
 }
 
@@ -173,35 +173,43 @@ void Scene::removeObject(Ref<Object> obj)
         DBG_WARNING("object " + obj->name + " is not a member of scene " + getOrigin());
         return;
     }
+
+    // remove children from the scene
     auto temp_children = obj->children;
     for (auto& child : temp_children) removeObject(child);
+    temp_children.clear();
+
+    // remove object from parent
+    if (obj->parent)
+    {
+        for (auto it2 = obj->parent->children.begin(); it2 != obj->parent->children.end(); ++it2)
+        {
+            if ((*it2) == obj)
+            {
+                obj->parent->children.erase(it2);
+                obj->parent = nullptr;
+                break;
+            }
+        }
+        if (obj->parent)
+            DBG_WARNING("object " + obj->name + " claims to be a child of object " +
+                        obj->parent->name + ", but could not be found in the parents child list.");
+    }
+    else
+        DBG_WARNING("object " + obj->name + " has no parent. this is not allowed.");
+
+    // remove object from scene
     for (auto it = objects.begin(); it != objects.end(); ++it)
     {
-        if ((*it).get() == obj.get())
+        if ((*it) == obj)
         {
             objects.erase(it);
             obj->scene = nullptr;
-            if (obj->parent)
-            {
-                for (auto it2 = obj->parent->children.begin(); it2 != obj->parent->children.end(); ++it2)
-                {
-                    if ((*it2).get() == obj.get())
-                    {
-                        obj->parent->children.erase(it2);
-                        obj->parent = nullptr;
-                        break;
-                    }
-                }
-                if (obj->parent)
-                    DBG_WARNING("object " + obj->name + " claims to be a child of object " +
-                                obj->parent->name + ", but could not be found in the parents child list.");
-            }
-            else
-                DBG_WARNING("object " + obj->name + " has no parent. this is not allowed.");
-            return;
+            break;
         }
     }
-    DBG_WARNING("object " + obj->name + " claims to be a member of scene " + getOrigin() +
+    if (obj->scene)
+        DBG_WARNING("object " + obj->name + " claims to be a member of scene " + getOrigin() +
                 ", but is not known to the scene. scene hierarchy is corrupt.");
 }
 

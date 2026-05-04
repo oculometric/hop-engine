@@ -262,7 +262,7 @@ public:
      * with objects from a different scene.
      * @param obj object which will become a child of this object.
      */
-    void addChild(WeakRef<Object> obj);
+    void addChild(Ref<Object> obj);
     /**
      * @brief removes the object from its parent object, if there is any parent object. if the object is
      * part of a scene, then the object will be made a child of only the scene root object.
@@ -275,7 +275,7 @@ public:
      * `Component`.
      * @returns reference to the newly created component.
      */
-    template<class T> WeakRef<T> addComponent();
+    template<class T> Ref<T> addComponent();
     /**
      * @brief searches through the list of attached components to find a matching component. only returns
      * the first matching component. you may only call this function with templates such that `T` inherits
@@ -319,7 +319,7 @@ private:
 
 template<class T> WeakRef<T> Component::getComponent() { return owner->getComponent<T>(); }
 
-template<class T> WeakRef<T> Object::addComponent()
+template<class T> Ref<T> Object::addComponent()
 {
     static_assert(std::is_convertible_v<T*, Component*>,
         "component must be a HopEngine::Component subclass");
@@ -327,7 +327,7 @@ template<class T> WeakRef<T> Object::addComponent()
     comp->owner = self;
     components.push_back(comp.template cast<Component>());
     comp->awake();
-    return comp.weak();
+    return comp;
 }
 
 template<class T> WeakRef<T> Object::getComponent()
@@ -410,14 +410,14 @@ public:
      * @param obj object to add.
      * @returns reference to `obj`.
      */
-    WeakRef<Object> insertObject(WeakRef<Object> obj);
+    Ref<Object> insertObject(Ref<Object> obj);
     /**
      * @brief adds a new object to the scene, constructing it and giving it a name.
      * @param name identifier which will be assigned to the new object, allowing it to be retrieved with
      * `findObject`.
      * @returns reference to the new object.
      */
-    WeakRef<Object> addObject(const std::string& name);
+    Ref<Object> addObject(const std::string& name);
     /**
      * @brief adds a new object to the scene, constructing it and giving it a name, and then adds a new
      * component of the specified type `T` to the newly created object. useful shortcut for setting up
@@ -427,7 +427,7 @@ public:
      * `findObject`.
      * @returns reference to the component which was created on the new object.
      */
-    template<class T> WeakRef<T> addObject(const std::string& name);
+    template<class T> Ref<T> addObject(const std::string& name);
     /**
      * @brief removes the specified object from the scene. the object's parent will be cleared. `obj` should
      * be a member of the current scene.
@@ -499,7 +499,7 @@ private:
     Scene(const std::string& name);
 };
 
-template<class T> WeakRef<T> Scene::addObject(const std::string& name)
+template<class T> Ref<T> Scene::addObject(const std::string& name)
 {
     static_assert(std::is_convertible_v<T*, Component*>,
         "component must be a HopEngine::Component subclass");
