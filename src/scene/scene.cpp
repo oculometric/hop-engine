@@ -142,7 +142,7 @@ WeakRef<Object> Scene::insertObject(WeakRef<Object> obj)
             }
             return obj;
         }
-        obj->scene->removeObject(obj);
+        obj->scene->removeObject(obj.strong());
     }
     objects.emplace_back(obj.strong());
     obj->scene = self;
@@ -166,7 +166,7 @@ WeakRef<Object> Scene::addObject(const std::string& name)
     return obj;
 }
 
-void Scene::removeObject(WeakRef<Object> obj)
+void Scene::removeObject(Ref<Object> obj)
 {
     if (obj->scene != self)
     {
@@ -179,6 +179,7 @@ void Scene::removeObject(WeakRef<Object> obj)
     {
         if ((*it).get() == obj.get())
         {
+            objects.erase(it);
             obj->scene = nullptr;
             if (obj->parent)
             {
@@ -197,7 +198,6 @@ void Scene::removeObject(WeakRef<Object> obj)
             }
             else
                 DBG_WARNING("object " + obj->name + " has no parent. this is not allowed.");
-            objects.erase(it);
             return;
         }
     }

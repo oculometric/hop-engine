@@ -433,7 +433,7 @@ public:
      * be a member of the current scene.
      * @param obj object to remove.
      */
-    void removeObject(WeakRef<Object> obj);
+    void removeObject(Ref<Object> obj);
 
     glm::u32vec2 getViewportSize() const { return last_viewport_size; }
     /**
