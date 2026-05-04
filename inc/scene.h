@@ -62,7 +62,6 @@ public:
     // TODO: glm::vec3 getEuler() const;
     glm::mat4 getMatrix()
     {
-        worldFromLocal();
         return world_matrix;
     }
     glm::vec3 right() const { return world_matrix[0]; }    // represents world space X axis

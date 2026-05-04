@@ -131,6 +131,12 @@ void Transform::worldFromLocal()
 	if (owner && owner->getParent())
 		world_matrix = owner->getParent()->getTransform().getMatrix();
 	world_matrix = world_matrix * local_matrix;
+
+    if (owner)
+    {
+        for (size_t i = 0; i < owner->getChildCount(); ++i)
+            owner->getChild(i)->getTransform().worldFromLocal();
+    }
 }
 
 void Transform::localFromVars()
