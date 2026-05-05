@@ -2,7 +2,7 @@
 
 ```C++
 /* 
- * 'Resource' statement loads an asset to be used by the material.
+ * 'Resource' statement loads an asset to be used by the render graph.
  * - anonymous arguments
  * - children forbidden
  * - identifier required

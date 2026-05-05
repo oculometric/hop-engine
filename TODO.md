@@ -18,7 +18,6 @@
 - document serial formats (document by example)
     - shader format
     - scene
-    - font
     - node style
 
 # v0.55
