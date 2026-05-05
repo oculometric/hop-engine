@@ -1,12 +1,12 @@
 # TODO
 
 # v0.54
-- framebuffer/render pass overhaul
+- framebuffer/render pass overhaul [120]
     - the user manages render passes purely according to their specification (actual render pass objects get created automatically)
     - framebuffers are separate from render passes, but created according to the same spec
     - swapchain image management happens in framebuffer instead of swapchain
 
-- package manager improvements
+- package manager improvements [240]
     - data blocks should know which package they came from
     - package manager should not have to load the entire file from disk at once, only an index of contents
     - when you try to load an entry, search through the indexes of loaded packages, don't keep a copy of dat
@@ -15,8 +15,7 @@
     - needs to be able to search a directory for res files too (we dont need to rebuild the hop file ALL the time)
     - metadata (date/time, author)
 
-- document serial formats (document by example)
-    - shader format
+- document serial formats (document by example) [60]
     - scene
     - node style
 
