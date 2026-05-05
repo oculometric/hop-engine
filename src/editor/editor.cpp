@@ -15,7 +15,7 @@ void Editor::awake()
         auto obj = view_3d->addObject("camera");
         auto cam = obj->addComponent<CameraComponent>();
         cam->clear_colour = { 0.05f, 0.05f, 0.05f };
-        view_3d->setSkybox(Engine::loadTexture("res://engine/textures/basic_skybox.png"));
+        view_3d->sky = new Sky(Engine::loadTexture("res://engine/textures/basic_skybox.png"));
         obj->getTransform().lookAt(glm::vec3(0.2f, -0.2f, 0.2f),
                               glm::vec3(0.0f, 0.0f, 0.0f),
                               glm::vec3(0.0f, 0.0f, 1.0f));

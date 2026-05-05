@@ -126,6 +126,7 @@ RenderServer::RenderServer(bool enable_validation)
     },
         { 0, 1, 2 });
     skybox_cube  = Mesh::loadMesh("res://engine/meshes/skybox.obj");
+    sky_sphere   = Mesh::loadMesh("res://engine/meshes/sky_sphere.obj");
     default_mesh = Mesh::loadMesh("res://engine/meshes/default_mesh.obj");
     if (!default_mesh) DBG_FAULT("failed to load default mesh!");
 
@@ -133,7 +134,7 @@ RenderServer::RenderServer(bool enable_validation)
     final_pass_uniforms = createSceneUniforms();
     spinner_material    = new Material(Engine::loadShader("res://engine/shaders/screen_space_image.glsl"),
         Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false),
-        RenderServer::getFinalRenderPass());
+        RenderServer::getFinalRenderPass().strong());
     spinner_uniforms    = createObjectUniforms();
     ObjectUniforms* spinner = static_cast<ObjectUniforms*>(spinner_uniforms->getBuffer());
     spinner->model_to_world = glm::mat4(1);
@@ -169,6 +170,7 @@ RenderServer::~RenderServer()
     spinner_material    = nullptr;
     final_pass_uniforms = nullptr;
     skybox_cube         = nullptr;
+    sky_sphere          = nullptr;
     default_material    = nullptr;
     quad                = nullptr;
     tri                 = nullptr;
@@ -210,7 +212,7 @@ void RenderServer::tryFreeResources(bool force)
     if (!force && (current_time - last_free_time < 2.0f) && free_list.size() < 30) return;
 
     RenderServer::waitIdle();
-    DBG_INFO("freeing " + std::to_string(free_list.size()) + " resources");
+    DBG_VERBOSE("freeing " + std::to_string(free_list.size()) + " resources");
     last_free_time = current_time;
     for (auto& item : free_list) item();
     free_list.clear();

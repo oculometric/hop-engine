@@ -37,6 +37,7 @@ namespace HopEngine
 class RenderServer final
 {
     friend class InitMachine;
+
 public:
     /**
      * @brief defines a scene-to-be-rendered, and the portion of the window it should be rendered into.
@@ -97,6 +98,7 @@ private:
 
     Ref<Mesh> default_mesh; // default mesh
     Ref<Mesh> skybox_cube;  // mesh used to render skyboxes
+    Ref<Mesh> sky_sphere;   // mesh used to render sky spheres
     Ref<Mesh> quad;         // mesh used to render quads
     Ref<Mesh> tri;          // mesh used to render full-screen images (NOT A QUAD)
 
@@ -182,6 +184,7 @@ public:
     static WeakRef<Material> getDefaultMaterial() { return getInstance()->default_material; }
     static WeakRef<Mesh> getDefaultMesh() { return getInstance()->default_mesh; }
     static WeakRef<Mesh> getSkyboxCube() { return getInstance()->skybox_cube; }
+    static WeakRef<Mesh> getSkySphere() { return getInstance()->sky_sphere; }
     static WeakRef<Mesh> getQuad() { return getInstance()->quad; }
 
     /**

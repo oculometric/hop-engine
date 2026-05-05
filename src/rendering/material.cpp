@@ -8,9 +8,9 @@
 
 using namespace HopEngine;
 
-Material::Material(Ref<Shader> _shader, const Pipeline::Builder& config, WeakRef<RenderPass> _render_pass)
+Material::Material(Ref<Shader> _shader, const Pipeline::Builder& config, Ref<RenderPass> _render_pass)
 {
-    render_pass = _render_pass ? _render_pass.strong() : RenderServer::getMainRenderPass().strong();
+    render_pass = _render_pass ? _render_pass : RenderServer::getMainRenderPass().strong();
     shader      = _shader;
     initaliseMaterial(config);
 

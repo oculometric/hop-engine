@@ -101,6 +101,8 @@ Ref<Material> Material::deserialise(const std::string& token_str, const std::str
 
     std::vector<TokenReader::Statement> uniforms;
     std::vector<std::tuple<Ref<Texture>, std::string, Sampler::Filter, Sampler::Address>> texture_bindings;
+    RenderPass::Config custom_config;
+    bool use_custom_render_pass = false;
 
     Deserialiser deserialiser("error deserialising material '" + origin + "'");
     deserialiser.addStatementAnonymous(
@@ -191,6 +193,21 @@ Ref<Material> Material::deserialise(const std::string& token_str, const std::str
             main_shader = shader_it->second;
             return true;
         });
+    deserialiser.addStatementNamed(
+        Deserialiser::NamedStatementSpec("RenderPass", Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
+            .argument("extra_outputs", TokenReader::TOKEN_INT, true)
+            .argument("has_depth", TokenReader::TOKEN_TEXT, true),
+            [&](Deserialiser::NamedStatementResult result) -> bool
+        {
+            uint32_t extra_outputs;
+            result.read("extra_outputs", extra_outputs);
+            bool has_depth;
+            if (!result.read("has_depth", has_depth))
+                return deserialiser.emitError("invalid value for 'has_depth'", result.offsetOf("has_depth"), token_str);
+            use_custom_render_pass = true;
+            custom_config = RenderPass::Config{ extra_outputs, has_depth };
+            return true;
+        });
     deserialiser.addStatementAnonymous(
         Deserialiser::AnonymousStatementSpec("Uniform", Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, true),
         [&](Deserialiser::AnonymousStatementResult result) -> bool
@@ -230,7 +247,7 @@ Ref<Material> Material::deserialise(const std::string& token_str, const std::str
     if (!deserialiser.execute(syntax_tree, token_str)) return nullptr;
 
     if (!main_shader) return nullptr;
-    Ref<Material> material = new Material(main_shader, pipeline_builder);
+    Ref<Material> material = new Material(main_shader, pipeline_builder, use_custom_render_pass ? new RenderPass({ 1, 1 }, custom_config) : nullptr);
     if (!material) return nullptr;
 
     for (const auto& binding : texture_bindings)

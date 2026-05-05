@@ -157,9 +157,9 @@ Ref<Object> Scene::insertObject(Ref<Object> obj)
 
 Ref<Object> Scene::addObject(const std::string& name)
 {
-    Ref<Object> obj    = Object::create();
-    obj->name  = name;
-    obj->scene = self;
+    Ref<Object> obj = Object::create();
+    obj->name       = name;
+    obj->scene      = self;
     objects.push_back(obj);
     obj->parent = root;
     root->children.push_back(obj);
@@ -192,8 +192,8 @@ void Scene::removeObject(Ref<Object> obj)
             }
         }
         if (obj->parent)
-            DBG_WARNING("object " + obj->name + " claims to be a child of object " +
-                        obj->parent->name + ", but could not be found in the parents child list.");
+            DBG_WARNING("object " + obj->name + " claims to be a child of object " + obj->parent->name +
+                        ", but could not be found in the parents child list.");
     }
     else
         DBG_WARNING("object " + obj->name + " has no parent. this is not allowed.");
@@ -210,7 +210,7 @@ void Scene::removeObject(Ref<Object> obj)
     }
     if (obj->scene)
         DBG_WARNING("object " + obj->name + " claims to be a member of scene " + getOrigin() +
-                ", but is not known to the scene. scene hierarchy is corrupt.");
+                    ", but is not known to the scene. scene hierarchy is corrupt.");
 }
 
 WeakRef<Object> Scene::raycast(const glm::vec3 position, const glm::vec3 direction) const
@@ -229,13 +229,6 @@ WeakRef<Object> Scene::raycast(const glm::vec3 position, const glm::vec3 directi
         }
     }
     return closest_obj;
-}
-
-void Scene::setSkybox(WeakRef<Texture> texture)
-{
-    if (texture == skybox) return;
-    skybox = texture;
-    skybox_material->setTexture("tex", texture.strong());
 }
 
 void Scene::update(float delta_time) { root->update(delta_time); }
@@ -278,9 +271,7 @@ void Scene::draw(Ref<DrawCommandBuffer> command_buffer, glm::u32vec2 viewport_si
 
     // collect all draw calls from the scene (plus the skybox!)
     std::vector<DrawCommand> draw_commands;
-    if (skybox)
-        draw_commands.push_back(
-            DrawCommand(skybox_material, RenderServer::getSkyboxCube(), skybox_uniforms).priority(1000));
+    if (sky) draw_commands.push_back(sky->getDrawCommand());
     for (const auto& object : objects)
     {
         auto temp = object->getDrawCommands();
@@ -298,13 +289,10 @@ void Scene::bindOutputMaterial(Ref<DrawCommandBuffer> command_buffer)
 
 Scene::Scene(const std::string& name)
 {
-    origin          = name;
-    render_graph    = new RenderGraph(RenderGraph::Builder().addCamera(0));
-    root            = Object::create();
-    skybox_material = new Material(new Shader("res://engine/shaders/skybox.glsl"),
-        Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false));
-    skybox_uniforms = RenderServer::createObjectUniforms();
-    root->name      = "scene root";
+    origin       = name;
+    render_graph = new RenderGraph(RenderGraph::Builder().addCamera(0));
+    root         = Object::create();
+    root->name   = "scene root";
 
     DBG_INFO("created new scene " + getOrigin());
 }
@@ -320,4 +308,42 @@ bool DrawCommand::compare(const DrawCommand& a, const DrawCommand& b)
     if (a.uniforms > b.uniforms) return false;
     if (a.mesh > b.mesh) return false;
     return true;
+}
+
+Sky::Sky(Ref<Texture> skybox_texture)
+{
+    uniforms = RenderServer::createObjectUniforms();
+    setSkyboxCubemap(skybox_texture);
+}
+
+Sky::Sky(Ref<Material> custom_material, bool render_cube)
+{
+    uniforms = RenderServer::createObjectUniforms();
+    setCustomMaterial(custom_material, render_cube);
+}
+
+void Sky::setSkyboxCubemap(Ref<Texture> skybox_texture)
+{
+    if (render_custom_material || !material)
+    {
+        material               = new Material(Engine::loadShader("res://engine/shaders/skybox.glsl"),
+            Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false));
+        render_custom_material = false;
+    }
+    render_as_cube = true;
+    material->setTexture("tex", skybox_texture);
+}
+
+void Sky::setCustomMaterial(Ref<Material> custom_material, bool render_cube)
+{
+    render_custom_material = true;
+    material               = custom_material;
+    render_as_cube         = render_cube;
+}
+
+DrawCommand Sky::getDrawCommand() const
+{
+    return DrawCommand(material,
+        render_as_cube ? RenderServer::getSkyboxCube() : RenderServer::getSkySphere(), uniforms)
+        .priority(1000);
 }

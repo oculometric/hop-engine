@@ -19,6 +19,7 @@
 #pragma once
 
 #include "common.h"
+#include "swapchain.h"
 
 #include <glm/glm.hpp>
 #include <map>
@@ -459,7 +460,7 @@ public:
      * compatible one.
      */
     Material(Ref<Shader> _shader, const Pipeline::Builder& config = Pipeline::Builder(),
-        WeakRef<RenderPass> _render_pass = nullptr);
+        Ref<RenderPass> _render_pass = nullptr);
     ~Material() override;
 
     std::string getOrigin() const
@@ -636,10 +637,18 @@ private:
  *    compare_value = 0...UINT32_MAX, compare_mask = 0...UINT32_MAX, write_mask = 0...UINT32_MAX)`
  *     controls the stencil behaviour for the material. statement uses named arguments, all but
  *     `write_mask` are required but and forbids an identifier.
- *     the value of `compare` must be one of the listed enum values, and determines the stencil 
+ *     the value of `compare` must be one of the listed enum values, and determines the stencil
  *     comparison condition for writing to a pixel.
  *     the values of `compare_value`, `compare_mask`, and `write_mask` must be unsigned integers.
- * 
+ *
+ * - `RenderPass(extra_outputs = 0...UINT32_MAX, has_depth = TRUE/FALSE)`
+ *     controls the custom render pass layout for the material. statement uses named arguments, all are
+ *     required, and forbids an identifier.
+ *     the value of `extra_outputs` must be an unsigned integer, and determines the number of additional
+ *     output buffers which will be present.
+ *     the value of `has_depth` must be one of the listed enum values, and determines whether a depth
+ *     buffer will be present.
+ *
  * - `Texture(resource = @IDENTIFIER, binding = "NAME", filter = NEAREST/LINEAR,
  *    address = REPEAT/MIRROR/CLAMP)`
  *     binds a texture resource to a shader texture uniform. statement uses named arguments, `resource`
@@ -647,7 +656,7 @@ private:
  *     the value of `resource` must be the identifier of a previously-declared `Resource` statement.
  *     the value of `filter` must be one of the listed enum values.
  *     the value of `address` must be one of the listed enum values.
- * 
+ *
  * - `Uniform() {}`
  *     allows you to assign values to shader uniform variables. statement has no arguments, forbids an
  *     identifier, but allows child statements.
@@ -657,13 +666,13 @@ private:
  *     second argument must be the value to be assigned. there are two statements supported as children:
  *     - `vec4`
  *     - `float`
- * 
+ *
  * ## example
- * 
+ *
  * ```
  * Resource(shader, "res://unlit.glsl") : shader;
  * Resource(texture, "res://david_crate.jpg") : albedo;
- * 
+ *
  * Shader(resource = @shader);
  * Culling(mode = NONE);
  *

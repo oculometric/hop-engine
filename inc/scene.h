@@ -60,10 +60,7 @@ public:
     glm::mat4 getLocalMatrix() const { return local_matrix; }
     glm::vec3 getPosition() const { return world_matrix[3]; }
     // TODO: glm::vec3 getEuler() const;
-    glm::mat4 getMatrix()
-    {
-        return world_matrix;
-    }
+    glm::mat4 getMatrix() { return world_matrix; }
     glm::vec3 right() const { return world_matrix[0]; }    // represents world space X axis
     glm::vec3 up() const { return world_matrix[1]; }       // represents world space Y axis
     glm::vec3 forward() const { return -world_matrix[2]; } // represents world space -Z axis
@@ -231,8 +228,8 @@ class Object final : public Destructible
 
 public:
     std::string name = "object"; // name of the object for debug and searching purposes
-    
-    private:
+
+private:
     Transform transform;                    // 3D transformation information for the object
     WeakRef<Object> self;                   // self reference for passing to children/parents
     WeakRef<Scene> scene;                   // scene which this object is a participant of
@@ -357,6 +354,51 @@ template<class T> bool Object::removeComponent()
 }
 
 /**
+ * @brief contains information about how to render the backdrop (or skybox) for a scene. supports both
+ * simple skybox-rendering (where a texture can be supplied) as well as custom material rendering using
+ * either a cube or an icosahedron as the mesh.
+ */
+class Sky final : public Destructible
+{
+private:
+    // if `true` the skybox cube mesh will be rendered, otherwise the sky sphere will be rendered
+    bool render_as_cube = true;
+    // if `true` the skybox is using a custom material for rendering, not the standard skybox material
+    bool render_custom_material = false;
+    Ref<UniformBlock> uniforms; // object uniforms for the skybox
+    Ref<Material> material;     // material used to render the skybox
+
+public:
+    DELETE_CONSTRUCTORS(Sky);
+    Sky(Ref<Texture> skybox_texture);
+    Sky(Ref<Material> custom_material, bool render_cube);
+    ~Sky() override = default;
+
+    /**
+     * @brief updates the sky to use a skybox cubemap texture. the texture should be 2D, but arranged in a
+     * 6x1 confiuration of +X, -X, +Y, -Y, +Z, -Z faces as seen from the inside of the skybox. (see
+     * `res_engine/textures/basic_skybox.png` for an example). switches to standard skybox material if a
+     * custom material is currently in use. forces the use of the skybox cube for rendering.
+     * @param skybox_texture texture to use for the skybox.
+     */
+    void setSkyboxCubemap(Ref<Texture> skybox_texture);
+    /**
+     * @brief updates the sky to use a custom material.
+     * @param custom_material material used for rendering the skybox.
+     * @param render_cube if `true` the standard skybox cube will be used for rendering, otherwise a sky
+     * sphere (icosahedron) will be used instead.
+     */
+    void setCustomMaterial(Ref<Material> custom_material, bool render_cube);
+
+    /**
+     * @brief generates a command for drawing the skybox into a command buffer. resulting command has
+     * extremely high priority to ensure the object is drawn first.
+     * @returns rendering command to draw the skybox.
+     */
+    DrawCommand getDrawCommand() const;
+};
+
+/**
  * @brief scene system which manages a collection of hierarchically-nested objects, each of which may have
  * one or more components providing functionality, interactivity, visuals, etc.
  */
@@ -366,16 +408,14 @@ public:
     // background light colour of the scene, passed to shaders
     glm::vec3 ambient_colour = { 0.01f, 0.01f, 0.01f };
     Ref<RenderGraph> render_graph; // render graph for the scene, used to record render commands
+    Ref<Sky> sky;                  // controls how the sky(box)/backdrop is drawn
 
 private:
-    std::string origin;                // if not empty, contains the path from which this scene was loaded
-    WeakRef<Scene> self;               // self reference for passing to objects
-    Ref<Object> root;                  // invisible root object, acts as parent for all scene objects
-    std::vector<Ref<Object>> objects;  // all members of the scene
-    glm::u32vec2 last_viewport_size;   // last known size of the viewport used to render the scene
-    Ref<Material> skybox_material;     // material which renders the skybox texture
-    Ref<UniformBlock> skybox_uniforms; // object uniforms for the skybox object
-    WeakRef<Texture> skybox;           // texture used to draw the skybox, or none to skip skybox rendering
+    std::string origin;               // if not empty, contains the path from which this scene was loaded
+    WeakRef<Scene> self;              // self reference for passing to objects
+    Ref<Object> root;                 // invisible root object, acts as parent for all scene objects
+    std::vector<Ref<Object>> objects; // all members of the scene
+    glm::u32vec2 last_viewport_size;  // last known size of the viewport used to render the scene
 
 public:
     DELETE_CONSTRUCTORS(Scene);
@@ -445,13 +485,6 @@ public:
      * @returns closest intersected object, or `nullptr`, if no objects were intersected.
      */
     WeakRef<Object> raycast(glm::vec3 position, glm::vec3 direction) const;
-
-    /**
-     * @brief applies a new skybox texture to the scene. if the skybox is set to `nullptr`, then the skybox
-     * will not be rendered, and the clear colour will be used instead.
-     * @param texture new texture to be used for the skybox, or `nullptr` if no skybox should be rendered.
-     */
-    void setSkybox(WeakRef<Texture> texture);
 
     /**
      * @brief called once per frame, and propagated to scene objects and their attached components.

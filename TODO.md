@@ -3,8 +3,11 @@
 # v0.54
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - fix errors on frame timeout and query pool results not ready
-- new Sky system for custom sky shading
-- material serial spec needs to support changing the render pass
+
+- framebuffer/render pass overhaul
+    - the user manages render passes purely according to their specification (actual render pass objects get created automatically)
+    - framebuffers are separate from render passes, but created according to the same spec
+    - swapchain image management happens in framebuffer instead of swapchain
 
 - package manager improvements
     - data blocks should know which package they came from
@@ -15,17 +18,12 @@
     - needs to be able to search a directory for res files too (we dont need to rebuild the hop file ALL the time)
     - metadata (date/time, author)
 
-- document serial formats
+- document serial formats (document by example)
     - render graph
     - shader format
     - scene
     - font
     - node style
-
-- framebuffer/render pass overhaul
-    - the user manages render passes purely according to their specification (actual render pass objects get created automatically)
-    - framebuffers are separate from render passes, but created according to the same spec
-    - swapchain image management happens in framebuffer instead of swapchain
 
 # v0.55
 - the ui update

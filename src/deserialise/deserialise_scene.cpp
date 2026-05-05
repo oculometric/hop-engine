@@ -200,7 +200,7 @@ Ref<Scene> Scene::deserialise(const std::string& token_str, const std::string& o
             if (texture_it == textures.end())
                 return deserialiser.emitError("no such texture loaded '" + texture_res + "'",
                     result.offsetOf("resource"), token_str);
-            scene->setSkybox(texture_it->second);
+            scene->sky = new Sky(texture_it->second);
             return true;
         });
     deserialiser.addStatementNamed(

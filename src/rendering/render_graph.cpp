@@ -90,7 +90,7 @@ RenderGraph::RenderGraph(const Builder& config)
 {
     passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough.glsl"),
         Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false),
-        RenderServer::getFinalRenderPass());
+        RenderServer::getFinalRenderPass().strong());
     passthrough->setSampler(0, Engine::getSampler(config.screen_filtering, Sampler::ADDRESS_CLAMP_EDGE));
     execution_steps = config.execution_steps;
     if (!config.execution_steps.empty())

@@ -208,7 +208,7 @@ void Scene::drawImGuiDebug()
 {
 	ImGui::LabelText("scene", "%s", getOrigin().c_str());
 	ImGui::ColorEdit3("ambient light", reinterpret_cast<float*>(&(ambient_colour)));
-	setSkybox(texturePicker(skybox, "skybox"));
+	//sky = new Sky(texturePicker(sky ? sky->get, "skybox"));
 	ImGui::LabelText("total objects", "%zu", objects.size());
 
 	if (ImGui::CollapsingHeader("object heirarchy", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
