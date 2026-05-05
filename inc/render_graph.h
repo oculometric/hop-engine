@@ -341,6 +341,7 @@ public:
     static Ref<RenderGraph> deserialiseFile(const std::string& name);
     /**
      * @brief constructs a render graph from a text-based serialised representation.
+     * @example doc/RENDER_GRAPH.md
      * @param token_str text representation to decode.
      * @param origin original path from which the render graph was loaded, may be empty.
      * @returns render graph constructed based on serialised representation, or `nullptr` if an error

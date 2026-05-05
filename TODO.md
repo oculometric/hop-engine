@@ -1,9 +1,6 @@
 # TODO
 
 # v0.54
-- input actions, and general input event cleanup (expand on pressed_since_checked etc)
-- fix errors on frame timeout and query pool results not ready
-
 - framebuffer/render pass overhaul
     - the user manages render passes purely according to their specification (actual render pass objects get created automatically)
     - framebuffers are separate from render passes, but created according to the same spec
@@ -19,13 +16,13 @@
     - metadata (date/time, author)
 
 - document serial formats (document by example)
-    - render graph
     - shader format
     - scene
     - font
     - node style
 
 # v0.55
+- input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - the ui update
     - document user_interface.h
     - ui canvas
@@ -76,6 +73,7 @@
 ---
 
 # future
+- fix errors on frame timeout and query pool results not ready
 - audio loading and output
 - windowless offscreen rendering support
 - .otf -> baked font converter (font oven)
