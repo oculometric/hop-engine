@@ -19,7 +19,7 @@
 #pragma once
 
 #include "common.h"
-#include "swapchain.h"
+#include "framebuffer.h"
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -103,12 +103,10 @@ public:
      * @param extent size of the framebuffer in pixels.
      * @param clear_values array of values to be used for clearing the various attachments to the render
      * pass.
-     * @param clear_colour additional override colour for clearing the main colour buffer.
-     * @param transparent if `true` the colour buffer will be treated as transparent and will be cleared
      * accordingly.
      */
     void startRenderPassInternal(GPUHandle render_pass, GPUHandle framebuffer, glm::u32vec2 extent,
-        const RenderPass::ClearValues& clear_values);
+        const Framebuffer::Clear& clear_values);
     /**
      * @brief internal function to issue a command to bind a pipeline. should be called when the active
      * material and/or shader changes.

@@ -7,7 +7,7 @@
 #include "input.h"
 #include "package.h"
 #include "scene.h"
-#include "swapchain.h"
+#include "framebuffer.h"
 #include "vulkan_helpers.h"
 
 #include <GLFW/glfw3.h>
@@ -96,7 +96,6 @@ bool RenderServer::resize(bool force_resize)
         swapchain   = new Swapchain(window_size);
         window_size = swapchain->getExtent();
         swapchain->setVsync(vsync);
-        final_render_pass = new RenderPass(swapchain, { 0, true });
 
         initImGui();
 
@@ -121,7 +120,6 @@ bool RenderServer::resize(bool force_resize)
             wants_vsync_update = false;
         }
         swapchain->resize(window_size);
-        final_render_pass->resize();
 
         return true;
     }

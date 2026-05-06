@@ -2,11 +2,11 @@
 
 #include "command_buffer.h"
 #include "engine.h"
+#include "framebuffer.h"
 #include "material.h"
 #include "mesh.h"
 #include "render_graph.h"
 #include "scene.h"
-#include "swapchain.h"
 #include "user_interface.h"
 
 using namespace HopEngine;
@@ -78,6 +78,18 @@ void RenderServer::setMultiScene(const std::vector<SceneRender>& multi_scenes)
     for (auto& scene : multi_scenes) server->scenes.emplace_back(scene);
 }
 
+GPUHandle RenderServer::getRenderPass(const Framebuffer::Config& for_config)
+{
+    auto it = server->render_passes.find(for_config);
+    if (it == server->render_passes.end())
+    {
+        Ref<RenderPass> new_pass          = new RenderPass(for_config);
+        server->render_passes[for_config] = new_pass;
+        return new_pass->getRenderPass();
+    }
+    return it->second->getRenderPass();
+}
+
 RenderServer::RenderServer(bool enable_validation)
 {
     server = this;
@@ -87,9 +99,6 @@ RenderServer::RenderServer(bool enable_validation)
     createVulkan(enable_validation);
 
     swapchain = new Swapchain(window_size);
-
-    final_render_pass = new RenderPass(swapchain, { 0, true });
-    offscreen_pass    = new RenderPass({ 1, 1 }, { 3, true });
 
     scene_descriptor_set_layout   = Shader::createDescriptorSetLayout({ scene_uniform_descriptor });
     object_descriptor_set_layout  = Shader::createDescriptorSetLayout({ object_uniform_descriptor });
@@ -130,11 +139,11 @@ RenderServer::RenderServer(bool enable_validation)
     default_mesh = Mesh::loadMesh("res://engine/meshes/default_mesh.obj");
     if (!default_mesh) DBG_FAULT("failed to load default mesh!");
 
-    default_material    = new Material(new Shader("res://engine/shaders/default_shader.glsl"));
+    default_material    = new Material(Engine::loadShader("res://engine/shaders/default_shader.glsl"));
     final_pass_uniforms = createSceneUniforms();
     spinner_material    = new Material(Engine::loadShader("res://engine/shaders/screen_space_image.glsl"),
         Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false),
-        RenderServer::getFinalRenderPass().strong());
+        swapchain->getFramebuffer()->getConfig());
     spinner_uniforms    = createObjectUniforms();
     ObjectUniforms* spinner = static_cast<ObjectUniforms*>(spinner_uniforms->getBuffer());
     spinner->model_to_world = glm::mat4(1);
@@ -179,9 +188,8 @@ RenderServer::~RenderServer()
     default_3d_image    = nullptr;
     default_sampler     = nullptr;
 
-    offscreen_pass    = nullptr;
-    final_render_pass = nullptr;
-    swapchain         = nullptr;
+    render_passes.clear();
+    swapchain = nullptr;
 
     destroyVulkan();
 
@@ -248,7 +256,10 @@ WeakRef<DrawCommandBuffer> RenderServer::recordRenderCommands(uint32_t image_ind
                 glm::u32vec2(scene.size_uv * glm::vec2(swapchain->getExtent())));
     }
 
-    final_render_pass->begin(command_buffer, glm::vec3{ 0.02f, 0.02f, 0.02f }, !scenes.empty());
+    swapchain->getFramebuffer()->bind(command_buffer, Framebuffer::Clear{
+                                                          { 0.02f, 0.02f, 0.02f },
+                                                          !scenes.empty()
+    });
 
     if (scenes.empty())
     {

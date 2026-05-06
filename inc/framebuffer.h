@@ -68,6 +68,7 @@ private:
     // fence GPU handles for whether we can start recording commands for each image
     std::vector<GPUHandle> in_flight_fences;
     size_t frame_index = SIZE_MAX; // internal frame index counter
+    Ref<Framebuffer> framebuffer;  // swapchain-attached framebuffer
 
 public:
     DELETE_CONSTRUCTORS(Swapchain);
@@ -113,6 +114,7 @@ public:
     GPUHandle getImageView(size_t i) const { return image_views[i]; }
     Texture::Format getFormat() const { return format; }
     glm::u32vec2 getExtent() const { return extent; }
+    WeakRef<Framebuffer> getFramebuffer() const { return framebuffer; }
 
     /**
      * @brief waits and attempts to acquire an image from the swapchain, for which a command buffer can
@@ -166,14 +168,14 @@ private:
 };
 
 /**
- * @brief handles creating a render pass, with configurable attachments. manages textures and
- * framebuffers accordingly.
+ * @brief handles creating a framebuffer, with configurable attachments. manages textures and
+ * framebuffer resources accordingly.
  */
-class RenderPass final : public Destructible
+class Framebuffer final : public Destructible
 {
 public:
     /**
-     * @brief description of how the render pass attachments will be configured.
+     * @brief description of how the framebuffers (render pass attachments) will be configured.
      */
     struct Config final
     {
@@ -183,12 +185,30 @@ public:
         bool has_depth_attachment = true;
         // format of the main colour attachment
         Texture::Format main_colour_format = Texture::FORMAT_FLOAT_16X4;
+        // whether the main attachment will be presentable
+        bool presentable_layout = false;
+
+        inline bool operator<(const Config& other) const
+        {
+            return (additional_attachments < other.additional_attachments) &&
+                   (has_depth_attachment < other.has_depth_attachment) &&
+                   (main_colour_format < other.main_colour_format) &&
+                   (presentable_layout < other.presentable_layout);
+        }
+
+        inline bool operator==(const Config& other) const
+        {
+            return (additional_attachments == other.additional_attachments) &&
+                   (has_depth_attachment == other.has_depth_attachment) &&
+                   (main_colour_format == other.main_colour_format) &&
+                   (presentable_layout == other.presentable_layout);
+        }
     };
 
     /**
-     * @brief encpasulates the clear values for a render pass.
+     * @brief encpasulates the clear values for a the render pass.
      */
-    struct ClearValues final
+    struct Clear final
     {
         glm::vec3 colour = { 1, 0, 1 };     // value used for the main colour attachment
         bool transparent = false;           // whether the main colour attachment should be transparent
@@ -198,90 +218,107 @@ public:
     };
 
 private:
-    GPUHandle render_pass = nullptr;     // render pass GPU handle
-    Config output_config;                // output attachment configuration used
-    std::vector<GPUHandle> framebuffers; // framebuffer GPU handles, 1 or matched to the swapchain
-    std::vector<Ref<Texture>> textures;  // images in use by the framebuffers
-    glm::u32vec2 extent;                 // size of the images
-    WeakRef<Swapchain> swapchain;        // optionally, swapchain which this render pass uses
+    Config config;                                                // output attachment configuration used
+    glm::u32vec2 extent;                                          // size of the images
+    std::vector<std::pair<Ref<Texture>, GPUHandle>> framebuffers; // framebuffers and their main images
+    std::vector<Ref<Texture>> additional_textures;                // extra images
+    Ref<Texture> depth_texture;                                   // depth image
+    WeakRef<Swapchain> swapchain;                                 // swapchain to which this is attached
 
 public:
-    DELETE_CONSTRUCTORS(RenderPass);
-    /**
-     * @brief constructs a render pass around a swapchain. instead of being created, images and views
-     * will be retrieved from the swapchain (extra attachments and the depth attachment will still be
-     * managed internally), and the `main_colour_format` of `config` is ignored. the swapchain's extent
-     * determines the extent of the render pass. framebuffers are still created internally.
-     * @param target_swapchain swapchain for which this render pass will be created.
-     * @param config configuration for additional attachments to the render pass.
-     */
-    RenderPass(const WeakRef<Swapchain>& target_swapchain, const Config& config);
-    /**
-     * @brief constructs a render pass independent from the swapchain, based on an extent and attachment
-     * configuration. all required images, views, and framebuffers are created and managed internally.
-     * @param image_extent size of the render pass images in pixels.
-     * @param config configuration for additional attachments to the render pass.
-     */
-    RenderPass(glm::u32vec2 image_extent, const Config& config);
-    ~RenderPass() override;
+    DELETE_CONSTRUCTORS(Framebuffer);
+    Framebuffer(glm::u32vec2 resolution, const Config& attachments);
+    Framebuffer(WeakRef<Swapchain> _swapchain, const Config& attachments);
+    ~Framebuffer() override;
 
-    GPUHandle getRenderPass() const { return render_pass; }
-    Config getOutputConfig() const { return output_config; }
-    /**
-     * @brief fetches a given image from the list of managed images. behaviour is determined by the
-     * number of attachments and whether the render pass was constructed around a swapchain. images are
-     * ordered like so: main colour attachment (required); additional colour attachments (zero or more);
-     * depth attachment (optional)
-     * @param attachment attachment index. if created around a swapchain, the main colour attachment is
-     * absent, and the first attachment will be either an additional colour attachment or the depth
-     * attachment.
-     * @returns texture which backs the attachment, or `nullptr` if `attachment` was out of bounds.
-     */
-    Ref<Texture> getImage(size_t attachment) const;
+    static constexpr Config getDefaultConfig() { return Config{ 3, true, Texture::FORMAT_FLOAT_16X4 }; }
+    static constexpr Config getCanvasConfig() { return Config{ 0, false, Texture::FORMAT_FLOAT_16X4 }; }
+
+    Config getConfig() const { return config; }
     glm::u32vec2 getExtent() const { return extent; }
     /**
-     * @brief checks if this render pass is compatible with rendering into another. used to check if a
-     * material can be rendered in a different render pass to that it was created for. render passes are
-     * considered compatible if their configurations are identical.
-     * @param other other render pass to check against.
-     * @returns `true` if the other render pass is compatible, otherwise `false`.
+     * @brief retrieves an image from the framebuffer.
+     * @param attachment index of the attachment to retrieve. a value of 0 returns the main colour
+     * attachment; a value between 1 and the number of additional attachments (inclusive) will return the
+     * corresponding additional attachment; a value one greater than the number of additional attachments
+     * will return the depth texture.
+     * @returns corresponding image attachment in the framebuffer.
+     */
+    Ref<Texture> getImage(size_t attachment) const;
+    /**
+     * @brief creates a new framebuffer with the same configuration, but unique image resources.
+     * @returns newly created independent framebuffer.
+     */
+    Ref<Framebuffer> duplicate() const;
+    /**
+     * @brief recreates the framebuffers and images at a new specified size.
+     * @param new_extent new size in pixels for images.
+     */
+    void resize(glm::u32vec2 new_extent);
+    /**
+     * @brief checks if a given render pass has a compatible attachment configuration.
+     * @param other render pass to check compatibility with.
+     * @returns `true` if the framebuffer can be rendered inside the render pass, otherwise `false`.
      */
     bool isCompatible(const WeakRef<RenderPass>& other) const;
     /**
-     * @brief creates a new render pass with the same configuration, but unique internal resources.
-     * @returns newly created independent render pass.
+     * @brief checks if a given material has a compatible render pass attachment configuration.
+     * @param other material to check compatibility with.
+     * @returns `true` if the material can be rendered inside the framebuffer, otherwise `false`.
      */
-    Ref<RenderPass> duplicate() const;
+    bool isCompatible(const WeakRef<Material>& other) const;
+
     /**
-     * @brief recreates the framebuffers and images at a new specified size.
-     * @param new_extent new size in pixels for images. ignored if the render pass was created around a
-     * swapchain.
-     */
-    void resize(glm::u32vec2 new_extent = { 0, 0 });
-    /**
-     * @brief starts the render pass in the given command buffer, for draw commands to be issued into
-     * it.
+     * @brief starts a compatible render pass in the given command buffer, rendering into the internally
+     * managed framebuffer images.
      * @param command_buffer command buffer into which rendering commands will be issued.
-     * @param clear_colour colour to use for clearing the main colour buffer.
-     * @param transparent if `true`, the main colour buffer will be cleared to transparency. does not
-     * cause the window to be transparent unless the swapchain supports transparency.
+     * @param clear_values colours and values to use for clearing the framebuffer's images before starting.
      */
-    void begin(WeakRef<DrawCommandBuffer> command_buffer, glm::vec3 clear_colour,
-        bool transparent = false);
+    void bind(WeakRef<DrawCommandBuffer> command_buffer, Clear clear_values);
 
 private:
-    /**
-     * @brief creates the render pass GPU handle.
-     */
-    void createRenderPass();
     /**
      * @brief creates images, image views, and framebuffers.
      */
     void createResources();
     /**
-     * @brief destroys resources created by `createRenderPass` `createResources`.
+     * @brief destroys resources created by `createResources`.
      */
     void destroyResources();
+    GPUHandle getFramebuffer(uint32_t index) const;
+};
+
+/**
+ * @brief handles creating a render pass, with configurable attachments.
+ */
+class RenderPass final : public Destructible
+{
+    friend class RenderServer;
+
+private:
+    GPUHandle render_pass = nullptr; // render pass GPU handle
+    Framebuffer::Config config;      // output attachment configuration used
+
+public:
+    DELETE_CONSTRUCTORS(RenderPass);
+    ~RenderPass() override;
+
+    GPUHandle getRenderPass() const { return render_pass; }
+    Framebuffer::Config getConfig() const { return config; }
+
+    /**
+     * @brief constructs a framebuffer object compatible with rendering to this render pass.
+     * @param extent size of the framebuffer in pixels.
+     * @returns newly created framebuffer based on the same attachment config used by this render pass.
+     */
+    Ref<Framebuffer> createFramebuffer(glm::u32vec2 extent) const;
+
+private:
+    RenderPass(const Framebuffer::Config& conf);
+    /**
+     * @brief creates the render pass GPU handle.
+     */
+    void createRenderPass();
 };
 
 } // namespace HopEngine

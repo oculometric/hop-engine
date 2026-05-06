@@ -19,8 +19,8 @@
 #pragma once
 
 #include "common.h"
+#include "framebuffer.h"
 #include "material.h"
-#include "swapchain.h"
 #include "texture.h"
 
 #include <glm/vec2.hpp>
@@ -97,8 +97,8 @@ public:
         // provides custom values for the resolution of the step's outputs. if either component is zero, the
         // extent of the overall render graph is used for that component instead
         glm::u32vec2 custom_extent{ 0, 0 };
-        // render pass (including framebuffers) into which this step will be rendered
-        Ref<RenderPass> render_pass;
+        // framebuffer into which this step will be rendered
+        Ref<Framebuffer> framebuffer;
         // if `!is_camera`, holds the scene (set 0) uniforms for rendering
         Ref<UniformBlock> scene_uniforms;
 
@@ -141,7 +141,7 @@ public:
          * instead.
          * @returns self-reference for chaining calls.
          */
-        Builder& addCamera(size_t slot, const RenderPass::Config& render_pass_config,
+        Builder& addCamera(size_t slot, const Framebuffer::Config& render_pass_config,
             float size_factor = 1.0f, glm::u32vec2 custom_extent = { 128, 128 });
         /**
          * @brief builer function which adds a camera render step. allows you to specify the resolution of
@@ -181,7 +181,7 @@ public:
          */
         Builder& addPostProcess(const Ref<Shader>& shader,
             const std::map<uint32_t, AttachmentBinding>& texture_bindings,
-            const RenderPass::Config& render_pass_config, float size_factor = 1.0f,
+            const Framebuffer::Config& render_pass_config, float size_factor = 1.0f,
             glm::u32vec2 custom_extent = { 128, 128 });
         /**
          * @brief builer function which adds a post-process render step. allows you to specify the
@@ -366,20 +366,22 @@ private:
      * @param command_buffer draw command buffer into which commands will be issued.
      * @param camera uniform block to be used in the scene (set 0) slot.
      * @param clear_colour clear colour for the main colour attachment.
-     * @param pass render pass to execute commands within.
+     * @param pass framebuffer to render within.
      * @param commands sorted series of draw commands to be executed.
      */
     static void recordCameraStep(WeakRef<DrawCommandBuffer> command_buffer,
-        const WeakRef<UniformBlock>& camera, glm::vec4 clear_colour, const WeakRef<RenderPass>& pass,
+        const WeakRef<UniformBlock>& camera, glm::vec4 clear_colour, const WeakRef<Framebuffer>& pass,
         const std::vector<DrawCommand>& commands);
     /**
      * @brief records draw commands for a post-process render step.
      * @param command_buffer draw command buffer into which commands will be issued.
      * @param material material which will be rendered on a full-screen quad, into its render pass.
      * @param scene_descriptor_set uniform block to be used in the scene (set 0) slot.
+     * @param pass framebuffer to render within.
      */
     static void recordPostProcessStep(WeakRef<DrawCommandBuffer> command_buffer,
-        const WeakRef<Material>& material, const WeakRef<UniformBlock>& scene_descriptor_set);
+        const WeakRef<Material>& material, const WeakRef<UniformBlock>& scene_descriptor_set,
+        const WeakRef<Framebuffer>& pass);
 };
 
 } // namespace HopEngine

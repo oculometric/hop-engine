@@ -20,6 +20,7 @@
 
 #include "common.h"
 #include "engine.h"
+#include "framebuffer.h"
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -78,8 +79,7 @@ private:
     std::vector<Ref<DrawCommandBuffer>> command_buffers;
 
     Ref<Swapchain> swapchain;          // connected to the window surface, provides images to present
-    Ref<RenderPass> offscreen_pass;    // standard render pass used by scene objects and cameras
-    Ref<RenderPass> final_render_pass; // render pass used to draw into the swapchain (colour only)
+    std::map<Framebuffer::Config, Ref<RenderPass>> render_passes;
 
     GPUHandle descriptor_pool = nullptr; // pool from which descriptors and descriptor sets are allocated
     // universally used descriptor set layout for set 0, containing scene and camera information
@@ -163,6 +163,7 @@ public:
      */
     static GPUHandle createPipelineLayout(GPUHandle layout_set_2);
     static GPUHandle getDefaultPipelineLayout() { return getInstance()->default_pipeline_layout; }
+    static GPUHandle getRenderPass(const Framebuffer::Config& for_config);
 
     /**
      * @brief queues up a resource to be freed when the internal garbage collector runs. this should be used
@@ -176,8 +177,6 @@ public:
      */
     static void queueFree(std::function<void()> destructor);
 
-    static WeakRef<RenderPass> getMainRenderPass() { return getInstance()->offscreen_pass; }
-    static WeakRef<RenderPass> getFinalRenderPass() { return getInstance()->final_render_pass; }
     static WeakRef<Texture> getDefaultTexture() { return getInstance()->default_image; }
     static WeakRef<Texture> getDefault3DTexture() { return getInstance()->default_3d_image; }
     static WeakRef<Sampler> getDefaultSampler() { return getInstance()->default_sampler; }

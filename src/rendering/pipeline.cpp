@@ -1,7 +1,7 @@
 #include "command_buffer.h"
+#include "framebuffer.h"
 #include "material.h"
 #include "render_server.h"
-#include "swapchain.h"
 #include "vulkan_helpers.h"
 
 #include <array>
@@ -16,7 +16,7 @@ TO_STRING_IMPL(Pipeline::PolygonMode, 3, VARGS("FILL", "LINE", "BACK"));
 TO_STRING_IMPL(Pipeline::CompareOp, 8,
     VARGS("NEVER", "LESS", "EQUAL", "LESS_EQUAL", "GREATER", "NOT_EQUAL", "GREATER_EQUAL", "ALWAYS"));
 
-Pipeline::Pipeline(Ref<Shader> shader, const Builder& config, Ref<RenderPass> render_pass)
+Pipeline::Pipeline(Ref<Shader> shader, const Builder& config, const Framebuffer::Config& render_pass)
 {
     pipeline_config                              = config;
     std::array<VkDynamicState, 2> dynamic_states = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
@@ -95,9 +95,7 @@ Pipeline::Pipeline(Ref<Shader> shader, const Builder& config, Ref<RenderPass> re
     colour_blend_attachment.alphaBlendOp        = VK_BLEND_OP_ADD;
     colour_attachment_blends.push_back(colour_blend_attachment);
 
-    auto [additional_attachments, has_depth_attachment, main_colour_format] =
-        render_pass->getOutputConfig();
-    for (size_t i = 0; i < additional_attachments; ++i)
+    for (size_t i = 0; i < render_pass.additional_attachments; ++i)
     {
         VkPipelineColorBlendAttachmentState blend_attachment{};
         blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
@@ -141,7 +139,7 @@ Pipeline::Pipeline(Ref<Shader> shader, const Builder& config, Ref<RenderPass> re
     pipeline_create_info.pColorBlendState    = &color_blending;
     pipeline_create_info.pDynamicState       = &dynamic_state_create_info;
     pipeline_create_info.layout              = static_cast<VkPipelineLayout>(shader->getPipelineLayout());
-    pipeline_create_info.renderPass          = static_cast<VkRenderPass>(render_pass->getRenderPass());
+    pipeline_create_info.renderPass          = static_cast<VkRenderPass>(RenderServer::getRenderPass(render_pass));
     pipeline_create_info.subpass             = 0;
 
     CHECK_RESULT(vkCreateGraphicsPipelines,

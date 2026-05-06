@@ -141,7 +141,7 @@ void DrawCommandBuffer::begin(uint32_t index, FrameStats* frame_stats)
 }
 
 void DrawCommandBuffer::startRenderPassInternal(GPUHandle render_pass, GPUHandle framebuffer,
-    glm::u32vec2 extent, const RenderPass::ClearValues& clear_values)
+    glm::u32vec2 extent, const Framebuffer::Clear& clear_values)
 {
     if (!begun)
     {

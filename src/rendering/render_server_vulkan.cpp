@@ -9,8 +9,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include "command_buffer.h"
 #include "engine.h"
+#include "framebuffer.h"
 #include "material.h"
-#include "swapchain.h"
 #include "vulkan_helpers.h"
 
 #include <GLFW/glfw3.h>
@@ -321,7 +321,7 @@ void RenderServer::createDevice()
         int score = queryPhysicalDevice(test_device, required_extensions);
         if (score > best_device_score)
         {
-            best_device = test_device;
+            best_device       = test_device;
             best_device_score = score;
         }
     }
@@ -395,10 +395,11 @@ void RenderServer::initImGui()
     init_info.PipelineCache  = VK_NULL_HANDLE;
     init_info.DescriptorPool = static_cast<VkDescriptorPool>(descriptor_pool);
     Swapchain::getSwapchainSupportInfo(physical_device);
-    init_info.MinImageCount                = Swapchain::computeImageCount();
-    init_info.ImageCount                   = Swapchain::computeImageCount();
-    init_info.Allocator                    = nullptr;
-    init_info.PipelineInfoMain.RenderPass  = static_cast<VkRenderPass>(final_render_pass->getRenderPass());
+    init_info.MinImageCount = Swapchain::computeImageCount();
+    init_info.ImageCount    = Swapchain::computeImageCount();
+    init_info.Allocator     = nullptr;
+    init_info.PipelineInfoMain.RenderPass =
+        static_cast<VkRenderPass>(getRenderPass(swapchain->getFramebuffer()->getConfig()));
     init_info.PipelineInfoMain.Subpass     = 0;
     init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     ImGui_ImplVulkan_Init(&init_info);

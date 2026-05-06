@@ -1,6 +1,5 @@
-#include "swapchain.h"
-
 #include "command_buffer.h"
+#include "framebuffer.h"
 #include "render_server.h"
 #include "vulkan_helpers.h"
 
@@ -71,6 +70,7 @@ Swapchain::Swapchain(glm::u32vec2 new_extent)
     createSwapchain();
     createImageViews();
     createSyncObjects();
+    framebuffer = new Framebuffer(this, Framebuffer::Config{ 0, true });
 
     DBG_INFO("created swapchain at " + std::to_string(new_extent.x) + "x" + std::to_string(new_extent.y) +
              " with " + std::to_string(images.size()) + " images");
@@ -155,6 +155,7 @@ void Swapchain::resize(const glm::u32vec2 new_extent)
     createSwapchain();
     createImageViews();
     createSyncObjects();
+    framebuffer->resize(getExtent());
 }
 
 void Swapchain::setVsync(bool enabled)

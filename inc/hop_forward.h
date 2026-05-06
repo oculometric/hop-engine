@@ -29,6 +29,7 @@ class RenderServer;
 class TransientCommandBuffer;
 class DrawCommandBuffer;
 class Swapchain;
+class Framebuffer;
 class RenderPass;
 class RenderGraph;
 class Pipeline;

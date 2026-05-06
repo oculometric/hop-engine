@@ -567,7 +567,7 @@ void RenderGraph::drawImGuiDebug()
 		ImGui::TableSetColumnIndex(1);
 		ImGui::Text("%s", pass.is_camera ? "camera" : "post-process");		
 		ImGui::TableSetColumnIndex(2);
-		ImGui::Text("%u x %u", pass.render_pass->getExtent().x, pass.render_pass->getExtent().y);
+		ImGui::Text("%u x %u", pass.framebuffer->getExtent().x, pass.framebuffer->getExtent().y);
 		ImGui::TableSetColumnIndex(3);
 		bool b = !pass.skipped;
 		if (ImGui::Checkbox("", &b))
@@ -619,8 +619,8 @@ void RenderGraph::drawImGuiDebug()
 		ImGui::Separator();
 		ImGui::Text("output attachments:");
 		ImGui::LabelText("colour", "always present");
-		ImGui::LabelText("extras", "%zu", pass.render_pass->getOutputConfig().additional_attachments);
-		ImGui::LabelText("depth", pass.render_pass->getOutputConfig().has_depth_attachment ? "present" : "disabled");
+		ImGui::LabelText("extras", "%zu", pass.framebuffer->getConfig().additional_attachments);
+		ImGui::LabelText("depth", pass.framebuffer->getConfig().has_depth_attachment ? "present" : "disabled");
 		ImGui::EndTooltip();
 	}
 	ImGui::Text("hover over a render step for more info");

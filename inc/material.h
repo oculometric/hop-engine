@@ -19,7 +19,7 @@
 #pragma once
 
 #include "common.h"
-#include "swapchain.h"
+#include "framebuffer.h"
 
 #include <glm/glm.hpp>
 #include <map>
@@ -327,9 +327,9 @@ public:
      * provides shader modules, while the render pass provides output attachments.
      * @param shader shader providing modules to bind to the pipeline.
      * @param config rasteriser configuration, see `PipelineBuilder` for details.
-     * @param render_pass render pass in which the pipeline will be drawn (or any compatible render pass).
+     * @param render_pass render pass config in which the pipeline will be drawn.
      */
-    Pipeline(Ref<Shader> shader, const Builder& config, Ref<RenderPass> render_pass);
+    Pipeline(Ref<Shader> shader, const Builder& config, const Framebuffer::Config& render_pass);
     ~Pipeline() override;
 
     /**
@@ -436,7 +436,7 @@ private:
     Ref<Pipeline> pipeline;          // pipeline used by the material for rendering
     Ref<Pipeline> debug_pipeline;    // debug pipeline used when force wireframe mode is enabled
     Ref<UniformBlock> uniforms;      // uniform block providing uniform buffers and texture/sampler bindings
-    Ref<RenderPass> render_pass;     // render pass within which this material will render (or compatible)
+    Framebuffer::Config render_config; // render pass config with which the material is compatible
     // mapping from texture uniform name to its shader binding index, retrieved from shader reflection
     std::map<std::string, uint32_t> texture_name_to_binding;
     // mapping from uniform variable name to its backing buffer offset, retrieved from shader reflection
@@ -455,12 +455,11 @@ public:
      * config and render pass are optional.
      * @param _shader shader to base the material on. an appropriate uniform buffer will be allocated.
      * @param config if provided, configures the pipeline (and thus rasteriser) used for the material.
-     * @param _render_pass specifies the render pass configuration; `nullptr` will cause the default
-     * offscreen render pass to be used. the material can only be rendered in this render pass, or a
-     * compatible one.
+     * @param _render_pass specifies the render pass configuration. the material can only be rendered in
+     * this render pass, or a compatible one.
      */
-    Material(Ref<Shader> _shader, const Pipeline::Builder& config = Pipeline::Builder(),
-        Ref<RenderPass> _render_pass = nullptr);
+    Material(Ref<Shader> _shader, const Pipeline::Builder& config, const Framebuffer::Config& _render_pass);
+    Material(Ref<Shader> _shader, const Pipeline::Builder& config = Pipeline::Builder());
     ~Material() override;
 
     std::string getOrigin() const
@@ -469,7 +468,8 @@ public:
         return origin.empty() ? PTR(this) : origin;
     }
     Ref<Shader> getShader() const;
-    Ref<RenderPass> getRenderPass() const;
+    Framebuffer::Config getRenderPassConfig() const { return render_config; }
+    Pipeline::Builder getPipelineConfig() const { return pipeline->getConfig(); }
     /**
      * @brief creates a copy of the material using the same shader and render pass, but with unique pipeline
      * and uniform buffer resources, which can be modified independently.

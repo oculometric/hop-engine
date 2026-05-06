@@ -101,7 +101,7 @@ Ref<Material> Material::deserialise(const std::string& token_str, const std::str
 
     std::vector<TokenReader::Statement> uniforms;
     std::vector<std::tuple<Ref<Texture>, std::string, Sampler::Filter, Sampler::Address>> texture_bindings;
-    RenderPass::Config custom_config;
+    Framebuffer::Config custom_config;
     bool use_custom_render_pass = false;
 
     Deserialiser deserialiser("error deserialising material '" + origin + "'");
@@ -205,7 +205,7 @@ Ref<Material> Material::deserialise(const std::string& token_str, const std::str
             if (!result.read("has_depth", has_depth))
                 return deserialiser.emitError("invalid value for 'has_depth'", result.offsetOf("has_depth"), token_str);
             use_custom_render_pass = true;
-            custom_config = RenderPass::Config{ extra_outputs, has_depth };
+            custom_config = Framebuffer::Config{ extra_outputs, has_depth };
             return true;
         });
     deserialiser.addStatementAnonymous(
@@ -247,7 +247,11 @@ Ref<Material> Material::deserialise(const std::string& token_str, const std::str
     if (!deserialiser.execute(syntax_tree, token_str)) return nullptr;
 
     if (!main_shader) return nullptr;
-    Ref<Material> material = new Material(main_shader, pipeline_builder, use_custom_render_pass ? new RenderPass({ 1, 1 }, custom_config) : nullptr);
+    Ref<Material> material;
+    if (use_custom_render_pass)
+        material = new Material(main_shader, pipeline_builder, custom_config);
+    else
+        material = new Material(main_shader, pipeline_builder);
     if (!material) return nullptr;
 
     for (const auto& binding : texture_bindings)
@@ -309,7 +313,7 @@ Ref<RenderGraph> RenderGraph::deserialise(const std::string& token_str, const st
     if (syntax_tree.empty()) return nullptr;
 
     std::map<std::string, Ref<Shader>> shaders;
-    std::map<std::string, RenderPass::Config> render_passes;
+    std::map<std::string, Framebuffer::Config> render_passes;
     std::map<std::string, int> step_identifiers;
     Builder builder;
 
@@ -341,7 +345,7 @@ Ref<RenderGraph> RenderGraph::deserialise(const std::string& token_str, const st
                     result.offsetOf(0), token_str);
             uint32_t extra_buffers;
             result.read(1, extra_buffers);
-            render_passes[result.statement.identifier] = RenderPass::Config{ extra_buffers, depth_enabled };
+            render_passes[result.statement.identifier] = Framebuffer::Config{ extra_buffers, depth_enabled };
             return true;
         });
     deserialiser.addStatementNamed(

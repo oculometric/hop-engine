@@ -2,9 +2,6 @@
 
 # v0.54
 - framebuffer/render pass overhaul [120]
-    - the user manages render passes purely according to their specification (actual render pass objects get created automatically)
-    - framebuffers are separate from render passes, but created according to the same spec
-    - swapchain image management happens in framebuffer instead of swapchain
 
 - package manager improvements [240]
     - data blocks should know which package they came from
@@ -18,6 +15,7 @@
 - document serial formats (document by example) [60]
     - scene
     - node style
+- improve render graph builder to allow specifying name in code
 
 # v0.55
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)

@@ -38,6 +38,6 @@
 #include "render_graph.h"
 #include "render_server.h"
 #include "scene.h"
-#include "swapchain.h"
+#include "framebuffer.h"
 #include "texture.h"
 #include "user_interface.h"

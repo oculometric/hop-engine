@@ -2,16 +2,27 @@
 
 #include "command_buffer.h"
 #include "engine.h"
+#include "framebuffer.h"
 #include "render_server.h"
-#include "swapchain.h"
 #include "texture.h"
 
 using namespace HopEngine;
 
-Material::Material(Ref<Shader> _shader, const Pipeline::Builder& config, Ref<RenderPass> _render_pass)
+Material::Material(Ref<Shader> _shader, const Pipeline::Builder& config,
+    const Framebuffer::Config& _render_pass)
 {
-    render_pass = _render_pass ? _render_pass : RenderServer::getMainRenderPass().strong();
-    shader      = _shader;
+    render_config = _render_pass;
+    shader        = _shader;
+    initaliseMaterial(config);
+
+    DBG_VERBOSE("created material from shader '" + shader->getOrigin() + "' with config " +
+                to_string(config.culling_mode) + ", " + to_string(config.polygon_mode));
+}
+
+Material::Material(Ref<Shader> _shader, const Pipeline::Builder& config)
+{
+    render_config = Framebuffer::getDefaultConfig();
+    shader        = _shader;
     initaliseMaterial(config);
 
     DBG_VERBOSE("created material from shader '" + shader->getOrigin() + "' with config " +
@@ -22,10 +33,8 @@ Material::~Material() { DBG_VERBOSE("destroying material '" + getOrigin() + '\''
 
 Ref<Shader> Material::getShader() const { return shader; }
 
-Ref<RenderPass> Material::getRenderPass() const { return render_pass; }
-
 Ref<Material> Material::duplicate() const
-{ return new Material(shader, pipeline->getConfig(), render_pass); }
+{ return new Material(shader, pipeline->getConfig(), render_config); }
 
 void Material::bind(WeakRef<DrawCommandBuffer> command_buffer, bool wireframe_allowed)
 {
@@ -109,9 +118,9 @@ void Material::setUniform(const std::string& name, const void* data, size_t size
 void Material::initaliseMaterial(const Pipeline::Builder& config)
 {
     last_known_shader_hash = shader->getHash();
-    pipeline               = new Pipeline(shader, config, render_pass);
+    pipeline               = new Pipeline(shader, config, render_config);
     debug_pipeline =
-        new Pipeline(shader, Pipeline::Builder().polygonMode(Pipeline::POLYGON_LINE), render_pass);
+        new Pipeline(shader, Pipeline::Builder().polygonMode(Pipeline::POLYGON_LINE), render_config);
 
     const auto layout = shader->getShaderLayout();
     uniforms          = new UniformBlock(layout);
