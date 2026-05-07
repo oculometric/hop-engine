@@ -2,6 +2,7 @@
 
 # v0.54
 - improve render graph builder to allow specifying name in code
+- overhaul obj loading
 
 - package manager improvements [240]
     - data blocks should know which package they came from

@@ -74,54 +74,35 @@ public:
     };
 
     /**
-     * @brief describes a step in the render chain. may contribute either as a camera step (rendering
-     * objects in the scene) or a post-process step (rendering a full-screen quad, with attachment
-     * bindings). should not be initialised manually, instead use the `RenderGraph::Builder` and its
-     * `add...` functions.
-     */
-    struct Step final
-    {
-        bool is_camera = true; // whether the step is a camera or post-process step
-        // if `is_camera`, reflects the camera index in the scene to which this step should bind
-        size_t camera_slot = 0;
-        // if `!is_camera`, holds the material used for post-processing
-        Ref<Material> material;
-        // if `!is_camera`, holds a mapping of material texture binding indices to output attachments from
-        // previous `Step`s
-        std::map<uint32_t, AttachmentBinding> texture_bindings;
-
-        // scales the resolution of the overall render graph, and thus the extent of the output textures,
-        // allowing for smaller (e.g. half-resolution) steps. if this value is less than or equal to zero,
-        // `custom_extent` is used instead
-        float resolution_scale = 1.0f;
-        // provides custom values for the resolution of the step's outputs. if either component is zero, the
-        // extent of the overall render graph is used for that component instead
-        glm::u32vec2 custom_extent{ 0, 0 };
-        // framebuffer into which this step will be rendered
-        Ref<Framebuffer> framebuffer;
-        // if `!is_camera`, holds the scene (set 0) uniforms for rendering
-        Ref<UniformBlock> scene_uniforms;
-
-        std::string name; // text identifier for the step, making retrieval easier
-        // if `true`, this step will not be executed, and attachment bindings targeting it will be
-        // redirected to the previous step
-        bool skipped = false;
-
-        ~Step();
-    };
-
-    /**
      * @brief builder class for the render graph which handles constructing and chaining together render
      * steps.
      */
     struct Builder final
     {
+    public:
+        /**
+         * @brief builder class for constructing render graph steps.
+         */
+        struct StepDescription final
+        {
+            std::string name;
+            bool is_camera = true;
+            float resolution_scale = 1.0f;
+            glm::u32vec2 custom_extent = { 128, 128 };
+            Framebuffer::Config framebuffer_config = Framebuffer::getDefaultConfig();
+            size_t camera_slot = 0;
+            Ref<Shader> shader = nullptr;
+            std::map<uint32_t, AttachmentBinding> texture_bindings;
+        };
+
+    private:
         // list of render steps in the order they will be rendered
-        std::vector<Step> execution_steps;
+        std::vector<StepBuilder> execution_steps;
         // filtering mode for when the final output attachment is being drawn to the swapchain, useful for
         // pixel-art post processing
         Sampler::Filter screen_filtering = Sampler::FILTER_LINEAR;
 
+    public:
         /**
          * @brief builer function which adds a camera render step. default render pass config (3 extra +
          * depth) is used, along with default resolution.
@@ -204,6 +185,44 @@ public:
             screen_filtering = value;
             return *this;
         }
+    };
+
+private:
+    /**
+     * @brief describes a step in the render chain. may contribute either as a camera step (rendering
+     * objects in the scene) or a post-process step (rendering a full-screen quad, with attachment
+     * bindings). should not be initialised manually, instead use the `RenderGraph::Builder` and its
+     * `add...` functions.
+     */
+    struct Step final
+    {
+        bool is_camera = true; // whether the step is a camera or post-process step
+        // if `is_camera`, reflects the camera index in the scene to which this step should bind
+        size_t camera_slot = 0;
+        // if `!is_camera`, holds the material used for post-processing
+        Ref<Material> material;
+        // if `!is_camera`, holds a mapping of material texture binding indices to output attachments from
+        // previous `Step`s
+        std::map<uint32_t, AttachmentBinding> texture_bindings;
+
+        // scales the resolution of the overall render graph, and thus the extent of the output textures,
+        // allowing for smaller (e.g. half-resolution) steps. if this value is less than or equal to zero,
+        // `custom_extent` is used instead
+        float resolution_scale = 1.0f;
+        // provides custom values for the resolution of the step's outputs. if either component is zero, the
+        // extent of the overall render graph is used for that component instead
+        glm::u32vec2 custom_extent{ 0, 0 };
+        // framebuffer into which this step will be rendered
+        Ref<Framebuffer> framebuffer;
+        // if `!is_camera`, holds the scene (set 0) uniforms for rendering
+        Ref<UniformBlock> scene_uniforms;
+
+        std::string name; // text identifier for the step, making retrieval easier
+        // if `true`, this step will not be executed, and attachment bindings targeting it will be
+        // redirected to the previous step
+        bool skipped = false;
+
+        ~Step();
     };
 
 public:
