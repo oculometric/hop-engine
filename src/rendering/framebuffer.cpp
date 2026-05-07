@@ -105,11 +105,13 @@ void Framebuffer::createResources()
         framebuffer_create_info.height          = extent.y;
         framebuffer_create_info.layers          = 1;
 
+        VkFramebuffer fb;
         CHECK_RESULT(vkCreateFramebuffer,
-            (static_cast<VkDevice>(RenderServer::getDevice()), &framebuffer_create_info, nullptr,
-                reinterpret_cast<VkFramebuffer*>(&framebuffers[i])),
+            (static_cast<VkDevice>(RenderServer::getDevice()), &framebuffer_create_info, nullptr, &fb),
             FAULT,
             ;);
+
+        framebuffers[i] = { main_tex, fb };
     }
 }
 

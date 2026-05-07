@@ -78,8 +78,10 @@ private:
     // array of graphics command buffers used for rendering, one per frame-in-flight
     std::vector<Ref<DrawCommandBuffer>> command_buffers;
 
-    Ref<Swapchain> swapchain;          // connected to the window surface, provides images to present
-    std::map<Framebuffer::Config, Ref<RenderPass>> render_passes;
+    Ref<Swapchain> swapchain; // connected to the window surface, provides images to present
+    std::map<Framebuffer::Config, Ref<RenderPass>,
+        decltype([](const Framebuffer::Config& a, const Framebuffer::Config& b) { return a < b; })>
+        render_passes;
 
     GPUHandle descriptor_pool = nullptr; // pool from which descriptors and descriptor sets are allocated
     // universally used descriptor set layout for set 0, containing scene and camera information

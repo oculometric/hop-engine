@@ -70,7 +70,7 @@ Swapchain::Swapchain(glm::u32vec2 new_extent)
     createSwapchain();
     createImageViews();
     createSyncObjects();
-    framebuffer = new Framebuffer(this, Framebuffer::Config{ 0, true });
+    framebuffer = new Framebuffer(this, Framebuffer::getSwapchainConfig());
 
     DBG_INFO("created swapchain at " + std::to_string(new_extent.x) + "x" + std::to_string(new_extent.y) +
              " with " + std::to_string(images.size()) + " images");

@@ -179,7 +179,7 @@ void RenderServer::createInstance(bool debug)
     create_info.enabledExtensionCount   = static_cast<uint32_t>(extensions_to_enable.size());
     create_info.ppEnabledExtensionNames = extensions_to_enable.data();
     DBG_VERBOSE("enabling " + std::to_string(create_info.enabledExtensionCount) + " extensions:");
-    DBG_WARNING("found " + std::to_string(glfw_extension_count) + " GLFW extensions.");
+    DBG_VERBOSE("found " + std::to_string(glfw_extension_count) + " GLFW extensions.");
     for (size_t i = 0; i < create_info.enabledExtensionCount; ++i)
         DBG_VERBOSE(create_info.ppEnabledExtensionNames[i]);
 

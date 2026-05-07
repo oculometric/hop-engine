@@ -190,10 +190,15 @@ public:
 
         inline bool operator<(const Config& other) const
         {
-            return (additional_attachments < other.additional_attachments) &&
-                   (has_depth_attachment < other.has_depth_attachment) &&
-                   (main_colour_format < other.main_colour_format) &&
-                   (presentable_layout < other.presentable_layout);
+            if (additional_attachments < other.additional_attachments) return true;
+            if (additional_attachments > other.additional_attachments) return false;
+            if (has_depth_attachment < other.has_depth_attachment) return true;
+            if (has_depth_attachment > other.has_depth_attachment) return false;
+            if (main_colour_format < other.main_colour_format) return true;
+            if (main_colour_format > other.main_colour_format) return false;
+            if (presentable_layout < other.presentable_layout) return true;
+            if (presentable_layout > other.presentable_layout) return false;
+            return false;
         }
 
         inline bool operator==(const Config& other) const
@@ -233,6 +238,7 @@ public:
 
     static constexpr Config getDefaultConfig() { return Config{ 3, true, Texture::FORMAT_FLOAT_16X4 }; }
     static constexpr Config getCanvasConfig() { return Config{ 0, false, Texture::FORMAT_FLOAT_16X4 }; }
+    static constexpr Config getSwapchainConfig() { return Config{ 0, true, Texture::FORMAT_SWAPCHAIN, true }; }
 
     Config getConfig() const { return config; }
     glm::u32vec2 getExtent() const { return extent; }
