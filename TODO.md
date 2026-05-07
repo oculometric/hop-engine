@@ -1,7 +1,7 @@
 # TODO
 
 # v0.54
-- framebuffer/render pass overhaul [120]
+- improve render graph builder to allow specifying name in code
 
 - package manager improvements [240]
     - data blocks should know which package they came from
@@ -15,7 +15,6 @@
 - document serial formats (document by example) [60]
     - scene
     - node style
-- improve render graph builder to allow specifying name in code
 
 # v0.55
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)

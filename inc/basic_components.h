@@ -36,6 +36,7 @@ class CameraComponent final : public Component
 private:
     Ref<UniformBlock> uniforms;        // uniform buffer, initialised to match `SceneUniforms` for set 0
     Ref<UniformBlock> object_uniforms; // uniform buffer, initialised to match `ObjectUniforms` for set 1
+    Ref<Material> camera_gizmo;
 
 public:
     float fov       = 90.0f;  // vertical field of view
@@ -107,6 +108,7 @@ class LightComponent final : public Component
 {
 private:
     Ref<UniformBlock> object_uniforms; // uniform buffer, initialised to match `ObjectUniforms` for set 1
+    Ref<Material> light_gizmo;
 
 public:
     /**

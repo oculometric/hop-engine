@@ -135,7 +135,7 @@ FrameStats RenderServer::draw()
 
     if (getInstance()->resize()) return {};
 
-    DBG_VERBOSE("drawing frame " + std::to_string(Engine::getFrameCount()));
+    // DBG_VERBOSE("drawing frame " + std::to_string(Engine::getFrameCount()));
 
     FrameStats stats{};
 

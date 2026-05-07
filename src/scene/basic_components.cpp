@@ -58,7 +58,10 @@ std::vector<DrawCommand> CameraComponent::getDrawCommands()
     u->id             = static_cast<int>(reinterpret_cast<size_t>(this));
     u->model_to_world = getTransform().getMatrix();
 
-    return { DrawCommand(Engine::loadMaterial("res://engine/materials/camera_gizmo.hmat"),
+    if (!camera_gizmo)
+        camera_gizmo = Engine::loadMaterial("res://engine/materials/camera_gizmo.hmat");
+
+    return { DrawCommand(camera_gizmo,
         RenderServer::getQuad(), object_uniforms)
             .priority(-1000) };
 }
@@ -103,7 +106,10 @@ std::vector<DrawCommand> LightComponent::getDrawCommands()
     u->id             = static_cast<int>(reinterpret_cast<size_t>(this));
     u->model_to_world = getTransform().getMatrix();
 
-    return { DrawCommand(Engine::loadMaterial("res://engine/materials/light_gizmo.hmat"),
+    if (!light_gizmo)
+        light_gizmo = Engine::loadMaterial("res://engine/materials/light_gizmo.hmat");
+
+    return { DrawCommand(light_gizmo,
         RenderServer::getQuad(), object_uniforms)
             .priority(-1000) };
 }

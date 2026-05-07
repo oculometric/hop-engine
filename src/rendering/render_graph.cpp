@@ -167,8 +167,8 @@ void RenderGraph::setSkipStep(const std::string& name, const bool skip)
 
 void RenderGraph::resizeBuffers(glm::u32vec2 new_extent)
 {
-    DBG_INFO("resizing render graph");
     if (expected_extent == new_extent) return;
+    DBG_VERBOSE("resizing render graph");
     for (Step& step : execution_steps)
     {
         if (step.resolution_scale > 0.0f)
