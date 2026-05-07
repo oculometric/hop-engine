@@ -88,3 +88,4 @@
 - skinned mesh support
 - networking kit
 - Steamworks integration
+- animated images

@@ -116,4 +116,5 @@ void Editor::update(float delta_time)
 void Editor::drawImGui()
 {
     node_view->drawImGuiDebug();
+    Engine::drawImGuiDebug();
 }
