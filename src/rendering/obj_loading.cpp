@@ -1,7 +1,7 @@
 #include "mesh.h"
 #include "package.h"
 
-#include <sstream>
+#include <charconv>
 
 using namespace HopEngine;
 
@@ -11,23 +11,6 @@ struct FaceCorner
     uint16_t uv;
     uint16_t vn;
 };
-
-// splits a formatted OBJ face corner into its component indices
-static FaceCorner splitOBJFaceCorner(const std::string& str)
-{
-    FaceCorner fci               = { 0, 0, 0 };
-    const size_t first_break_ind = str.find('/');
-    fci.co                       = static_cast<uint16_t>(stoi(str.substr(0, first_break_ind)) - 1);
-    if (first_break_ind == std::string::npos) return fci;
-    const size_t second_break_ind = str.find('/', first_break_ind + 1);
-    if (second_break_ind != first_break_ind + 1)
-        fci.uv = static_cast<uint16_t>(
-            stoi(str.substr(first_break_ind + 1, second_break_ind - first_break_ind)) - 1);
-    fci.vn = static_cast<uint16_t>(
-        stoi(str.substr(second_break_ind + 1, str.find('/', second_break_ind + 1) - second_break_ind)) - 1);
-
-    return fci;
-}
 
 struct FaceCornerReference
 {
@@ -66,78 +49,160 @@ static glm::vec3 computeTangent(glm::vec3 co_a, glm::vec3 co_b, glm::vec3 co_c, 
     // [ AB.z  AC.z  0 ]     [ T.z  B.z  N.z ]   [ 0         0         1 ]
     //
 
-    vec_mat = (vec_mat)*glm::inverse((uv_mat));
+    vec_mat = vec_mat * glm::inverse((uv_mat));
 
     return glm::normalize(glm::vec3{ vec_mat[0] }); // extract tangent
 }
 
+bool isWhitespace(char c) { return (c == ' ' || c == '\r' || c == '\n' || c == '\t'); }
+bool isNewline(char c) { return (c == '\r' || c == '\n'); }
+
 bool Mesh::readOBJ(const DataBlock& data, std::vector<Vertex>& verts, std::vector<uint16_t>& inds)
 {
-    const auto string_data = std::string(reinterpret_cast<const char*>(data.data()), data.size());
-    auto stream            = std::stringstream(string_data);
-
     // vectors to load data into
-    std::vector<glm::vec3> tmp_co;
-    std::vector<glm::vec3> tmp_cl;
-    std::vector<FaceCorner> tmp_fc;
-    std::vector<glm::vec2> tmp_uv;
-    std::vector<glm::vec3> tmp_vn;
+    std::vector<std::pair<glm::vec3, glm::vec3>> tmp_position_colour;
+    std::vector<glm::vec3> tmp_normal;
+    std::vector<glm::vec2> tmp_texcoord;
+    std::vector<FaceCorner> tmp_corner;
 
-    // temporary locations for reading data to
-    std::string tmps;
-    glm::vec3 tmp3;
-    glm::vec3 tmp2;
+    // parsing state
+    std::string tmp_str;
+    tmp_str.reserve(32);
+    size_t i;
 
-    // repeat for every line in the file
-    std::string line;
-    while (getline(stream, line))
+    auto getChunk = [&]() -> void
     {
-        auto file = std::stringstream(line);
-        file >> tmps;
-        if (tmps == "v")
+        tmp_str.clear();
+        bool started = false;
+        while (i < data.size() && !isNewline(data[i]))
         {
-            // read a vertex coordinate
-            file >> tmp3.x;
-            file >> tmp3.y;
-            file >> tmp3.z;
-            tmp_co.push_back(tmp3);
-            auto peeked = file.peek();
-            if (peeked != -1 && peeked != '\n' && peeked != '\r')
+            if (isWhitespace(data[i]))
             {
-                file >> tmp3.x;
-                file >> tmp3.y;
-                file >> tmp3.z;
-                tmp_cl.push_back(tmp3);
+                if (started) return;
+                else
+                {
+                    ++i;
+                    continue;
+                }
             }
             else
             {
-                tmp_cl.emplace_back(1, 1, 1);
+                started = true;
+                tmp_str.push_back(data[i]);
+                ++i;
             }
         }
-        else if (tmps == "vn")
+    };
+
+    auto splitCorner = [&]() -> FaceCorner
+    {
+        FaceCorner fci = { 0, 0, 0 };
+
+        const size_t first_break_ind = tmp_str.find('/');
+        std::from_chars(tmp_str.data(), tmp_str.data() + glm::min(first_break_ind, tmp_str.size()), fci.co);
+        --fci.co;
+        if (first_break_ind == std::string::npos) return fci;
+
+        const size_t second_break_ind = tmp_str.find('/', first_break_ind + 1);
+        if (second_break_ind != first_break_ind + 1)
         {
-            // read a face corner normal
-            file >> tmp3.x;
-            file >> tmp3.y;
-            file >> tmp3.z;
-            tmp_vn.push_back(tmp3);
+            std::from_chars(tmp_str.data() + first_break_ind + 1,
+                tmp_str.data() + glm::min(second_break_ind, tmp_str.size()), fci.uv);
+            --fci.uv;
         }
-        else if (tmps == "vt")
+        if (second_break_ind == std::string::npos) return fci;
+        std::from_chars(tmp_str.data() + second_break_ind + 1, tmp_str.data() + tmp_str.size(), fci.vn);
+        --fci.vn;
+
+        return fci;
+    };
+
+    for (i = 0; i < data.size(); ++i)
+    {
+        char c = static_cast<char>(data[i]);
+        // if we detect a comment, skip to the next line
+        if (c == '#')
         {
-            // read a face corner uv (texture coordinate)
-            file >> tmp2.x;
-            file >> tmp2.y;
-            tmp_uv.emplace_back(tmp2);
+            while (i < data.size() && !isNewline(data[i])) ++i;
+            continue;
         }
-        else if (tmps == "f")
+
+        // if we're looking for the start of a command, skip until we see something of interest
+        if (isWhitespace(c)) continue;
+        if (c == 'v' && (i + 1) < data.size() && isWhitespace(data[i + 1]))
         {
-            // read a face (only supports triangles)
-            file >> tmps;
-            tmp_fc.push_back(splitOBJFaceCorner(tmps));
-            file >> tmps;
-            tmp_fc.push_back(splitOBJFaceCorner(tmps));
-            file >> tmps;
-            tmp_fc.push_back(splitOBJFaceCorner(tmps));
+            // we found a vertex command
+            ++i;
+            glm::vec3 position = { 0, 0, 0 };
+            glm::vec3 colour   = { 1, 1, 1 };
+
+            getChunk();
+            std::from_chars(tmp_str.data(), tmp_str.data() + tmp_str.size(), position.x);
+            getChunk();
+            std::from_chars(tmp_str.data(), tmp_str.data() + tmp_str.size(), position.y);
+            getChunk();
+            std::from_chars(tmp_str.data(), tmp_str.data() + tmp_str.size(), position.z);
+
+            getChunk();
+            std::from_chars(tmp_str.data(), tmp_str.data() + tmp_str.size(), colour.x);
+            getChunk();
+            std::from_chars(tmp_str.data(), tmp_str.data() + tmp_str.size(), colour.y);
+            getChunk();
+            std::from_chars(tmp_str.data(), tmp_str.data() + tmp_str.size(), colour.z);
+
+            tmp_position_colour.emplace_back(position, colour);
+            continue;
+        }
+        else if (c == 'f' && (i + 1) < data.size() && isWhitespace(data[i + 1]))
+        {
+            // we found a face corner command
+            ++i;
+            getChunk();
+            tmp_corner.push_back(splitCorner());
+            getChunk();
+            tmp_corner.push_back(splitCorner());
+            getChunk();
+            tmp_corner.push_back(splitCorner());
+            continue;
+        }
+        else if (c == 'v' && (i + 2) < data.size() && data[i + 1] == 'n' && isWhitespace(data[i + 2]))
+        {
+            // we found a vertex normal command
+            i += 2;
+            glm::vec3 normal = { 0, 0, 0 };
+            getChunk();
+            std::from_chars(tmp_str.data(), tmp_str.data() + tmp_str.size(), normal.x);
+            getChunk();
+            std::from_chars(tmp_str.data(), tmp_str.data() + tmp_str.size(), normal.y);
+            getChunk();
+            std::from_chars(tmp_str.data(), tmp_str.data() + tmp_str.size(), normal.z);
+
+            tmp_normal.emplace_back(normal);
+            continue;
+        }
+        else if (c == 'v' && (i + 2) < data.size() && data[i + 1] == 't' && isWhitespace(data[i + 2]))
+        {
+            // we found a texture coordinate command
+            i += 2;
+            glm::vec2 texcoord = { 0, 0 };
+            getChunk();
+            std::from_chars(tmp_str.data(), tmp_str.data() + tmp_str.size(), texcoord.x);
+            getChunk();
+            std::from_chars(tmp_str.data(), tmp_str.data() + tmp_str.size(), texcoord.y);
+
+            tmp_texcoord.emplace_back(texcoord);
+            continue;
+        }
+        else if ((c == 'o' || c == 's') && (i + 1) < data.size() && isWhitespace(data[i + 1]))
+        {
+            // we found an object command. ignore it
+            while (i < data.size() && data[i] != '\r' && data[i] != '\n') ++i;
+            continue;
+        }
+        else
+        {
+            DBG_ERROR("error reading OBJ file, invalid command");
+            return false;
         }
     }
 
@@ -145,13 +210,13 @@ bool Mesh::readOBJ(const DataBlock& data, std::vector<Vertex>& verts, std::vecto
     // normal/uv index was for that face corner this allows us to tell when we should split a vertex (i.e.
     // if it has already been used by another face corner but which had a different normal and/or a
     // different uv)
-    std::vector<std::vector<FaceCornerReference>> fc_normal_uses(tmp_co.size(),
+    std::vector<std::vector<FaceCornerReference>> fc_normal_uses(tmp_position_colour.size(),
         std::vector<FaceCornerReference>());
 
     verts.clear();
     inds.clear();
 
-    for (auto [co, uv, vn] : tmp_fc)
+    for (auto [co, uv, vn] : tmp_corner)
     {
         bool found_matching_vertex = false;
         uint16_t match             = 0;
@@ -169,10 +234,10 @@ bool Mesh::readOBJ(const DataBlock& data, std::vector<Vertex>& verts, std::vecto
         else
         {
             Vertex new_vert;
-            new_vert.position = glm::vec4(tmp_co[co], 1);
-            new_vert.colour   = glm::vec4(tmp_cl[co], 0);
-            if (vn < tmp_vn.size()) new_vert.normal = glm::vec4(tmp_vn[vn], 0);
-            if (uv < tmp_uv.size()) new_vert.uv = glm::vec3{ tmp_uv[uv], 0 };
+            new_vert.position = glm::vec4(tmp_position_colour[co].first, 1);
+            new_vert.colour   = glm::vec4(tmp_position_colour[co].second, 0);
+            if (vn < tmp_normal.size()) new_vert.normal = glm::vec4(tmp_normal[vn], 0);
+            if (uv < tmp_texcoord.size()) new_vert.uv = glm::vec3{ tmp_texcoord[uv], 0 };
 
             uint16_t new_index = static_cast<uint16_t>(verts.size());
             fc_normal_uses[co].push_back(FaceCornerReference{ vn, uv, new_index });
@@ -182,7 +247,7 @@ bool Mesh::readOBJ(const DataBlock& data, std::vector<Vertex>& verts, std::vecto
         }
     }
 
-    if (tmp_vn.empty())
+    if (tmp_normal.empty())
     {
         for (size_t i = 0; i < inds.size() - 2; i += 3)
         {

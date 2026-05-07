@@ -1,8 +1,6 @@
 # TODO
 
 # v0.54
-- overhaul obj loading
-
 - package manager improvements [240]
     - data blocks should know which package they came from
     - package manager should not have to load the entire file from disk at once, only an index of contents

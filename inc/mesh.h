@@ -82,6 +82,14 @@ public:
      */
     static Ref<Mesh> loadMesh(const std::string& path);
     /**
+     * @brief extracts arrays of vertices and indices from an OBJ data file.
+     * @param data byte array containing the OBJ mesh file.
+     * @param verts output array for the mesh vertices. cleared during mesh loading.
+     * @param inds output array for the mesh indices. cleared during mesh loading.
+     * @returns `true` if the mesh was loaded successfully, otherwise `false`.
+     */
+    static bool readOBJ(const DataBlock& data, std::vector<Vertex>& verts, std::vector<uint16_t>& inds);
+    /**
      * @brief converts an OBJ mesh into a binary mesh format, often saving more than 30% in storage cost for
      * large meshes as well as significantly reducing loading times.
      * @param obj_path path to the target OBJ input mesh.
@@ -137,14 +145,6 @@ private:
      */
     static bool decodeBinaryMesh(const DataBlock& data, std::vector<Vertex>& verts,
         std::vector<uint16_t>& inds);
-    /**
-     * @brief extracts arrays of vertices and indices from an OBJ data file.
-     * @param data byte array containing the OBJ mesh file.
-     * @param verts output array for the mesh vertices. cleared during mesh loading.
-     * @param inds output array for the mesh indices. cleared during mesh loading.
-     * @returns `true` if the mesh was loaded successfully, otherwise `false`.
-     */
-    static bool readOBJ(const DataBlock& data, std::vector<Vertex>& verts, std::vector<uint16_t>& inds);
 
     /**
      * @brief updates the internal data of the mesh, resizing the GPU buffers if needed.

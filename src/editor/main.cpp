@@ -40,6 +40,8 @@ void printUsage()
               << std::endl;
 }
 
+bool readOBJ(const DataBlock& data, std::vector<Mesh::Vertex>& verts, std::vector<uint16_t>& inds);
+
 int main(int nargs, const char** cargs)
 {
     printLicense();
@@ -82,9 +84,7 @@ int main(int nargs, const char** cargs)
     }
 
     Engine::init(params);
-
     Engine::startApplication<Editor>();
-
     Engine::destroy();
 
     return 0;
