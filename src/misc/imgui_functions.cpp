@@ -597,7 +597,7 @@ void RenderGraph::drawImGuiDebug()
 			{
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
-				ImGui::Text("%u", tex_id);
+				ImGui::Text("%s", tex_id.c_str());
 				ImGui::TableSetColumnIndex(1);
 				ImGui::Text("%zu", bind.step_index);
 				ImGui::TableSetColumnIndex(2);

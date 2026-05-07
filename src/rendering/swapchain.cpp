@@ -169,6 +169,7 @@ void Swapchain::setVsync(bool enabled)
     createSwapchain();
     createImageViews();
     createSyncObjects();
+    framebuffer = new Framebuffer(this, Framebuffer::getSwapchainConfig());
 }
 
 void Swapchain::createSwapchain()

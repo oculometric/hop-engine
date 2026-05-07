@@ -13,92 +13,109 @@
 
 using namespace HopEngine;
 
-RenderGraph::Step::~Step() {}
-
-RenderGraph::Builder& RenderGraph::Builder::addCamera(const size_t slot)
-{ return addCamera(slot, Framebuffer::getDefaultConfig()); }
-
-RenderGraph::Builder& RenderGraph::Builder::addCamera(const size_t slot,
-    const Framebuffer::Config& render_pass_config, float size_factor, glm::u32vec2 custom_extent)
+RenderGraph::Builder& RenderGraph::Builder::addCameraStep(const std::string& name, size_t slot)
 {
-    Step step;
-    step.is_camera        = true;
-    step.camera_slot      = slot;
-    step.resolution_scale = size_factor;
-    step.custom_extent    = custom_extent;
-    const glm::vec2 size  = RenderServer::getFramebufferSize();
-    if (size_factor > 0.0f)
-        step.framebuffer = new Framebuffer(
-            { static_cast<uint32_t>(size.x * size_factor), static_cast<uint32_t>(size.y * size_factor) },
-            render_pass_config);
-    else
-        step.framebuffer =
-            new Framebuffer({ custom_extent.x ? custom_extent.x : static_cast<uint32_t>(size.x),
-                                custom_extent.y ? custom_extent.y : static_cast<uint32_t>(size.y) },
-                render_pass_config);
+    StepDescription step;
+    step.name = name;
+    step.is_camera = true;
+    step.camera_slot = slot;
     execution_steps.push_back(step);
     return *this;
 }
 
-RenderGraph::Builder& RenderGraph::Builder::addCamera(const size_t slot, const float size_factor,
-    const glm::u32vec2 custom_extent)
-{ return addCamera(slot, Framebuffer::getDefaultConfig(), size_factor, custom_extent); }
-
-RenderGraph::Builder& RenderGraph::Builder::addPostProcess(const Ref<Shader>& shader,
-    const std::map<uint32_t, AttachmentBinding>& texture_bindings)
-{ return addPostProcess(shader, texture_bindings, Framebuffer::getCanvasConfig()); }
-
-RenderGraph::Builder& RenderGraph::Builder::addPostProcess(const Ref<Shader>& shader,
-    const std::map<uint32_t, AttachmentBinding>& texture_bindings,
-    const Framebuffer::Config& render_pass_config, const float size_factor,
-    const glm::u32vec2 custom_extent)
+RenderGraph::Builder& RenderGraph::Builder::addPostprocessStep(const std::string& name, Ref<Shader> shader)
 {
-    Step step;
-    step.is_camera        = false;
-    step.resolution_scale = size_factor;
-    step.custom_extent    = custom_extent;
-    const glm::vec2 size  = RenderServer::getFramebufferSize();
-    if (size_factor > 0.0f)
-        step.framebuffer = new Framebuffer(
-            { static_cast<uint32_t>(size.x * size_factor), static_cast<uint32_t>(size.y * size_factor) },
-            render_pass_config);
-    else
-        step.framebuffer =
-            new Framebuffer({ custom_extent.x ? custom_extent.x : static_cast<uint32_t>(size.x),
-                                custom_extent.y ? custom_extent.y : static_cast<uint32_t>(size.y) },
-                render_pass_config);
-    step.material         = new Material(shader,
-        Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthWrite(false),
-        render_pass_config);
-    step.texture_bindings = texture_bindings;
-    step.scene_uniforms   = RenderServer::createSceneUniforms();
+    StepDescription step;
+    step.name = name;
+    step.is_camera = false;
+    step.shader             = shader;
+    step.framebuffer_config = Framebuffer::getCanvasConfig();
     execution_steps.push_back(step);
     return *this;
 }
 
-RenderGraph::Builder& RenderGraph::Builder::addPostProcess(const Ref<Shader>& shader,
-    const std::map<uint32_t, AttachmentBinding>& texture_bindings, const float size_factor,
-    const glm::u32vec2 custom_extent)
+RenderGraph::Builder& RenderGraph::Builder::configureFramebuffer(const Framebuffer::Config& config)
 {
-    return addPostProcess(shader, texture_bindings, Framebuffer::getCanvasConfig(), size_factor,
-        custom_extent);
+    if (execution_steps.empty())
+        DBG_WARNING("attempted to modify a render graph builder step, but there are no steps to modify!");
+    else
+        execution_steps.rbegin()->framebuffer_config = config;
+    return *this;
+}
+
+RenderGraph::Builder& RenderGraph::Builder::setResolution(float scale)
+{
+    if (execution_steps.empty())
+        DBG_WARNING("attempted to modify a render graph builder step, but there are no steps to modify!");
+    else
+        execution_steps.rbegin()->resolution_scale = scale;
+    return *this;
+}
+
+RenderGraph::Builder& RenderGraph::Builder::setResolution(glm::u32vec2 extent)
+{
+    if (execution_steps.empty())
+        DBG_WARNING("attempted to modify a render graph builder step, but there are no steps to modify!");
+    else
+    {
+        execution_steps.rbegin()->resolution_scale = 0.0f;
+        execution_steps.rbegin()->custom_extent    = extent;
+    }
+    return *this;
+}
+
+RenderGraph::Builder& RenderGraph::Builder::bindTexture(const std::string& texture_uniform,
+    const TextureInput& binding)
+{
+    if (execution_steps.empty() || execution_steps.rbegin()->is_camera)
+        DBG_WARNING("attempted to modify a render graph builder step, but there are no steps to modify!");
+    else
+        execution_steps.rbegin()->texture_bindings[texture_uniform] = binding;
+    return *this;
+}
+
+RenderGraph::Builder& RenderGraph::Builder::filtering(Sampler::Filter value)
+{
+    screen_filtering = value;
+    return *this;
 }
 
 RenderGraph::RenderGraph(const Builder& config)
 {
+    // set up passthrough material
     passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough.glsl"),
-        Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false), { 0, true });
+        Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false), Framebuffer::getSwapchainConfig());
     passthrough->setSampler(0, Engine::getSampler(config.screen_filtering, Sampler::ADDRESS_CLAMP_EDGE));
-    execution_steps = config.execution_steps;
-    if (!config.execution_steps.empty())
-        expected_extent = config.execution_steps[execution_steps.size() - 1].framebuffer->getExtent();
+
+    // ensure there is at least one render step
+    if (config.execution_steps.empty()) execution_steps.push_back({});
+
+    // create render steps according to the step descriptions
+    for (const auto& step_desc : config.execution_steps)
+    {
+        Step step;
+        step.is_camera        = step_desc.is_camera;
+        step.resolution_scale = step_desc.resolution_scale;
+        step.custom_extent    = step_desc.custom_extent;
+        step.framebuffer      = new Framebuffer({ 1, 1 }, step_desc.framebuffer_config);
+        if (step_desc.is_camera) step.camera_slot = step_desc.camera_slot;
+        else
+        {
+            step.material         = new Material(step_desc.shader,
+                Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthWrite(false),
+                step_desc.framebuffer_config);
+            step.texture_bindings = step_desc.texture_bindings;
+            step.scene_uniforms   = RenderServer::createSceneUniforms();
+        }
+        execution_steps.push_back(step);
+    }
 
     rebuildBindings();
 }
 
 RenderGraph::~RenderGraph() { DBG_VERBOSE("destroying render graph " + PTR(this)); }
 
-WeakRef<Material> RenderGraph::getMaterialForStep(const size_t step)
+WeakRef<Material> RenderGraph::getMaterialForStep(size_t step) const
 {
     if (step >= execution_steps.size())
     {
@@ -117,7 +134,7 @@ WeakRef<Material> RenderGraph::getMaterialForStep(const size_t step)
     return execution_steps[step].material;
 }
 
-WeakRef<Material> RenderGraph::getMaterialForStep(const std::string& name)
+WeakRef<Material> RenderGraph::getMaterialForStep(const std::string& name) const
 { return getMaterialForStep(findStep(name)); }
 
 WeakRef<Texture> RenderGraph::getFinalImage() const
@@ -135,7 +152,7 @@ WeakRef<Texture> RenderGraph::getFinalImage() const
     return step.framebuffer->getImage(attachment);
 }
 
-bool RenderGraph::getSkipStep(const size_t step) const
+bool RenderGraph::getSkipStep(size_t step) const
 {
     if (step >= execution_steps.size())
     {
@@ -149,7 +166,7 @@ bool RenderGraph::getSkipStep(const size_t step) const
 
 bool RenderGraph::getSkipStep(const std::string& name) const { return getSkipStep(findStep(name)); }
 
-void RenderGraph::setSkipStep(const size_t step, const bool skip)
+void RenderGraph::setSkipStep(size_t step, bool skip)
 {
     if (step >= execution_steps.size())
     {
@@ -162,8 +179,7 @@ void RenderGraph::setSkipStep(const size_t step, const bool skip)
     rebuildBindings();
 }
 
-void RenderGraph::setSkipStep(const std::string& name, const bool skip)
-{ setSkipStep(findStep(name), skip); }
+void RenderGraph::setSkipStep(const std::string& name, bool skip) { setSkipStep(findStep(name), skip); }
 
 void RenderGraph::resizeBuffers(glm::u32vec2 new_extent)
 {
@@ -198,7 +214,7 @@ void RenderGraph::draw(WeakRef<DrawCommandBuffer> command_buffer,
         if (!step.is_camera)
         {
             SceneUniforms* uniforms = reinterpret_cast<SceneUniforms*>(step.scene_uniforms->getBuffer());
-            auto& first_input       = execution_steps[(*step.texture_bindings.begin()).first];
+            auto& first_input       = execution_steps[(*step.texture_bindings.begin()).second.step_index];
             if (first_input.is_camera) last_uniforms = cameras.at(first_input.camera_slot).first;
             else
                 last_uniforms = first_input.scene_uniforms;
@@ -252,12 +268,12 @@ void RenderGraph::draw(WeakRef<DrawCommandBuffer> command_buffer,
             auto camera = cameras.at(execution_steps[i].camera_slot);
             std::sort(step_commands[i].begin(), step_commands[i].end(),
                 [](const DrawCommand& a, const DrawCommand& b) { return DrawCommand::compare(a, b); });
-            recordCameraStep(command_buffer, camera.first, camera.second, execution_steps[i].framebuffer,
+            recordCameraStep(command_buffer, execution_steps[i].framebuffer, camera.first, camera.second,
                 step_commands[i]);
         }
         else
-            recordPostProcessStep(command_buffer, execution_steps[i].material,
-                execution_steps[i].scene_uniforms, execution_steps[i].framebuffer);
+            recordPostProcessStep(command_buffer, execution_steps[i].framebuffer,
+                execution_steps[i].scene_uniforms, execution_steps[i].material);
     }
 }
 
@@ -283,8 +299,7 @@ size_t RenderGraph::findStep(const std::string& name) const
         ++index;
     }
 
-    DBG_ERROR(
-        "attempt to find step " + name + " of render graph " + PTR(this) + ", but there is no such step");
+    DBG_ERROR("unable to find step " + name + " of render graph " + PTR(this));
     return 0;
 }
 
@@ -316,9 +331,8 @@ void RenderGraph::rebuildBindings()
     }
 }
 
-void RenderGraph::recordCameraStep(WeakRef<DrawCommandBuffer> command_buffer,
-    const WeakRef<UniformBlock>& camera, glm::vec4 clear_colour, const WeakRef<Framebuffer>& pass,
-    const std::vector<DrawCommand>& commands)
+void RenderGraph::recordCameraStep(WeakRef<DrawCommandBuffer> command_buffer, WeakRef<Framebuffer> pass,
+    WeakRef<UniformBlock> camera, glm::vec4 clear_colour, const std::vector<DrawCommand>& commands)
 {
     pass->bind(command_buffer, Framebuffer::Clear{ clear_colour });
 
@@ -339,9 +353,9 @@ void RenderGraph::recordCameraStep(WeakRef<DrawCommandBuffer> command_buffer,
 }
 
 void RenderGraph::recordPostProcessStep(WeakRef<DrawCommandBuffer> command_buffer,
-    const WeakRef<Material>& material, const WeakRef<UniformBlock>& scene_descriptor_set, const WeakRef<Framebuffer>& pass)
+    WeakRef<Framebuffer> pass, WeakRef<UniformBlock> scene_descriptor_set, WeakRef<Material> material)
 {
-    pass->bind(command_buffer, Framebuffer::Clear{ { 0, 0, 0 } });
+    pass->bind(command_buffer, {});
 
     // material must be bound before we can start binding uniforms at all
     material->bind(command_buffer, false);

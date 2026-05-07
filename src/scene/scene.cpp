@@ -199,7 +199,7 @@ void Scene::bindOutputMaterial(Ref<DrawCommandBuffer> command_buffer)
 Scene::Scene(const std::string& name)
 {
     origin       = name;
-    render_graph = new RenderGraph(RenderGraph::Builder().addCamera(0));
+    render_graph = new RenderGraph(RenderGraph::Builder().addCameraStep("camera", 0));
     root         = Object::create();
     root->name   = "scene root";
 

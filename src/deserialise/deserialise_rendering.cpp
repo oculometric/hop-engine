@@ -197,15 +197,16 @@ Ref<Material> Material::deserialise(const std::string& token_str, const std::str
         Deserialiser::NamedStatementSpec("RenderPass", Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
             .argument("extra_outputs", TokenReader::TOKEN_INT, true)
             .argument("has_depth", TokenReader::TOKEN_TEXT, true),
-            [&](Deserialiser::NamedStatementResult result) -> bool
+        [&](Deserialiser::NamedStatementResult result) -> bool
         {
             uint32_t extra_outputs;
             result.read("extra_outputs", extra_outputs);
             bool has_depth;
             if (!result.read("has_depth", has_depth))
-                return deserialiser.emitError("invalid value for 'has_depth'", result.offsetOf("has_depth"), token_str);
+                return deserialiser.emitError("invalid value for 'has_depth'", result.offsetOf("has_depth"),
+                    token_str);
             use_custom_render_pass = true;
-            custom_config = Framebuffer::Config{ extra_outputs, has_depth };
+            custom_config          = Framebuffer::Config{ extra_outputs, has_depth };
             return true;
         });
     deserialiser.addStatementAnonymous(
@@ -248,8 +249,7 @@ Ref<Material> Material::deserialise(const std::string& token_str, const std::str
 
     if (!main_shader) return nullptr;
     Ref<Material> material;
-    if (use_custom_render_pass)
-        material = new Material(main_shader, pipeline_builder, custom_config);
+    if (use_custom_render_pass) material = new Material(main_shader, pipeline_builder, custom_config);
     else
         material = new Material(main_shader, pipeline_builder);
     if (!material) return nullptr;
@@ -345,7 +345,8 @@ Ref<RenderGraph> RenderGraph::deserialise(const std::string& token_str, const st
                     result.offsetOf(0), token_str);
             uint32_t extra_buffers;
             result.read(1, extra_buffers);
-            render_passes[result.statement.identifier] = Framebuffer::Config{ extra_buffers, depth_enabled };
+            render_passes[result.statement.identifier] =
+                Framebuffer::Config{ extra_buffers, depth_enabled };
             return true;
         });
     deserialiser.addStatementNamed(
@@ -365,43 +366,40 @@ Ref<RenderGraph> RenderGraph::deserialise(const std::string& token_str, const st
             result.read("scale", scale);
             glm::vec2 custom_size{ -1, -1 };
             result.read("custom_size", custom_size);
-            if (custom_size != glm::vec2{ -1, -1 })
-            {
-                scale       = 0.0f;
-                custom_size = glm::max(custom_size, 1.0f);
-            }
             std::string render_pass_id;
             result.read("render_pass", render_pass_id);
-            if (render_pass_id.empty()) builder.addCamera(slot, scale, custom_size);
-            else
+            builder.addCameraStep(result.statement.identifier, slot);
+            if (!render_pass_id.empty())
             {
                 auto render_pass_it = render_passes.find(render_pass_id);
                 if (render_pass_it == render_passes.end())
                     return deserialiser.emitError("unknown render pass identifier '" + render_pass_id + "'",
                         result.offsetOf("render_pass"), token_str);
-                builder.addCamera(slot, render_pass_it->second, scale, custom_size);
+                builder.configureFramebuffer(render_pass_it->second);
             }
-            builder.execution_steps[builder.execution_steps.size() - 1].name = result.statement.identifier;
+            if (custom_size != glm::vec2{ -1, -1 }) builder.setResolution(glm::max(custom_size, 1.0f));
+            else
+                builder.setResolution(scale);
             step_identifiers[result.statement.identifier] =
                 static_cast<int>(builder.execution_steps.size()) - 1;
             return true;
         });
 
     Deserialiser binding_deserialiser("error deserialising render graph '" + origin + "'");
-    std::map<uint32_t, AttachmentBinding> bindings;
+    std::map<std::string, TextureInput> bindings;
     binding_deserialiser.addStatementNamed(
         Deserialiser::NamedStatementSpec("Input", Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
-            .argument("binding", TokenReader::TOKEN_INT, true)
+            .argument("binding", TokenReader::TOKEN_STRING, true)
             .argument("step", TokenReader::TOKEN_IDENTIFIER, true)
             .argument("attachment", TokenReader::TOKEN_INT, true)
             .argument("filter", TokenReader::TOKEN_TEXT, false)
             .argument("address", TokenReader::TOKEN_TEXT, false),
         [&](Deserialiser::NamedStatementResult result) -> bool
         {
-            int binding;
+            std::string binding;
             result.read("binding", binding);
-            if (binding < 0)
-                return binding_deserialiser.emitError("post-process input binding must be positive",
+            if (binding.empty())
+                return binding_deserialiser.emitError("post-process texture binding must have a name",
                     result.offsetOf("binding"), token_str);
             std::string step_id;
             result.read("step", step_id);
@@ -415,14 +413,14 @@ Ref<RenderGraph> RenderGraph::deserialise(const std::string& token_str, const st
                 return binding_deserialiser.emitError(
                     "post-process target attachment reference must be positive",
                     result.offsetOf("attachment"), token_str);
-            AttachmentBinding texture_binding(step_it->second, static_cast<uint32_t>(attachment));
+            TextureInput texture_binding(step_it->second, static_cast<uint32_t>(attachment));
             if (!result.read<Sampler::Filter>("filter", texture_binding.filter_mode, getFilter))
                 return binding_deserialiser.emitError("invalid post-process input filter value",
                     result.offsetOf("filter"), token_str);
             if (!result.read<Sampler::Address>("address", texture_binding.address_mode, getAddressMode))
                 return binding_deserialiser.emitError("invalid post-process input address value",
                     result.offsetOf("address"), token_str);
-            bindings[static_cast<uint32_t>(binding)] = texture_binding;
+            bindings[binding] = texture_binding;
             return true;
         });
 
@@ -444,27 +442,23 @@ Ref<RenderGraph> RenderGraph::deserialise(const std::string& token_str, const st
             result.read("scale", scale);
             glm::vec2 custom_size{ -1, -1 };
             result.read("custom_size", custom_size);
-            if (custom_size != glm::vec2{ -1, -1 })
-            {
-                scale       = 0.0f;
-                custom_size = glm::max(custom_size, 1.0f);
-            }
             bindings.clear();
             if (!binding_deserialiser.execute(result.statement.children, token_str)) return false;
             std::string render_pass_id;
             result.read("render_pass", render_pass_id);
-            if (render_pass_id.empty())
-                builder.addPostProcess(shader_it->second, bindings, scale, custom_size);
-            else
+            builder.addPostprocessStep(result.statement.identifier, shader_it->second);
+            if (!render_pass_id.empty())
             {
                 auto render_pass_it = render_passes.find(render_pass_id);
                 if (render_pass_it == render_passes.end())
                     return deserialiser.emitError("unknown render pass identifier '" + render_pass_id + "'",
                         result.offsetOf("render_pass"), token_str);
-                builder.addPostProcess(shader_it->second, bindings, render_pass_it->second, scale,
-                    custom_size);
+                builder.configureFramebuffer(render_pass_it->second);
             }
-            builder.execution_steps[builder.execution_steps.size() - 1].name = result.statement.identifier;
+            if (custom_size != glm::vec2{ -1, -1 }) builder.setResolution(glm::max(custom_size, 1.0f));
+            else
+                builder.setResolution(scale);
+            for (const auto& binding : bindings) builder.bindTexture(binding.first, binding.second);
             step_identifiers[result.statement.identifier] =
                 static_cast<int>(builder.execution_steps.size()) - 1;
             return true;

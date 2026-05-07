@@ -50,23 +50,25 @@ public:
      * @brief outlines the binding to an output attachment of an existing render pass, including information
      * for how it should be sampled in the material to which it is bound.
      */
-    struct AttachmentBinding final
+    struct TextureInput final
     {
+        friend class RenderGraph;
+
+    private:
         size_t step_index             = 0; // target step (render pass) to bind to
         size_t output_index           = 0; // attachment texture index within the target step
         Sampler::Filter filter_mode   = Sampler::FILTER_LINEAR;      // texture filtering mode
         Sampler::Address address_mode = Sampler::ADDRESS_CLAMP_EDGE; // texture addressing mode
 
-        AttachmentBinding() = default;
-        AttachmentBinding(const size_t step, const size_t output) : step_index(step), output_index(output)
-        {
-        }
-        AttachmentBinding& filter(const Sampler::Filter value)
+    public:
+        TextureInput() = default;
+        TextureInput(size_t step, size_t output) : step_index(step), output_index(output) {}
+        TextureInput& filter(Sampler::Filter value)
         {
             filter_mode = value;
             return *this;
         }
-        AttachmentBinding& address(const Sampler::Address value)
+        TextureInput& address(Sampler::Address value)
         {
             address_mode = value;
             return *this;
@@ -77,114 +79,97 @@ public:
      * @brief builder class for the render graph which handles constructing and chaining together render
      * steps.
      */
-    struct Builder final
+    struct Builder final : public Destructible
     {
-    public:
+        friend class RenderGraph;
+
+    private:
         /**
          * @brief builder class for constructing render graph steps.
          */
-        struct StepDescription final
+        struct StepDescription final : public Destructible
         {
+            ~StepDescription() override = default;
+
             std::string name;
-            bool is_camera = true;
-            float resolution_scale = 1.0f;
-            glm::u32vec2 custom_extent = { 128, 128 };
+            bool is_camera                         = true;
+            float resolution_scale                 = 1.0f;
+            glm::u32vec2 custom_extent             = { 128, 128 };
             Framebuffer::Config framebuffer_config = Framebuffer::getDefaultConfig();
-            size_t camera_slot = 0;
-            Ref<Shader> shader = nullptr;
-            std::map<uint32_t, AttachmentBinding> texture_bindings;
+            size_t camera_slot                     = 0;
+            Ref<Shader> shader;
+            std::map<std::string, TextureInput> texture_bindings;
         };
 
     private:
         // list of render steps in the order they will be rendered
-        std::vector<StepBuilder> execution_steps;
+        std::vector<StepDescription> execution_steps;
         // filtering mode for when the final output attachment is being drawn to the swapchain, useful for
         // pixel-art post processing
         Sampler::Filter screen_filtering = Sampler::FILTER_LINEAR;
 
     public:
+        ~Builder() override = default;
+
         /**
-         * @brief builer function which adds a camera render step. default render pass config (3 extra +
-         * depth) is used, along with default resolution.
+         * @brief builder function which adds a camera render step. subsequent calls to
+         * `configureFramebuffer` and `setResolution` can be used to further configure this render step.
+         * @param name text identifier for the render step to be queried later.
          * @param slot which camera slot in the scene should be used to render this camera step.
          * @returns self-reference for chaining calls.
          */
-        Builder& addCamera(size_t slot);
+        Builder& addCameraStep(const std::string& name, size_t slot);
         /**
-         * @brief builer function which adds a camera render step. allows you to specify the configuration
-         * of the target render pass and resolution of the framebuffers.
-         * @param slot which camera slot in the scene should be used to render this camera step.
-         * @param render_pass_config description of the render pass configuration.
-         * @param size_factor scale factor applied to default render graph resolution for output
-         * attachments. if set to zero, this value is ignored and `custom_extent` is used instead.
-         * @param custom_extent custom resolution to use for output attachments, in pixels. if either of the
+         * @brief builder function which adds a post-process render step. subsequent calls to
+         * `configureFramebuffer`, `setResolution`, and `bindTexture` can be used to further configure this
+         * render step.
+         * @param name text identifier for the render step to be queried later.
+         * @param shader shader to generate a material for rendering.
+         * @returns self-reference for chaining calls.
+         */
+        Builder& addPostprocessStep(const std::string& name, Ref<Shader> shader);
+        /**
+         * @brief builder function which updates the framebuffer attachment configuration of the most
+         * recently added render step. only valid after a call to `addCameraStep` or `addPostprocessStep`.
+         * @param config configuration parameters to be used for creating the framebuffer (and the material,
+         * if this is a post-processing step) for the render step.
+         * @returns self-reference for chaining calls.
+         */
+        Builder& configureFramebuffer(const Framebuffer::Config& config);
+        /**
+         * @brief builder function which updates the framebuffer resolution of the most recently added
+         * render step. only valid after a call to `addCameraStep` or `addPostprocessStep`.
+         * @param scale scale factor used to compute the framebuffer resolution, by multiplying with default
+         * render graph resolution. may not be less than or equal to zero.
+         * @returns self-reference for chaining calls.
+         */
+        Builder& setResolution(float scale);
+        /**
+         * @brief builder function which updates the framebuffer resolution of the most recently added
+         * render step. only valid after a call to `addCameraStep` or `addPostprocessStep`.
+         * @param extent custom resolution to use for the framebuffer, in pixels. if either of the
          * coordinates is zero, the default resolution for the render graph is used for that coordinate
          * instead.
          * @returns self-reference for chaining calls.
          */
-        Builder& addCamera(size_t slot, const Framebuffer::Config& render_pass_config,
-            float size_factor = 1.0f, glm::u32vec2 custom_extent = { 128, 128 });
+        Builder& setResolution(glm::u32vec2 extent);
         /**
-         * @brief builer function which adds a camera render step. allows you to specify the resolution of
-         * the framebuffers.
-         * @param slot which camera slot in the scene should be used to render this camera step.
-         * @param size_factor scale factor applied to default render graph resolution for output
-         * attachments. if set to zero, this value is ignored and `custom_extent` is used instead.
-         * @param custom_extent custom resolution to use for output attachments, in pixels. if either of the
-         * coordinates is zero, the default resolution for the render graph is used for that coordinate
-         * instead.
+         * @brief builder function which adds a texture binding to the most recently added render step. used
+         * to link the outputs of previous render steps as inputs of this step. only valid after a call to
+         * `addPostprocessStep`.
+         * @param texture_uniform name of the texture uniform variable to which the texture will be bound.
+         * @param binding struct describing which render step and output attachment should be used as the
+         * target texture. also allows specifying texture sampling parameters.
          * @returns self-reference for chaining calls.
          */
-        Builder& addCamera(size_t slot, float size_factor, glm::u32vec2 custom_extent = { 128, 128 });
+        Builder& bindTexture(const std::string& texture_uniform, const TextureInput& binding);
         /**
-         * @brief builer function which adds a post-process render step. default render pass config (3 extra
-         * + depth) is used, along with default resolution.
-         * @param shader shader to use for creating a material to be applied to the fullscreen quad.
-         * @param texture_bindings list of bindings between material textures and output attachments from
-         * other render steps.
+         * @brief builder function which configures the filtering of the final render graph output when
+         * drawn to the screen.
+         * @param value filtering mode used when outputting the render graph's final image.
          * @returns self-reference for chaining calls.
          */
-        Builder& addPostProcess(const Ref<Shader>& shader,
-            const std::map<uint32_t, AttachmentBinding>& texture_bindings);
-        /**
-         * @brief builer function which adds a post-process render step. allows you to specify the
-         * render pass configuration and the resolution of the framebuffers.
-         * @param shader shader to use for creating a material to be applied to the fullscreen quad.
-         * @param texture_bindings list of bindings between material textures and output attachments from
-         * other render steps.
-         * @param render_pass_config description of the render pass configuration.
-         * @param size_factor scale factor applied to default render graph resolution for output
-         * attachments. if set to zero, this value is ignored and `custom_extent` is used instead.
-         * @param custom_extent custom resolution to use for output attachments, in pixels. if either of the
-         * coordinates is zero, the default resolution for the render graph is used for that coordinate
-         * instead.
-         * @returns self-reference for chaining calls.
-         */
-        Builder& addPostProcess(const Ref<Shader>& shader,
-            const std::map<uint32_t, AttachmentBinding>& texture_bindings,
-            const Framebuffer::Config& render_pass_config, float size_factor = 1.0f,
-            glm::u32vec2 custom_extent = { 128, 128 });
-        /**
-         * @brief builer function which adds a post-process render step. allows you to specify the
-         * resolution of the framebuffers.
-         * @param shader shader to use for creating a material to be applied to the fullscreen quad.
-         * @param texture_bindings list of bindings between material textures and output attachments from
-         * other render steps.
-         * @param size_factor scale factor applied to default render graph resolution for output
-         * attachments. if set to zero, this value is ignored and `custom_extent` is used instead.
-         * @param custom_extent custom resolution to use for output attachments, in pixels. if either of the
-         * coordinates is zero, the default resolution for the render graph is used for that coordinate
-         * instead.
-         * @returns self-reference for chaining calls.
-         */
-        Builder& addPostProcess(const Ref<Shader>& shader,
-            const std::map<uint32_t, AttachmentBinding>& texture_bindings, float size_factor,
-            glm::u32vec2 custom_extent = { 128, 128 });
-        Builder& filtering(const Sampler::Filter value)
-        {
-            screen_filtering = value;
-            return *this;
-        }
+        Builder& filtering(Sampler::Filter value);
     };
 
 private:
@@ -194,16 +179,18 @@ private:
      * bindings). should not be initialised manually, instead use the `RenderGraph::Builder` and its
      * `add...` functions.
      */
-    struct Step final
+    struct Step final : public Destructible
     {
+        ~Step() override = default;
+
         bool is_camera = true; // whether the step is a camera or post-process step
         // if `is_camera`, reflects the camera index in the scene to which this step should bind
         size_t camera_slot = 0;
         // if `!is_camera`, holds the material used for post-processing
         Ref<Material> material;
-        // if `!is_camera`, holds a mapping of material texture binding indices to output attachments from
+        // if `!is_camera`, holds a mapping of material texture binding names to output attachments from
         // previous `Step`s
-        std::map<uint32_t, AttachmentBinding> texture_bindings;
+        std::map<std::string, TextureInput> texture_bindings;
 
         // scales the resolution of the overall render graph, and thus the extent of the output textures,
         // allowing for smaller (e.g. half-resolution) steps. if this value is less than or equal to zero,
@@ -221,8 +208,6 @@ private:
         // if `true`, this step will not be executed, and attachment bindings targeting it will be
         // redirected to the previous step
         bool skipped = false;
-
-        ~Step();
     };
 
 public:
@@ -234,8 +219,7 @@ private:
     std::vector<Step> execution_steps;       // list of render steps in the order they will be rendered
     glm::u32vec2 expected_extent = { 0, 0 }; // default extent of the render graph images
     Ref<Material> passthrough; // material for rendering the final output attachment to the screen
-    // final output texture which will be exposed outside the render graph, and theoretically drawn to the
-    // screen
+    // final output texture which will be exposed outside the render graph as the final product
     WeakRef<Texture> passthrough_texture;
 
 public:
@@ -260,7 +244,7 @@ public:
      * @returns material used by the render step, or `nullptr` if `step` does not exist or is not a
      * post-processing step.
      */
-    WeakRef<Material> getMaterialForStep(size_t step);
+    WeakRef<Material> getMaterialForStep(size_t step) const;
     /**
      * @brief retrieves the material being used for a particular post-processing render step.
      * @param name name of the step from which to retrieve the material. must be the name of a
@@ -268,7 +252,7 @@ public:
      * @returns material used by the render step, or `nullptr` if `name` does not match any render step or
      * is not a post-processing step.
      */
-    WeakRef<Material> getMaterialForStep(const std::string& name);
+    WeakRef<Material> getMaterialForStep(const std::string& name) const;
     /**
      * @brief retrieves the final output attachment from the render graph, defined by the `output_step` and
      * `output_image` fields. if `output_step` is set to -1, the last step in the graph is used. if
@@ -377,30 +361,28 @@ private:
     size_t findStep(const std::string& name) const;
     /**
      * @brief binds material texture slots to the output attachments described by their
-     * `AttachmentBinding`s; necessary when the render graph is modified.
+     * `TextureInput`s; necessary when the render graph is modified.
      */
     void rebuildBindings();
     /**
      * @brief records draw commands for a camera render step.
      * @param command_buffer draw command buffer into which commands will be issued.
-     * @param camera uniform block to be used in the scene (set 0) slot.
-     * @param clear_colour clear colour for the main colour attachment.
      * @param pass framebuffer to render within.
+     * @param camera camera to be used for rendering (providing scene descriptor set).
+     * @param clear_colour clear colour for the main colour attachment.
      * @param commands sorted series of draw commands to be executed.
      */
-    static void recordCameraStep(WeakRef<DrawCommandBuffer> command_buffer,
-        const WeakRef<UniformBlock>& camera, glm::vec4 clear_colour, const WeakRef<Framebuffer>& pass,
-        const std::vector<DrawCommand>& commands);
+    static void recordCameraStep(WeakRef<DrawCommandBuffer> command_buffer, WeakRef<Framebuffer> pass,
+        WeakRef<UniformBlock> camera, glm::vec4 clear_colour, const std::vector<DrawCommand>& commands);
     /**
      * @brief records draw commands for a post-process render step.
      * @param command_buffer draw command buffer into which commands will be issued.
-     * @param material material which will be rendered on a full-screen quad, into its render pass.
-     * @param scene_descriptor_set uniform block to be used in the scene (set 0) slot.
      * @param pass framebuffer to render within.
+     * @param scene_descriptor_set uniform block to be used in the scene (set 0) slot.
+     * @param material material which will be rendered on a full-screen quad, into its render pass.
      */
-    static void recordPostProcessStep(WeakRef<DrawCommandBuffer> command_buffer,
-        const WeakRef<Material>& material, const WeakRef<UniformBlock>& scene_descriptor_set,
-        const WeakRef<Framebuffer>& pass);
+    static void recordPostProcessStep(WeakRef<DrawCommandBuffer> command_buffer, WeakRef<Framebuffer> pass,
+        WeakRef<UniformBlock> scene_descriptor_set, WeakRef<Material> material);
 };
 
 } // namespace HopEngine
