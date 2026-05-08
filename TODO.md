@@ -1,11 +1,5 @@
 # TODO
 
-# v0.54
-
-- document serial formats (document by example) [60]
-    - scene
-    - node style
-
 # v0.55
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - the ui update
