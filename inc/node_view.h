@@ -144,7 +144,7 @@ private:
     glm::vec2 temp_link_start;
     glm::vec2 temp_link_end;
     bool draw_temp_link = false;
-    Ref<UIContextMenu> context_menu;
+    // Ref<UIContextMenu> context_menu;
 
 public:
 	DELETE_NOT_ALL_CONSTRUCTORS(NodeView);

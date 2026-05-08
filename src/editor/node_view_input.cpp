@@ -85,12 +85,12 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
     glm::vec2 offset = getTransform().getLocalPosition();
     glm::vec2 node_space_pos = ((mouse_pos - glm::vec2(rect_min)) - (glm::vec2(rect_size) / 2.0f)) - offset;
 
-    if (context_menu)
-    {
-        if ((!context_menu->checkInput() && Input::isMouseDown(Input::MOUSE_LEFT)) || Input::wasKeyPressed(Input::KEY_ESCAPE))
-            context_menu = nullptr;
-        return true;
-    }
+    // if (context_menu)
+    // {
+    //     if ((!context_menu->checkInput() && Input::isMouseDown(Input::MOUSE_LEFT)) || Input::wasKeyPressed(Input::KEY_ESCAPE))
+    //         context_menu = nullptr;
+    //     return true;
+    // }
 
     if (Input::isKeyDown('A') && Input::isKeyDown(Input::KEY_LEFT_CONTROL))
     {
@@ -105,16 +105,16 @@ bool NodeView::checkInput(glm::ivec2 rect_min, glm::ivec2 rect_size)
         needs_update = true;
     }
 
-    if (Input::wasMousePressed(Input::MOUSE_RIGHT))
-    {
-        context_menu = new UIContextMenu(node_space_pos);
-        context_menu->addButton("a button", nullptr);
-        context_menu->addButton("another button", nullptr);
-        context_menu->addText("text stuff");
-        context_menu->addButton("final button", nullptr);
-        context_menu->done();
-        return true;
-    }
+    // if (Input::wasMousePressed(Input::MOUSE_RIGHT))
+    // {
+    //     context_menu = new UIContextMenu(node_space_pos);
+    //     context_menu->addButton("a button", nullptr);
+    //     context_menu->addButton("another button", nullptr);
+    //     context_menu->addText("text stuff");
+    //     context_menu->addButton("final button", nullptr);
+    //     context_menu->done();
+    //     return true;
+    // }
 
     if (Input::isMouseDown(Input::MOUSE_MIDDLE))
     {

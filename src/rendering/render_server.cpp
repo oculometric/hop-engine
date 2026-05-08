@@ -280,6 +280,8 @@ WeakRef<DrawCommandBuffer> RenderServer::recordRenderCommands(uint32_t image_ind
         }
     }
 
+    UIManager::draw(command_buffer);
+
     if (overlay_logs)
     {
         command_buffer->setScissorViewport({ 0, 0 }, { 1, 1 });

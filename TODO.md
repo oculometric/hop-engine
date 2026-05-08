@@ -1,14 +1,6 @@
 # TODO
 
 # v0.54
-- package manager improvements [240]
-    - data blocks should know which package they came from
-    - package manager should not have to load the entire file from disk at once, only an index of contents
-    - when you try to load an entry, search through the indexes of loaded packages, don't keep a copy of dat
-    - you can ask for an entry to be preloaded, where a copy of it IS kept in memory, but only until a call to load it properly
-    - needs ability to create directories (including automatically when writing a file)
-    - needs to be able to search a directory for res files too (we dont need to rebuild the hop file ALL the time)
-    - metadata (date/time, author)
 
 - document serial formats (document by example) [60]
     - scene
@@ -44,6 +36,18 @@
         - use the generic user interface shader
 
 - make local/global transform from forward/up vectors (generally complete the transform functionality) [H]
+---
+
+# v0.56
+- package manager improvements [240]
+    - data blocks should know which package they came from
+    - package manager should not have to load the entire file from disk at once, only an index of contents
+    - when you try to load an entry, search through the indexes of loaded packages, don't keep a copy of dat
+    - you can ask for an entry to be preloaded, where a copy of it IS kept in memory, but only until a call to load it properly
+    - needs ability to create directories (including automatically when writing a file)
+    - needs to be able to search a directory for res files too (we dont need to rebuild the hop file ALL the time)
+    - metadata (date/time, author)
+---
 
 # v0.60
 - interactive node editor

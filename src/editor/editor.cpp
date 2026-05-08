@@ -8,19 +8,18 @@ void Editor::awake()
 
     view_3d = Scene::create("3D View");
     {
-        auto comp = view_3d->addObject<StaticMeshComponent>("bunny");
-        comp->mesh = Engine::loadMesh("res://engine/meshes/bunny.obj");
+        auto comp      = view_3d->addObject<StaticMeshComponent>("bunny");
+        comp->mesh     = Engine::loadMesh("res://engine/meshes/bunny.obj");
         comp->material = Engine::loadMaterial("res://engine/materials/bunny.hmat");
-        
-        auto obj = view_3d->addObject("camera");
-        auto cam = obj->addComponent<CameraComponent>();
-        cam->clear_colour = { 0.05f, 0.05f, 0.05f };
-        view_3d->sky = new Sky(Engine::loadTexture("res://engine/textures/basic_skybox.png"));
-        obj->getTransform().lookAt(glm::vec3(0.2f, -0.2f, 0.2f),
-                              glm::vec3(0.0f, 0.0f, 0.0f),
-                              glm::vec3(0.0f, 0.0f, 1.0f));
 
-        obj = view_3d->addObject("camera2");
+        auto obj          = view_3d->addObject("camera");
+        auto cam          = obj->addComponent<CameraComponent>();
+        cam->clear_colour = { 0.05f, 0.05f, 0.05f };
+        view_3d->sky      = new Sky(Engine::loadTexture("res://engine/textures/basic_skybox.png"));
+        obj->getTransform().lookAt(glm::vec3(0.2f, -0.2f, 0.2f), glm::vec3(0.0f, 0.0f, 0.0f),
+            glm::vec3(0.0f, 0.0f, 1.0f));
+
+        obj                                               = view_3d->addObject("camera2");
         obj->addComponent<CameraComponent>()->camera_slot = 1;
         obj->getTransform().setPosition({ 1, 0, 0 });
 
@@ -28,9 +27,9 @@ void Editor::awake()
         obj->addComponent<LightComponent>();
         obj->getTransform().setPosition({ 0, 0, 2 });
 
-        obj = view_3d->addObject("cube");
-        cube = obj->addComponent<StaticMeshComponent>();
-        cube->mesh = Engine::loadMesh("res://engine/meshes/cube.obj");
+        obj            = view_3d->addObject("cube");
+        cube           = obj->addComponent<StaticMeshComponent>();
+        cube->mesh     = Engine::loadMesh("res://engine/meshes/cube.obj");
         cube->material = new Material(Engine::loadShader("test_shader.glsl"));
         cube->material->setTexture("albedo", Engine::loadTexture("res://engine/icon.png"));
     }
@@ -85,11 +84,9 @@ void Editor::awake()
             ->input("shader")
             ->input("tex")
             ->output("colour")
-            ->position = { 12, 0 };
-        node_view->makeNode("Screen", { 0.7f, 0.2f, 0 }, 4)
-            ->input("texture")
-            ->position = { 18, 3 };
-            
+            ->position                                                                  = { 12, 0 };
+        node_view->makeNode("Screen", { 0.7f, 0.2f, 0 }, 4)->input("texture")->position = { 18, 3 };
+
         node_view->updateMesh();
 
         view_nodes->addObject<CameraComponent>("camera");
@@ -97,20 +94,22 @@ void Editor::awake()
 
     Engine::setScene(view_3d);
 
-    RenderServer::setMultiScene(
-        {
-            { view_3d,    { 0.0f, 0.0f }, { 0.8f, 0.7f } },
-            { view_nodes, { 0.0f, 0.7f }, { 0.8f, 0.3f } },
-        }
-    );
+    RenderServer::setMultiScene({
+        {    view_3d, { 0.0f, 0.0f }, { 0.8f, 0.7f } },
+        { view_nodes, { 0.0f, 0.7f }, { 0.8f, 0.3f } },
+    });
+
+    auto canvas = UIManager::push(new UICanvas({ 300, 300 }), { 100, 400 });
+    canvas->addElement<UILabel>()->setText("hello, World!");
 }
 
 void Editor::update(float delta_time)
 {
-    if (!node_view->checkInput({ 0, RenderServer::getFramebufferSize().y * 0.7f }, view_nodes->getViewportSize()))
+    if (!node_view->checkInput({ 0, RenderServer::getFramebufferSize().y * 0.7f },
+            view_nodes->getViewportSize()))
         Engine::debugCamera(view_3d->findObject("camera"));
 
-    //cube->material->getShader()->reload();
+    // cube->material->getShader()->reload();
 }
 
 void Editor::drawImGui()
