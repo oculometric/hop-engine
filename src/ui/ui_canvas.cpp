@@ -1,12 +1,9 @@
+#include "command_buffer.h"
+#include "engine.h"
+#include "material.h"
 #include "user_interface.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
-#include "command_buffer.h"
-#include "engine.h"
-#include "input.h"
-#include "material.h"
-#include "render_server.h"
-
 #include <glm/gtx/matrix_transform_2d.hpp>
 
 using namespace HopEngine;
@@ -33,8 +30,6 @@ Ref<Material> UIStyle::makeMaterial(bool world_space)
     mat->setBoolUniform("world_space", world_space);
     return mat;
 }
-
-UICanvasElement::~UICanvasElement() { DBG_INFO("destroying ui element"); }
 
 void UICanvasElement::layout(glm::vec2 parent_size, glm::mat3 parent_transform)
 {
@@ -180,8 +175,6 @@ void UIManager::draw(WeakRef<DrawCommandBuffer> command_buffer)
     command_buffer->setScissorViewport(glm::vec2(0.0f), glm::vec2(1.0f));
     for (const auto& [canvas, offset] : manager->canvases)
     {
-        // command_buffer->setScissorViewport(offset / RenderServer::getFramebufferSize(),
-        //     canvas->getSize() / RenderServer::getFramebufferSize());
         canvas->build();
         auto command = canvas->draw();
         command.material->bind(command_buffer);
@@ -195,18 +188,6 @@ void UIManager::destroy()
 {
     delete manager;
     manager = nullptr;
-}
-
-void UILabel::build()
-{
-    getRenderer()->addText(getTransform() * glm::vec3{ 0, 0, 1 }, 0.0f, UIRenderer::TextFormatting{}, text,
-        glm::vec3{ 0, 1, 0 }, text_backing);
-}
-
-void UIPanel::build()
-{
-    getRenderer()->addNineSlice(getTransform() * glm::vec3{ 0, 0, 1 }, 0.0f, getSize(), 0, colour,
-        panel_backing);
 }
 
 void UICanvasComponent::awake()

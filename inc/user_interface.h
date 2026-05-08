@@ -18,11 +18,11 @@
 
 #pragma once
 
+#include "basic_components.h"
 #include "common.h"
 #include "input.h"
 #include "mesh.h"
 #include "scene.h"
-#include "basic_components.h"
 
 #include <functional>
 #include <glm/glm.hpp>
@@ -236,8 +236,8 @@ private:
 
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(UICanvasElement);
-    UICanvasElement() = default;
-    ~UICanvasElement() override;
+    UICanvasElement()           = default;
+    ~UICanvasElement() override = default;
 
     void setPosition(glm::vec2 position)
     {
@@ -339,12 +339,6 @@ template<class T, class Q> inline WeakRef<T> UICanvas::addChild(WeakRef<Q> paren
     static_assert(std::is_convertible_v<Q*, UICanvasElement*>,
         "Q must be a HopEngine::UICanvasElement subclass");
 
-    // if (!elements.find(parent))
-    // {
-    //     DBG_ERROR("UICanvas hierarchy does not contain the specified parent!");
-    //     return nullptr;
-    // }
-
     // create new element of specified type
     Ref<T> element    = new T();
     element->renderer = renderer;
@@ -404,26 +398,18 @@ public:
 class UILabel final : public UICanvasElement
 {
 private:
-    std::string text;
+    std::string text = "Label";
+    UIRenderer::TextFormatting formatting;
+    glm::vec3 colour = { 1, 1, 1 };
     UIRenderer::BackingData text_backing;
 
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(UILabel);
     UILabel() = default;
 
-    void setText(const std::string& new_text)
-    {
-        if (text.size() != new_text.size())
-        {
-            text = new_text;
-            setNeedsRebuild();
-        }
-        else
-        {
-            text = new_text;
-            build();
-        }
-    }
+    void setText(const std::string& new_text);
+    void setFormatting(const UIRenderer::TextFormatting& new_formatting);
+    void setColour(glm::vec3 new_colour);
 
     void build() override;
 };
@@ -431,18 +417,16 @@ public:
 class UIPanel final : public UICanvasElement
 {
 private:
-    glm::vec4 colour;
+    glm::vec3 colour = { 0.2f, 0.2f, 0.2f };
+    int style = 0;
     UIRenderer::BackingData panel_backing;
 
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(UIPanel);
     UIPanel() = default;
 
-    void setColour(glm::vec4 new_colour)
-    {
-        colour = new_colour;
-        build();
-    }
+    void setColour(glm::vec3 new_colour);
+    void setStyle(int new_style);
 
     void build() override;
 };

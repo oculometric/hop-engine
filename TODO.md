@@ -10,18 +10,16 @@
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - the ui update
     - figure out view space transform (need to be able to specify canvas size and position in pixels in 0-width space)
+    - transform needs to be applied by the RENDERER
 
     - document user_interface.h
-    - world space UI canvas as a component which obeys object and camera transforms
     - basic elements
-        - label
         - button
         - dropdown
         - checkbox
         - radiobutton
         - textbox
         - slider
-        - panel
     - ui input event system [4]
         - mousedown/mouseup/mouseclick/mousedrag
         - mouseenter/mouseexit/mousemove
