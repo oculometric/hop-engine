@@ -20,16 +20,17 @@ UIStyle::UIStyle()
 
 UIStyle::~UIStyle() {}
 
-Ref<Material> UIStyle::makeMaterial()
+Ref<Material> UIStyle::makeMaterial(bool world_space)
 {
     Ref mat = new Material(shader,
         Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthWrite(false),
-        Framebuffer::getSwapchainConfig());
+        world_space ? Framebuffer::getDefaultConfig() : Framebuffer::getSwapchainConfig());
     mat->setTextureSampler("text_atlas", font->getAtlas().strong(),
         Engine::getSampler(Sampler::FILTER_NEAREST));
     mat->setTextureSampler("text_bold_atlas", font->getBoldAtlas().strong(),
         Engine::getSampler(Sampler::FILTER_NEAREST));
     mat->setTextureSampler("ui_atlas", ui_atlas, Engine::getSampler(Sampler::FILTER_NEAREST));
+    mat->setBoolUniform("world_space", world_space);
     return mat;
 }
 
@@ -128,6 +129,8 @@ UICanvas::UICanvas(glm::vec2 size)
     hierarchy->element->transform.scaling = UITransform::SCALING_FILL_BOTH;
     canvas_size                           = size;
     elements.push_back(hierarchy->element);
+
+    layout();
 }
 
 void UICanvas::build()
@@ -139,73 +142,16 @@ void UICanvas::build()
         elem->needs_rebuild = false;
     }
 
-    if (rebuild_needed) renderer->clear();
-
-    for (const auto& elem : elements) elem->build();
+    if (rebuild_needed)
+    {
+        renderer->clear();
+        for (const auto& elem : elements) elem->build();
+    }
 
     renderer->finalise();
 }
 
-void UICanvas::layout()
-{ hierarchy->element->layout(canvas_size, glm::translate(glm::mat3(1), canvas_size / -2.0f)); }
-
-// UIContextMenu::UIContextMenu(glm::vec2 position)
-// {
-//     top_corner = position;
-//     renderer = new UIRenderer(new UIStyle());
-// }
-
-// void UIContextMenu::addText(const std::string& text)
-// {
-//     elements.emplace_back(text, false, nullptr);
-// }
-
-// void UIContextMenu::addButton(const std::string& text, std::function<void()> callback)
-// {
-//     elements.emplace_back(text, true, callback);
-// }
-
-// void UIContextMenu::done()
-// {
-//     renderer->clear();
-//     renderer->addNineSlice(top_corner - glm::vec2{ 5, 5 }, -1.0f, glm::vec2{ 220, elements.size() * 32 }
-//     + glm::vec2{ 10, 10 }, 1, glm::vec3{ 0.8f, 0.8f, 0.8f }); size_t element_index = 0; for (const auto&
-//     elem : elements)
-//     {
-//         if (std::get<bool>(elem))
-//             renderer->addNineSlice(top_corner + glm::vec2{ 0, (element_index * 32) + 0 }, 0.0f,
-//             glm::vec2{ 220, 32 }, 0, glm::vec3{ 0.8f, 0.8f, 0.8f });
-//         renderer->addText(top_corner + glm::vec2{ 5, (element_index * 32) + 5 }, 1.0f, {
-//         UIRenderer::TEXT_ALIGN_LEFT, UIRenderer::TEXT_FLAGS_NONE }, std::get<std::string>(elem),
-//         glm::vec3{ 0, 0, 0 });
-
-//         ++element_index;
-//     }
-
-//     renderer->addText(glm::vec2{ 0, 0 }, 2.0f,
-//         UIRenderer::TextFormatting{
-//             .align = UIRenderer::TEXT_ALIGN_CENTER,
-//             .flags = UIRenderer::TextFlags(UIRenderer::TEXT_FLAGS_ITALIC |
-//             UIRenderer::TEXT_FLAGS_STRIKETHROUGH | UIRenderer::TEXT_FLAGS_UNDERLINE), .wrap = true,
-//             .clip_bounds = { 250, 100 }
-//         }, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam bibendum massa ut urna laoreet
-//         vehicula.", { 0, 0, 0 });
-
-//     renderer->finalise();
-// }
-
-// bool UIContextMenu::checkInput()
-// {
-//     glm::vec2 bounds_min = top_corner;
-//     glm::vec2 bounds_max = top_corner + glm::vec2{ 220, (elements.size() * 32) };
-//     glm::vec2 mouse_pos = Input::getMousePosition();
-
-//     if (mouse_pos.x < bounds_min.x || mouse_pos.x > bounds_max.x
-//      || mouse_pos.y < bounds_min.y || mouse_pos.y > bounds_max.y)
-//         return false;
-
-//     return true;
-// }
+void UICanvas::layout() { hierarchy->element->layout(canvas_size, glm::mat3(1)); }
 
 static UIManager* manager;
 
@@ -231,10 +177,11 @@ Ref<UICanvas> UIManager::peek()
 void UIManager::draw(WeakRef<DrawCommandBuffer> command_buffer)
 {
     if (!manager) return;
+    command_buffer->setScissorViewport(glm::vec2(0.0f), glm::vec2(1.0f));
     for (const auto& [canvas, offset] : manager->canvases)
     {
-        command_buffer->setScissorViewport(offset / RenderServer::getFramebufferSize(),
-            canvas->getSize() / RenderServer::getFramebufferSize());
+        // command_buffer->setScissorViewport(offset / RenderServer::getFramebufferSize(),
+        //     canvas->getSize() / RenderServer::getFramebufferSize());
         canvas->build();
         auto command = canvas->draw();
         command.material->bind(command_buffer);
@@ -252,6 +199,28 @@ void UIManager::destroy()
 
 void UILabel::build()
 {
-    getRenderer()->addText(glm::vec2{ 0, 0 }, 0.0f, UIRenderer::TextFormatting{}, text,
+    getRenderer()->addText(getTransform() * glm::vec3{ 0, 0, 1 }, 0.0f, UIRenderer::TextFormatting{}, text,
         glm::vec3{ 0, 1, 0 }, text_backing);
+}
+
+void UIPanel::build()
+{
+    getRenderer()->addNineSlice(getTransform() * glm::vec3{ 0, 0, 1 }, 0.0f, getSize(), 0, colour,
+        panel_backing);
+}
+
+void UICanvasComponent::awake()
+{
+    StaticMeshComponent::awake();
+    canvas = new UICanvas({ 100, 100 });
+    canvas->setWorldSpace(true);
+}
+
+std::vector<DrawCommand> UICanvasComponent::getDrawCommands()
+{
+    canvas->build();
+    auto command = canvas->draw();
+    mesh         = command.mesh.strong();
+    material     = command.material.strong();
+    return StaticMeshComponent::getDrawCommands();
 }

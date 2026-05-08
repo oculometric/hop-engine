@@ -9,11 +9,10 @@
 # v0.55
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - the ui update
+    - figure out view space transform (need to be able to specify canvas size and position in pixels in 0-width space)
+
     - document user_interface.h
-    - ui canvas
-        - canvas can be in 'world' mode, or 'view' mode [2]
-            - view mode is added to a global ui stack which is applied at composite time
-            - world mode can have world space transforms applied, exists as a component
+    - world space UI canvas as a component which obeys object and camera transforms
     - basic elements
         - label
         - button

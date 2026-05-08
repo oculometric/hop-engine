@@ -100,7 +100,17 @@ void Editor::awake()
     });
 
     auto canvas = UIManager::push(new UICanvas({ 300, 300 }), { 100, 400 });
+    auto panel  = canvas->addElement<UIPanel>();
+    panel->setColour({ 1, 0, 0, 1 });
+    panel->setScaling(UITransform::SCALING_FILL_BOTH);
     canvas->addElement<UILabel>()->setText("hello, World!");
+
+    auto canvas2 = view_3d->addObject<UICanvasComponent>("canvas_test");
+    panel  = canvas2->getCanvas()->addElement<UIPanel>();
+    panel->setColour({ 1.0f, 0.6f, 0, 1 });
+    panel->setScaling(UITransform::SCALING_FILL_BOTH);
+    canvas2->getCanvas()->addElement<UILabel>()->setText("this is in world space");
+    canvas2->getTransform().setLocalScale(glm::vec3(glm::vec2(1.0f) / canvas2->getCanvas()->getSize(), 1.0f));
 }
 
 void Editor::update(float delta_time)

@@ -27,6 +27,7 @@
 #include "basic_components.h"
 #include "mesh.h"
 #include "texture.h"
+#include "user_interface.h"
 
 namespace HopEngine
 {

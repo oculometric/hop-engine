@@ -7,6 +7,8 @@
 
 using namespace HopEngine;
 
+TextComponent::~TextComponent() {}
+
 void TextComponent::awake()
 {
     StaticMeshComponent::awake();
