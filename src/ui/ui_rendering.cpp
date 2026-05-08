@@ -123,7 +123,7 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
 
     std::vector<std::string> lines;
 
-    if (!formatting.wrap || (formatting.wrap && formatting.clip_bounds.x <= 0))
+    if (!formatting.wrap || (formatting.wrap && !formatting.clip))
     {
         if (formatting.terminate_at_newline) lines.push_back(text.substr(0, text.find('\n')));
         else
@@ -186,7 +186,7 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
 
     glm::vec2 top_left = position;
     int bottom_clip    = formatting.clip_bounds.y;
-    if (bottom_clip <= 0) bottom_clip = INT_MAX;
+    if (bottom_clip <= 0 || !formatting.clip) bottom_clip = INT_MAX;
     for (const auto& line : lines)
     {
         TextFormatting sub_format = formatting;

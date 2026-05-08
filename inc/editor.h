@@ -30,6 +30,7 @@ private:
     Ref<Scene> view_nodes;
     WeakRef<NodeView> node_view;
     WeakRef<StaticMeshComponent> cube;
+    Ref<UICanvas> main_canvas;
 
 public:
     void awake() override;

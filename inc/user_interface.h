@@ -101,6 +101,7 @@ public:
         TextFlags flags           = TEXT_FLAGS_NONE;
         bool terminate_at_newline = false;
         bool wrap                 = false;
+        bool clip                 = false;
         glm::ivec2 clip_bounds    = { 0, 0 };
         int spacing               = 0;
     };

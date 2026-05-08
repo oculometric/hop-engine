@@ -30,6 +30,7 @@ void UILabel::setColour(glm::vec3 new_colour)
 
 void UILabel::build()
 {
+    formatting.clip_bounds = getSize();
     getRenderer()->addText(getTransform() * glm::vec3{ 0, 0, 1 }, 0.0f, formatting, text, colour,
         text_backing);
 }
