@@ -542,7 +542,11 @@ public:
     void setUintUniform(const std::string& name, glm::uint value)
     { setUniform(name, &value, sizeof(value)); }
 
-    void setBoolUniform(const std::string& name, bool value) { setUniform(name, &value, sizeof(uint32_t)); }
+    void setBoolUniform(const std::string& name, bool value)
+    {
+        uint32_t tmp = value;
+        setUniform(name, &tmp, sizeof(uint32_t));
+    }
 
     void setMat2Uniform(const std::string& name, glm::mat2 value)
     { setUniform(name, &value, sizeof(value)); }

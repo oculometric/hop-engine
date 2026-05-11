@@ -350,10 +350,14 @@ public:
 
         RenderServer::init(params.enable_vulkan_validation);
         Input::init();
+
+        UIManager::init();
     }
 
     static void destroy()
     {
+        UIManager::destroy();
+
         Input::destroy();
         Package::destroy();
         RenderServer::destroy();

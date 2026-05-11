@@ -1,6 +1,11 @@
 #pragma OMIT_TRANSFORM
 #pragma CANVAS_ATTACHMENTS
 
+uniform Uniforms
+{
+    bool world_space;
+};
+
 void vertex(in Vertex vert, inout vec4 clip, inout Varyings vars)
 {
     vars.position = vert.position;    // treated as position in pixel coordinates
@@ -14,10 +19,17 @@ void vertex(in Vertex vert, inout vec4 clip, inout Varyings vars)
                                     // .zw   -> unused
     vars.uv = vert.uv;
 
-    // vertex coordinates are passed in in canvas space ({ 0, 0 } is center)
-    vec2 pixel_position = floor(vert.position.xy + (scene.viewport_size / 2.0f));
-    clip.xy = (pixel_position / vec2(scene.viewport_size)) * 2.0f - 1.0f;
-    clip.zw = vec2(0, 1);
+    if (world_space)
+    {
+        clip.xyzw = scene.view_to_clip * scene.world_to_view * object.model_to_world * vec4(vert.position.xyz * vec3(-1, 1, 1), 1);
+    }
+    else
+    {
+        // vertex coordinates are passed in in canvas space ({ 0, 0 } is top left)
+        vec2 pixel_position = floor(vert.position.xy);
+        clip.xy = (pixel_position / vec2(scene.viewport_size)) * 2.0f - 1.0f;
+        clip.zw = vec2(0, 1);
+    }
 }
 
 uniform sampler2D text_atlas;

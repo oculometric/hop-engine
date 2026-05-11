@@ -1,7 +1,7 @@
 {
     "editor.detectIndentation": false,
     "cmake.debugConfig": {
-        "args": [ "--validation", "--verboselog" ],
+        "args": [ "--validation", ],
         "console": "externalTerminal"
     },
 }

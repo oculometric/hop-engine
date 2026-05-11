@@ -3,6 +3,7 @@
 #include "mesh.h"
 #include "node_view.h"
 #include "package.h"
+#include "user_interface.h"
 
 using namespace HopEngine;
 

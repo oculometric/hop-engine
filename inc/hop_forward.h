@@ -64,7 +64,7 @@ class UIRenderer;
 class UIStyle;
 class UICanvas;
 class UICanvasElement;
-class UIContextMenu;
+class UIManager;
 
 // misc
 

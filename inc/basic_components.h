@@ -21,7 +21,6 @@
 #include "common.h"
 #include "material.h"
 #include "scene.h"
-#include "user_interface.h"
 
 #include <glm/glm.hpp>
 
@@ -153,7 +152,7 @@ private:
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(TextComponent);
     TextComponent()           = default;
-    ~TextComponent() override = default;
+    ~TextComponent() override;
 
     void awake() override;
 

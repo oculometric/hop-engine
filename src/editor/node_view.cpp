@@ -392,7 +392,7 @@ NodeView::~NodeView()
 vector<DrawCommand> NodeView::getDrawCommands()
 {
     auto arr = StaticMeshComponent::getDrawCommands();
-    if (context_menu)
-        arr.push_back(context_menu->draw());
+    // if (context_menu)
+    //     arr.push_back(context_menu->draw());
     return arr;
 }
