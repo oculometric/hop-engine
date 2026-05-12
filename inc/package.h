@@ -53,14 +53,8 @@ public:
      * could not be found and/or read, or if no data block was found in the currently loaded packages
      * with a matching identifier.
      */
-    static DataBlock load(const std::string& path);
-    /**
-     * @brief loads the entire contents of the specified file path on disk.
-     * @param path path of the target file.
-     * @returns byte array containing all the data from the target file; empty if the file could not be
-     * found and/or read.
-     */
-    static DataBlock loadFromDisk(const std::string& path);
+    static DataBlock load(const std::string& path_or_identifier);
+    static void preload(const std::string& identifier);
     /**
      * @brief stores a block of data to the specified path. may be a res-relative package path or an
      * external filesystem path. if `path` begins with `"res://"`, the package manager will insert the
@@ -71,17 +65,19 @@ public:
      * @param data byte array to be written to the file/data block registry.
      * @returns `true` if the operation was successful, otherwise `false`.
      */
-    static bool store(const std::string& path, const DataBlock& data);
-    /**
-     * @brief stores the bytes in a byte array to the specified file path on disk. creates the file if
-     * necessarry, and will overwrite existing data if the file already exists. does not create
-     * intermediate directories to the specified path.
-     * @param path of the target file.
-     * @param byte array to be written to the file.
-     * @returns `true` if the data was written successfully, or `false` if the file could not be
-     * created/modified or one or more intermediate directories were missing.
-     */
-    static bool storeToDisk(const std::string& path, const DataBlock& data);
+    static bool store(const std::string& path_or_identifier, const DataBlock& data);
+    // stores a data block to the loose package with extra information
+    static bool store(const std::string& identifier, const DataBlock& data, const std::string& author, uint16_t creation_year, uint8_t creation_month, uint8_t creation_day);
+    
+    struct Selector
+    {
+        bool allow_resources_from_packages = false;
+        std::string package_selection_regex = "*";
+        std::string entry_selection_regex = "*";
+    };
+
+    // encode currently loaded entries into a new package
+    static DataBlock encodePackage(const std::string& author, const Selector& selector);
 
     /**
      * @brief reads a hop-engine package file as a byte array and loads all the data blocks contained
@@ -91,38 +87,17 @@ public:
      * @returns `true` if the package was loaded successfully, or `false` if there was an error during
      * package extraction (may be due to file corruption, incomplete data, or inability to decompress).
      */
+
+
+    // pulls in a package from memory, loading everything immediately
     static bool importPackage(const DataBlock& data);
-    /**
-     * @brief reads a hop-engine package file from disk and loads all the data blocks contained inside
-     * it into the data block registry via `importPackage`.
-     * @param path path to the target package file. the default extension for hop-engine package files
-     * is `*.hop`.
-     * @returns `true` if the package was loaded successfully, or `false` if there was an error during
-     * file reading or package extraction (see `loadFromDisk` and `importPackage`).
-     */
-    static bool importPackage(const std::string& path);
-    /**
-     * @brief collects all currently loaded data blocks and writes them out to a package file in the
-     * form of a byte array. optionally compresses the exported package with ZIP compression.
-     * compression usually reduces size by about 20-50%, although it will increase load time and memory
-     * usage when importing.
-     * @param compressed if `true` enables ZIP compression for the package file.
-     * @returns `true` if the package file was built successfully, or `false` if there was an error
-     * during encoding (may be due to inability to compress).
-     */
-    static DataBlock exportPackage(bool compressed = false);
-    /**
-     * @brief collects all currently loaded data blocks and writes them out to a package file specified
-     * by `path`. optionally compresses the exported package with ZIP compression. compression usually
-     * reduces size by about 20-50%, although it will increase load time and memory usage when
-     * importing.
-     * @param path file path where the final package should be written. the default extension for
-     * hop-engine package files is `*.hop`.
-     * @param compressed if `true` enables ZIP compression for the package file.
-     * @returns `true` if the package file was built and written successfully, or `false` if the file
-     * could not be written for some reason (see `storeToDisk` and `exportPackage`).
-     */
-    static bool exportPackage(const std::string& path, bool compressed = false);
+    // frees a package (and all entries) loaded using importpackage
+    static bool releasePackage(const DataBlock& data);
+    // starts tracking a package file by loading just its index
+    static bool importDeferredPackage(const std::string& path);
+    // stops tracking a package file
+    static bool releaseDeferredPackage(const std::string& path);
+
 
     /**
      * @brief lists the identifiers of all data blocks currently loaded in the registry.
