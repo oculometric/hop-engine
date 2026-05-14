@@ -86,12 +86,14 @@ int main(const int nargs, const char** vargs)
 				HopEngine::Package::store("res://" + path_prefix + identifier, HopEngine::Mesh::convertToBinaryMesh(path));
 			}
 			else
-				HopEngine::Package::store("res://" + path_prefix + identifier, HopEngine::Package::loadFromDisk(path));
+				HopEngine::Package::store("res://" + path_prefix + identifier, HopEngine::Package::load(path));
 			++entries;
 		}
 	}
 
-	HopEngine::Package::exportPackage(output_hop, compressed);
+    auto result = HopEngine::Package::encodePackage("cassette costen", {}, 2026, 5, 14);
+    
+	//HopEngine::Package::exportPackage(output_hop, compressed);
 
-	return 0;
+	return HopEngine::Package::store(output_hop, result);
 }

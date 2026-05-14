@@ -24,6 +24,9 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <queue>
+#include <fstream>
+#include <thread>
 
 namespace HopEngine
 {
@@ -35,6 +38,14 @@ namespace HopEngine
 class Package final
 {
     friend class InitMachine;
+public:
+    struct Selector
+    {
+        bool allow_resources_from_packages  = false;
+        bool allow_loose_resources          = true;
+        std::string package_selection_regex = ".*";
+        std::string entry_selection_regex   = ".*";
+    };
 
 private:
     struct Entry
@@ -53,15 +64,29 @@ private:
         DataBlock data;
     };
 
+    typedef std::pair<std::string, size_t> EntryPointer;
     typedef std::vector<Entry> EntryList;
     typedef std::map<std::string, std::pair<std::ifstream, EntryList>> PackageMap;
 
+    struct LoadCommand
+    {
+        std::ifstream* file;
+        uint32_t offset;
+        uint32_t size;
+        std::string package_name;
+        size_t entry;
+        void* data_pointer;
+    };
+
 private:
     // maps entry names to a package which contains them and the index of the entry in the entry table
-    std::multimap<std::string, std::pair<std::string, size_t>> all_entries;
+    std::multimap<std::string, EntryPointer> all_entries;
     // maps package names to their associated file handles and entry tables
     PackageMap tracked_packages;
     EntryList loose_entries;
+    std::queue<LoadCommand> load_queue;
+    bool background_thread_exit = false;
+    std::thread* background_thread = nullptr;
 
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(Package);
@@ -76,15 +101,9 @@ public:
     static bool store(const std::string& identifier, const DataBlock& data, const std::string& author,
         uint16_t creation_year, uint8_t creation_month, uint8_t creation_day);
 
-    struct Selector
-    {
-        bool allow_resources_from_packages  = false;
-        std::string package_selection_regex = "*";
-        std::string entry_selection_regex   = "*";
-    };
-
     // encode currently loaded entries into a new package based on a selector
-    static DataBlock encodePackage(const std::string& author, const Selector& selector);
+    static DataBlock encodePackage(const std::string& author, const Selector& selector,
+        uint16_t creation_year, uint8_t creation_month, uint8_t creation_day);
 
     // pulls in a package from memory, loading everything immediately
     static bool importPackage(const DataBlock& data);
@@ -102,11 +121,13 @@ public:
     static std::string getTempPath();
 
 private:
-    Package()  = default;
-    ~Package() = default;
+    Package();
+    ~Package();
 
     static void init();
     static void destroy();
+
+    static Package* getInstance();
 
     /**
      * @brief checks if the specified path has the `res://` prefix.

@@ -4,11 +4,11 @@
 - package manager improvements [240]
     - data blocks should know which package they came from
     - package manager should not have to load the entire file from disk at once, only an index of contents
-    - when you try to load an entry, search through the indexes of loaded packages, don't keep a copy of dat
-    - you can ask for an entry to be preloaded, where a copy of it IS kept in memory, but only until a call to load it properly
     - needs to be able to search a directory for res files too (we dont need to rebuild the hop file ALL the time)
-    - metadata (date/time, author)
     - async preloading with 'is_loading' flag to wait on
+    - SYNCHRONISATION!!! LOCKING
+
+- further init/destroy overhaul (one file with instances, all init/destroy functions return true/false, all init/destroy functions have init structs, always use getInstance function to fetch the instance)
 ---
 
 # v0.56

@@ -3,6 +3,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <thread>
 
 using namespace HopEngine;
 
@@ -24,15 +25,19 @@ void Package::destroy()
     }
 }
 
+Package* Package::getInstance()
+{
+    if (!instance) Package::init();
+    return instance;
+}
+
 DataBlock Package::load(const std::string& path)
 {
     std::string real_path;
     if (isResPath(path, real_path))
     {
-        if (!instance) Package::init();
-
         DBG_VERBOSE("loading '" + path + "'");
-        auto [start, end] = instance->all_entries.equal_range(real_path);
+        auto [start, end] = getInstance()->all_entries.equal_range(real_path);
         if (start == end)
         {
             DBG_ERROR("failed to load '" + path + "'");
@@ -41,13 +46,13 @@ DataBlock Package::load(const std::string& path)
 
         auto [package, entry] = (--end)->second;
 
-        if (package == "__ANONYMOUS__") return instance->loose_entries[entry].data;
+        if (package == "__ANONYMOUS__") return getInstance()->loose_entries[entry].data;
         else
         {
-            auto package_it = instance->tracked_packages.find(package);
+            auto package_it = getInstance()->tracked_packages.find(package);
             auto entry_it   = package_it->second.second.begin() + entry;
             if (!entry_it->is_loaded && !entry_it->is_loading) queueLoad(package_it, entry_it);
-            while (!entry_it->is_loaded) { _sleep(1000); }
+            while (!entry_it->is_loaded) { std::this_thread::sleep_for(std::chrono::milliseconds(100)); }
             DataBlock result = entry_it->data;
             if (entry_it->unload_after_read)
             {
@@ -71,10 +76,8 @@ void Package::preload(const std::string& identifier)
     std::string real_path;
     if (isResPath(identifier, real_path))
     {
-        if (!instance) Package::init();
-
         DBG_VERBOSE("preloading '" + identifier + "'");
-        auto [start, end] = instance->all_entries.equal_range(real_path);
+        auto [start, end] = getInstance()->all_entries.equal_range(real_path);
         if (start == end)
         {
             DBG_ERROR("failed to preload '" + identifier + "'");
@@ -86,7 +89,7 @@ void Package::preload(const std::string& identifier)
         if (package == "__ANONYMOUS__") return;
         else
         {
-            auto package_it = instance->tracked_packages.find(package);
+            auto package_it = getInstance()->tracked_packages.find(package);
             auto entry_it   = package_it->second.second.begin() + entry;
             if (!entry_it->is_loaded && !entry_it->is_loading)
             {
@@ -104,12 +107,12 @@ bool Package::store(const std::string& path, const DataBlock& data)
     std::string real_path;
     if (isResPath(path, real_path))
     {
-        if (!instance) Package::init();
-
         DBG_VERBOSE("storing '" + path + "' (" + std::to_string(data.size()) + " bytes)");
-        instance->loose_entries.emplace_back("__ANONYMOUS__", real_path, "", 0, 0, 0, true, false, 0, 0,
-            false, data);
-        instance->all_entries.emplace(real_path, "__ANONYMOUS__", instance->loose_entries.size() - 1);
+        getInstance()->loose_entries.emplace_back("__ANONYMOUS__", real_path, "", 0, 0, 0, true, false, 0,
+            0, false, data);
+        getInstance()->all_entries.insert({
+            real_path, EntryPointer{ "__ANONYMOUS__", getInstance()->loose_entries.size() - 1 }
+        });
         return true;
     }
     else
@@ -122,19 +125,61 @@ bool Package::store(const std::string& identifier, const DataBlock& data, const 
     std::string real_path;
     if (isResPath(identifier, real_path))
     {
-        if (!instance) Package::init();
-
         DBG_VERBOSE("storing '" + identifier + "' (" + std::to_string(data.size()) + " bytes)");
-        instance->loose_entries.emplace_back("__ANONYMOUS__", real_path, author, creation_year,
+        getInstance()->loose_entries.emplace_back("__ANONYMOUS__", real_path, author, creation_year,
             creation_month, creation_day, true, false, 0, 0, false, data);
-        instance->all_entries.emplace(real_path, "__ANONYMOUS__", instance->loose_entries.size() - 1);
+        getInstance()->all_entries.insert({
+            real_path, EntryPointer{ "__ANONYMOUS__", getInstance()->loose_entries.size() - 1 }
+        });
         return true;
     }
     else
         DBG_WARNING("advanced store cannot be used for disk files.");
+    return false;
 }
 
+Package::Package()
+{
+    instance          = this;
+    background_thread = new std::thread(Package::packageBackgroundMain);
+}
 
+Package::~Package()
+{
+    background_thread_exit = true;
+    background_thread->join();
+}
+
+void Package::queueLoad(PackageMap::iterator package_it, EntryList::iterator entry_it)
+{
+    if (entry_it->is_loaded || entry_it->is_loading) return;
+    entry_it->is_loading = true;
+    entry_it->data.resize(entry_it->data_size);
+    getInstance()->load_queue.emplace(&(package_it->second.first), entry_it->data_offset,
+        entry_it->data_size, package_it->first,
+        std::distance(std::begin(package_it->second.second), entry_it), entry_it->data.data());
+}
+
+void Package::packageBackgroundMain()
+{
+    while (!getInstance()->background_thread_exit)
+    {
+        if (getInstance()->load_queue.empty())
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            continue;
+        }
+        LoadCommand command = getInstance()->load_queue.front();
+        getInstance()->load_queue.pop();
+
+        command.file->seekg(static_cast<std::streampos>(command.offset));
+        command.file->readsome(reinterpret_cast<char*>(command.data_pointer), command.size);
+
+        auto& entry      = getInstance()->tracked_packages[command.package_name].second[command.entry];
+        entry.is_loaded  = true;
+        entry.is_loading = false;
+    }
+}
 
 // bool Package::exportPackage(const std::string& path, bool compressed)
 // {
@@ -300,9 +345,9 @@ bool Package::store(const std::string& identifier, const DataBlock& data, const 
 //         DBG_VERBOSE("loading compressed package");
 
 //         std::filesystem::create_directories(Package::getTempPath());
-//         std::string temp_zip_address = Package::getTempPath() + "hop_package_tmp" + PTR(instance) + ".zip";
-//         DataBlock trimmed(data.begin() + sizeof(PackageHeader), data.end());
-//         if (!storeToDisk(temp_zip_address, trimmed))
+//         std::string temp_zip_address = Package::getTempPath() + "hop_package_tmp" + PTR(instance) +
+//         ".zip"; DataBlock trimmed(data.begin() + sizeof(PackageHeader), data.end()); if
+//         (!storeToDisk(temp_zip_address, trimmed))
 //         {
 //             DBG_ERROR("failed to load package; error during decompression");
 //             return false;
