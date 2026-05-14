@@ -71,6 +71,7 @@ int main(const int nargs, const char** vargs)
 		output_hop = args[args.size() - 1];
 
 	HopEngine::InitMachine::initialise();
+
 	size_t entries = 0;
 	for (const auto& p : filesystem::recursive_directory_iterator(target_dir))
 	{
@@ -92,8 +93,5 @@ int main(const int nargs, const char** vargs)
 	}
 
     auto result = HopEngine::Package::encodePackage("cassette costen", {}, 2026, 5, 14);
-    
-	//HopEngine::Package::exportPackage(output_hop, compressed);
-
 	return !HopEngine::Package::store(output_hop, result);
 }

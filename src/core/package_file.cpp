@@ -83,6 +83,7 @@ DataBlock Package::encodePackage(const std::string& author, const Selector& sele
     package_header.creation_date_months = creation_month;
     package_header.creation_date_days   = creation_day;
     package_header.file_size            = static_cast<uint32_t>(align(sizeof(PackageFileHeader)));
+    package_header.author_str_size      = static_cast<uint16_t>(align(author.size()));
 
     // TODO: compress each data entry! not the whole package
 
@@ -96,11 +97,16 @@ DataBlock Package::encodePackage(const std::string& author, const Selector& sele
             static_cast<uint32_t>(align(entry->is_loaded ? entry->data.size() : entry->data_size));
     }
     package_header.file_size += static_cast<uint32_t>(entry_table_length);
+    package_header.file_size += package_header.author_str_size;
 
     DataBlock result;
     result.resize(package_header.file_size);
     memcpy(result.data(), &package_header, sizeof(PackageFileHeader));
-    size_t offset      = package_header.entry_table_offset;
+    size_t offset = package_header.entry_table_offset;
+
+    memcpy(result.data() + offset, author.data(), author.size());
+    offset += package_header.author_str_size;
+    
     size_t data_offset = offset + entry_table_length;
     for (auto& [entry, file] : entries_to_pack)
     {
@@ -129,6 +135,9 @@ DataBlock Package::encodePackage(const std::string& author, const Selector& sele
         }
         data_offset += entry_header->data_size;
     }
+
+    DBG_INFO("stored " + std::to_string(package_header.entry_table_count) + " entries (" +
+             std::to_string(package_header.file_size) + " bytes) to in-memory package file.");
 
     return result;
 }
