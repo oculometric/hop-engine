@@ -82,3 +82,6 @@
 - networking kit
 - Steamworks integration
 - animated images
+- audio synthesiser node editor
+- horizon-based ambient occlusion
+- support multiple materials per mesh

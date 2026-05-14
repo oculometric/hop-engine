@@ -12,3 +12,4 @@ engine.hop
 /builds
 *.kra~
 /.doc
+/.VSCodeCounter
