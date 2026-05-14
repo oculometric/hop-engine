@@ -61,6 +61,14 @@
 ---
 
 # future
+- node editors
+    - shader
+    - texture
+    - mesh
+    - render graph
+    - scene graph
+    - animation timeline
+    - audio synthesiser
 - fix errors on frame timeout and query pool results not ready
 - audio loading and output
 - windowless offscreen rendering support
@@ -68,9 +76,6 @@
 - hover tooltips for nodes....
 - frustrum culling [M]
 - texture upload/download of data
-- shader node editor
-- render graph node editor
-- animation timeline using nodes
 - shadows
 - textures should be loadable in linear mode?
 - a proper procedural shading art workflow
@@ -82,6 +87,5 @@
 - networking kit
 - Steamworks integration
 - animated images
-- audio synthesiser node editor
 - horizon-based ambient occlusion
 - support multiple materials per mesh

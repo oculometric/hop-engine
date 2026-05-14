@@ -35,8 +35,25 @@ namespace HopEngine
 class Package final
 {
     friend class InitMachine;
+
 private:
-    std::map<std::string, DataBlock> database; // map of all currently loaded data blocks
+    struct Entry
+    {
+        std::string owning_package;
+        std::string identifier;
+        std::string author;
+        uint16_t creation_date_year;
+        uint8_t creation_date_months;
+        uint8_t creation_date_days;
+        bool is_loaded;
+        uint32_t data_size;
+        uint32_t data_offset;
+        bool unload_after_read;
+        DataBlock data;
+    };
+
+private:
+    std::multimap<std::string, Entry> database; // map of all currently loaded data blocks
     std::map<std::string, std::string> alias_table;
 
 public:
@@ -67,13 +84,14 @@ public:
      */
     static bool store(const std::string& path_or_identifier, const DataBlock& data);
     // stores a data block to the loose package with extra information
-    static bool store(const std::string& identifier, const DataBlock& data, const std::string& author, uint16_t creation_year, uint8_t creation_month, uint8_t creation_day);
-    
+    static bool store(const std::string& identifier, const DataBlock& data, const std::string& author,
+        uint16_t creation_year, uint8_t creation_month, uint8_t creation_day);
+
     struct Selector
     {
-        bool allow_resources_from_packages = false;
+        bool allow_resources_from_packages  = false;
         std::string package_selection_regex = "*";
-        std::string entry_selection_regex = "*";
+        std::string entry_selection_regex   = "*";
     };
 
     // encode currently loaded entries into a new package
@@ -88,7 +106,6 @@ public:
      * package extraction (may be due to file corruption, incomplete data, or inability to decompress).
      */
 
-
     // pulls in a package from memory, loading everything immediately
     static bool importPackage(const DataBlock& data);
     // frees a package (and all entries) loaded using importpackage
@@ -97,7 +114,6 @@ public:
     static bool importDeferredPackage(const std::string& path);
     // stops tracking a package file
     static bool releaseDeferredPackage(const std::string& path);
-
 
     /**
      * @brief lists the identifiers of all data blocks currently loaded in the registry.
