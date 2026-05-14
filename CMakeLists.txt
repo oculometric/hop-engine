@@ -34,7 +34,9 @@ add_compile_definitions(HOP_ENGINE_COMMIT=${GIT_TAG})
 # ================ EXECUTABLE TARGET 'package-tool' =======================================
 add_executable(package-tool
 	"src/package-builder/package-builder.cpp"
-	"src/core/package.cpp"
+	"src/core/filesystem.cpp"
+    "src/core/package_file.cpp"
+    "src/core/package_management.cpp"
 	"src/rendering/binmesh_loading.cpp"
 	"src/rendering/obj_loading.cpp"
 	"src/misc/exec.cpp"
@@ -151,7 +153,6 @@ add_custom_command(
 	DEPENDS
 		${ENGINE_HOP}
         bin-to-cpp
-		#${CMAKE_SOURCE_DIR}/bin_to_cpp.py
 	COMMENT "Converting engine.hop to CPP format"
 )
 
@@ -168,7 +169,6 @@ set_property(TARGET hop-engine PROPERTY CXX_STANDARD 20)
 
 if(MSVC)
 	target_compile_options(hop-engine PRIVATE /wd4100 /wd4101)
-	# target_compile_options("/W4")
 	string(REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
 	string(REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
 else()
@@ -215,7 +215,6 @@ target_include_directories(hop-editor
 )
 
 # ================ EXPORT TARGET 'export' =================================================
-message("Generating exported zip...")
 string(TIMESTAMP TODAY "%d_%m_%Y %H.%M.%S")
 set(ZIP_COMMAND "tar")
 if(WIN32)

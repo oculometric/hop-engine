@@ -4,4 +4,16 @@
         "args": [ "--validation", ],
         "console": "externalTerminal"
     },
+    "C_Cpp.files.exclude": {
+        "bin/**": true,
+    },
+    "files.watcherExclude": {
+        "bin/**": true,
+    },
+    "search.exclude": {
+        "bin/**": true,
+    },
+    "files.exclude": {
+        "bin/**": true,
+    },
 }
