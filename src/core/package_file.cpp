@@ -44,6 +44,8 @@ size_t align(size_t original) { return (original % BYTE_ALIGNMENT) ? original + 
 DataBlock Package::encodePackage(const std::string& author, const Selector& selector,
     uint16_t creation_year, uint8_t creation_month, uint8_t creation_day)
 {
+    const std::lock_guard lock(getInstance()->database_mutex);
+
     std::vector<std::pair<const Entry*, std::ifstream*>> entries_to_pack;
 
     std::regex entry_regex(selector.entry_selection_regex);
@@ -90,7 +92,8 @@ DataBlock Package::encodePackage(const std::string& author, const Selector& sele
         entry_table_length += align(sizeof(EntryFileHeader));
         entry_table_length += align(entry->identifier.size());
         entry_table_length += align(entry->author.size());
-        package_header.file_size += static_cast<uint32_t>(align(entry->is_loaded ? entry->data.size() : entry->data_size));
+        package_header.file_size +=
+            static_cast<uint32_t>(align(entry->is_loaded ? entry->data.size() : entry->data_size));
     }
     package_header.file_size += static_cast<uint32_t>(entry_table_length);
 
@@ -107,7 +110,8 @@ DataBlock Package::encodePackage(const std::string& author, const Selector& sele
         entry_header->creation_date_year   = entry->creation_date_year;
         entry_header->creation_date_months = entry->creation_date_months;
         entry_header->creation_date_days   = entry->creation_date_days;
-        entry_header->data_size   = static_cast<uint32_t>(align(entry->is_loaded ? entry->data.size() : entry->data_size));
+        entry_header->data_size =
+            static_cast<uint32_t>(align(entry->is_loaded ? entry->data.size() : entry->data_size));
         entry_header->data_offset = static_cast<uint32_t>(data_offset);
         offset += align(sizeof(EntryFileHeader));
 

@@ -395,7 +395,7 @@ Engine::Engine(const InitParams& params)
     };
     for (auto s : builders) premade_samplers[s] = new Sampler(s.first, s.second);
 
-    auto discord_application_id_data = Package::loadFromDisk("discord_appid.txt");
+    auto discord_application_id_data = Package::load("discord_appid.txt");
     std::string discord_application_id(discord_application_id_data.begin(),
         discord_application_id_data.end());
 

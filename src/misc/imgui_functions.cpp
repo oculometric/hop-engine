@@ -479,49 +479,49 @@ void Engine::_drawImGuiDebug() const
 			ImGui::EndPopup();
 		}
 	
-		if (ImGui::Button("load resource"))
-			ImGui::OpenPopup("load_resource");
-		if (ImGui::BeginPopup("load_resource"))
-		{
-			const auto entries = Package::listLoadedEntries();
-			ImGui::BeginTable("resources_table", 1);
-			for (const auto& entry : entries)
-			{
-				string extension;
-				const size_t extension_start = entry.find_last_of('.');
-				if (extension_start != string::npos)
-					extension = entry.substr(extension_start + 1);
-				int type = -1;
-				string type_string;
-				if (extension == "obj")
-				{ type = 0; type_string = "mesh"; }
-				else if (extension == "png")
-				{ type = 1; type_string = "texture"; }
-				else if (extension == "hmat")
-				{ type = 2; type_string = "material"; }
-				else if (extension == "vert" || extension == "frag")
-				{ type = 3; type_string = "shader"; }
-				ImGui::TableNextRow();
-				ImGui::TableSetColumnIndex(0);
-				ImGui::Text("%s", entry.c_str());
-				if (ImGui::IsItemHovered() && type != -1)
-					ImGui::SetTooltip("loads as %s", type_string.c_str());
-				if (ImGui::IsItemClicked() && type != -1)
-				{
-					switch (type)
-					{
-					case 0: Engine::loadMesh("res://" + entry); break;
-					case 1: Engine::loadTexture("res://" + entry); break;
-					case 2: Engine::loadMaterial("res://" + entry); break;
-					case 3: Engine::loadShader("res://" + entry.substr(0, extension_start)); break;
-					default: break;
-					}
-					ImGui::CloseCurrentPopup();				
-				}
-			}
-			ImGui::EndTable();
-			ImGui::EndPopup();
-		}
+		// if (ImGui::Button("load resource"))
+		// 	ImGui::OpenPopup("load_resource");
+		// if (ImGui::BeginPopup("load_resource"))
+		// {
+		// 	const auto entries = Package::listLoadedEntries();
+		// 	ImGui::BeginTable("resources_table", 1);
+		// 	for (const auto& entry : entries)
+		// 	{
+		// 		string extension;
+		// 		const size_t extension_start = entry.find_last_of('.');
+		// 		if (extension_start != string::npos)
+		// 			extension = entry.substr(extension_start + 1);
+		// 		int type = -1;
+		// 		string type_string;
+		// 		if (extension == "obj")
+		// 		{ type = 0; type_string = "mesh"; }
+		// 		else if (extension == "png")
+		// 		{ type = 1; type_string = "texture"; }
+		// 		else if (extension == "hmat")
+		// 		{ type = 2; type_string = "material"; }
+		// 		else if (extension == "vert" || extension == "frag")
+		// 		{ type = 3; type_string = "shader"; }
+		// 		ImGui::TableNextRow();
+		// 		ImGui::TableSetColumnIndex(0);
+		// 		ImGui::Text("%s", entry.c_str());
+		// 		if (ImGui::IsItemHovered() && type != -1)
+		// 			ImGui::SetTooltip("loads as %s", type_string.c_str());
+		// 		if (ImGui::IsItemClicked() && type != -1)
+		// 		{
+		// 			switch (type)
+		// 			{
+		// 			case 0: Engine::loadMesh("res://" + entry); break;
+		// 			case 1: Engine::loadTexture("res://" + entry); break;
+		// 			case 2: Engine::loadMaterial("res://" + entry); break;
+		// 			case 3: Engine::loadShader("res://" + entry.substr(0, extension_start)); break;
+		// 			default: break;
+		// 			}
+		// 			ImGui::CloseCurrentPopup();				
+		// 		}
+		// 	}
+		// 	ImGui::EndTable();
+		// 	ImGui::EndPopup();
+		// }
 		const auto size = ImGui::GetWindowSize();
 		if (align_windows)
 			ImGui::SetWindowPos({ ImGui::GetIO().DisplaySize.x - size.x - 10.0f, last_window_height + 40 });

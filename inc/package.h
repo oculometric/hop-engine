@@ -27,6 +27,7 @@
 #include <queue>
 #include <fstream>
 #include <thread>
+#include <mutex>
 
 namespace HopEngine
 {
@@ -87,6 +88,7 @@ private:
     std::queue<LoadCommand> load_queue;
     bool background_thread_exit = false;
     std::thread* background_thread = nullptr;
+    std::mutex database_mutex;
 
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(Package);

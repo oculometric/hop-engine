@@ -152,6 +152,7 @@ Package::~Package()
 
 void Package::queueLoad(PackageMap::iterator package_it, EntryList::iterator entry_it)
 {
+    const std::lock_guard lock(getInstance()->database_mutex);
     if (entry_it->is_loaded || entry_it->is_loading) return;
     entry_it->is_loading = true;
     entry_it->data.resize(entry_it->data_size);

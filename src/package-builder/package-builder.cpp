@@ -95,5 +95,5 @@ int main(const int nargs, const char** vargs)
     
 	//HopEngine::Package::exportPackage(output_hop, compressed);
 
-	return HopEngine::Package::store(output_hop, result);
+	return !HopEngine::Package::store(output_hop, result);
 }

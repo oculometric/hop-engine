@@ -7,6 +7,7 @@
 #include "render_graph.h"
 #include "scene.h"
 #include "texture.h"
+#include "user_interface.h"
 
 #include <filesystem>
 
