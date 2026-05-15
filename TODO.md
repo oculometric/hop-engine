@@ -9,6 +9,8 @@
     - SYNCHRONISATION!!! LOCKING
 
 - further init/destroy overhaul (one file with instances, all init/destroy functions return true/false, all init/destroy functions have init structs, always use getInstance function to fetch the instance)
+- improve encapsulation! module-private stuff
+- fix errors on frame timeout and query pool results not ready
 ---
 
 # v0.56
@@ -36,8 +38,12 @@
         - no longer their own scene
         - pack everything into a single texture
         - use the generic user interface shader
+    - ui deserialisation
 
-- make local/global transform from forward/up vectors (generally complete the transform functionality) [H]
+- transform overhaul
+    - make local/global transform from forward/up vectors (generally complete the transform functionality), i.e. create from basis vectors
+    - merge with hierarchy
+    - implement quaternion
 ---
 
 # v0.60
@@ -69,7 +75,6 @@
     - scene graph
     - animation timeline
     - audio synthesiser
-- fix errors on frame timeout and query pool results not ready
 - audio loading and output
 - windowless offscreen rendering support
 - .otf -> baked font converter (font oven)
@@ -89,3 +94,4 @@
 - animated images
 - horizon-based ambient occlusion
 - support multiple materials per mesh
+- replace discord integration library with internal stuff
