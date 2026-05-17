@@ -1,15 +1,13 @@
 # TODO
 
 # v0.55
+- fix errors on frame timeout and query pool results not ready
+- eliminate separate linux build from build system
 - package manager improvements [240]
-    - re-document
     - reimplement compresion
 
 - further init/destroy overhaul (one file with instances, all init/destroy functions return true/false, all init/destroy functions have init structs, always use getInstance function to fetch the instance, should be able to eliminate init/destroy?)
 - improve encapsulation! module-private stuff
-- fix errors on frame timeout and query pool results not ready
-- eliminate separate linux build from build system
-- fix discord time
 ---
 
 # v0.56

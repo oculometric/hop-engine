@@ -305,11 +305,17 @@ void Engine::setRPCActivity(RPCActivityType activity)
     discord::RPCManager::get().getPresence().setActivityType(type).refresh();
 }
 
+size_t chronoToTime(std::chrono::system_clock::time_point time_point)
+{
+    return std::chrono::system_clock::to_time_t(time_point);
+}
+
 void Engine::setRPCTimestamp(std::chrono::system_clock::time_point start_time)
 {
     discord::RPCManager::get()
         .getPresence()
-        .setStartTimestamp(start_time.time_since_epoch().count() / 1000000000)
+        .setStartTimestamp(chronoToTime(start_time))
+        .setEndTimestamp(0)
         .refresh();
 }
 
@@ -318,8 +324,8 @@ void Engine::setRPCTimestamp(std::chrono::system_clock::time_point start_time,
 {
     discord::RPCManager::get()
         .getPresence()
-        .setStartTimestamp(start_time.time_since_epoch().count() / 1000000000)
-        .setEndTimestamp(end_time.time_since_epoch().count() / 1000000000)
+        .setStartTimestamp(chronoToTime(start_time))
+        .setEndTimestamp(chronoToTime(end_time))
         .refresh();
 }
 
