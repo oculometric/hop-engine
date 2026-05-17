@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.27)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIRECTORY}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIRECTORY}")
@@ -7,22 +7,35 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIRECTORY}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIRECTORY}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIRECTORY}")
 
+if(WIN32)
+	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+		set(CMAKE_BUILD_TYPE "Release")
+	endif()
+endif()
+
 # ================ PROJECT 'hop-engine' ===================================================
 project(hop-engine)
 
 if(WIN32)
-	if(HOP_BUILD_DEBUG)
-		# add_compile_options("/Od")
-		string(REPLACE "/O2" "/Od" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
-		add_link_options("/INCREMENTAL")
-	endif()
+	set(CMAKE_C_COMPILER "cl.exe")
+	set(CMAKE_CXX_COMPILER "cl.exe")
+
 	add_compile_options("/ZI")
 	add_link_options("/DEBUG")
+
+	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+		string(REPLACE "/O2" "/Od" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+		add_link_options("/INCREMENTAL")
+	endif()
 else()
+	set(CMAKE_C_COMPILER "/usr/bin/clang")
+	set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+
 	add_compile_options("-g")
 	add_compile_options("-O1")
 	add_link_options("-g")
 endif()
+
 find_package(Vulkan REQUIRED COMPONENTS SPIRV-Tools)
 set(ENGINE_HOP "${CMAKE_BINARY_DIR}/engine.hop")
 execute_process(
@@ -35,9 +48,9 @@ add_compile_definitions(HOP_ENGINE_COMMIT=${GIT_TAG})
 # ================ EXECUTABLE TARGET 'package-tool' =======================================
 add_executable(package-tool
 	"src/package-builder/package-builder.cpp"
-	"src/core/filesystem.cpp"
-	"src/core/package_file.cpp"
-	"src/core/package_management.cpp"
+	"src/filesystem/filesystem.cpp"
+	"src/filesystem/package_file.cpp"
+	"src/filesystem/package_management.cpp"
 	"src/rendering/binmesh_loading.cpp"
 	"src/rendering/obj_loading.cpp"
 	"src/misc/exec.cpp"

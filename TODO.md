@@ -2,7 +2,6 @@
 
 # v0.55
 - fix errors on frame timeout and query pool results not ready
-- eliminate separate linux build from build system
 - package manager improvements [240]
     - reimplement compresion
 

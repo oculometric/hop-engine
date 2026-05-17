@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <source_location>
+
 #define PTR(ptr) HopEngine::Debug::pointerToString(ptr)
 
 #if defined(_WIN32)
@@ -26,21 +28,11 @@
 #define __FUNCTION_SIGNATURE__ __PRETTY_FUNCTION__
 #endif
 
-#define DBG_VERBOSE(str)                                                                            \
-    HopEngine::Debug::write(str, HopEngine::Debug::DEBUG_VERBOSE, __FILE__, __FUNCTION_SIGNATURE__, \
-        __LINE__)
-#define DBG_INFO(str)                                                                            \
-    HopEngine::Debug::write(str, HopEngine::Debug::DEBUG_INFO, __FILE__, __FUNCTION_SIGNATURE__, \
-        __LINE__)
-#define DBG_WARNING(str)                                                                            \
-    HopEngine::Debug::write(str, HopEngine::Debug::DEBUG_WARNING, __FILE__, __FUNCTION_SIGNATURE__, \
-        __LINE__)
-#define DBG_ERROR(str)                                                                            \
-    HopEngine::Debug::write(str, HopEngine::Debug::DEBUG_ERROR, __FILE__, __FUNCTION_SIGNATURE__, \
-        __LINE__)
-#define DBG_FAULT(str)                                                                            \
-    HopEngine::Debug::write(str, HopEngine::Debug::DEBUG_FAULT, __FILE__, __FUNCTION_SIGNATURE__, \
-        __LINE__)
+#define DBG_VERBOSE(str) HopEngine::Debug::write(str, HopEngine::Debug::DEBUG_VERBOSE)
+#define DBG_INFO(str)    HopEngine::Debug::write(str, HopEngine::Debug::DEBUG_INFO)
+#define DBG_WARNING(str) HopEngine::Debug::write(str, HopEngine::Debug::DEBUG_WARNING)
+#define DBG_ERROR(str)   HopEngine::Debug::write(str, HopEngine::Debug::DEBUG_ERROR)
+#define DBG_FAULT(str)   HopEngine::Debug::write(str, HopEngine::Debug::DEBUG_FAULT)
 
 #include "common.h"
 
@@ -58,6 +50,7 @@ namespace HopEngine
 class Debug final
 {
     friend class InitMachine;
+
 public:
     /**
      * @brief enum which describes the severity of a debug output call.
@@ -106,9 +99,10 @@ public:
      * `crash level`, this call will cause the program to exit.
      * @param description text to be printed.
      * @param severity severity of the debug command. higher means worse.
+     * @param location place in the codebase where the error ocurred
      */
-    static void write(const std::string& description, Level severity, const char* file,
-        const char* function, size_t line);
+    static void write(const std::string& description, Level severity,
+        const std::source_location& location = std::source_location::current());
     /**
      * @brief force flush output to file, useful for circumstances where the program crashes.
      */

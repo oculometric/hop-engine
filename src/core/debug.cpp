@@ -50,8 +50,7 @@ static std::string makeANSIColour(const int fgcol) { return "\033[" + std::to_st
 std::string Debug::pointerToString(const void* ptr)
 { return std::format("0x{:x}", reinterpret_cast<size_t>(ptr)); }
 
-void Debug::write(const std::string& description, Level severity, const char* file, const char* function,
-    size_t line)
+void Debug::write(const std::string& description, Level severity, const std::source_location& location)
 {
     if (instance == nullptr)
     {
@@ -64,7 +63,7 @@ void Debug::write(const std::string& description, Level severity, const char* fi
     static const std::string bracket_col  = makeANSIColour(60);
     static const std::string standard_col = makeANSIColour(67);
     static const std::string time_col     = makeANSIColour(5);
-    std::filesystem::path file_path       = file;
+    std::filesystem::path file_path       = location.file_name();
     static const std::string file_str     = file_path.filename().generic_string();
 
     std::string type_col  = "";
@@ -88,12 +87,14 @@ void Debug::write(const std::string& description, Level severity, const char* fi
     case DEBUG_ERROR:
         log_type  = "ERROR";
         type_col  = makeANSIColour(61);
-        next_line = "(in " + file_str + ", " + function + ", at ln " + std::to_string(line) + ")";
+        next_line = " -> in " + file_str + ", ln " + std::to_string(location.line()) + "\n -> " +
+                    location.function_name();
         break;
     case DEBUG_FAULT:
         log_type  = "FAULT";
         type_col  = makeANSIColour(1);
-        next_line = "(in " + file_str + ", '" + function + "', at ln " + std::to_string(line) + ")";
+        next_line = " -> in " + file_str + ", ln " + std::to_string(location.line()) + "\n -> " +
+                    location.function_name();
         break;
     }
 
@@ -113,8 +114,8 @@ void Debug::write(const std::string& description, Level severity, const char* fi
         standard_col, description);
     if (!next_line.empty())
     {
-        log_line.append("\n    " + next_line);
-        term_line.append("\n    " + next_line);
+        log_line.append("\n" + next_line);
+        term_line.append("\n" + next_line);
     }
     instance->lines_history.push_back(log_line);
     if (instance->lines_history.size() > 256) instance->lines_history.pop_front();
