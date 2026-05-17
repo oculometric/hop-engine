@@ -1,9 +1,9 @@
 #include "package.h"
 
 #include <algorithm>
+#include <fcntl.h>
 #include <filesystem>
 #include <fstream>
-#include <fcntl.h>
 #include <io.h>
 
 using namespace HopEngine;

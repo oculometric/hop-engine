@@ -323,10 +323,7 @@ void Engine::setRPCTimestamp(std::chrono::system_clock::time_point start_time,
         .refresh();
 }
 
-void Engine::clearRPCActivity()
-{
-    discord::RPCManager::get().clearPresence();
-}
+void Engine::clearRPCActivity() { discord::RPCManager::get().clearPresence(); }
 
 void Engine::drawImGuiDebug() { engine->_drawImGuiDebug(); }
 
@@ -410,7 +407,10 @@ Engine::Engine(const InitParams& params)
                     setRPCActivity(RPC_PLAYING);
                     setRPCDescription("hop-engine is running.");
                     setRPCTimestamp(std::chrono::system_clock::now());
-                    discord::RPCManager::get().getPresence().setStatusDisplayType(discord::StatusDisplayType::State).refresh();
+                    discord::RPCManager::get()
+                        .getPresence()
+                        .setStatusDisplayType(discord::StatusDisplayType::State)
+                        .refresh();
                 })
             .onDisconnected([](int errcode, std::string_view message)
                 { DBG_WARNING("disconnected discord with error code " + std::string(message)); })
@@ -418,8 +418,8 @@ Engine::Engine(const InitParams& params)
                 { DBG_ERROR("discord error with code " + std::string(message)); })
             .onJoinGame([](std::string_view joinSecret) { DBG_INFO("discord join game"); })
             .onSpectateGame([](std::string_view spectateSecret) { DBG_INFO("discord spectate game"); })
-            .onJoinRequest(
-                [](discord::User const& user) { DBG_INFO("discord join game request from " + user.username); })
+            .onJoinRequest([](discord::User const& user)
+                { DBG_INFO("discord join game request from " + user.username); })
             .initialize();
     }
 

@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <regex>
+#include <set>
 
 using namespace HopEngine;
 
@@ -12,7 +13,6 @@ struct PackageFileHeader
 {
     uint32_t signature;
     uint32_t file_size;
-    uint32_t checksum; // TODO: checksum!
     uint8_t version;
     uint8_t padding;
     uint16_t entry_table_count;
@@ -36,6 +36,8 @@ struct EntryFileHeader
 
 size_t align(size_t original)
 { return (original % BYTE_ALIGNMENT) ? ((original / BYTE_ALIGNMENT) + 1) * BYTE_ALIGNMENT : original; }
+
+size_t remainder(size_t original) { return align(original) - original; }
 
 DataBlock Package::encodePackage(const std::string& author, const Selector& selector,
     uint16_t creation_year, uint8_t creation_month, uint8_t creation_day)
@@ -64,7 +66,7 @@ DataBlock Package::encodePackage(const std::string& author, const Selector& sele
             for (const auto& entry : package.second.second)
             {
                 if (std::regex_match(entry.identifier, entry_regex))
-                    entries_to_pack.emplace_back(&entry, &package.second.first);
+                    entries_to_pack.emplace_back(&entry, package.second.first);
             }
         }
     }
@@ -140,11 +142,11 @@ DataBlock Package::encodePackage(const std::string& author, const Selector& sele
 }
 
 bool populateIndex(const DataBlock& data, const PackageFileHeader*& package_header,
-    std::vector<const EntryFileHeader*>& entry_headers)
+    std::vector<const EntryFileHeader*>& entry_headers, size_t real_data_size)
 {
     package_header = nullptr;
     entry_headers.clear();
-    if (data.size() < sizeof(package_header))
+    if (data.size() < sizeof(PackageFileHeader))
     {
         DBG_ERROR("failed to decode package: data too short");
         return false;
@@ -197,14 +199,15 @@ bool populateIndex(const DataBlock& data, const PackageFileHeader*& package_head
             entry_headers.clear();
             return false;
         }
-        if (entry_header->data_offset + align(entry_header->data_size) > data.size())
+        if (entry_header->data_offset + align(entry_header->data_size) > real_data_size)
         {
             DBG_ERROR("failed to decode package: data appears truncated");
             package_header = nullptr;
             entry_headers.clear();
             return false;
         }
-        offset += align(sizeof(EntryFileHeader)) + align(entry_header->author_str_size) + align(entry_header->identifier_str_size);
+        offset += align(sizeof(EntryFileHeader)) + align(entry_header->author_str_size) +
+                  align(entry_header->identifier_str_size);
         entry_headers.push_back(entry_header);
     }
     return true;
@@ -214,7 +217,7 @@ bool Package::importPackage(const DataBlock& data)
 {
     const PackageFileHeader* package_header;
     std::vector<const EntryFileHeader*> entry_headers;
-    if (!populateIndex(data, package_header, entry_headers))
+    if (!populateIndex(data, package_header, entry_headers, data.size()))
     {
         DBG_ERROR("unable to decode package");
         return false;
@@ -237,5 +240,122 @@ bool Package::importPackage(const DataBlock& data)
     }
     DBG_INFO("loaded " + std::to_string(package_header->entry_table_count) + " entries (" +
              std::to_string(package_header->file_size) + " bytes) from in-memory package file.");
+    return true;
+}
+
+bool Package::importDeferredPackage(const std::string& path)
+{
+    std::ifstream* file = new std::ifstream(path, std::ios::binary | std::ios::ate);
+    if (!file->is_open())
+    {
+        DBG_ERROR("unable to open package file");
+        return false;
+    }
+    auto file_size = file->tellg();
+    file->seekg(std::ios::beg);
+    PackageFileHeader package_header;
+    file->read(reinterpret_cast<char*>(&package_header), sizeof(PackageFileHeader));
+    if (file->tellg() > file_size)
+    {
+        DBG_ERROR("failed to decode package: data too short");
+        file->close();
+        return false;
+    }
+    if (package_header.signature != SIGNATURE)
+    {
+        DBG_ERROR("failed to decode package: invalid signature");
+        file->close();
+        return false;
+    }
+    if (package_header.version != 1)
+    {
+        DBG_ERROR("failed to decode package: invalid version");
+        file->close();
+        return false;
+    }
+    file->ignore(remainder(sizeof(PackageFileHeader)));
+    std::string package_author(package_header.author_str_size, ' ');
+    file->read(reinterpret_cast<char*>(package_author.data()), package_author.size());
+    if (file->tellg() > file_size)
+    {
+        DBG_ERROR("failed to decode package: data too short");
+        file->close();
+        return false;
+    }
+    file->ignore(remainder(package_header.author_str_size));
+
+    file->seekg(package_header.entry_table_offset);
+    if (file->tellg() != package_header.entry_table_offset)
+    {
+        DBG_ERROR("failed to decode package: data too short");
+        file->close();
+        return false;
+    }
+    std::vector<Entry> entries;
+    for (size_t i = 0; i < package_header.entry_table_count; ++i)
+    {
+        EntryFileHeader entry_header;
+        file->read(reinterpret_cast<char*>(&entry_header), sizeof(EntryFileHeader));
+        if (file->tellg() > file_size)
+        {
+            DBG_ERROR("failed to decode package: data too short");
+            file->close();
+            return false;
+        }
+        file->ignore(remainder(sizeof(EntryFileHeader)));
+        std::string identifier(entry_header.identifier_str_size, ' ');
+        std::string author(entry_header.author_str_size, ' ');
+        file->read(reinterpret_cast<char*>(identifier.data()), entry_header.identifier_str_size);
+        if (file->tellg() > file_size)
+        {
+            DBG_ERROR("failed to decode package: data too short");
+            file->close();
+            return false;
+        }
+        file->ignore(remainder(entry_header.identifier_str_size));
+        file->read(reinterpret_cast<char*>(author.data()), entry_header.author_str_size);
+        if (file->tellg() > file_size)
+        {
+            DBG_ERROR("failed to decode package: data too short");
+            file->close();
+            return false;
+        }
+        file->ignore(remainder(entry_header.author_str_size));
+
+        entries.emplace_back(path, identifier, author, entry_header.creation_date_year,
+            entry_header.creation_date_months, entry_header.creation_date_days, false, false,
+            entry_header.data_size, entry_header.data_offset, false, DataBlock{});
+    }
+
+    const std::lock_guard lock(getInstance()->database_mutex);
+    getInstance()->tracked_packages.insert({
+        path, { file, entries }
+    });
+    size_t i = 0;
+    for (const auto& entry : entries)
+    {
+        getInstance()->all_entries.insert({
+            entry.identifier, { path, i }
+        });
+        ++i;
+    }
+
+    return true;
+}
+
+bool Package::releaseDeferredPackage(const std::string& path)
+{
+    const std::lock_guard lock(getInstance()->database_mutex);
+    auto it = getInstance()->tracked_packages.find(path);
+    if (it == getInstance()->tracked_packages.end()) { return false; }
+    it->second.first->close();
+    delete it->second.first;
+    getInstance()->tracked_packages.erase(it);
+    for (auto it = getInstance()->all_entries.begin(); it != getInstance()->all_entries.end();)
+    {
+        if (it->second.first == path) it = getInstance()->all_entries.erase(it);
+        else
+            ++it;
+    }
     return true;
 }
