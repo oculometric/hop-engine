@@ -16,20 +16,28 @@ vector<string>::iterator findArg(string s, vector<string>& v)
     return it;
 }
 
-namespace HopEngine
-{
+HopEngine::Package* package = nullptr;
+HopEngine::Debug* debug     = nullptr;
 
-class InitMachine final
+class HopEngine::InitMachine final
 {
 public:
-    static void initialise() { HopEngine::Package::init(); }
-};
+    static void initialise()
+    {
+        debug = reinterpret_cast<HopEngine::Debug*>(malloc(sizeof(HopEngine::Debug)));
+        new (debug) HopEngine::Debug(HopEngine::Debug::DEBUG_FAULT, false);
+        package = reinterpret_cast<HopEngine::Package*>(malloc(sizeof(HopEngine::Package)));
+        new (package) HopEngine::Package();
+    }
 
-} // namespace HopEngine
+    static void destroy() {}
+};
 
 // TODO: improve this to be much more advanced, multiple files/folders to specify, set root, etc
 int main(const int nargs, const char** vargs)
 {
+    HopEngine::InitMachine::initialise();
+
     if (nargs < 2)
     {
         cout << "usage: package-builder SOURCE_DIRECTORY [options] [OUTPUT_FILE]" << endl;
@@ -61,8 +69,6 @@ int main(const int nargs, const char** vargs)
     }
     if (args[args.size() - 1][0] != '-') output_hop = args[args.size() - 1];
 
-    HopEngine::InitMachine::initialise();
-
     size_t entries = 0;
     for (const auto& p : filesystem::recursive_directory_iterator(target_dir))
     {
@@ -87,3 +93,6 @@ int main(const int nargs, const char** vargs)
     auto result = HopEngine::Package::encodePackage("cassette costen", {}, 2026, 5, 14);
     return !HopEngine::Package::store(output_hop, result);
 }
+
+HopEngine::Debug* HopEngine::Debug::getInstance() { return debug; }
+HopEngine::Package* HopEngine::Package::getInstance() { return package; }

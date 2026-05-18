@@ -7,12 +7,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIRECTORY}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIRECTORY}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIRECTORY}")
 
-if(WIN32)
-	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-		set(CMAKE_BUILD_TYPE "Release")
-	endif()
-endif()
-
 # ================ PROJECT 'hop-engine' ===================================================
 project(hop-engine)
 
@@ -23,7 +17,7 @@ if(WIN32)
 	add_compile_options("/ZI")
 	add_link_options("/DEBUG")
 
-	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	if(${GENERATE_DEBUG})
 		string(REPLACE "/O2" "/Od" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 		add_link_options("/INCREMENTAL")
 	endif()

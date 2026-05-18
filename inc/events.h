@@ -20,8 +20,8 @@
 
 #include "common.h"
 
-#include <functional>
 #include <cstdint>
+#include <functional>
 #include <map>
 
 namespace HopEngine
@@ -33,6 +33,7 @@ namespace HopEngine
 class EventServer final
 {
     friend class InitMachine;
+
 public:
     typedef uint32_t TypeID;
     /**
@@ -116,9 +117,7 @@ public:
 private:
     EventServer()  = default;
     ~EventServer() = default;
-
-    static void init();
-    static void destroy();
+    static EventServer* getInstance();
 
     /**
      * @brief attempts to find a subscriber to a particular event based on the event type ID and the

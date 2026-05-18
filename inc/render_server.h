@@ -275,10 +275,6 @@ public:
 private:
     RenderServer(bool enable_validation);
     ~RenderServer();
-
-    static void init(bool enable_validation);
-    static void destroy();
-
     static RenderServer* getInstance();
 
     /**

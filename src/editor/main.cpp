@@ -83,9 +83,9 @@ int main(int nargs, const char** cargs)
         }
     }
 
-    Engine::init(params);
+    HopEngine::init(params);
     Engine::startApplication<Editor>();
-    Engine::destroy();
+    HopEngine::destroy();
 
     return 0;
 }

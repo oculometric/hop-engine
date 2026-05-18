@@ -21,7 +21,8 @@
       "displayName": "x64 Debug",
       "inherits": "base",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Release",
+        "GENERATE_DEBUG": "YES"
       }
     }
   ]

@@ -374,10 +374,9 @@ public:
     static void draw(WeakRef<DrawCommandBuffer> command_buffer);
 
 private:
-    UIManager() = default;
-
-    static void init();
-    static void destroy();
+    UIManager()  = default;
+    ~UIManager() = default;
+    static UIManager* getInstance();
 };
 
 class UICanvasComponent final : public StaticMeshComponent
@@ -419,7 +418,7 @@ class UIPanel final : public UICanvasElement
 {
 private:
     glm::vec3 colour = { 0.2f, 0.2f, 0.2f };
-    int style = 0;
+    int style        = 0;
     UIRenderer::BackingData panel_backing;
 
 public:

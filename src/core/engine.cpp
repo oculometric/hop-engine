@@ -13,54 +13,37 @@
 #include <discord-presence/discord-rpc.hpp>
 
 using namespace HopEngine;
-using namespace std;
-
-static Engine* engine = nullptr;
-
-void Engine::init(const InitParams& params)
-{
-    if (engine == nullptr) engine = new Engine(params);
-}
-
-void Engine::destroy()
-{
-    if (engine != nullptr)
-    {
-        delete engine;
-        engine = nullptr;
-    }
-}
 
 void Engine::start()
 {
-    if (engine->start_called)
+    if (getInstance()->start_called)
     {
         DBG_WARNING(
             "attempt to start the engine mainloop when the mainloop is already running. don't do that!");
         return;
     }
-    engine->start_called = true;
+    getInstance()->start_called = true;
 
-    auto last_frame = chrono::steady_clock::now();
+    auto last_frame = std::chrono::steady_clock::now();
 
-    while (!RenderServer::getWindowShouldClose() && !engine->stop_requested)
+    while (!RenderServer::getWindowShouldClose() && !getInstance()->stop_requested)
     {
         EventServer::dispatch(EVENT_TYPE_FRAME_BEGIN);
 
-        if (engine->next_application)
+        if (getInstance()->next_application)
         {
-            engine->application      = engine->next_application;
-            engine->next_application = nullptr;
-            engine->application->awake();
+            getInstance()->application      = getInstance()->next_application;
+            getInstance()->next_application = nullptr;
+            getInstance()->application->awake();
             EventServer::dispatch(EVENT_TYPE_APPLICATION_CHANGE);
         }
 
-        auto this_frame                     = chrono::steady_clock::now();
-        chrono::duration<float> delta       = this_frame - last_frame;
-        last_frame                          = this_frame;
-        engine->delta_time                  = delta.count();
-        chrono::duration<float> since_start = this_frame - engine->engine_start_timestamp;
-        engine->total_time                  = since_start.count();
+        auto this_frame                          = std::chrono::steady_clock::now();
+        std::chrono::duration<float> delta       = this_frame - last_frame;
+        last_frame                               = this_frame;
+        getInstance()->delta_time                = delta.count();
+        std::chrono::duration<float> since_start = this_frame - getInstance()->engine_start_timestamp;
+        getInstance()->total_time                = since_start.count();
 
         Input::pollInput();
 
@@ -70,62 +53,83 @@ void Engine::start()
         if (Input::wasKeyPressed(Input::KEY_F9))
             RenderServer::setOverlayLogs(!RenderServer::getOverlayLogs());
 
-        auto update_start = chrono::steady_clock::now();
-        if (engine->application) engine->application->update(getDeltaTime());
-        chrono::duration<float> update_duration = chrono::steady_clock::now() - update_start;
+        auto update_start = std::chrono::steady_clock::now();
+        if (getInstance()->application) getInstance()->application->update(getDeltaTime());
+        std::chrono::duration<float> update_duration = std::chrono::steady_clock::now() - update_start;
 
-        if (engine->application)
+        if (getInstance()->application)
         {
             ImGui_ImplVulkan_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            if (engine->application) engine->application->drawImGui();
+            if (getInstance()->application) getInstance()->application->drawImGui();
 
             ImGui::Render();
         }
         FrameStats stats  = RenderServer::draw();
         stats.update_time = update_duration.count();
 
-        engine->updateStats(stats);
+        getInstance()->updateStats(stats);
 
-        ++(engine->frame_index);
+        ++(getInstance()->frame_index);
 
         EventServer::dispatch(EVENT_TYPE_FRAME_END);
     }
 
-    engine->start_called = false;
+    getInstance()->start_called = false;
 }
 
 void Engine::setScene(const Ref<Scene>& new_scene)
 {
     Engine::debugSelect(WeakRef<Object>());
-    engine->scene = new_scene;
+    getInstance()->scene = new_scene;
     RenderServer::setSingleScene(new_scene);
     EventServer::dispatch(EVENT_TYPE_SCENE_CHANGE);
 }
 
-void Engine::stop() { engine->stop_requested = true; }
+void Engine::stop() { getInstance()->stop_requested = true; }
 
-Ref<Scene> Engine::getScene() { return engine->scene; }
+void Engine::reset()
+{
+    stop();
+
+    Engine::debugSelect(WeakRef<Object>());
+    getInstance()->scene            = nullptr;
+    getInstance()->application      = nullptr;
+    getInstance()->next_application = nullptr;
+    getInstance()->loaded_shaders.clear();
+    getInstance()->loaded_materials.clear();
+    getInstance()->loaded_textures.clear();
+    getInstance()->loaded_3d_textures.clear();
+    getInstance()->loaded_meshes.clear();
+    getInstance()->premade_samplers.clear();
+}
+
+Ref<Scene> Engine::getScene() { return getInstance()->scene; }
+
+// all currently managed `Ref` objects known to the engine
+static std::multimap<const char*, WeakRef<void>> allocated_refs;
 
 void Engine::summariseTrackedObjects()
 {
-    DBG_INFO("enumerating allocated objects (" + ::to_string(engine->allocated_refs.size()) + "):");
-    for (auto& [type_name, ptr] : engine->allocated_refs)
+    DBG_INFO("enumerating allocated objects (" + std::to_string(allocated_refs.size()) + "):");
+    for (auto& [type_name, ptr] : allocated_refs)
         DBG_INFO("object " + PTR(ptr.get()) + ", with type '" + type_name + '\'');
 }
 
-void Engine::registerCountedRef(const char* type_name, const WeakRef<void>& reference)
-{ engine->allocated_refs.insert({ type_name, reference }); }
+size_t Engine::countTrackedObjects() { return allocated_refs.size(); }
 
-void Engine::unregisterCountedRef(const void* ptr)
+void HopEngine::registerCountedRef(const char* type_name, const WeakRef<void>& reference)
+{ allocated_refs.insert({ type_name, reference }); }
+
+void HopEngine::unregisterCountedRef(const void* ptr)
 {
-    for (auto pair = engine->allocated_refs.begin(); pair != engine->allocated_refs.end(); ++pair)
+    for (auto pair = allocated_refs.begin(); pair != allocated_refs.end(); ++pair)
     {
         if (pair->second.get() == ptr)
         {
-            engine->allocated_refs.erase(pair);
+            allocated_refs.erase(pair);
             return;
         }
     }
@@ -133,71 +137,66 @@ void Engine::unregisterCountedRef(const void* ptr)
         "a reference counted object was deallocated, but its raw pointer is not allocated! you probably used a raw pointer twice. we are about to double-free that pointer. fuck you.");
 }
 
-void HopEngine::registerCountedRef(const char* type_name, const WeakRef<void>& reference)
-{ Engine::registerCountedRef(type_name, reference); }
-
-void HopEngine::unregisterCountedRef(const void* ptr) { Engine::unregisterCountedRef(ptr); }
-
-Ref<Shader> Engine::loadShader(const string& path)
+Ref<Shader> Engine::loadShader(const std::string& path)
 {
-    const auto it = engine->loaded_shaders.find(path);
-    if (it == engine->loaded_shaders.end())
+    const auto it = getInstance()->loaded_shaders.find(path);
+    if (it == getInstance()->loaded_shaders.end())
     {
-        Ref<Shader> thing            = new Shader(path);
-        engine->loaded_shaders[path] = thing;
+        Ref<Shader> thing                   = new Shader(path);
+        getInstance()->loaded_shaders[path] = thing;
         return thing;
     }
     DBG_VERBOSE("reused shader '" + path + "' instead of duplicating");
     return it->second;
 }
 
-Ref<Material> Engine::loadMaterial(const string& path)
+Ref<Material> Engine::loadMaterial(const std::string& path)
 {
-    const auto it = engine->loaded_materials.find(path);
-    if (it == engine->loaded_materials.end())
+    const auto it = getInstance()->loaded_materials.find(path);
+    if (it == getInstance()->loaded_materials.end())
     {
-        Ref<Material> thing            = Material::deserialiseFile(path);
-        engine->loaded_materials[path] = thing;
+        Ref<Material> thing                   = Material::deserialiseFile(path);
+        getInstance()->loaded_materials[path] = thing;
         return thing;
     }
     DBG_VERBOSE("reused material '" + path + "' instead of duplicating");
     return it->second;
 }
 
-Ref<Texture> Engine::loadTexture(const string& path)
+Ref<Texture> Engine::loadTexture(const std::string& path)
 {
-    const auto it = engine->loaded_textures.find(path);
-    if (it == engine->loaded_textures.end())
+    const auto it = getInstance()->loaded_textures.find(path);
+    if (it == getInstance()->loaded_textures.end())
     {
-        Ref<Texture> thing            = Texture::loadImage(path);
-        engine->loaded_textures[path] = thing;
+        Ref<Texture> thing                   = Texture::loadImage(path);
+        getInstance()->loaded_textures[path] = thing;
         return thing;
     }
     DBG_VERBOSE("reused texture '" + path + "' instead of duplicating");
     return it->second;
 }
 
-Ref<Texture> Engine::loadTexture3D(const string& path, const int layers_wide, const int layers_high)
+Ref<Texture> Engine::loadTexture3D(const std::string& path, const int layers_wide, const int layers_high)
 {
-    const auto it = engine->loaded_3d_textures.find(path);
-    if (it == engine->loaded_3d_textures.end())
+    const auto it = getInstance()->loaded_3d_textures.find(path);
+    if (it == getInstance()->loaded_3d_textures.end())
     {
-        Ref<Texture> thing               = Texture::loadImage3D(path,
+        Ref<Texture> thing                      = Texture::loadImage3D(path,
             { static_cast<uint32_t>(layers_wide), static_cast<uint32_t>(layers_high) });
-        engine->loaded_3d_textures[path] = thing;
+        getInstance()->loaded_3d_textures[path] = thing;
         return thing;
     }
     DBG_VERBOSE("reused texture 3D '" + path + "' instead of duplicating");
     return it->second;
 }
 
-Ref<Mesh> Engine::loadMesh(const string& path)
+Ref<Mesh> Engine::loadMesh(const std::string& path)
 {
-    const auto it = engine->loaded_meshes.find(path);
-    if (it == engine->loaded_meshes.end())
+    const auto it = getInstance()->loaded_meshes.find(path);
+    if (it == getInstance()->loaded_meshes.end())
     {
-        Ref<Mesh> thing             = Mesh::loadMesh(path);
-        engine->loaded_meshes[path] = thing;
+        Ref<Mesh> thing                    = Mesh::loadMesh(path);
+        getInstance()->loaded_meshes[path] = thing;
         return thing;
     }
     DBG_VERBOSE("reused mesh '" + path + "' instead of duplicating");
@@ -205,75 +204,84 @@ Ref<Mesh> Engine::loadMesh(const string& path)
 }
 
 Ref<Sampler> Engine::getSampler(Sampler::Filter filter)
-{ return engine->premade_samplers[{ filter, Sampler::ADDRESS_REPEAT }]; }
+{ return getSampler(filter, Sampler::ADDRESS_REPEAT); }
 
 Ref<Sampler> Engine::getSampler(Sampler::Address address)
-{ return engine->premade_samplers[{ Sampler::FILTER_NEAREST, address }]; }
+{ return getSampler(Sampler::FILTER_NEAREST, address); }
 
 Ref<Sampler> Engine::getSampler(Sampler::Filter filter, Sampler::Address address)
-{ return engine->premade_samplers[{ filter, address }]; }
+{
+    if (getInstance()->premade_samplers.find({ filter, address }) != getInstance()->premade_samplers.end())
+        return getInstance()->premade_samplers[{ filter, address }];
+    else
+    {
+        Ref<Sampler> s                                       = new Sampler(filter, address);
+        getInstance()->premade_samplers[{ filter, address }] = s;
+        return s;
+    }
+}
 
 size_t Engine::pruneUnusedResources()
 {
     DBG_INFO("pruning currently loaded unused resources...");
     size_t pruned_refs = 0;
-    auto mesh_it       = engine->loaded_meshes.begin();
-    while (mesh_it != engine->loaded_meshes.end())
+    auto mesh_it       = getInstance()->loaded_meshes.begin();
+    while (mesh_it != getInstance()->loaded_meshes.end())
     {
         if (mesh_it->second.getCount() == 1)
         {
             auto next = mesh_it;
             ++next;
-            engine->loaded_meshes.erase(mesh_it);
+            getInstance()->loaded_meshes.erase(mesh_it);
             ++pruned_refs;
             mesh_it = next;
         }
         else
             ++mesh_it;
     }
-    auto mat_it = engine->loaded_materials.begin();
-    while (mat_it != engine->loaded_materials.end())
+    auto mat_it = getInstance()->loaded_materials.begin();
+    while (mat_it != getInstance()->loaded_materials.end())
     {
         if (mat_it->second.getCount() == 1)
         {
             auto next = mat_it;
             ++next;
-            engine->loaded_materials.erase(mat_it);
+            getInstance()->loaded_materials.erase(mat_it);
             ++pruned_refs;
             mat_it = next;
         }
         else
             ++mat_it;
     }
-    auto shr_it = engine->loaded_shaders.begin();
-    while (shr_it != engine->loaded_shaders.end())
+    auto shr_it = getInstance()->loaded_shaders.begin();
+    while (shr_it != getInstance()->loaded_shaders.end())
     {
         if (shr_it->second.getCount() == 1)
         {
             auto next = shr_it;
             ++next;
-            engine->loaded_shaders.erase(shr_it);
+            getInstance()->loaded_shaders.erase(shr_it);
             ++pruned_refs;
             shr_it = next;
         }
         else
             ++shr_it;
     }
-    auto tex_it = engine->loaded_textures.begin();
-    while (tex_it != engine->loaded_textures.end())
+    auto tex_it = getInstance()->loaded_textures.begin();
+    while (tex_it != getInstance()->loaded_textures.end())
     {
         if (tex_it->second.getCount() == 1)
         {
             auto next = tex_it;
             ++next;
-            engine->loaded_textures.erase(tex_it);
+            getInstance()->loaded_textures.erase(tex_it);
             ++pruned_refs;
             tex_it = next;
         }
         else
             ++tex_it;
     }
-    DBG_INFO("pruned " + ::to_string(pruned_refs) + " total reference counted objects");
+    DBG_INFO("pruned " + std::to_string(pruned_refs) + " total reference counted objects");
     return pruned_refs;
 }
 
@@ -306,9 +314,7 @@ void Engine::setRPCActivity(RPCActivityType activity)
 }
 
 size_t chronoToTime(std::chrono::system_clock::time_point time_point)
-{
-    return std::chrono::system_clock::to_time_t(time_point);
-}
+{ return std::chrono::system_clock::to_time_t(time_point); }
 
 void Engine::setRPCTimestamp(std::chrono::system_clock::time_point start_time)
 {
@@ -331,72 +337,11 @@ void Engine::setRPCTimestamp(std::chrono::system_clock::time_point start_time,
 
 void Engine::clearRPCActivity() { discord::RPCManager::get().clearPresence(); }
 
-void Engine::drawImGuiDebug() { engine->_drawImGuiDebug(); }
-
-extern unsigned char engine_hop_raw[];
-extern unsigned long long engine_hop_raw_size;
-
-class HopEngine::InitMachine final
-{
-public:
-    static void initialise(const Engine::InitParams& params)
-    {
-        Debug::init(params.create_log_file);
-        Debug::setLogLevel(params.debug_log_level);
-
-        EventServer::init();
-
-        Package::init();
-        DataBlock engine_hop(engine_hop_raw_size);
-        memcpy(engine_hop.data(), engine_hop_raw, engine_hop.size());
-        Package::importPackage(engine_hop);
-
-        RenderServer::init(params.enable_vulkan_validation);
-        Input::init();
-
-        UIManager::init();
-    }
-
-    static void destroy()
-    {
-        UIManager::destroy();
-
-        Input::destroy();
-        Package::destroy();
-        RenderServer::destroy();
-        if (!engine->allocated_refs.empty())
-        {
-            DBG_ERROR(
-                "uh oh! there are objects still allocated! prepare for vulkan errors and possibly crashes! see below:");
-            Engine::summariseTrackedObjects();
-        }
-        else
-            DBG_INFO("good girl for cleaning up!");
-
-        EventServer::destroy();
-
-        Debug::close();
-    }
-};
+void Engine::drawImGuiDebug() { getInstance()->_drawImGuiDebug(); }
 
 Engine::Engine(const InitParams& params)
 {
-    engine = this;
-
-    engine->engine_start_timestamp = chrono::steady_clock::now();
-
-    InitMachine::initialise(params);
-
-    RenderServer::setIcon("res://engine/icon.png");
-    std::pair<Sampler::Filter, Sampler::Address> builders[6] = {
-        {  Sampler::FILTER_LINEAR,     Sampler::ADDRESS_REPEAT },
-        { Sampler::FILTER_NEAREST,     Sampler::ADDRESS_REPEAT },
-        {  Sampler::FILTER_LINEAR,   Sampler::ADDRESS_MIRRORED },
-        { Sampler::FILTER_NEAREST,   Sampler::ADDRESS_MIRRORED },
-        {  Sampler::FILTER_LINEAR, Sampler::ADDRESS_CLAMP_EDGE },
-        { Sampler::FILTER_NEAREST, Sampler::ADDRESS_CLAMP_EDGE },
-    };
-    for (auto s : builders) premade_samplers[s] = new Sampler(s.first, s.second);
+    getInstance()->engine_start_timestamp = std::chrono::steady_clock::now();
 
     auto discord_application_id_data = Package::load("discord_appid.txt");
     std::string discord_application_id(discord_application_id_data.begin(),
@@ -428,36 +373,18 @@ Engine::Engine(const InitParams& params)
                 { DBG_INFO("discord join game request from " + user.username); })
             .initialize();
     }
-
-    EventServer::dispatch(EVENT_TYPE_INIT_FINISH);
 }
 
 Engine::~Engine()
 {
-    EventServer::dispatch(EVENT_TYPE_DESTROY_START);
-
     discord::RPCManager::get().shutdown();
-
-    Engine::debugSelect(WeakRef<Object>());
-    scene            = nullptr;
-    application      = nullptr;
-    next_application = nullptr;
-    loaded_shaders.clear();
-    loaded_materials.clear();
-    loaded_textures.clear();
-    loaded_3d_textures.clear();
-    loaded_meshes.clear();
-    premade_samplers.clear();
-
-    InitMachine::destroy();
+    reset();
 }
 
-Engine* Engine::getEngine() { return engine; }
-
-vector<WeakRef<void>> Engine::getRefsWithType(const char* type_name)
+std::vector<WeakRef<void>> Engine::getRefsWithType(const char* type_name)
 {
-    vector<WeakRef<void>> refs;
-    auto [range_start, range_end] = engine->allocated_refs.equal_range(type_name);
+    std::vector<WeakRef<void>> refs;
+    auto [range_start, range_end] = allocated_refs.equal_range(type_name);
     while (range_start != range_end)
     {
         refs.push_back(range_start->second);

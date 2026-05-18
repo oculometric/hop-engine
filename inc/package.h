@@ -194,10 +194,6 @@ public:
 private:
     Package();
     ~Package();
-
-    static void init();
-    static void destroy();
-
     static Package* getInstance();
 
     /**

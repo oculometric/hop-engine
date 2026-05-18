@@ -11,35 +11,9 @@
 
 using namespace HopEngine;
 
-static Debug* instance = nullptr;
+void Debug::setLogLevel(const Level severity) { getInstance()->log_level = severity; }
 
-void Debug::init(bool create_file)
-{
-    if (instance == nullptr) instance = new Debug(Debug::DEBUG_FAULT, create_file);
-
-    DBG_INFO("initialised debug");
-}
-
-void Debug::close()
-{
-    if (instance != nullptr)
-    {
-        delete instance;
-        instance = nullptr;
-    }
-}
-
-void Debug::setLogLevel(const Level severity)
-{
-    if (!instance) Debug::init(true);
-    instance->log_level = severity;
-}
-
-void Debug::setCrashLevel(const Level severity)
-{
-    if (!instance) Debug::init(true);
-    instance->crash_level = severity;
-}
+void Debug::setCrashLevel(const Level severity) { getInstance()->crash_level = severity; }
 
 // generates an ANSI colour command from the given foreground and background colours
 static std::string makeANSIColour(const int fgcol, const int bgcol)
@@ -52,13 +26,13 @@ std::string Debug::pointerToString(const void* ptr)
 
 void Debug::write(const std::string& description, Level severity, const std::source_location& location)
 {
-    if (instance == nullptr)
+    if (!getInstance())
     {
         DEBUG_TERMINAL << description << std::endl;
         return;
     }
 
-    if (severity < instance->log_level) return;
+    if (severity < getInstance()->log_level) return;
 
     static const std::string bracket_col  = makeANSIColour(60);
     static const std::string standard_col = makeANSIColour(67);
@@ -117,16 +91,16 @@ void Debug::write(const std::string& description, Level severity, const std::sou
         log_line.append("\n" + next_line);
         term_line.append("\n" + next_line);
     }
-    instance->lines_history.push_back(log_line);
-    if (instance->lines_history.size() > 256) instance->lines_history.pop_front();
-    if (instance->file_output.is_open()) instance->file_output << log_line << std::endl;
+    getInstance()->lines_history.push_back(log_line);
+    if (getInstance()->lines_history.size() > 256) getInstance()->lines_history.pop_front();
+    if (getInstance()->file_output.is_open()) getInstance()->file_output << log_line << std::endl;
     DEBUG_TERMINAL << term_line << std::endl;
 
     static const std::string crash_string = "crash-severity issue occurred. stopping.";
-    if (severity >= instance->crash_level)
+    if (severity >= getInstance()->crash_level)
     {
         // if severity is too high, stop the program
-        if (instance->file_output.is_open()) instance->file_output << crash_string << std::endl;
+        if (getInstance()->file_output.is_open()) getInstance()->file_output << crash_string << std::endl;
         DEBUG_TERMINAL << makeANSIColour(1, 0) << crash_string;
         exit(-1);
     }
@@ -134,8 +108,8 @@ void Debug::write(const std::string& description, Level severity, const std::sou
 
 void Debug::flush()
 {
-    if (instance == nullptr) return;
-    if (instance->file_output.is_open()) instance->file_output.flush();
+    if (getInstance() == nullptr) return;
+    if (getInstance()->file_output.is_open()) getInstance()->file_output.flush();
     DEBUG_TERMINAL.flush();
 }
 
@@ -145,16 +119,14 @@ std::vector<std::string> Debug::queryLines(size_t count)
     arr.reserve(count);
     for (size_t i = 0; i < count; ++i)
     {
-        if (i >= instance->lines_history.size()) break;
-        arr.push_back(*(instance->lines_history.rbegin() + (count - i - 1)));
+        if (i >= getInstance()->lines_history.size()) break;
+        arr.push_back(*(getInstance()->lines_history.rbegin() + (count - i - 1)));
     }
     return arr;
 }
 
 Debug::Debug(Level crash, bool create_file)
 {
-    instance = this;
-
     log_level   = Debug::DEBUG_INFO;
     crash_level = crash;
 

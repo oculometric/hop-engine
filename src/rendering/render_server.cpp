@@ -11,58 +11,40 @@
 
 using namespace HopEngine;
 
-static RenderServer* server = nullptr;
-
-void RenderServer::init(bool enable_validation)
-{
-    DBG_INFO("initialising graphics server");
-    if (server == nullptr) server = new RenderServer(enable_validation);
-}
-
-void RenderServer::destroy()
-{
-    DBG_INFO("destroying graphics server");
-    if (server != nullptr)
-    {
-        delete server;
-        server = nullptr;
-    }
-}
-
 constexpr Shader::Descriptor scene_uniform_descriptor{ 0, Shader::UNIFORM, sizeof(SceneUniforms) };
 constexpr Shader::Descriptor object_uniform_descriptor{ 0, Shader::UNIFORM, sizeof(ObjectUniforms) };
 
 Ref<UniformBlock> RenderServer::createSceneUniforms()
 {
     return new UniformBlock(
-        Shader::Layout{ server->scene_descriptor_set_layout, { scene_uniform_descriptor }, 0 });
+        Shader::Layout{ getInstance()->scene_descriptor_set_layout, { scene_uniform_descriptor }, 0 });
 }
 
 Ref<UniformBlock> RenderServer::createObjectUniforms()
 {
     return new UniformBlock(
-        Shader::Layout{ server->object_descriptor_set_layout, { object_uniform_descriptor }, 1 });
+        Shader::Layout{ getInstance()->object_descriptor_set_layout, { object_uniform_descriptor }, 1 });
 }
 
-uint32_t RenderServer::getFramesInFlight() { return server->swapchain->getImageCount(); }
+uint32_t RenderServer::getFramesInFlight() { return getInstance()->swapchain->getImageCount(); }
 
-glm::vec2 RenderServer::getFramebufferSize() { return glm::vec2(server->swapchain->getExtent()); }
+glm::vec2 RenderServer::getFramebufferSize() { return glm::vec2(getInstance()->swapchain->getExtent()); }
 
 void RenderServer::setVsyncEnabled(bool enabled)
 {
-    server->vsync              = enabled;
-    server->wants_vsync_update = true;
+    getInstance()->vsync              = enabled;
+    getInstance()->wants_vsync_update = true;
 }
 
-bool RenderServer::getVsyncEnabled() { return server->vsync; }
+bool RenderServer::getVsyncEnabled() { return getInstance()->vsync; }
 
 void RenderServer::setFullscreenEnabled(bool enabled)
 {
-    server->fullscreen              = enabled;
-    server->wants_fullscreen_update = true;
+    getInstance()->fullscreen              = enabled;
+    getInstance()->wants_fullscreen_update = true;
 }
 
-bool RenderServer::getFullscreenEnabled() { return server->fullscreen; }
+bool RenderServer::getFullscreenEnabled() { return getInstance()->fullscreen; }
 
 void RenderServer::setSingleScene(const Ref<Scene>& scene)
 {
@@ -74,17 +56,17 @@ void RenderServer::setSingleScene(const Ref<Scene>& scene)
 void RenderServer::setMultiScene(const std::vector<SceneRender>& multi_scenes)
 {
     RenderServer::waitIdle();
-    server->scenes.clear();
-    for (auto& scene : multi_scenes) server->scenes.emplace_back(scene);
+    getInstance()->scenes.clear();
+    for (auto& scene : multi_scenes) getInstance()->scenes.emplace_back(scene);
 }
 
 GPUHandle RenderServer::getRenderPass(const Framebuffer::Config& for_config)
 {
-    auto it = server->render_passes.find(for_config);
-    if (it == server->render_passes.end())
+    auto it = getInstance()->render_passes.find(for_config);
+    if (it == getInstance()->render_passes.end())
     {
-        Ref<RenderPass> new_pass          = new RenderPass(for_config);
-        server->render_passes[for_config] = new_pass;
+        Ref<RenderPass> new_pass                 = new RenderPass(for_config);
+        getInstance()->render_passes[for_config] = new_pass;
         return new_pass->getRenderPass();
     }
     return it->second->getRenderPass();
@@ -92,8 +74,6 @@ GPUHandle RenderServer::getRenderPass(const Framebuffer::Config& for_config)
 
 RenderServer::RenderServer(bool enable_validation)
 {
-    server = this;
-
     createWindow();
 
     createVulkan(enable_validation);
@@ -148,7 +128,8 @@ RenderServer::RenderServer(bool enable_validation)
     ObjectUniforms* spinner = static_cast<ObjectUniforms*>(spinner_uniforms->getBuffer());
     spinner->model_to_world = glm::mat4(1);
     spinner_material->setTexture(0, Engine::loadTexture("res://engine/icon.png"));
-    spinner_material->setSampler(0, new Sampler(Sampler::FILTER_NEAREST, Sampler::ADDRESS_CLAMP_EDGE));
+    spinner_material->setSampler(0,
+        Engine::getSampler(Sampler::FILTER_NEAREST, Sampler::ADDRESS_CLAMP_EDGE));
 
     debug_text_font      = Font::deserialise("res://engine/NASA_worm.hfnt");
     auto debug_ui_style  = new UIStyle();
@@ -158,6 +139,8 @@ RenderServer::RenderServer(bool enable_validation)
     initImGui();
 
     DBG_VERBOSE("graphics server initialised");
+
+    RenderServer::setIcon("res://engine/icon.png");
 
     draw();
     setVisible(true);
@@ -195,8 +178,6 @@ RenderServer::~RenderServer()
 
     destroyWindow();
 }
-
-RenderServer* RenderServer::getInstance() { return server; }
 
 void RenderServer::updateTextMesh()
 {

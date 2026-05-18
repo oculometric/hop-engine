@@ -45,14 +45,13 @@ struct FrameStats final
     size_t cameras          = 0;   // number of camera passes executed
 };
 
-class InitMachine;
-
 /**
  * @brief encapsulates management of the overall graphics engine. provides various miscellaneous tools.
  */
 class Engine final
 {
     friend class InitMachine;
+
 public:
     /**
      * @brief engine-specific event IDs which can be subscribed to via the event server.
@@ -92,8 +91,6 @@ private:
     // application which will be switched to when this frame has been completed
     Ref<Application> next_application;
 
-    // all currently managed `Ref` objects known to the engine
-    std::multimap<const char*, WeakRef<void>> allocated_refs;
     // currently loaded shaders, to avoid reloading when not necessary
     std::map<std::string, Ref<Shader>> loaded_shaders;
     // currently loaded materials, to avoid reloading when not necessary
@@ -130,9 +127,6 @@ private:
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(Engine);
 
-    static void init(const InitParams& params);
-    static void destroy();
-
     /**
      * @brief starts the engine mainloop with the specified application class as the client. you should
      * extend `Application` appropriately to implement your game/application code. may not be called again
@@ -149,6 +143,10 @@ public:
      * will be returned to wherever `startApplication` was called.
      */
     static void stop();
+    /**
+     * @brief clears loaded resources, stops and unloads the current application, clears the current scene.
+     */
+    static void reset();
 
     /**
      * @brief switches the currently active scene to the specified scene. also propagates to the render
@@ -158,27 +156,27 @@ public:
     static void setScene(const Ref<Scene>& new_scene);
     static Ref<Scene> getScene();
 
-    static float getDeltaTime() { return getEngine()->delta_time; };
-    static float getEngineTime() { return getEngine()->total_time; }
-    static float getSmoothedDeltaTime() { return getEngine()->smoothed_delta_time; }
-    static float getSmoothedFPS() { return getEngine()->smoothed_fps; }
-    static size_t getFrameCount() { return getEngine()->frame_index; }
-    static FrameStats getFrameStats() { return getEngine()->last_frame_stats; }
+    static float getDeltaTime() { return getInstance()->delta_time; };
+    static float getEngineTime() { return getInstance()->total_time; }
+    static float getSmoothedDeltaTime() { return getInstance()->smoothed_delta_time; }
+    static float getSmoothedFPS() { return getInstance()->smoothed_fps; }
+    static size_t getFrameCount() { return getInstance()->frame_index; }
+    static FrameStats getFrameStats() { return getInstance()->last_frame_stats; }
 
-    static bool isWireframeMode() { return getEngine()->wireframe_view; }
+    static bool isWireframeMode() { return getInstance()->wireframe_view; }
     /**
      * @brief toggles debug wireframe mode. when active, all non-postprocessing materials will render as
      * wireframes regardless of their normal pipeline configuration. can be useful for debugging.
      * @param value if `true`, materials will draw in wireframe mode, otherwise materials will draw as
      * normal.
      */
-    static void setForceWireframe(bool value) { getEngine()->wireframe_view = value; }
-    static bool getShowGizmos() { return getEngine()->show_gizmos; }
+    static void setForceWireframe(bool value) { getInstance()->wireframe_view = value; }
+    static bool getShowGizmos() { return getInstance()->show_gizmos; }
     /**
      * @brief toggles gizmo visibility mode. when active, some objects will draw editor gizmos.
      * @param value if `true`, objects can emit draw calls for gizmos.
      */
-    static void setShowGizmos(bool value) { getEngine()->show_gizmos = value; }
+    static void setShowGizmos(bool value) { getInstance()->show_gizmos = value; }
 
     /**
      * @brief selects an object to be viewable in ImGui debug mode. semi-deprecated.
@@ -283,7 +281,8 @@ public:
     static void setRPCStatus(const std::string& state, int32_t party_size = 0, int32_t party_max = 0);
     static void setRPCActivity(RPCActivityType activity);
     static void setRPCTimestamp(std::chrono::system_clock::time_point start_time);
-    static void setRPCTimestamp(std::chrono::system_clock::time_point start_time, std::chrono::system_clock::time_point end_time);
+    static void setRPCTimestamp(std::chrono::system_clock::time_point start_time,
+        std::chrono::system_clock::time_point end_time);
     static void clearRPCActivity();
 
     /**
@@ -291,14 +290,6 @@ public:
      * @returns list of currently loaded objects of type `T`.
      */
     template<class T> static std::vector<WeakRef<T>> getAllRefs();
-    /**
-     * @brief internal-use-only.
-     */
-    static void registerCountedRef(const char* type_name, const WeakRef<void>& reference);
-    /**
-     * @brief internal-use-only.
-     */
-    static void unregisterCountedRef(const void* ptr);
 
     /**
      * @brief displays a debug UI over the screen. information about the engine, framerate, resources, and
@@ -309,6 +300,7 @@ public:
 private:
     Engine(const InitParams& params);
     ~Engine();
+    static Engine* getInstance();
 
     /**
      * @brief starts the engine mainloop, using whatever the current application object is set to. this
@@ -316,7 +308,6 @@ private:
      * calls `stop`.
      */
     static void start();
-    static Engine* getEngine();
     /**
      * @brief fetches a list of all currently loaded reference counted objects which match the specified
      * type.
@@ -335,6 +326,7 @@ private:
      * resources which are unintentionally hanging around at program exit.
      */
     static void summariseTrackedObjects();
+    static size_t countTrackedObjects();
 
     void _drawImGuiDebug() const;
 };
@@ -371,13 +363,13 @@ public:
 template<class T> inline void Engine::startApplication()
 {
     static_assert(std::is_convertible_v<T*, Application*>, "T must be a HopEngine::Application subclass");
-    if (getEngine()->start_called)
+    if (getInstance()->start_called)
     {
         DBG_WARNING("an application is already running. did you mean to call switchApplication?");
         return;
     }
-    getEngine()->application = new T();
-    getEngine()->application->awake();
+    getInstance()->application = new T();
+    getInstance()->application->awake();
     EventServer::dispatch(EVENT_TYPE_APPLICATION_CHANGE);
     Engine::start();
 }
@@ -385,7 +377,7 @@ template<class T> inline void Engine::startApplication()
 template<class T> inline void Engine::switchApplication()
 {
     static_assert(std::is_convertible_v<T*, Application*>, "T must be a HopEngine::Application subclass");
-    getEngine()->next_application = new T();
+    getInstance()->next_application = new T();
 }
 
 template<class T> std::vector<WeakRef<T>> Engine::getAllRefs()
@@ -449,5 +441,8 @@ public:
     const_iterator begin() const { return arguments_parsed.begin(); }
     const_iterator end() const { return arguments_parsed.end(); }
 };
+
+void init(const Engine::InitParams& params);
+void destroy();
 
 } // namespace HopEngine

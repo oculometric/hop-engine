@@ -148,46 +148,36 @@ void UICanvas::build()
 
 void UICanvas::layout() { hierarchy->element->layout(canvas_size, glm::mat3(1)); }
 
-static UIManager* manager;
-
 Ref<UICanvas> UIManager::push(Ref<UICanvas> canvas, glm::vec2 offset)
 {
-    manager->canvases.emplace_back(canvas, offset);
+    getInstance()->canvases.emplace_back(canvas, offset);
     return canvas;
 }
 
 void UIManager::pop()
 {
-    if (manager->canvases.empty()) return;
-    manager->canvases.pop_back();
+    if (getInstance()->canvases.empty()) return;
+    getInstance()->canvases.pop_back();
 }
 
 Ref<UICanvas> UIManager::peek()
 {
-    if (manager->canvases.empty()) return nullptr;
+    if (getInstance()->canvases.empty()) return nullptr;
 
-    return manager->canvases.rbegin()->first;
+    return getInstance()->canvases.rbegin()->first;
 }
 
 void UIManager::draw(WeakRef<DrawCommandBuffer> command_buffer)
 {
-    if (!manager) return;
+    if (!getInstance()) return;
     command_buffer->setScissorViewport(glm::vec2(0.0f), glm::vec2(1.0f));
-    for (const auto& [canvas, offset] : manager->canvases)
+    for (const auto& [canvas, offset] : getInstance()->canvases)
     {
         canvas->build();
         auto command = canvas->draw();
         command.material->bind(command_buffer);
         command.mesh->draw(command_buffer);
     }
-}
-
-void UIManager::init() { manager = new UIManager(); }
-
-void UIManager::destroy()
-{
-    delete manager;
-    manager = nullptr;
 }
 
 void UICanvasComponent::awake()

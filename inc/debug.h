@@ -118,9 +118,7 @@ public:
 private:
     Debug(Level crash, bool create_file);
     ~Debug();
-
-    static void init(bool create_file);
-    static void close();
+    static Debug* getInstance();
 };
 
 } // namespace HopEngine

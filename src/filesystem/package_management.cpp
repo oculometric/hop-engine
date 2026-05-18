@@ -7,30 +7,6 @@
 
 using namespace HopEngine;
 
-static Package* instance = nullptr;
-
-void Package::init()
-{
-    DBG_INFO("initialising package manager");
-    if (instance == nullptr) instance = new Package();
-}
-
-void Package::destroy()
-{
-    DBG_INFO("destroying package manager");
-    if (instance != nullptr)
-    {
-        delete instance;
-        instance = nullptr;
-    }
-}
-
-Package* Package::getInstance()
-{
-    if (!instance) Package::init();
-    return instance;
-}
-
 DataBlock Package::load(const std::string& path)
 {
     std::string real_path;
@@ -140,7 +116,6 @@ bool Package::store(const std::string& identifier, const DataBlock& data, const 
 
 Package::Package()
 {
-    instance          = this;
     background_thread = new std::thread(Package::packageBackgroundMain);
 }
 

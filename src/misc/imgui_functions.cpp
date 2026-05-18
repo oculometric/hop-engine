@@ -423,7 +423,6 @@ void Engine::_drawImGuiDebug() const
 	
 	{
 		ImGui::Begin("resources", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-		ImGui::LabelText("total references", "%zu", allocated_refs.size());
 		ImGui::Text("the categories below only show\nresources loaded with Engine::loadXXX(),\nnot internal resources");
 		if (ImGui::CollapsingHeader(("materials (" + ::to_string(loaded_materials.size()) + " loaded)").c_str()))
 		{
@@ -449,9 +448,9 @@ void Engine::_drawImGuiDebug() const
 				if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", res_name.c_str());
 			}
 		}
-		if (ImGui::CollapsingHeader(("shaders (" + ::to_string(getEngine()->loaded_shaders.size()) + " loaded)").c_str()))
+		if (ImGui::CollapsingHeader(("shaders (" + ::to_string(getInstance()->loaded_shaders.size()) + " loaded)").c_str()))
 		{
-			for (const auto& [res_name, ref] : getEngine()->loaded_shaders)
+			for (const auto& [res_name, ref] : getInstance()->loaded_shaders)
 			{
 				ImGui::LabelText(("(" + ::to_string(ref.getCount()) + " users)").c_str(), "%s", res_name.c_str());
 				if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", res_name.c_str());
