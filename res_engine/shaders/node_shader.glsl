@@ -93,7 +93,7 @@ vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size, bool top_border, bool
 #define RENDER_MODE_BACKGROUND 3.0f
 #define RENDER_MODE_UI 4.0f
 
-bool fragment(in Varyings vars, out Fragment frag)
+bool fragment(in Varyings vars, inout Fragment frag)
 {
     vec2 uv = vars.uv.xy;
     float render_mode = vars.normal.z;

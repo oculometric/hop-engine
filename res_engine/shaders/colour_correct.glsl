@@ -19,7 +19,7 @@ uniform Params
     float use_lut;
 };
 
-bool fragment(in Varyings vars, out Fragment frag)
+bool fragment(in Varyings vars, inout Fragment frag)
 {
     vec3 colour = texture(tex, vars.uv.xy).rgb;
     if (use_lut > 0.5f) colour = sampleLut(colour, lut);

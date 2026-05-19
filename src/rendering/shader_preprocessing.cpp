@@ -361,7 +361,7 @@ static const std::string vertex_function_def[2] = {
 };
 
 static const std::string fragment_function_def[2] = {
-    R"VOGON(bool fragment(in Varyings vars, out Fragment frag))VOGON", R"VOGON({
+    R"VOGON(bool fragment(in Varyings vars, inout Fragment frag))VOGON", R"VOGON({
     frag.colour = vec4(mod(abs(vars.position.xy * 4.0f), 1.0f), 0, 1);
     return true;
 }
@@ -550,7 +550,7 @@ void ShaderParser::processShaders(std::string& source)
         auto result = getArguments(tokens, fragment_shader_locations[2], fragment_shader_locations[3]);
         size_t result_last = result.size() - 1;
         if (result.size() < 2 || result[0].first.text != "in" || result[0].second.text != "Varyings" ||
-            result[result_last].first.text != "out" || result[result_last].second.text != "Fragment")
+            result[result_last].first.text != "inout" || result[result_last].second.text != "Fragment")
         {
             DBG_ERROR("error parsing shader " + file_path +
                       ": invalid fragment shader definition, the minimum definition should match: " +

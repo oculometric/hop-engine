@@ -14,7 +14,7 @@ void vertex(in Vertex vert, inout vec4 clip, inout Varyings vars)
 
 uniform sampler2D tex;
 
-bool fragment(in Varyings vars, out Fragment frag)
+bool fragment(in Varyings vars, inout Fragment frag)
 {
     frag.colour = vec4(texture(tex, vars.uv.xy).rgb, 1);
     return true;

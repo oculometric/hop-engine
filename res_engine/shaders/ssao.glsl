@@ -16,7 +16,7 @@ uniform AOParams
     vec4 samples[NUM_SSAO_SAMPLES];
 };
 
-bool fragment(in Varyings vars, out Fragment frag)
+bool fragment(in Varyings vars, inout Fragment frag)
 {
     frag.colour = vec4(vec3(computeSSAO(1.0f, 2.0f, 0.025f, vars.uv.xy, vars.position.xy, normal_texture, depth_texture, samples)), 1);
     return true;

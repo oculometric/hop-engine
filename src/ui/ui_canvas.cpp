@@ -20,7 +20,7 @@ UIStyle::~UIStyle() {}
 Ref<Material> UIStyle::makeMaterial(bool world_space)
 {
     Ref mat = new Material(shader,
-        Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthWrite(false),
+        Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(world_space).depthWrite(false),
         world_space ? Framebuffer::getDefaultConfig() : Framebuffer::getSwapchainConfig());
     mat->setTextureSampler("text_atlas", font->getAtlas().strong(),
         Engine::getSampler(Sampler::FILTER_NEAREST));

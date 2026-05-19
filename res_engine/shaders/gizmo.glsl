@@ -9,7 +9,7 @@ uniform MaterialUniforms
     vec3 colour_filter;
 };
 
-bool fragment(in Varyings vars, out Fragment frag)
+bool fragment(in Varyings vars, inout Fragment frag)
 {
     if (length(vars.colour.rgb - colour_filter) < 0.01f)
         frag.colour = vec4(1);

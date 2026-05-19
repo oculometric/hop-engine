@@ -14,7 +14,7 @@ uniform Params
     PBR_PARAMS;
 };
 
-bool fragment(in Varyings vars, out Fragment frag)
+bool fragment(in Varyings vars, inout Fragment frag)
 {
     PBR_SETUP;
 

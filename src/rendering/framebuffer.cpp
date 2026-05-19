@@ -61,7 +61,7 @@ bool Framebuffer::isCompatible(const WeakRef<Material>& other) const
 
 void Framebuffer::bind(WeakRef<DrawCommandBuffer> command_buffer, Framebuffer::Clear clear_values)
 {
-    clear_values.additionals.resize(getConfig().additional_attachments, { 0, 0, 0, 0 });
+    clear_values.additionals.resize(getConfig().additional_attachments, { 0, 0, 0, 1 });
     clear_values.depth_present = getConfig().has_depth_attachment;
     command_buffer->startRenderPassInternal(
         static_cast<VkRenderPass>(RenderServer::getRenderPass(getConfig())),

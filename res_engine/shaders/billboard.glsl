@@ -11,7 +11,7 @@ void vertex(in Vertex vert, inout vec4 clip, inout Varyings vars)
 
 uniform sampler2D image;
 
-bool fragment(in Varyings vars, out Fragment frag)
+bool fragment(in Varyings vars, inout Fragment frag)
 {
     vec4 colour = texture(image, vars.uv.xy);
     if (colour.a < 0.5f)

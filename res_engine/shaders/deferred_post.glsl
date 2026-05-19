@@ -14,7 +14,7 @@ uniform sampler2D param_tex;
 uniform sampler2D custom_tex;
 uniform sampler2D depth_tex;
 
-bool fragment(in Varyings vars, out Fragment frag)
+bool fragment(in Varyings vars, inout Fragment frag)
 {
     vec4 colour_val = texture(colour_tex, vars.uv.xy);
     vec4 param_val = texture(param_tex, vars.uv.xy);

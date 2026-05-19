@@ -25,7 +25,7 @@ uniform sampler2D albedo;
 const vec3 highlight = vec3(1.300f, 1.300f, 1.300f);
 const vec3 shadow = vec3(0.194f, 0.129f, 0.076f);
 
-bool fragment(in Varyings vars, out Fragment frag)
+bool fragment(in Varyings vars, inout Fragment frag)
 {
     vec4 col = texture(albedo, vars.uv.xy);
     if (col.a < 0.5f)

@@ -18,7 +18,7 @@ uniform MaterialUniforms
     float fog_exponent;
 };
 
-bool fragment(in Varyings vars, out Fragment frag)
+bool fragment(in Varyings vars, inout Fragment frag)
 {
     vec3 scene_colour = texture(screen_texture, vars.uv.xy).rgb;
     if (fog_start == fog_end || fog_exponent == 0)

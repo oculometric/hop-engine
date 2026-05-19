@@ -5,6 +5,7 @@ using namespace HopEngine;
 void Editor::awake()
 {
     Engine::setShowGizmos(true);
+    RenderServer::setTitle("HopEngine");
 
     view_3d = Scene::create("3D View");
     {

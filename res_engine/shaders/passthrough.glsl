@@ -13,7 +13,7 @@ uniform MaterialUniforms
     int display_depth;
 };
 
-bool fragment(in Varyings vars, out Fragment frag)
+bool fragment(in Varyings vars, inout Fragment frag)
 {
     if (display_depth == 1)
     {

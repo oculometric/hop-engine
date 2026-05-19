@@ -78,15 +78,15 @@ vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size, bool top_border, bool
     return new_uv;
 }
 
-bool fragment(in Varyings vars, out Fragment frag)
+bool fragment(in Varyings vars, inout Fragment frag)
 {
-    int draw_mode = int(vars.normal.x);
+    int draw_mode = int(round(vars.normal.x));
     vec3 fill_colour = vars.colour.rgb;
 
     if (draw_mode == 0)         // text mode
     {
         vec2 uv = vars.uv.xy;
-        int text_mode = int(vars.normal.y);
+        int text_mode = int(round(vars.normal.y));
         bool underline_flag = (text_mode & 2) > 0;
         bool strikethrough_flag = (text_mode & 4) > 0;
         vec2 quad_size = vars.tangent.xy;
@@ -122,8 +122,8 @@ bool fragment(in Varyings vars, out Fragment frag)
     {
         vec2 quad_size = vars.tangent.xy;
         vec3 atlas_size = vec3(textureSize(ui_atlas, 0));
-        uint borders = uint(vars.normal.z);
-        int slice = int(vars.normal.y);
+        uint borders = uint(round(vars.normal.z));
+        int slice = int(round(vars.normal.y));
         vec2 uv = nineSliceUV(vars.uv.xy, quad_size, atlas_size.xy, bool(borders & 1), bool(borders & 2), bool(borders & 4), bool(borders & 8));
         vec4 colour = texture(ui_atlas, vec3(uv, float(slice) / atlas_size.z));
         if (colour.a < 0.5f)

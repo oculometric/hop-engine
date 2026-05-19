@@ -3,13 +3,14 @@
 # v0.55
 - package manager improvements [240]
     - reimplement compresion
+- fix camera gizmo
 ---
 
 # v0.56
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - the ui update
-    - figure out view space transform (need to be able to specify canvas size and position in pixels in 0-width space)
-    - transform needs to be applied by the RENDERER
+    - transform needs to be applied by the RENDERER (not during component construct)
+    - do not specify canvas size for view space!!! (automatically applied by manager)
 
     - document user_interface.h
     - basic elements
