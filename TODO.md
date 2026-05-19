@@ -1,11 +1,9 @@
 # TODO
 
 # v0.56
+- update readme
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - the ui update
-    - transform needs to be applied by the RENDERER (not during component construct)
-    - do not specify canvas size for view space!!! (automatically applied by manager)
-
     - document user_interface.h
     - basic elements
         - button

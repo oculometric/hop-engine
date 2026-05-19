@@ -30,9 +30,9 @@ void UILabel::setColour(glm::vec3 new_colour)
 
 void UILabel::build()
 {
+    getRenderer()->setTransformation(getTransform());
     formatting.clip_bounds = getSize();
-    getRenderer()->addText(getTransform() * glm::vec3{ 0, 0, 1 }, 0.0f, formatting, text, colour,
-        text_backing);
+    getRenderer()->addText({ 0, 0 }, 0.0f, formatting, text, colour, text_backing);
 }
 
 void UIPanel::setColour(glm::vec3 new_colour)
@@ -49,6 +49,6 @@ void UIPanel::setStyle(int new_style)
 
 void UIPanel::build()
 {
-    getRenderer()->addNineSlice(getTransform() * glm::vec3{ 0, 0, 1 }, 0.0f, getSize(), style, colour,
-        panel_backing);
+    getRenderer()->setTransformation(getTransform());
+    getRenderer()->addNineSlice({ 0, 0 }, 0.0f, getSize(), style, colour, panel_backing);
 }

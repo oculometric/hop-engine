@@ -100,11 +100,11 @@ void Editor::awake()
         //{ view_nodes, { 0.0f, 0.7f }, { 0.8f, 0.3f } },
     });
 
-    auto canvas = UIManager::push(new UICanvas({ 300, 300 }), { 100, 400 });
+    auto canvas = UIManager::push();
     auto panel  = canvas->addElement<UIPanel>();
     panel->setColour({ 1, 0, 0 });
-    panel->setScaling(UITransform::SCALING_FILL_BOTH);
-    auto label = canvas->addElement<UILabel>();
+    panel->setSize({ 300, 300 });
+    auto label = canvas->addChild<UILabel>(panel);
     label->setText("hello, World!");
     label->setFormatting(
         { .align = UIRenderer::TEXT_ALIGN_CENTER, .flags = UIRenderer::TEXT_FLAGS_UNDERLINE });
@@ -119,7 +119,7 @@ void Editor::awake()
     canvas2->getTransform().setLocalScale(
         glm::vec3(glm::vec2(1.0f) / canvas2->getCanvas()->getSize(), 1.0f));
 
-    main_canvas      = UIManager::push(new UICanvas(RenderServer::getFramebufferSize()), { 0, 0 });
+    main_canvas      = UIManager::push();
     auto right_panel = main_canvas->addElement<UIPanel>();
     right_panel->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
     right_panel->setInternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
@@ -145,15 +145,6 @@ void Editor::update(float delta_time)
     // if (!node_view->checkInput({ 0, RenderServer::getFramebufferSize().y * 0.7f },
     // view_nodes->getViewportSize()))
     Engine::debugCamera(view_3d->findObject("camera"));
-
-    static glm::vec2 framebuffer_size = RenderServer::getFramebufferSize();
-
-    glm::vec2 framebuffer_size_now = RenderServer::getFramebufferSize();
-    if (framebuffer_size_now != framebuffer_size)
-    {
-        framebuffer_size = framebuffer_size_now;
-        main_canvas->resize(framebuffer_size);
-    }
 
     // cube->material->getShader()->reload();
 }

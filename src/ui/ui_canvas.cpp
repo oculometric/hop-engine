@@ -1,6 +1,7 @@
 #include "command_buffer.h"
 #include "engine.h"
 #include "material.h"
+#include "render_server.h"
 #include "user_interface.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -128,6 +129,8 @@ UICanvas::UICanvas(glm::vec2 size)
     layout();
 }
 
+UICanvas::UICanvas() : UICanvas({ 10, 10 }) {}
+
 void UICanvas::build()
 {
     bool rebuild_needed = false;
@@ -154,11 +157,13 @@ void UICanvas::resize(glm::vec2 new_size)
     layout();
 }
 
-Ref<UICanvas> UIManager::push(Ref<UICanvas> canvas, glm::vec2 offset)
+Ref<UICanvas> UIManager::push(Ref<UICanvas> canvas)
 {
-    getInstance()->canvases.emplace_back(canvas, offset);
+    getInstance()->canvases.push_back(canvas);
     return canvas;
 }
+
+Ref<UICanvas> UIManager::push() { return UIManager::push(new UICanvas()); }
 
 void UIManager::pop()
 {
@@ -170,15 +175,17 @@ Ref<UICanvas> UIManager::peek()
 {
     if (getInstance()->canvases.empty()) return nullptr;
 
-    return getInstance()->canvases.rbegin()->first;
+    return *(getInstance()->canvases.rbegin());
 }
 
 void UIManager::draw(WeakRef<DrawCommandBuffer> command_buffer)
 {
     if (!getInstance()) return;
     command_buffer->setScissorViewport(glm::vec2(0.0f), glm::vec2(1.0f));
-    for (const auto& [canvas, offset] : getInstance()->canvases)
+    for (auto& canvas : getInstance()->canvases)
     {
+        if (canvas->getSize() != RenderServer::getFramebufferSize())
+            canvas->resize(RenderServer::getFramebufferSize());
         canvas->build();
         auto command = canvas->draw();
         command.material->bind(command_buffer);

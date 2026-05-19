@@ -135,7 +135,8 @@ private:
     std::vector<Mesh::Vertex> vertices;
     std::map<float, std::vector<uint16_t>> indices;
     std::map<uint32_t, BackingDataInternal> backing_datas;
-    uint32_t next_id = 0;
+    uint32_t next_id    = 0;
+    glm::mat3 transform = glm::mat3(1.0);
 
 public:
     DELETE_CONSTRUCTORS(UIRenderer);
@@ -163,6 +164,7 @@ public:
     void finalise();
 
     void setWorldSpace(bool world_space);
+    void setTransformation(glm::mat3 transform_matrix) { transform = transform_matrix; }
 
     DrawCommand draw() const { return DrawCommand(material, mesh); }
 
@@ -310,8 +312,9 @@ private:
     glm::vec2 canvas_size;
 
 public:
-    DELETE_CONSTRUCTORS(UICanvas);
+    DELETE_NOT_ALL_CONSTRUCTORS(UICanvas);
     UICanvas(glm::vec2 size);
+    UICanvas();
     ~UICanvas() override = default;
 
     void build();
@@ -362,12 +365,13 @@ class UIManager final
     friend class InitMachine;
 
 private:
-    std::vector<std::pair<Ref<UICanvas>, glm::vec2>> canvases;
+    std::vector<Ref<UICanvas>> canvases;
 
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(UIManager);
 
-    static Ref<UICanvas> push(Ref<UICanvas> canvas, glm::vec2 offset);
+    static Ref<UICanvas> push(Ref<UICanvas> canvas);
+    static Ref<UICanvas> push();
     static void pop();
     static Ref<UICanvas> peek();
 

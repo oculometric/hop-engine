@@ -16,6 +16,7 @@ UIRenderer::~UIRenderer() {}
 
 void UIRenderer::clear()
 {
+    transform = glm::mat3(1.0);
     vertices.clear();
     indices.clear();
     backing_datas.clear();
@@ -342,24 +343,29 @@ void UIRenderer::updateTextSingleLine(glm::vec2 position, TextFormatting formatt
 void UIRenderer::updateQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 uv_tl,
     glm::vec2 uv_br, glm::vec4 colour, glm::vec4 normal, glm::vec4 tangent, BackingDataInternal backing)
 {
+    glm::vec3 _p1 = transform * glm::vec3{ p1, 1 };
+    glm::vec3 _p2 = transform * glm::vec3{ p2, 1 };
+    glm::vec3 _p3 = transform * glm::vec3{ p3, 1 };
+    glm::vec3 _p4 = transform * glm::vec3{ p4, 1 };
+
     // top left
     vertices[backing.first_vertex + 0] = Mesh::Vertex{
-        { p1.x, p1.y, 0, 1 },
+        { _p1.x, _p1.y, 0, 1 },
         colour, normal, tangent, { uv_tl, 0 }
     };
     // top right
     vertices[backing.first_vertex + 1] = Mesh::Vertex{
-        { p2.x, p2.y, 0, 1 },
+        { _p2.x, _p2.y, 0, 1 },
         colour, normal, tangent, { uv_br.x, uv_tl.y, 0 }
     };
     // bottom left
     vertices[backing.first_vertex + 2] = Mesh::Vertex{
-        { p3.x, p3.y, 0, 1 },
+        { _p3.x, _p3.y, 0, 1 },
         colour, normal, tangent, { uv_tl.x, uv_br.y, 0 }
     };
     // bottom right
     vertices[backing.first_vertex + 3] = Mesh::Vertex{
-        { p4.x, p4.y, 0, 1 },
+        { _p4.x, _p4.y, 0, 1 },
         colour, normal, tangent, { uv_br, 0 }
     };
 
