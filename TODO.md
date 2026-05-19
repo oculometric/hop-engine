@@ -1,7 +1,6 @@
 # TODO
 
 # v0.55
-- fix errors on frame timeout and query pool results not ready
 - package manager improvements [240]
     - reimplement compresion
 ---

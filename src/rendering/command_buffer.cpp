@@ -417,12 +417,15 @@ void DrawCommandBuffer::extractTiming() const
 {
     std::vector<uint32_t> results_buf;
     results_buf.resize(query_offset, 0);
-    CHECK_RESULT(vkGetQueryPoolResults,
-        (static_cast<VkDevice>(RenderServer::getDevice()), static_cast<VkQueryPool>(query_pool), 0,
-            query_offset, results_buf.size() * sizeof(uint32_t), results_buf.data(), 4,
-            VK_QUERY_RESULT_WAIT_BIT),
-        ERROR,
-        ;);
+    {
+        VkResult _result = vkGetQueryPoolResults(static_cast<VkDevice>(RenderServer::getDevice()),
+            static_cast<VkQueryPool>(query_pool), 0, query_offset, results_buf.size() * sizeof(uint32_t),
+            results_buf.data(), 4, VK_QUERY_RESULT_WAIT_BIT);
+        if (_result == VK_NOT_READY)
+            DBG_WARNING("vkGetQueryPoolResults failed with error " + vk::to_string((vk::Result)_result));
+        else if (_result != VK_SUCCESS)
+            DBG_ERROR("vkGetQueryPoolResults failed with error " + vk::to_string((vk::Result)_result));
+    }
 
     const float render_time = static_cast<float>(results_buf[results_buf.size() - 1] - results_buf[0]) /
                               (1000.0f * 1000.0f * 100.0f);

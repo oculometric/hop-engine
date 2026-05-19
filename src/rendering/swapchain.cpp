@@ -86,11 +86,17 @@ uint32_t Swapchain::acquireNextImage()
 {
     ++frame_index;
 
-    CHECK_RESULT(vkWaitForFences,
-        (static_cast<VkDevice>(RenderServer::getDevice()), 1,
+    {
+        VkResult _result = vkWaitForFences(static_cast<VkDevice>(RenderServer::getDevice()), 1,
             reinterpret_cast<VkFence*>(&in_flight_fences[frame_index % in_flight_fences.size()]), VK_TRUE,
-            10000000),
-        WARNING, return UINT32_MAX);
+            10000000);
+        if (_result == VK_TIMEOUT) return UINT32_MAX;
+        else if (_result != VK_SUCCESS)
+        {
+            DBG_ERROR("vkWaitForFences failed with error " + vk::to_string((vk::Result)_result));
+            return UINT32_MAX;
+        }
+    }
     CHECK_RESULT(vkResetFences,
         (static_cast<VkDevice>(RenderServer::getDevice()), 1,
             reinterpret_cast<VkFence*>(&in_flight_fences[frame_index % in_flight_fences.size()])),
