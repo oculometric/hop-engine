@@ -11,11 +11,15 @@ Shader::Shader(const std::string& base_path)
     origin = base_path;
     std::vector<uint32_t> vert_blob;
     std::vector<uint32_t> frag_blob;
-    if (!compileShaders(base_path, vert_blob, frag_blob))
+    load_succeeded = compileShaders(base_path, vert_blob, frag_blob);
+    hash           = 0;
+
+    if (!load_succeeded)
     {
-        DBG_ERROR("shader '" + origin + "' compilation failed");
         if (!compileShaders("res://engine/shaders/default_shader.glsl", vert_blob, frag_blob))
+        {
             DBG_FAULT("failed to load default shader!");
+        }
     }
 
     hash = computeHash(vert_blob, frag_blob);
@@ -84,8 +88,7 @@ std::vector<Shader::Descriptor> Shader::mergeBindings(const std::vector<Descript
 
 void Shader::reload()
 {
-    if (origin.empty())
-        return;
+    if (origin.empty()) return;
 
     std::vector<uint32_t> vert_blob;
     std::vector<uint32_t> frag_blob;
@@ -127,15 +130,13 @@ uint64_t Shader::computeHash(const std::vector<uint32_t>& blob1, const std::vect
     {
         result ^= elem << segment;
         ++segment;
-        if (segment > 32)
-            segment = 0;
+        if (segment > 32) segment = 0;
     }
     for (const uint32_t elem : blob2)
     {
         result ^= elem << segment;
         ++segment;
-        if (segment > 32)
-            segment = 0;
+        if (segment > 32) segment = 0;
     }
     return result;
 }

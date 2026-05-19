@@ -4,9 +4,6 @@
 - fix errors on frame timeout and query pool results not ready
 - package manager improvements [240]
     - reimplement compresion
-
-- further init/destroy overhaul (all init/destroy functions return success or failure, all init/destroy functions have init structs)
-- improve encapsulation! module-private stuff
 ---
 
 # v0.56

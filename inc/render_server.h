@@ -59,6 +59,14 @@ public:
         std::optional<uint32_t> present_family;
     };
 
+    /**
+     * @brief render server setup parameter struct.
+     */
+    struct InitParams
+    {
+        bool enable_api_validation = false; // if `true` Vulkan API validation layers are enabled
+    };
+
 private:
     GLFWwindow* window       = nullptr;        // main window that the user will see and interact with
     glm::u32vec2 window_size = { 1024, 1024 }; // current size of the window, and i.e. the surface
@@ -273,7 +281,7 @@ public:
     static FrameStats draw();
 
 private:
-    RenderServer(bool enable_validation);
+    RenderServer(const InitParams& params, bool& success);
     ~RenderServer();
     static RenderServer* getInstance();
 

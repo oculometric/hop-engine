@@ -38,6 +38,7 @@ namespace HopEngine
 class Input final
 {
     friend class InitMachine;
+
 public:
     /**
      * @brief enumerates existing gamepad button types. triggers are treated as buttons for
@@ -194,6 +195,13 @@ public:
         KEY_MENU          = 348
     };
 
+    /**
+     * @brief input manager setup parameter struct.
+     */
+    struct InitParams
+    {
+    };
+
 private:
     GLFWwindow* window; // GLFW window object handle, initialised by `RenderServer`
     std::array<GLFWcursor*, CURSOR_MAX_ENUM> cursors; // GLFW cursors created for each cursor type
@@ -317,7 +325,7 @@ public:
     static float getGamepadAxis(GamepadAxis axis, int controller = 0);
 
 private:
-    Input();
+    Input(const InitParams& params, bool& success);
     ~Input() = default;
     static Input* getInstance();
 

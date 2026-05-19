@@ -114,9 +114,10 @@ bool Package::store(const std::string& identifier, const DataBlock& data, const 
     return false;
 }
 
-Package::Package()
+Package::Package(const InitParams& params, bool& success)
 {
     background_thread = new std::thread(Package::packageBackgroundMain);
+    success = true;
 }
 
 Package::~Package()

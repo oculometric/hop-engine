@@ -24,10 +24,11 @@ class HopEngine::InitMachine final
 public:
     static void initialise()
     {
+        bool success;
         debug = reinterpret_cast<HopEngine::Debug*>(malloc(sizeof(HopEngine::Debug)));
-        new (debug) HopEngine::Debug(HopEngine::Debug::DEBUG_FAULT, false);
+        new (debug) HopEngine::Debug({}, success);
         package = reinterpret_cast<HopEngine::Package*>(malloc(sizeof(HopEngine::Package)));
-        new (package) HopEngine::Package();
+        new (package) HopEngine::Package({}, success);
     }
 
     static void destroy() {}

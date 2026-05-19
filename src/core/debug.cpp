@@ -125,10 +125,10 @@ std::vector<std::string> Debug::queryLines(size_t count)
     return arr;
 }
 
-Debug::Debug(Level crash, bool create_file)
+Debug::Debug(const InitParams& params, bool& success)
 {
-    log_level   = Debug::DEBUG_INFO;
-    crash_level = crash;
+    log_level   = params.log_level;
+    crash_level = params.crash_level;
 
     const auto time_now = std::time(nullptr);
     tm time;
@@ -138,7 +138,7 @@ Debug::Debug(Level crash, bool create_file)
     auto tmp = localtime(&time_now);
     time     = *tmp;
 #endif
-    if (create_file)
+    if (params.create_log_file)
     {
         // generate a unique name for the log file based on the time
         const std::string file_name =
@@ -149,9 +149,12 @@ Debug::Debug(Level crash, bool create_file)
         if (!file_output.is_open())
         {
             DEBUG_TERMINAL << "FATAL ERROR: FAILED TO OPEN LOG FILE." << std::endl;
+            success = false;
             exit(-1);
         }
     }
+
+    success = true;
 }
 
 Debug::~Debug()

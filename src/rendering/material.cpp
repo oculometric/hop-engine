@@ -62,6 +62,7 @@ void Material::setSampler(const uint32_t binding, Ref<Sampler> sampler)
 
 void Material::setTexture(const std::string& name, Ref<Texture> texture)
 {
+    if (!shader->didCompileSuccessfully()) return;
     const auto it = texture_name_to_binding.find(name);
     if (it != texture_name_to_binding.end())
     {
@@ -74,6 +75,7 @@ void Material::setTexture(const std::string& name, Ref<Texture> texture)
 
 void Material::setSampler(const std::string& name, Ref<Sampler> sampler)
 {
+    if (!shader->didCompileSuccessfully()) return;
     const auto it = texture_name_to_binding.find(name);
     if (it != texture_name_to_binding.end())
     {
@@ -98,6 +100,7 @@ void Material::setTextureSampler(const std::string& name, Ref<Texture> texture, 
 
 void Material::setUniform(const std::string& name, const void* data, size_t size)
 {
+    if (!shader->didCompileSuccessfully()) return;
     const auto it = variable_name_to_binding.find(name);
     if (it == variable_name_to_binding.end())
     {

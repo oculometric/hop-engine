@@ -52,6 +52,13 @@ public:
         std::string entry_selection_regex   = ".*";
     };
 
+    /**
+     * @brief package server setup parameter struct.
+     */
+    struct InitParams
+    {
+    };
+
 private:
     /**
      * @brief in-memory description of a package entry. the entry may or may not actually be loaded.
@@ -192,7 +199,7 @@ public:
     static std::string getTempPath();
 
 private:
-    Package();
+    Package(const InitParams& params, bool& success);
     ~Package();
     static Package* getInstance();
 

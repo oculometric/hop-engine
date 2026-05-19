@@ -100,7 +100,8 @@ private:
     GPUHandle pipeline_layout       = nullptr; // pipeline layout linking together descriptor set layouts
     GPUHandle descriptor_set_layout = nullptr; // shader-specific descriptor set 2 layout
     std::vector<Descriptor> bindings;          // reflected descriptor bindings for set 2
-    uint64_t hash = 0;                         // hash of the shader modules which are compiled
+    uint64_t hash       = 0;                   // hash of the shader modules which are compiled
+    bool load_succeeded = false;               // if `false` the shader failed to load/compile
 
 public:
     DELETE_CONSTRUCTORS(Shader);
@@ -134,6 +135,7 @@ public:
     }
     uint64_t getHash() const { return hash; }
     GPUHandle getPipelineLayout() const { return pipeline_layout; }
+    bool didCompileSuccessfully() const { return load_succeeded; }
     Layout getShaderLayout() const { return { descriptor_set_layout, bindings }; }
     /**
      * @brief constructs a list describing the currently present stages within the shader. usually just

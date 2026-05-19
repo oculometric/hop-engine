@@ -298,7 +298,7 @@ public:
     static void drawImGuiDebug();
 
 private:
-    Engine(const InitParams& params);
+    Engine(const InitParams& params, bool& success);
     ~Engine();
     static Engine* getInstance();
 

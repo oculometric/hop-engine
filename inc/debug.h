@@ -64,6 +64,16 @@ public:
         DEBUG_FAULT
     };
 
+    /**
+     * @brief debug setup parameter struct.
+     */
+    struct InitParams
+    {
+        Level crash_level    = DEBUG_FAULT; // level at which the program will crash
+        Level log_level      = DEBUG_INFO;  // level at which logs will be printed
+        bool create_log_file = false;       // if `true` debug output will be sent to a log file
+    };
+
 private:
     Level log_level   = DEBUG_INFO;        // severity needed before debug is sent to the log/terminal
     Level crash_level = DEBUG_FAULT;       // severity which triggers a program crash
@@ -116,7 +126,7 @@ public:
     static std::vector<std::string> queryLines(size_t count);
 
 private:
-    Debug(Level crash, bool create_file);
+    Debug(const InitParams& params, bool& success);
     ~Debug();
     static Debug* getInstance();
 };

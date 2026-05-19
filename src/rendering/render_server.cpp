@@ -72,11 +72,11 @@ GPUHandle RenderServer::getRenderPass(const Framebuffer::Config& for_config)
     return it->second->getRenderPass();
 }
 
-RenderServer::RenderServer(bool enable_validation)
+RenderServer::RenderServer(const InitParams& params, bool& success)
 {
     createWindow();
 
-    createVulkan(enable_validation);
+    createVulkan(params.enable_api_validation);
 
     swapchain = new Swapchain(window_size);
 
@@ -117,7 +117,11 @@ RenderServer::RenderServer(bool enable_validation)
     skybox_cube  = Mesh::loadMesh("res://engine/meshes/skybox.obj");
     sky_sphere   = Mesh::loadMesh("res://engine/meshes/sky_sphere.obj");
     default_mesh = Mesh::loadMesh("res://engine/meshes/default_mesh.obj");
-    if (!default_mesh) DBG_FAULT("failed to load default mesh!");
+    if (!default_mesh)
+    {
+        success = false;
+        DBG_FAULT("failed to load default mesh!");
+    }
 
     default_material    = new Material(Engine::loadShader("res://engine/shaders/default_shader.glsl"));
     final_pass_uniforms = createSceneUniforms();
@@ -144,6 +148,8 @@ RenderServer::RenderServer(bool enable_validation)
 
     draw();
     setVisible(true);
+
+    success = true;
 }
 
 RenderServer::~RenderServer()

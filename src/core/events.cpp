@@ -2,6 +2,11 @@
 
 using namespace HopEngine;
 
+EventServer::EventServer(const InitParams& params, bool& success)
+{
+    success = true;
+}
+
 void EventServer::subscribe(TypeID event, Callback callback, void* instance)
 {
     auto sub = getInstance()->findSubscriber(event, instance);

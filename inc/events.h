@@ -46,6 +46,13 @@ public:
 
     static constexpr TypeID EVENT_TYPE_NONE = 0x00000000;
 
+    /**
+     * @brief event server setup parameter struct.
+     */
+    struct InitParams
+    {
+    };
+
 private:
     /**
      * @brief internal structure for a subscriber instance, detailing the `callback` function and the
@@ -115,7 +122,7 @@ public:
     static void dispatch(TypeID event) { dispatch(event, nullptr, 0); }
 
 private:
-    EventServer()  = default;
+    EventServer(const InitParams& params, bool& success);
     ~EventServer() = default;
     static EventServer* getInstance();
 

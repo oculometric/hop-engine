@@ -339,7 +339,7 @@ void Engine::clearRPCActivity() { discord::RPCManager::get().clearPresence(); }
 
 void Engine::drawImGuiDebug() { getInstance()->_drawImGuiDebug(); }
 
-Engine::Engine(const InitParams& params)
+Engine::Engine(const InitParams& params, bool& success)
 {
     getInstance()->engine_start_timestamp = std::chrono::steady_clock::now();
 
@@ -373,6 +373,8 @@ Engine::Engine(const InitParams& params)
                 { DBG_INFO("discord join game request from " + user.username); })
             .initialize();
     }
+
+    success = true;
 }
 
 Engine::~Engine()

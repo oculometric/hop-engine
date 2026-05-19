@@ -11,7 +11,7 @@ public:
     void awake() override
     {
         // load the package containing our resources
-        Package::importPackage("resources.hop");
+        Package::importDeferredPackage("resources.hop");
 
         // update the window title and icon
         RenderServer::setTitle("David's Crate");
@@ -26,22 +26,19 @@ public:
         camera->getTransform().lookAt(glm::vec3{ 2, 2, 2 }, glm::vec3{ 0, 0, 0 }, glm::vec3{ 0, 0, 1 });
 
         // add a crate, using the builtin cube and a custom material
-        auto mesh_obj = scene->addObject<StaticMeshComponent>("mesh");
+        auto mesh_obj      = scene->addObject<StaticMeshComponent>("mesh");
         mesh_obj->material = Engine::loadMaterial("res://material.hmat");
-        mesh_obj->mesh = Engine::loadMesh("res://engine/meshes/cube.obj");
+        mesh_obj->mesh     = Engine::loadMesh("res://engine/meshes/cube.obj");
     }
 
-    void update(float delta_time) override
-    {
-        Engine::debugCamera(camera->getOwner());
-    }
+    void update(float delta_time) override { Engine::debugCamera(camera->getOwner()); }
 };
 
 int main()
 {
-    Engine::init(Engine::InitParams{ false, Debug::DEBUG_INFO, false });
+    HopEngine::init(Engine::InitParams{ false, Debug::DEBUG_INFO, false });
     Engine::startApplication<MyGame>();
-    Engine::destroy();
+    HopEngine::destroy();
 
     return 0;
 }

@@ -161,7 +161,7 @@ void Input::mouseButtonCallback(GLFWwindow* window, const int button, const int 
         getInstance()->pressed_since_checked_mouse.insert(static_cast<MouseButton>(button));
 }
 
-Input::Input()
+Input::Input(const InitParams& params, bool& success)
 {
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
     cursors[CURSOR_NORMAL]            = nullptr;
@@ -172,4 +172,5 @@ Input::Input()
     cursors[CURSOR_HAND]              = glfwCreateStandardCursor(GLFW_POINTING_HAND_CURSOR);
     cursors[CURSOR_BUSY]              = glfwCreateStandardCursor(GLFW_NOT_ALLOWED_CURSOR);
     applyCallbackBindings();
+    success = true;
 }
