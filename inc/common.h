@@ -23,7 +23,7 @@
 #include <vector>
 
 constexpr uint16_t HOP_ENGINE_VERSION_MAJOR = 0;
-constexpr uint16_t HOP_ENGINE_VERSION_MINOR = 54;
+constexpr uint16_t HOP_ENGINE_VERSION_MINOR = 55;
 constexpr uint16_t HOP_ENGINE_VERSION       = (HOP_ENGINE_VERSION_MAJOR << 8) | HOP_ENGINE_VERSION_MINOR;
 #define HOP_ENGINE_VERSION_STRING \
     (std::to_string(HOP_ENGINE_VERSION_MAJOR) + '.' + std::to_string(HOP_ENGINE_VERSION_MINOR))

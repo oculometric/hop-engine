@@ -1,9 +1,5 @@
 # TODO
 
-# v0.55
-- implement per-package-entry compresion
----
-
 # v0.56
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - the ui update
@@ -35,6 +31,7 @@
     - make local/global transform from forward/up vectors (generally complete the transform functionality), i.e. create from basis vectors
     - merge with hierarchy
     - implement quaternion
+- implement per-package-entry compresion
 ---
 
 # v0.60
