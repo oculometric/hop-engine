@@ -435,4 +435,32 @@ public:
     void build() override;
 };
 
+class UIButton final : public UICanvasElement
+{
+private:
+    std::string text = "Button";
+    UIRenderer::TextFormatting formatting;
+    glm::vec3 text_colour = { 1, 1, 1 };
+    UIRenderer::BackingData text_backing;
+
+    glm::vec3 colour = { 0.2f, 0.2f, 0.2f };
+    UIRenderer::BackingData background_backing;
+
+    bool icon = true;
+    int icon_index = 0;
+    UIRenderer::BackingData icon_backing;
+
+public:
+    DELETE_NOT_ALL_CONSTRUCTORS(UIButton);
+    UIButton() = default;
+
+    void setText(const std::string& new_text);
+    void setFormatting(const UIRenderer::TextFormatting& new_formatting);
+    void setTextColour(glm::vec3 new_colour);
+    void setBackgroundColour(glm::vec3 new_colour);
+    void setIcon(bool show_icon, int new_icon_index);
+
+    void build() override;
+};
+
 } // namespace HopEngine

@@ -138,6 +138,10 @@ void Editor::awake()
     lorem_label->setFormatting({ .flags = UIRenderer::TEXT_FLAGS_ITALIC, .wrap = true, .clip = true });
     lorem_label->setPosition({ 0, 60 });
     lorem_label->setSize({ 0, 800 });
+    auto button = main_canvas->addElement<UIButton>();
+    button->setExternalAnchor(UITransform::ANCHOR_BOTTOM_CENTER);
+    button->setInternalAnchor(UITransform::ANCHOR_BOTTOM_CENTER);
+    button->setSize({ 160, 32 });
 }
 
 void Editor::update(float delta_time)

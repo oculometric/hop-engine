@@ -6,7 +6,6 @@
 - the ui update
     - document user_interface.h
     - basic elements
-        - button
         - dropdown
         - checkbox
         - radiobutton
@@ -24,6 +23,7 @@
         - pack everything into a single texture
         - use the generic user interface shader
     - ui deserialisation
+    - extend UI style to contain stuff like default button colours, etc
 
 - transform overhaul
     - make local/global transform from forward/up vectors (generally complete the transform functionality), i.e. create from basis vectors
