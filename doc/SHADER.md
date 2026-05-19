@@ -132,7 +132,7 @@ void vertex(in Vertex vert, inout vec4 clip, inout Varyings vars)
  *
  * - the fragment function must return a `bool`. if `false` is returned, then the pixel will be discarded, otherwise the pixel will be submitted to the rasteriser. a `return false;` statement should be written instead of `discard;` if the discard functionality is desired (e.g. for masked transparency).
  * - the `in Varyings` parameter contains interpolated values from the vertex shader.
- * - the `out Fragment` parameter contains fields which can be written to by the fragment function in order to send values to the framebuffer attachments.
+ * - the `inout Fragment` parameter contains fields which can be written to by the fragment function in order to send values to the framebuffer attachments.
  *
  * the `Fragment` type has the following structure.
  *
@@ -144,9 +144,9 @@ void vertex(in Vertex vert, inout vec4 clip, inout Varyings vars)
  *     vec4 custom;
  * };
  *
- * - additional varying types may be specified as parameters in the format `in MyStruct ms`, before the `out Fragment` parameter. the same restrictions apply as with additional varyings in the vertex shader, and the number, type, and ordering of input varyings to the fragment shader must match the varyings specified in the vertex function signature.
+ * - additional varying types may be specified as parameters in the format `in MyStruct ms`, before the `inout Fragment` parameter. the same restrictions apply as with additional varyings in the vertex shader, and the number, type, and ordering of input varyings to the fragment shader must match the varyings specified in the vertex function signature.
  */
-bool fragment(in Varyings vars, out Fragment frag)
+bool fragment(in Varyings vars, inout Fragment frag)
 {
     // you may perform whatever shading logic you wish here. values can be read from the `in Varyings` parameter
     vec2 uv = vars.uv.xy;
@@ -157,7 +157,7 @@ bool fragment(in Varyings vars, out Fragment frag)
         // the function may return `false` (or `true`, as needed) early. returning `false` causes the pixel to be discarded
         return false;
     }
-    // values can be written to the `out Fragment` parameter
+    // values can be written to the `inout Fragment` parameter
     frag.colour = vec4(col.rgb * scene.ambient_light.rgb, 1.0f);
     frag.normal.xyz = vars.normal.xyz;
     // the function must always return a value. if you want the pixel to be recorded to the framebuffer, return `true`
