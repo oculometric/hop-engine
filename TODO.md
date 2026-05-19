@@ -1,9 +1,7 @@
 # TODO
 
 # v0.55
-- package manager improvements [240]
-    - reimplement compresion
-- fix camera gizmo
+- implement per-package-entry compresion
 ---
 
 # v0.56

@@ -96,7 +96,7 @@ void Editor::awake()
     Engine::setScene(view_3d);
 
     RenderServer::setMultiScene({
-        {    view_3d, { 0.0f, 0.0f }, { 0.8f, 0.7f } },
+        { view_3d, { 0.0f, 0.0f }, { 0.8f, 0.7f } },
         //{ view_nodes, { 0.0f, 0.7f }, { 0.8f, 0.3f } },
     });
 
@@ -119,7 +119,7 @@ void Editor::awake()
     canvas2->getTransform().setLocalScale(
         glm::vec3(glm::vec2(1.0f) / canvas2->getCanvas()->getSize(), 1.0f));
 
-    main_canvas = UIManager::push(new UICanvas(RenderServer::getFramebufferSize()), { 0, 0 });
+    main_canvas      = UIManager::push(new UICanvas(RenderServer::getFramebufferSize()), { 0, 0 });
     auto right_panel = main_canvas->addElement<UIPanel>();
     right_panel->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
     right_panel->setInternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
@@ -131,7 +131,8 @@ void Editor::awake()
     title_label->setExternalAnchor(UITransform::ANCHOR_TOP_CENTER);
     title_label->setPosition({ 0, 10 });
     auto lorem_label = main_canvas->addChild<UILabel>(right_panel);
-    lorem_label->setText("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at erat eleifend, placerat quam et, feugiat libero. Nunc sollicitudin lacus est, id venenatis justo bibendum vitae. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Aliquam quis convallis turpis. Sed in convallis lectus, non mollis ligula. Aenean bibendum metus in metus bibendum porttitor. Fusce malesuada pulvinar orci at fermentum.");
+    lorem_label->setText(
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at erat eleifend, placerat quam et, feugiat libero. Nunc sollicitudin lacus est, id venenatis justo bibendum vitae. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Aliquam quis convallis turpis. Sed in convallis lectus, non mollis ligula. Aenean bibendum metus in metus bibendum porttitor. Fusce malesuada pulvinar orci at fermentum.");
     lorem_label->setScaling(UITransform::SCALING_FILL_HORIZONTAL);
     lorem_label->setColour({ 1, 0, 0 });
     lorem_label->setFormatting({ .flags = UIRenderer::TEXT_FLAGS_ITALIC, .wrap = true, .clip = true });
@@ -142,7 +143,7 @@ void Editor::awake()
 void Editor::update(float delta_time)
 {
     // if (!node_view->checkInput({ 0, RenderServer::getFramebufferSize().y * 0.7f },
-            // view_nodes->getViewportSize()))
+    // view_nodes->getViewportSize()))
     Engine::debugCamera(view_3d->findObject("camera"));
 
     static glm::vec2 framebuffer_size = RenderServer::getFramebufferSize();
