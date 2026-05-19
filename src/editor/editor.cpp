@@ -144,6 +144,15 @@ void Editor::update(float delta_time)
             // view_nodes->getViewportSize()))
     Engine::debugCamera(view_3d->findObject("camera"));
 
+    static glm::vec2 framebuffer_size = RenderServer::getFramebufferSize();
+
+    glm::vec2 framebuffer_size_now = RenderServer::getFramebufferSize();
+    if (framebuffer_size_now != framebuffer_size)
+    {
+        framebuffer_size = framebuffer_size_now;
+        main_canvas->resize(framebuffer_size);
+    }
+
     // cube->material->getShader()->reload();
 }
 

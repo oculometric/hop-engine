@@ -148,6 +148,12 @@ void UICanvas::build()
 
 void UICanvas::layout() { hierarchy->element->layout(canvas_size, glm::mat3(1)); }
 
+void UICanvas::resize(glm::vec2 new_size)
+{
+    canvas_size = new_size;
+    layout();
+}
+
 Ref<UICanvas> UIManager::push(Ref<UICanvas> canvas, glm::vec2 offset)
 {
     getInstance()->canvases.emplace_back(canvas, offset);
