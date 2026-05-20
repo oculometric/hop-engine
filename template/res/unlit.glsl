@@ -12,9 +12,9 @@ void vertex(in Vertex vert, inout vec4 clip, inout Varyings vars /*, out CustomS
     // modify the vertex transform here
 }
 
-bool fragment(in Varyings vars, /*in CustomStruct cs,*/ out Fragment frag)
+bool fragment(in Varyings vars, /*in CustomStruct cs,*/ inout Fragment frag)
 {
     // perform fragment shading here
-    frag.colour.rgb = texture(albedo, vars.uv.xy).rgb * material_colour.rgb;
+    frag.colour = texture(albedo, vars.uv.xy) * material_colour;
     return true; // return false to discard the pixel
 }

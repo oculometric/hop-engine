@@ -13,10 +13,12 @@ set(HOP_ENGINE "${CMAKE_SOURCE_DIR}/..")
 # set(HOP_ENGINE "${CMAKE_SOURCE_DIR}/lib/hop-engine")
 if(WIN32)
 	set(HOP_PACKAGE_TOOL "package-tool.exe")
-	set(HOP_LIB "hop-engine.dll")
+	set(HOP_DLL "hop-engine.dll")
+	set(HOP_LINK "hop-engine.lib")
 else()
 	set(HOP_PACKAGE_TOOL "package-tool")
 	set(HOP_LIB "libhop-engine.so")
+	set(HOP_LINK "libhop-engine.so")
 endif()
 
 # you can customise `EXPORT_DIR` and `EXPORT_EXE` to your liking
@@ -66,7 +68,7 @@ target_include_directories(build
 )
 # link against hop-engine shared library
 target_link_libraries(build
-	PRIVATE "${HOP_ENGINE}/lib/${HOP_LIB}"
+	PRIVATE "${HOP_ENGINE}/lib/${HOP_LINK}"
 )
 
 # ensure C++20 is in use
