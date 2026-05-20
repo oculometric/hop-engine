@@ -4,10 +4,10 @@
 #define GLFW_INCLUDE_VULKAN
 #include "command_buffer.h"
 #include "engine.h"
+#include "framebuffer.h"
 #include "input.h"
 #include "package.h"
 #include "scene.h"
-#include "framebuffer.h"
 #include "vulkan_helpers.h"
 
 #include <GLFW/glfw3.h>
@@ -45,7 +45,10 @@ void RenderServer::setBorderless(bool borderless)
 
 void RenderServer::createWindow()
 {
+#if defined(_WIN32)
+#else
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+#endif
     glfwInit();
     // appropriate hints for vulkan
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
