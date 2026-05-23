@@ -30,7 +30,7 @@ Texture::Texture(glm::u32vec3 image_extent, Format image_format, const void* dat
     case FORMAT_FLOAT_16X4:
     case FORMAT_SRGB_8X4:   usage = IMAGE_USAGE_COLOR_ATTACHMENT | IMAGE_USAGE_SHADER; break;
     }
-    if (data_ptr) usage = usage | IMAGE_USAGE_READABLE;
+    usage = usage | IMAGE_USAGE_READABLE;
     usage = usage | IMAGE_USAGE_WRITEABLE;
 
     extent = glm::max(image_extent, glm::u32vec3{ 1, 1, 1 });

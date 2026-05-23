@@ -247,3 +247,36 @@ void Texture::destroyResources()
     QUEUE_FREE(view, VkImageView, vkDestroyImageView);
     QUEUE_FREE(memory, VkDeviceMemory, vkFreeMemory);
 }
+
+Ref<Texture> Texture::duplicate()
+{
+    auto new_tex = new Texture(getSize(), getFormat(), nullptr);
+    auto old_layout = current_layout;
+    transitionLayout(Texture::LAYOUT_TRANSFER_SRC);
+    new_tex->transitionLayout(Texture::LAYOUT_TRANSFER_DST);
+
+    VkImageCopy image_copy{};
+    image_copy.srcOffset = { 0, 0, 0 };
+    image_copy.dstOffset = { 0, 0, 0 };
+
+    image_copy.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    image_copy.dstSubresource.mipLevel       = 0;
+    image_copy.dstSubresource.baseArrayLayer = 0;
+    image_copy.dstSubresource.layerCount     = 1;
+
+    image_copy.srcSubresource = image_copy.dstSubresource;
+
+    image_copy.extent = { extent.x, extent.y, extent.z };
+
+    Ref<TransientCommandBuffer> cmd_buf = new TransientCommandBuffer();
+
+    vkCmdCopyImage(static_cast<VkCommandBuffer>(cmd_buf->getHandle()), static_cast<VkImage>(image),
+        toVulkanLayout(current_layout), static_cast<VkImage>(new_tex->image),
+        toVulkanLayout(new_tex->current_layout), 1, &image_copy);
+
+    cmd_buf->submit();
+    transitionLayout(old_layout);
+    new_tex->transitionLayout(Texture::LAYOUT_SHADER_READ);
+
+    return new_tex;
+}

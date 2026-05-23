@@ -4,7 +4,7 @@
 - update readme
 - random number generation utilities
 - prevent crash when shader doesnt compile
-- image duplicate function
+- errors with queuepresent suboptimal
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - the ui update
     - document user_interface.h

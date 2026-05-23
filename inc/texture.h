@@ -180,6 +180,11 @@ public:
      * @param path path to the target output file.
      */
     void storeImage(const std::string& path);
+    /**
+     * @brief duplicates the image, retaining identical (but un-coupled) data.
+     * @returns new image with the same contents as the original.
+     */
+    Ref<Texture> duplicate();
 
 private:
     /**
