@@ -231,6 +231,18 @@ public:
      * unavailable to the user.
      */
     static void setBorderless(bool borderless);
+    /**
+     * @brief resizes the window.
+     * @param new_window_size intended new size for the window. you should check that the framebuffer size
+     * has been updated correctly.
+     */
+    static void setSize(glm::u32vec2 new_window_size);
+    /**
+     * @brief toggles window resizability.
+     * @param resizable if `true` the user is able to resize the window, otherwise the windows size is fixed
+     * (until `setSize` is used).
+     */
+    static void setResizable(bool resizable);
 
     /**
      * @brief toggles whether image presentation to the window is tied to the screen's refresh rate.

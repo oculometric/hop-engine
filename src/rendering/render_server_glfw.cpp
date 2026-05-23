@@ -43,6 +43,12 @@ void RenderServer::setIcon(const std::string& path)
 void RenderServer::setBorderless(bool borderless)
 { glfwSetWindowAttrib(getWindow(), GLFW_DECORATED, !borderless); }
 
+void RenderServer::setSize(glm::u32vec2 new_window_size)
+{ glfwSetWindowSize(getWindow(), new_window_size.x, new_window_size.y); }
+
+void RenderServer::setResizable(bool resizable)
+{ glfwSetWindowAttrib(getWindow(), GLFW_RESIZABLE, resizable); }
+
 void RenderServer::createWindow()
 {
 #if defined(_WIN32)

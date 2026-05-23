@@ -2,6 +2,9 @@
 
 # v0.56
 - update readme
+- random number generation utilities
+- prevent crash when shader doesnt compile
+- image duplicate function
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - the ui update
     - document user_interface.h
