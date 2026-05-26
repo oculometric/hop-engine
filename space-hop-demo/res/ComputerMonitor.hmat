@@ -1,0 +1,7 @@
+Resource(shader, "res://ComputerMonitor.glsl") : shader;
+Resource(texture, "res://ComputerMonitor.png") : albedo;
+
+Shader(resource = @shader);
+Culling(mode = NONE);
+
+Texture(binding = "albedo", resource = @albedo, filter = NEAREST);

@@ -10,30 +10,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIRECTORY}")
 # ================ PROJECT 'hop-engine' ===================================================
 project(hop-engine)
 
-if(WIN32)
-	set(CMAKE_C_COMPILER "cl.exe")
-	set(CMAKE_CXX_COMPILER "cl.exe")
-
-	add_compile_options("/ZI")
-	add_link_options("/DEBUG")
-
-	if(${GENERATE_DEBUG})
-		string(REPLACE "/O2" "/Od" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
-		add_link_options("/INCREMENTAL")
-	endif()
-else()
-	set(CMAKE_C_COMPILER "/usr/bin/clang")
-	set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
-
-	add_compile_options("-g")
-    add_link_options("-g")
-    if (${GENERATE_DEBUG})
-	    add_compile_options("-O1")
-    else()
-        add_compile_options("-O3")
-    endif()
-endif()
-
 find_package(Vulkan REQUIRED COMPONENTS SPIRV-Tools)
 set(ENGINE_HOP "${CMAKE_BINARY_DIR}/engine.hop")
 execute_process(
@@ -267,15 +243,19 @@ else()
 	)
 endif()
 
+add_subdirectory(space-hop-demo)
+
 add_custom_target(export
 	DEPENDS hop-engine
 	DEPENDS package-tool
 	DEPENDS hop-editor
 	DEPENDS bin-to-cpp
+    DEPENDS space-hop-demo
 	COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_SOURCE_DIR}/builds"
 	COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/staging"
 	COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/staging/tools"
 	COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/staging/lib"
+	COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/staging/demo"
 	COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/inc/"
 		"${CMAKE_BINARY_DIR}/staging/include"
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -287,7 +267,32 @@ add_custom_target(export
 		"${CMAKE_BINARY_DIR}/staging/COPYING.md"
 	COMMAND ${CMAKE_COMMAND} -E copy ${TOOLS} "${CMAKE_BINARY_DIR}/staging/tools"
 	COMMAND ${CMAKE_COMMAND} -E copy ${LIBS} "${CMAKE_BINARY_DIR}/staging/lib"
+	COMMAND ${CMAKE_COMMAND} -E copy ${DEMO_FILES} "${CMAKE_BINARY_DIR}/staging/demo"
 	COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_BINARY_DIR}/staging"
 		${CMAKE_COMMAND} -E tar cfv ${TAR_OUTPUT} --format=zip .
 	COMMENT "Creating exported archive"
 )
+
+if(WIN32)
+	set(CMAKE_C_COMPILER "cl.exe")
+	set(CMAKE_CXX_COMPILER "cl.exe")
+
+	add_compile_options("/ZI")
+	add_link_options("/DEBUG")
+
+	if(${GENERATE_DEBUG})
+		string(REPLACE "/O2" "/Od" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+		add_link_options("/INCREMENTAL")
+	endif()
+else()
+	set(CMAKE_C_COMPILER "/usr/bin/clang")
+	set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+
+	add_compile_options("-g")
+    add_link_options("-g")
+    if (${GENERATE_DEBUG})
+	    add_compile_options("-O1")
+    else()
+        add_compile_options("-O3")
+    endif()
+endif()
