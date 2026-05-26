@@ -53,17 +53,18 @@ void RenderServer::createWindow()
 {
 #if defined(_WIN32)
 #else
-    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+    // this fucking sucks, fuck you X11 and fuck you renderdoc (its ok renderdoc i forgive you)
+    if (!transparent) glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
 #endif
     glfwInit();
     // appropriate hints for vulkan
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
+    if (transparent) glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
     // keep window invisible until vulkan is ready to draw. prevents a flashbang
     window = glfwCreateWindow(window_size.x, window_size.y, "hop-engine",
         fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
-    if (!glfwGetWindowAttrib(window, GLFW_TRANSPARENT_FRAMEBUFFER))
+    if (transparent && !glfwGetWindowAttrib(window, GLFW_TRANSPARENT_FRAMEBUFFER))
         DBG_ERROR("unable to make window framebuffer transparent");
     glfwFocusWindow(window);
     DBG_INFO("created window at " + std::to_string(window_size.x) + "x" + std::to_string(window_size.y));

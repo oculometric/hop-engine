@@ -99,6 +99,8 @@ public:
             size_t camera_slot                     = 0;
             Ref<Shader> shader;
             std::map<std::string, TextureInput> texture_bindings;
+            glm::vec3 clear_colour = { 1, 0, 1 };
+            bool clear_transparent = false;
         };
 
     private:
@@ -164,6 +166,14 @@ public:
          */
         Builder& bindTexture(const std::string& texture_uniform, const TextureInput& binding);
         /**
+         * @brief builder function which configures the clear colour of the most recently added render step.
+         * only valid after a call to `addPostprocessStep`.
+         * @param colour colour used to clear the main colour pass.
+         * @param transparent if `true` the main colour pass will be cleared to be transparent.
+         * @returns self-reference for chaining calls.
+         */
+        Builder& clearColour(glm::vec3 colour, bool transparent = false);
+        /**
          * @brief builder function which configures the filtering of the final render graph output when
          * drawn to the screen.
          * @param value filtering mode used when outputting the render graph's final image.
@@ -203,6 +213,10 @@ private:
         Ref<Framebuffer> framebuffer;
         // if `!is_camera`, holds the scene (set 0) uniforms for rendering
         Ref<UniformBlock> scene_uniforms;
+        // if `!is_camera`, specifies the colour used to clear the main attachment
+        glm::vec3 clear_colour = { 1, 0, 1 };
+        // if `!is_camera`, specifies whether the main attachment should be cleared transparent
+        bool clear_transparent = false;
 
         std::string name; // text identifier for the step, making retrieval easier
         // if `true`, this step will not be executed, and attachment bindings targeting it will be
@@ -378,11 +392,12 @@ private:
      * @brief records draw commands for a post-process render step.
      * @param command_buffer draw command buffer into which commands will be issued.
      * @param pass framebuffer to render within.
+     * @param clear_colour clear colour for the main colour attachment.
      * @param scene_descriptor_set uniform block to be used in the scene (set 0) slot.
      * @param material material which will be rendered on a full-screen quad, into its render pass.
      */
     static void recordPostProcessStep(WeakRef<DrawCommandBuffer> command_buffer, WeakRef<Framebuffer> pass,
-        WeakRef<UniformBlock> scene_descriptor_set, WeakRef<Material> material);
+        glm::vec4 clear_colour, WeakRef<UniformBlock> scene_descriptor_set, WeakRef<Material> material);
 };
 
 } // namespace HopEngine

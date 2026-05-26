@@ -45,9 +45,12 @@ Texture::Texture(glm::u32vec3 image_extent, Format image_format, const void* dat
                     to_string(format));
     }
     else
+    {
         DBG_VERBOSE("created blank image with size " + std::to_string(extent.x) + "x" +
                     std::to_string(extent.y) + "x" + std::to_string(extent.z) + " and format " +
                     to_string(format));
+        transitionLayout(Texture::LAYOUT_SHADER_READ);
+    }
 
     createView();
 }
@@ -161,8 +164,8 @@ Ref<Texture> Texture::loadImage3D(const std::string& path, glm::u32vec2 segments
 
 void Texture::uploadData(const void* data)
 {
-    const size_t image_length = static_cast<size_t>(extent.x * extent.y * extent.z * 4);
-    Ref<Buffer> staging_buffer      = new Buffer(image_length, Buffer::BUFFER_USAGE_TRANSFER_SRC,
+    const size_t image_length  = static_cast<size_t>(extent.x * extent.y * extent.z * 4);
+    Ref<Buffer> staging_buffer = new Buffer(image_length, Buffer::BUFFER_USAGE_TRANSFER_SRC,
         MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
     memcpy(staging_buffer->mapMemory(), data, image_length);
     transitionLayout(LAYOUT_TRANSFER_DST);

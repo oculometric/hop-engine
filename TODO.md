@@ -5,6 +5,7 @@
 - random number generation utilities
 - prevent crash when shader doesnt compile
 - errors with queuepresent suboptimal
+- ability to update window transparent-ness at runtime
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - the ui update
     - document user_interface.h

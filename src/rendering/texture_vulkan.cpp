@@ -67,6 +67,16 @@ void Texture::transitionLayout(const Layout new_layout)
         memory_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
         dst_stage                    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
     }
+    else if (current_layout == LAYOUT_SHADER_READ && new_layout == LAYOUT_TRANSFER_DST)
+    {
+        if (!(usage & IMAGE_USAGE_WRITEABLE))
+            DBG_WARNING(
+                "attempt to transition an image to transfer destination layout, but it does not support being a transfer destination");
+        memory_barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        src_stage                    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        memory_barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        dst_stage                    = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    }
     else if (current_layout == LAYOUT_UNDEFINED && new_layout == LAYOUT_SHADER_READ)
     {
         if (!(usage & IMAGE_USAGE_SHADER))
@@ -250,7 +260,7 @@ void Texture::destroyResources()
 
 Ref<Texture> Texture::duplicate()
 {
-    auto new_tex = new Texture(getSize(), getFormat(), nullptr);
+    auto new_tex    = new Texture(getSize(), getFormat(), nullptr);
     auto old_layout = current_layout;
     transitionLayout(Texture::LAYOUT_TRANSFER_SRC);
     new_tex->transitionLayout(Texture::LAYOUT_TRANSFER_DST);

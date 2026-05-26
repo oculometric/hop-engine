@@ -71,9 +71,10 @@ public:
      */
     struct InitParams final
     {
-        bool enable_vulkan_validation = false;             // if `true` Vulkan validation layers are enabled
-        Debug::Level debug_log_level  = Debug::DEBUG_INFO; // debug output level
-        bool create_log_file          = true;              // if `true`, output will be copied to a file
+        bool enable_vulkan_validation  = false; // if `true` Vulkan validation layers are enabled
+        bool enable_transparent_window = false; // if `true` the window will be created to be transparent
+        Debug::Level debug_log_level   = Debug::DEBUG_INFO; // debug output level
+        bool create_log_file           = true;              // if `true`, output will be copied to a file
     };
 
     enum RPCActivityType : uint8_t

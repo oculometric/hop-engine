@@ -74,6 +74,7 @@ GPUHandle RenderServer::getRenderPass(const Framebuffer::Config& for_config)
 
 RenderServer::RenderServer(const InitParams& params, bool& success)
 {
+    transparent = params.transparent_window;
     createWindow();
 
     createVulkan(params.enable_api_validation);

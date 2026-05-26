@@ -72,7 +72,8 @@ public:
 
         if (!render_server)
         {
-            RenderServer::InitParams render_server_params{ params.enable_vulkan_validation };
+            RenderServer::InitParams render_server_params{ params.enable_vulkan_validation,
+                params.enable_transparent_window };
             IN_PLACE_INIT(render_server, RenderServer, (render_server_params, success));
             if (success) DBG_INFO("initialised render server");
             else

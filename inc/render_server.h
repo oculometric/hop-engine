@@ -65,6 +65,7 @@ public:
     struct InitParams
     {
         bool enable_api_validation = false; // if `true` Vulkan API validation layers are enabled
+        bool transparent_window    = false; // if `true` the window will be created to be transparent
     };
 
 private:
@@ -120,6 +121,7 @@ private:
     Ref<UniformBlock> spinner_uniforms;    // object uniforms used for the loading/no-scene spinner
     std::vector<SceneRender> scenes;       // list of scenes currently wanting to be rendered each frame
 
+    bool transparent             = false; // if `true`, the window should be transparently composited
     bool fullscreen              = false; // if `true`, the window should be borderless fullscreen
     bool wants_fullscreen_update = false; // if `true`, there is a setFullscreen operation pending
     bool vsync                   = true;  // if `true`, image present is clamped to screen refresh rate

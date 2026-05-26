@@ -26,6 +26,6 @@ bool fragment(in Varyings vars, inout Fragment frag)
         float d = texture(stencil_texture, vars.uv.xy).r * 16.0f;
         frag.colour = vec4(vec3(d), 1);
     }
-    else frag.colour = vec4(texture(screen_texture, vars.uv.xy).rgb, 1);
+    else frag.colour = texture(screen_texture, vars.uv.xy);
     return true;
 }

@@ -16,8 +16,8 @@ using namespace HopEngine;
 RenderGraph::Builder& RenderGraph::Builder::addCameraStep(const std::string& name, size_t slot)
 {
     StepDescription step;
-    step.name = name;
-    step.is_camera = true;
+    step.name        = name;
+    step.is_camera   = true;
     step.camera_slot = slot;
     execution_steps.push_back(step);
     return *this;
@@ -26,8 +26,8 @@ RenderGraph::Builder& RenderGraph::Builder::addCameraStep(const std::string& nam
 RenderGraph::Builder& RenderGraph::Builder::addPostprocessStep(const std::string& name, Ref<Shader> shader)
 {
     StepDescription step;
-    step.name = name;
-    step.is_camera = false;
+    step.name               = name;
+    step.is_camera          = false;
     step.shader             = shader;
     step.framebuffer_config = Framebuffer::getCanvasConfig();
     execution_steps.push_back(step);
@@ -74,6 +74,18 @@ RenderGraph::Builder& RenderGraph::Builder::bindTexture(const std::string& textu
     return *this;
 }
 
+RenderGraph::Builder& RenderGraph::Builder::clearColour(glm::vec3 colour, bool transparent)
+{
+    if (execution_steps.empty() || execution_steps.rbegin()->is_camera)
+        DBG_WARNING("attempted to modify a render graph builder step, but there are no steps to modify!");
+    else
+    {
+        execution_steps.rbegin()->clear_colour      = colour;
+        execution_steps.rbegin()->clear_transparent = transparent;
+    }
+    return *this;
+}
+
 RenderGraph::Builder& RenderGraph::Builder::filtering(Sampler::Filter value)
 {
     screen_filtering = value;
@@ -84,7 +96,8 @@ RenderGraph::RenderGraph(const Builder& config)
 {
     // set up passthrough material
     passthrough = new Material(Engine::loadShader("res://engine/shaders/passthrough.glsl"),
-        Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false), Framebuffer::getSwapchainConfig());
+        Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false),
+        Framebuffer::getSwapchainConfig());
     passthrough->setSampler(0, Engine::getSampler(config.screen_filtering, Sampler::ADDRESS_CLAMP_EDGE));
 
     // ensure there is at least one render step
@@ -101,11 +114,13 @@ RenderGraph::RenderGraph(const Builder& config)
         if (step_desc.is_camera) step.camera_slot = step_desc.camera_slot;
         else
         {
-            step.material         = new Material(step_desc.shader,
+            step.material          = new Material(step_desc.shader,
                 Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthWrite(false),
                 step_desc.framebuffer_config);
-            step.texture_bindings = step_desc.texture_bindings;
-            step.scene_uniforms   = RenderServer::createSceneUniforms();
+            step.texture_bindings  = step_desc.texture_bindings;
+            step.scene_uniforms    = RenderServer::createSceneUniforms();
+            step.clear_colour      = step_desc.clear_colour;
+            step.clear_transparent = step_desc.clear_transparent;
         }
         execution_steps.push_back(step);
     }
@@ -273,6 +288,7 @@ void RenderGraph::draw(WeakRef<DrawCommandBuffer> command_buffer,
         }
         else
             recordPostProcessStep(command_buffer, execution_steps[i].framebuffer,
+                { execution_steps[i].clear_colour, execution_steps[i].clear_transparent ? 0.0f : 1.0f },
                 execution_steps[i].scene_uniforms, execution_steps[i].material);
     }
 }
@@ -353,9 +369,10 @@ void RenderGraph::recordCameraStep(WeakRef<DrawCommandBuffer> command_buffer, We
 }
 
 void RenderGraph::recordPostProcessStep(WeakRef<DrawCommandBuffer> command_buffer,
-    WeakRef<Framebuffer> pass, WeakRef<UniformBlock> scene_descriptor_set, WeakRef<Material> material)
+    WeakRef<Framebuffer> pass, glm::vec4 clear_colour, WeakRef<UniformBlock> scene_descriptor_set,
+    WeakRef<Material> material)
 {
-    pass->bind(command_buffer, {});
+    pass->bind(command_buffer, { clear_colour, clear_colour.a < 0.5f });
 
     // material must be bound before we can start binding uniforms at all
     material->bind(command_buffer, false);
