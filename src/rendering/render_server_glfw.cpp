@@ -113,6 +113,7 @@ bool RenderServer::resize(bool force_resize)
 
         glfwShowWindow(window);
         wants_fullscreen_update = false;
+        EventServer::dispatch(EVENT_TYPE_RESIZE);
         return true;
     }
     else
@@ -130,6 +131,7 @@ bool RenderServer::resize(bool force_resize)
             wants_vsync_update = false;
         }
         swapchain->resize(window_size);
+        EventServer::dispatch(EVENT_TYPE_RESIZE);
 
         return true;
     }

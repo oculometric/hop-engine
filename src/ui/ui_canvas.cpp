@@ -18,11 +18,11 @@ UIStyle::UIStyle()
 
 UIStyle::~UIStyle() {}
 
-Ref<Material> UIStyle::makeMaterial(bool world_space)
+Ref<Material> UIStyle::makeMaterial(bool world_space, Framebuffer::Config custom_config)
 {
     Ref mat = new Material(shader,
         Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(world_space).depthWrite(false),
-        world_space ? Framebuffer::getDefaultConfig() : Framebuffer::getSwapchainConfig());
+        world_space ? Framebuffer::getDefaultConfig() : custom_config);
     mat->setTextureSampler("text_atlas", font->getAtlas().strong(),
         Engine::getSampler(Sampler::FILTER_NEAREST));
     mat->setTextureSampler("text_bold_atlas", font->getBoldAtlas().strong(),
@@ -160,6 +160,7 @@ void UICanvas::resize(glm::vec2 new_size)
 Ref<UICanvas> UIManager::push(Ref<UICanvas> canvas)
 {
     getInstance()->canvases.push_back(canvas);
+    canvas->setWorldSpace(false, Framebuffer::getSwapchainConfig());
     return canvas;
 }
 

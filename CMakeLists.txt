@@ -10,6 +10,24 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIRECTORY}")
 # ================ PROJECT 'hop-engine' ===================================================
 project(hop-engine)
 
+if(WIN32)
+	add_compile_options("/ZI")
+	add_link_options("/DEBUG")
+
+	if(${GENERATE_DEBUG})
+		string(REPLACE "/O2" "/Od" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+		add_link_options("/INCREMENTAL")
+	endif()
+else()
+	add_compile_options("-g")
+    add_link_options("-g")
+    if (${GENERATE_DEBUG})
+	    add_compile_options("-O1")
+    else()
+        add_compile_options("-O3")
+    endif()
+endif()
+
 find_package(Vulkan REQUIRED COMPONENTS SPIRV-Tools)
 set(ENGINE_HOP "${CMAKE_BINARY_DIR}/engine.hop")
 execute_process(

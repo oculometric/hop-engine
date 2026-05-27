@@ -16,6 +16,7 @@ private:
     std::string credit_text_target;
     size_t credit_text_offset;
     float text_typing_cooldown = 0.0f;
+    Ref<UICanvas> canvas;
 
     std::vector<std::tuple<std::string, std::string, std::string>> images = 
     {
@@ -61,30 +62,48 @@ public:
         mesh_obj->material = Engine::loadMaterial("res://ComputerMonitor.hmat");
         mesh_obj->mesh = Engine::loadMesh("res://ComputerMonitor.obj");
 
-        Ref<UICanvas> canvas = UIManager::push();
-        
-        title_label = canvas->addElement<UILabel>().strong();
+        scene->render_graph = new RenderGraph(RenderGraph::Builder()
+            .addCameraStep("camera", 0)
+            .addPostprocessStep("stylised", Engine::loadShader("res://postprocess.glsl"))
+            .bindTexture("camera", RenderGraph::TextureInput(0, 0))
+            .clearColour({ 0, 0, 0 }, true)
+            .setResolution(0.5f)
+            .filtering(Sampler::FILTER_NEAREST)
+        );
+
+        auto world_canvas = scene->addObject<UICanvasComponent>("canvas");
+        world_canvas->getCanvas()->setWorldSpace(false);
+        world_canvas->getCanvas()->resize({ 1024, 768 });
+
+        canvas = world_canvas->getCanvas();
+        EventServer::subscribe(RenderServer::EVENT_TYPE_RESIZE, [](void* data, size_t size, void* inst) -> void {
+            reinterpret_cast<MyGame*>(inst)->canvas->resize(RenderServer::getFramebufferSize());
+        }, this);
+
+        auto offsetter = canvas->addElement<UICanvasElement>();
+        title_label = canvas->addChild<UILabel>(offsetter).strong();
         title_label->setFormatting(UIRenderer::TextFormatting{ UIRenderer::TEXT_ALIGN_RIGHT, UIRenderer::TEXT_FLAGS_UNDERLINE });
         title_label->setColour({ 1.0f, 0.6f, 0.0f });
         title_label->setExternalAnchor(UITransform::ANCHOR_BOTTOM_RIGHT);
         title_label->setInternalAnchor(UITransform::ANCHOR_BOTTOM_RIGHT);
         title_label->setPosition({ 0, -58.0f });
-        credit_label = canvas->addElement<UILabel>().strong();
+        credit_label = canvas->addChild<UILabel>(offsetter).strong();
         credit_label->setFormatting(UIRenderer::TextFormatting{ UIRenderer::TEXT_ALIGN_RIGHT, UIRenderer::TEXT_FLAGS_ITALIC });
         credit_label->setColour({ 0.8f, 0.8f, 0.8f });
         credit_label->setExternalAnchor(UITransform::ANCHOR_BOTTOM_RIGHT);
         credit_label->setInternalAnchor(UITransform::ANCHOR_BOTTOM_RIGHT);
         credit_label->setPosition({ 0, -36.0f });
+        offsetter->setPosition({ -16.0f, -16.0f });
+        offsetter->setExternalAnchor(UITransform::ANCHOR_BOTTOM_RIGHT);
+        offsetter->setInternalAnchor(UITransform::ANCHOR_BOTTOM_RIGHT);
 
-        scene->render_graph = new RenderGraph(RenderGraph::Builder()
-            .addCameraStep("camera", 0)
-            .addPostprocessStep("stylised", Engine::loadShader("res://postprocess.glsl"))
-            .bindTexture("camera", { 0, 0 })
-            .clearColour({ 0, 0, 0 }, true)
-            .setResolution(0.5f)
-            .filtering(Sampler::FILTER_NEAREST)
-        );
-        
+        auto overlay = scene->addObject<StaticMeshComponent>("overlay");
+        overlay->mesh = RenderServer::getQuad().strong();
+        overlay->material = Engine::loadMaterial("res://overlay.hmat");
+        overlay->getTransform().setLocalEuler({ 90, 0, 0 });
+        overlay->getTransform().setLocalScale({ 1.3333f, 1.0f, 1.0f });
+        overlay->getTransform().setLocalPosition({ 0.0f, 3.0f, camera->getTransform().getLocalPosition().z });
+
         reset();
 
         Engine::setScene(scene);
@@ -162,7 +181,7 @@ public:
 
 int main()
 {
-    HopEngine::init(Engine::InitParams{false, true, Debug::DEBUG_INFO, false});
+    HopEngine::init(Engine::InitParams{false, false, Debug::DEBUG_INFO, false});
     Engine::startApplication<MyGame>();
     HopEngine::destroy();
 

@@ -270,7 +270,7 @@ void UIRenderer::finalise()
             ((final_indices.size() / 256) + 1) * 256);
 }
 
-void UIRenderer::setWorldSpace(bool world_space) { material = style->makeMaterial(world_space); }
+void UIRenderer::setWorldSpace(bool world_space, Framebuffer::Config custom_config) { material = style->makeMaterial(world_space, custom_config); }
 
 bool UIRenderer::isBackingValid(const BackingData& backing_ref)
 { return backing_datas.contains(backing_ref.id); }

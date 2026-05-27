@@ -73,7 +73,8 @@ public:
     Ref<Font> font;
     Ref<Texture> ui_atlas;
 
-    Ref<Material> makeMaterial(bool world_space);
+    Ref<Material> makeMaterial(bool world_space,
+        Framebuffer::Config custom_config = Framebuffer::getDefaultConfig());
 };
 
 class UIRenderer final : public Destructible
@@ -163,7 +164,8 @@ public:
         glm::vec2 uv_size);
     void finalise();
 
-    void setWorldSpace(bool world_space);
+    void setWorldSpace(bool world_space,
+        Framebuffer::Config custom_config = Framebuffer::getDefaultConfig());
     void setTransformation(glm::mat3 transform_matrix) { transform = transform_matrix; }
 
     DrawCommand draw() const { return DrawCommand(material, mesh); }
@@ -326,7 +328,9 @@ public:
     void resize(glm::vec2 new_size);
     DrawCommand draw() const { return renderer->draw(); }
     glm::vec2 getSize() const { return canvas_size; }
-    void setWorldSpace(bool world_space) { renderer->setWorldSpace(world_space); }
+    void setWorldSpace(bool world_space,
+        Framebuffer::Config custom_config = Framebuffer::getDefaultConfig())
+    { renderer->setWorldSpace(world_space, custom_config); }
 };
 
 template<class T> inline WeakRef<T> UICanvas::addElement()
@@ -446,7 +450,7 @@ private:
     glm::vec3 colour = { 0.2f, 0.2f, 0.2f };
     UIRenderer::BackingData background_backing;
 
-    bool icon = true;
+    bool icon      = true;
     int icon_index = 0;
     UIRenderer::BackingData icon_backing;
 
@@ -462,5 +466,20 @@ public:
 
     void build() override;
 };
+
+// class UIImage final : public UICanvasElement
+// {
+// private:
+//     Ref<Texture> texture;
+//     UIRenderer::BackingData backing;
+
+// public:
+//     DELETE_NOT_ALL_CONSTRUCTORS(UIImage);
+//     UIImage() = default;
+    
+//     void setImage(const Ref<Texture> texture);
+
+//     void build() override;
+// };
 
 } // namespace HopEngine

@@ -1,0 +1,12 @@
+Resource(texture, "res://grid.png") : image;
+Resource(shader, "res://unlit.glsl") : shader;
+
+Shader(resource = @shader);
+Culling(mode = NONE);
+Depth(test = FALSE);
+Texture(binding = "image", resource = @image);
+
+Uniform()
+{
+    vec4("colour", [ 1.0, 0.6, 0.0, 1.0 ]);
+};

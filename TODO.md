@@ -7,8 +7,10 @@
 - errors with queuepresent suboptimal
 - ability to update window transparent-ness at runtime
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
+- material needs the ability to specify render priority (used by staticmeshes etc)
 - the ui update
     - document user_interface.h
+    - canvas needs to be able to have multiple meshes/materials (for images)
     - basic elements
         - dropdown
         - checkbox

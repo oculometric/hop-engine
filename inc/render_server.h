@@ -20,6 +20,7 @@
 
 #include "common.h"
 #include "engine.h"
+#include "events.h"
 #include "framebuffer.h"
 
 #include <glm/vec2.hpp>
@@ -66,6 +67,14 @@ public:
     {
         bool enable_api_validation = false; // if `true` Vulkan API validation layers are enabled
         bool transparent_window    = false; // if `true` the window will be created to be transparent
+    };
+
+    /**
+     * @brief render-server-specific event IDs which can be subscribed to via the event server.
+     */
+    enum Events : EventServer::TypeID
+    {
+        EVENT_TYPE_RESIZE = 0x20000001, // called when the framebuffer size changes
     };
 
 private:
