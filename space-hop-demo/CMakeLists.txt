@@ -40,6 +40,7 @@ else()
 endif()
 
 add_custom_target(space-hop-demo_resources
+    DEPENDS package-tool
 	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 	COMMAND ${HOP_PACKAGE_TOOL} res -c -b
 		"${CMAKE_CURRENT_BINARY_DIR}/resources.hop"
@@ -47,6 +48,7 @@ add_custom_target(space-hop-demo_resources
 )
 
 add_custom_target(space-hop-demo_libs
+    DEPENDS hop-engine
 	COMMAND ${CMAKE_COMMAND} -E copy ${HOP_LIB}
 		"${CMAKE_CURRENT_BINARY_DIR}/${HOP_LIB_FILE}"
 	COMMENT "Copying dependency"
@@ -54,7 +56,5 @@ add_custom_target(space-hop-demo_libs
 
 add_dependencies(space-hop-demo space-hop-demo_resources)
 add_dependencies(space-hop-demo space-hop-demo_libs)
-add_dependencies(space-hop-demo hop-engine)
-add_dependencies(space-hop-demo package-tool)
 
 set(DEMO_FILES ${HOP_LIB} "${CMAKE_CURRENT_BINARY_DIR}/resources.hop" $<TARGET_FILE:space-hop-demo> PARENT_SCOPE)

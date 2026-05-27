@@ -16,12 +16,14 @@ uniform sampler2D camera;
 
 bool fragment(in Varyings vars, inout Fragment frag)
 {
-	vec3 barrel_uv = computeBarrelDistortedPosition(vars.uv.xy * 2.0f - 1.0f, 0.1f, 0.8f, 0.08f);
+	vec3 barrel_uv = computeBarrelDistortedPosition(vars.uv.xy * 2.0f - 1.0f, 0.1f, 0.8f, 0.04f);
 	vec2 distorted_uv = (barrel_uv.xy + 1.0f) / 2.0f;
 
 	if (barrel_uv.z > 0)
 		return false;//frag.colour = vec4(0, 0, 0, 0);//vec4(pow(texture(backing_tex, vec2(vars.uv.x, 1.0f - vars.uv.y)).rgb, vec3(1.0f / 2.2f)), 1);
-	else
+	else if (abs(barrel_uv.x) > 0.94f || abs(barrel_uv.y) > 0.94f)
+        frag.colour = vec4(0.02f, 0.02f, 0.02f, 1.0f);
+    else
 	{
 		vec3 colour = texture(camera, distorted_uv).rgb;
 		// very subtle chromatic aberration

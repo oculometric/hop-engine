@@ -11,6 +11,11 @@ private:
     Ref<Material> sky_material;
     Ref<UILabel> title_label;
     Ref<UILabel> credit_label;
+    std::string title_text_target;
+    size_t title_text_offset;
+    std::string credit_text_target;
+    size_t credit_text_offset;
+    float text_typing_cooldown = 0.0f;
 
     std::vector<std::tuple<std::string, std::string, std::string>> images = 
     {
@@ -97,6 +102,26 @@ public:
         mesh_obj->getTransform().translate({ 0, delta_time * 0.7f, 0 });
         mesh_obj->getTransform().rotate(angular_speed * delta_time);
         remaining_time -= delta_time;
+        text_typing_cooldown -= delta_time;
+        if (text_typing_cooldown <= 0.0f)
+        {
+            if (title_text_offset > 0)
+            {
+                --title_text_offset;
+                auto temp = std::string(title_text_target.size() - title_text_offset, ' ');
+                memcpy(temp.data(), title_text_target.data(), temp.size());
+                title_label->setText(temp);
+                text_typing_cooldown = 0.05f;
+            }
+            else if (credit_text_offset > 0)
+            {
+                --credit_text_offset;
+                auto temp = std::string(credit_text_target.size() - credit_text_offset, ' ');
+                memcpy(temp.data(), credit_text_target.data(), temp.size());
+                credit_label->setText(temp);
+                text_typing_cooldown = 0.02f;
+            }
+        }
         if (remaining_time <= 0.0f)
         {
             remaining_time = 8.0f;
@@ -126,8 +151,12 @@ public:
         }
         auto image = images[rand() % images.size()];
         sky_material->setTexture("tex", Engine::loadTexture(std::get<0>(image)));
-        title_label->setText(std::get<1>(image));
-        credit_label->setText(std::get<2>(image));
+        title_text_target = std::get<1>(image);
+        title_text_offset = title_text_target.size();
+        credit_text_target = std::get<2>(image);
+        credit_text_offset = credit_text_target.size();
+        title_label->setText("");
+        credit_label->setText("");
     }
 };
 
