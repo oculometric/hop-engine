@@ -201,7 +201,7 @@ public:
 
 int main()
 {
-    HopEngine::init(Engine::InitParams{false, false, Debug::DEBUG_INFO, false});
+    HopEngine::init(Engine::InitParams{false, true, Debug::DEBUG_INFO, false});
     Engine::startApplication<MyGame>();
     HopEngine::destroy();
 

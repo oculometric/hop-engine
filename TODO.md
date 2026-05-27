@@ -2,6 +2,7 @@
 
 # v0.56
 - update readme
+- window aspect ratio limit
 - random number generation utilities
 - prevent crash when shader doesnt compile
 - errors with queuepresent suboptimal

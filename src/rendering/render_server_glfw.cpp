@@ -49,6 +49,18 @@ void RenderServer::setSize(glm::u32vec2 new_window_size)
 void RenderServer::setResizable(bool resizable)
 { glfwSetWindowAttrib(getWindow(), GLFW_RESIZABLE, resizable); }
 
+glm::u32vec2 RenderServer::getWindowPosition()
+{
+    int x_pos, y_pos;
+    glfwGetWindowPos(getWindow(), &x_pos, &y_pos);
+    return { x_pos, y_pos };
+}
+
+void RenderServer::setWindowPosition(glm::u32vec2 position)
+{
+    glfwSetWindowPos(getWindow(), position.x, position.y);
+}
+
 void RenderServer::createWindow()
 {
 #if defined(_WIN32)

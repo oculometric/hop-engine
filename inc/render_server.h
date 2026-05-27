@@ -254,6 +254,8 @@ public:
      * (until `setSize` is used).
      */
     static void setResizable(bool resizable);
+    static glm::u32vec2 getWindowPosition();
+    static void setWindowPosition(glm::u32vec2 position);
 
     /**
      * @brief toggles whether image presentation to the window is tied to the screen's refresh rate.
