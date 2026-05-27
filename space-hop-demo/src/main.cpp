@@ -17,6 +17,9 @@ private:
     size_t credit_text_offset;
     float text_typing_cooldown = 0.0f;
     Ref<UICanvas> canvas;
+    Ref<UIIcon> me_img;
+    bool img_visible = false;
+    float img_visible_timer = 0.0f;
 
     std::vector<std::tuple<std::string, std::string, std::string>> images = 
     {
@@ -96,6 +99,16 @@ public:
         offsetter->setPosition({ -16.0f, -16.0f });
         offsetter->setExternalAnchor(UITransform::ANCHOR_BOTTOM_RIGHT);
         offsetter->setInternalAnchor(UITransform::ANCHOR_BOTTOM_RIGHT);
+        auto me_label = canvas->addElement<UILabel>().strong();
+        me_label->setColour({ 1.0f, 0.0f, 0.0f });
+        me_label->setPosition({ 16.0f, 16.0f });
+        me_label->setText("created by Cassette Costen");
+        me_img = canvas->addElement<UIIcon>().strong();
+        me_img->setIcon(7, true);
+        me_img->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+        me_img->setInternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+        me_img->setPosition({ -16.0f, 8.0f });
+        me_img->setSize(glm::vec2(72.0f));
 
         auto overlay = scene->addObject<StaticMeshComponent>("overlay");
         overlay->mesh = RenderServer::getQuad().strong();
@@ -122,6 +135,13 @@ public:
         mesh_obj->getTransform().rotate(angular_speed * delta_time);
         remaining_time -= delta_time;
         text_typing_cooldown -= delta_time;
+        img_visible_timer -= delta_time;
+        if (img_visible_timer <= 0.0f)
+        {
+            img_visible = !img_visible;
+            me_img->setPosition({ img_visible ? -16.0f : 10000.0f, 8.0f });
+            img_visible_timer = 0.75f;
+        }
         if (text_typing_cooldown <= 0.0f)
         {
             if (title_text_offset > 0)

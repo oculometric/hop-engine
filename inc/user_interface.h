@@ -467,6 +467,22 @@ public:
     void build() override;
 };
 
+class UIIcon final : public UICanvasElement
+{
+private:
+    int icon_index = 0;
+    bool icon_big = false;
+    UIRenderer::BackingData icon_backing;
+
+public:
+    DELETE_NOT_ALL_CONSTRUCTORS(UIIcon);
+    UIIcon() = default;
+
+    void setIcon(int new_icon_index, bool big);
+
+    void build() override;
+};
+
 // class UIImage final : public UICanvasElement
 // {
 // private:
