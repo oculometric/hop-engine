@@ -11,7 +11,17 @@
 - material needs the ability to specify render priority (used by staticmeshes etc)
 - the ui update
     - document user_interface.h
-    - canvas needs to be able to have multiple meshes/materials (for images)
+    - separate ui style into multiple textures (one for icons, one for nineslices, etc)
+    - canvas needs to be able to have multiple meshes/materials passed for drawing
+    - per-camera ui stack?
+    - renderer generates multiple materials as needed
+        - custom images (one mesh + one material per unique image)
+        - custom styles (one mesh + one material per unique style)
+        - per-element styles
+    - percentage sizing for elements
+    - style additions
+        - colourset stuff like default button colours, etc
+        - style size information, pixel perfectness
     - basic elements
         - dropdown
         - checkbox
@@ -30,7 +40,6 @@
         - pack everything into a single texture
         - use the generic user interface shader
     - ui deserialisation
-    - extend UI style to contain stuff like default button colours, etc
 
 - transform overhaul
     - make local/global transform from forward/up vectors (generally complete the transform functionality), i.e. create from basis vectors
