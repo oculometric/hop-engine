@@ -21,7 +21,7 @@ bool fragment(in Varyings vars, inout Fragment frag)
 
 	if (barrel_uv.z > 0)
 		return false;//frag.colour = vec4(0, 0, 0, 0);//vec4(pow(texture(backing_tex, vec2(vars.uv.x, 1.0f - vars.uv.y)).rgb, vec3(1.0f / 2.2f)), 1);
-	else if (abs(barrel_uv.fx) > 0.98f || abs(barrel_uv.y) > 0.98f)
+	else if (abs(barrel_uv.x) > 0.98f || abs(barrel_uv.y) > 0.98f)
         frag.colour = vec4(0.02f, 0.02f, 0.02f, 1.0f);
     else
 	{

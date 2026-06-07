@@ -39,7 +39,7 @@ void Texture::transitionLayout(const Layout new_layout)
     memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     memory_barrier.image               = static_cast<VkImage>(image);
     memory_barrier.subresourceRange.aspectMask =
-        format == FORMAT_DEPTH ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+        format == FORMAT_DEPTH ? (VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT) : VK_IMAGE_ASPECT_COLOR_BIT;
     memory_barrier.subresourceRange.baseMipLevel   = 0;
     memory_barrier.subresourceRange.levelCount     = 1;
     memory_barrier.subresourceRange.baseArrayLayer = 0;
