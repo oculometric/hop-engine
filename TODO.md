@@ -2,7 +2,6 @@
 
 # v0.56
 - material needs the ability to specify render priority (used by staticmeshes etc)
-- random number generation utilities
 
 - separate window functionality
     - window aspect ratio limit
@@ -21,6 +20,8 @@
 - implement per-package-entry compresion
 - shadows
 - skinned mesh support
+- horizon-based ambient occlusion
+- way to show performance metrics in a regular ass game
 
 # v0.57
 - the ui update
@@ -100,6 +101,5 @@
 - networking kit
 - Steamworks integration
 - animated images
-- horizon-based ambient occlusion
 - support multiple materials per mesh
 - replace discord integration library with internal stuff

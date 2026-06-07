@@ -188,7 +188,7 @@ public:
             auto tex = Engine::getScene()->render_graph->getFinalImage();
             mesh_obj->material->setTexture("screen", tex->duplicate());
         }
-        auto image = images[rand() % images.size()];
+        auto image = images[Random::limit(images.size())];
         sky_material->setTexture("tex", Engine::loadTexture(std::get<0>(image)));
         title_text_target = std::get<1>(image);
         title_text_offset = title_text_target.size();

@@ -5,6 +5,7 @@
 #include "package.h"
 #include "render_server.h"
 #include "user_interface.h"
+#include "random.h"
 
 #define IN_PLACE_INIT(var, type, args)                   \
     var = reinterpret_cast<type*>(malloc(sizeof(type))); \
@@ -30,6 +31,8 @@ public:
     {
         // TODO: checks for success, checks for already-inited
         bool success = true;
+
+        Random::randomiseSeed();
 
         if (!debug)
         {

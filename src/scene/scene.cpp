@@ -203,5 +203,5 @@ Scene::Scene(const std::string& name)
     root         = Object::create();
     root->name   = "scene root";
 
-    DBG_INFO("created new scene " + getOrigin());
+    DBG_INFO("created new scene \"" + getOrigin() + '\"');
 }
