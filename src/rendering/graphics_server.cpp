@@ -1,4 +1,4 @@
-#include "render_server.h"
+#include "graphics_server.h"
 
 #include "command_buffer.h"
 #include "engine.h"
@@ -17,37 +17,37 @@ using namespace HopEngine;
 constexpr Shader::Descriptor scene_uniform_descriptor{ 0, Shader::UNIFORM, sizeof(SceneUniforms) };
 constexpr Shader::Descriptor object_uniform_descriptor{ 0, Shader::UNIFORM, sizeof(ObjectUniforms) };
 
-Ref<UniformBlock> RenderServer::createSceneUniforms()
+Ref<UniformBlock> GraphicsServer::createSceneUniforms()
 {
     return new UniformBlock(
         Shader::Layout{ getInstance()->scene_descriptor_set_layout, { scene_uniform_descriptor }, 0 });
 }
 
-Ref<UniformBlock> RenderServer::createObjectUniforms()
+Ref<UniformBlock> GraphicsServer::createObjectUniforms()
 {
     return new UniformBlock(
         Shader::Layout{ getInstance()->object_descriptor_set_layout, { object_uniform_descriptor }, 1 });
 }
 
-uint32_t RenderServer::getFramesInFlight() { return getSwapchain()->getImageCount(); }
+uint32_t GraphicsServer::getFramesInFlight() { return getSwapchain()->getImageCount(); }
 
-glm::vec2 RenderServer::getFramebufferSize() { return glm::vec2(getSwapchain()->getExtent()); }
+glm::vec2 GraphicsServer::getFramebufferSize() { return glm::vec2(getSwapchain()->getExtent()); }
 
-void RenderServer::setSingleScene(const Ref<Scene>& scene)
+void GraphicsServer::setSingleScene(const Ref<Scene>& scene)
 {
     setMultiScene({
         { scene, glm::vec2{ 0, 0 }, glm::vec2{ 1, 1 } }
     });
 }
 
-void RenderServer::setMultiScene(const std::vector<SceneRender>& multi_scenes)
+void GraphicsServer::setMultiScene(const std::vector<SceneRender>& multi_scenes)
 {
-    RenderServer::waitIdle();
+    GraphicsServer::waitIdle();
     getInstance()->scenes.clear();
     for (auto& scene : multi_scenes) getInstance()->scenes.emplace_back(scene);
 }
 
-FrameStats RenderServer::draw()
+FrameStats GraphicsServer::draw()
 {
     if (Window::isMinimised())
     {
@@ -82,7 +82,7 @@ FrameStats RenderServer::draw()
     return stats;
 }
 
-GPUHandle RenderServer::getRenderPass(const Framebuffer::Config& for_config)
+GPUHandle GraphicsServer::getRenderPass(const Framebuffer::Config& for_config)
 {
     auto it = getInstance()->render_passes.find(for_config);
     if (it == getInstance()->render_passes.end())
@@ -94,9 +94,9 @@ GPUHandle RenderServer::getRenderPass(const Framebuffer::Config& for_config)
     return it->second->getRenderPass();
 }
 
-Ref<Swapchain> RenderServer::getSwapchain() { return Window::getSwapchain(); }
+Ref<Swapchain> GraphicsServer::getSwapchain() { return Window::getSwapchain(); }
 
-RenderServer::RenderServer(const InitParams& params, bool& success)
+GraphicsServer::GraphicsServer(const InitParams& params, bool& success)
 {
     createVulkan(params.enable_api_validation);
 
@@ -105,7 +105,7 @@ RenderServer::RenderServer(const InitParams& params, bool& success)
     scene_descriptor_set_layout   = Shader::createDescriptorSetLayout({ scene_uniform_descriptor });
     object_descriptor_set_layout  = Shader::createDescriptorSetLayout({ object_uniform_descriptor });
     default_descriptor_set_layout = Shader::createDescriptorSetLayout({});
-    default_pipeline_layout       = RenderServer::createPipelineLayout(default_descriptor_set_layout);
+    default_pipeline_layout       = GraphicsServer::createPipelineLayout(default_descriptor_set_layout);
 
     const uint32_t default_image_data[2 * 2 * 2] = {
         0xFF000000,
@@ -172,11 +172,11 @@ RenderServer::RenderServer(const InitParams& params, bool& success)
     success = true;
 }
 
-RenderServer::~RenderServer()
+GraphicsServer::~GraphicsServer()
 {
-    RenderServer::waitIdle();
+    GraphicsServer::waitIdle();
 
-    RenderServer::destroyImGui();
+    GraphicsServer::destroyImGui();
 
     command_buffers.clear();
     scenes.clear();
@@ -202,7 +202,7 @@ RenderServer::~RenderServer()
     destroyVulkan();
 }
 
-void RenderServer::updateTextMesh()
+void GraphicsServer::updateTextMesh()
 {
     if (!overlay_logs) return;
     auto lines = Debug::queryLines(32);
@@ -215,7 +215,7 @@ void RenderServer::updateTextMesh()
     debug_text_renderer->finalise();
 }
 
-void RenderServer::tryFreeResources(bool force)
+void GraphicsServer::tryFreeResources(bool force)
 {
     static float last_free_time = 0.0f;
 
@@ -223,14 +223,14 @@ void RenderServer::tryFreeResources(bool force)
     if (free_list.empty()) return;
     if (!force && (current_time - last_free_time < 2.0f) && free_list.size() < 30) return;
 
-    RenderServer::waitIdle();
+    GraphicsServer::waitIdle();
     DBG_VERBOSE("freeing " + std::to_string(free_list.size()) + " resources");
     last_free_time = current_time;
     for (auto& item : free_list) item();
     free_list.clear();
 }
 
-WeakRef<DrawCommandBuffer> RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
+WeakRef<DrawCommandBuffer> GraphicsServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
 {
     SceneUniforms scene_uniforms;
     scene_uniforms.time          = Engine::getEngineTime();

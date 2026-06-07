@@ -200,7 +200,7 @@ public:
     };
 
 private:
-    GPUHandle window; // GLFW window object handle, initialised by `RenderServer`
+    GPUHandle window; // GLFW window object handle, initialised by `GraphicsServer`
     std::array<GPUHandle, CURSOR_MAX_ENUM> cursors; // GLFW cursors created for each cursor type
     // set of keyboard keys which have been pressed since the last time they were queried
     std::set<uint16_t> pressed_since_checked;

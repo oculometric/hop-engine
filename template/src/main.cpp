@@ -14,8 +14,8 @@ public:
         Package::importDeferredPackage("resources.hop");
 
         // update the window title and icon
-        RenderServer::setTitle("David's Crate");
-        RenderServer::setIcon("res://david_crate.jpg");
+        GraphicsServer::setTitle("David's Crate");
+        GraphicsServer::setIcon("res://david_crate.jpg");
 
         // create a scene and make it current
         auto scene = Scene::create("scene");

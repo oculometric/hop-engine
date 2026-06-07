@@ -4,7 +4,7 @@
 #include "engine.h"
 #include "material.h"
 #include "mesh.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "scene.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -13,8 +13,8 @@ using namespace HopEngine;
 
 void CameraComponent::awake()
 {
-    uniforms        = RenderServer::createSceneUniforms();
-    object_uniforms = RenderServer::createObjectUniforms();
+    uniforms        = GraphicsServer::createSceneUniforms();
+    object_uniforms = GraphicsServer::createObjectUniforms();
 }
 
 WeakRef<UniformBlock> CameraComponent::getUniforms(glm::ivec2 viewport_size,
@@ -39,7 +39,7 @@ WeakRef<UniformBlock> CameraComponent::getUniforms(glm::ivec2 viewport_size,
 
 glm::mat4 CameraComponent::getWorldToScreenMatrix()
 {
-    const glm::vec2 viewport_size = RenderServer::getFramebufferSize();
+    const glm::vec2 viewport_size = GraphicsServer::getFramebufferSize();
     glm::mat4 view_to_clip        = glm::perspective(glm::radians(fov),
         viewport_size.x / static_cast<float>(viewport_size.y), near_clip, far_clip);
     view_to_clip[1][1] *= -1;
@@ -62,18 +62,18 @@ std::vector<DrawCommand> CameraComponent::getDrawCommands()
         camera_gizmo = Engine::loadMaterial("res://engine/materials/camera_gizmo.hmat");
 
     return { DrawCommand(camera_gizmo,
-        RenderServer::getQuad(), object_uniforms)
+        GraphicsServer::getQuad(), object_uniforms)
             .priority(-1000) };
 }
 
-void StaticMeshComponent::awake() { uniforms = RenderServer::createObjectUniforms(); }
+void StaticMeshComponent::awake() { uniforms = GraphicsServer::createObjectUniforms(); }
 
 std::vector<DrawCommand> StaticMeshComponent::getDrawCommands()
 {
     if (!uniforms)
     {
         DBG_WARNING("static mesh component had no uniforms! creating them now...");
-        uniforms = RenderServer::createObjectUniforms();
+        uniforms = GraphicsServer::createObjectUniforms();
     }
     ObjectUniforms* object_uniforms = reinterpret_cast<ObjectUniforms*>(uniforms->getBuffer());
     object_uniforms->id             = static_cast<int>(reinterpret_cast<size_t>(this));
@@ -96,7 +96,7 @@ LightParams LightComponent::getParamsStructure() const
     return params;
 }
 
-void LightComponent::awake() { object_uniforms = RenderServer::createObjectUniforms(); }
+void LightComponent::awake() { object_uniforms = GraphicsServer::createObjectUniforms(); }
 
 std::vector<DrawCommand> LightComponent::getDrawCommands()
 {
@@ -110,6 +110,6 @@ std::vector<DrawCommand> LightComponent::getDrawCommands()
         light_gizmo = Engine::loadMaterial("res://engine/materials/light_gizmo.hmat");
 
     return { DrawCommand(light_gizmo,
-        RenderServer::getQuad(), object_uniforms)
+        GraphicsServer::getQuad(), object_uniforms)
             .priority(-1000) };
 }

@@ -50,7 +50,7 @@ void Engine::start()
         if (Input::wasKeyPressed(Input::KEY_F11)) Window::setFullscreen(!Window::isFullscreen());
         if (Input::wasKeyPressed(Input::KEY_F10)) Engine::setForceWireframe(!Engine::isWireframeMode());
         if (Input::wasKeyPressed(Input::KEY_F9))
-            RenderServer::setOverlayLogs(!RenderServer::getOverlayLogs());
+            GraphicsServer::setOverlayLogs(!GraphicsServer::getOverlayLogs());
 
         auto update_start = std::chrono::steady_clock::now();
         if (getInstance()->application) getInstance()->application->update(getDeltaTime());
@@ -66,7 +66,7 @@ void Engine::start()
 
             ImGui::Render();
         }
-        FrameStats stats  = RenderServer::draw();
+        FrameStats stats  = GraphicsServer::draw();
         stats.update_time = update_duration.count();
 
         getInstance()->updateStats(stats);
@@ -83,7 +83,7 @@ void Engine::setScene(const Ref<Scene>& new_scene)
 {
     Engine::debugSelect(WeakRef<Object>());
     getInstance()->scene = new_scene;
-    RenderServer::setSingleScene(new_scene);
+    GraphicsServer::setSingleScene(new_scene);
     EventServer::dispatch(EVENT_TYPE_SCENE_CHANGE);
 }
 

@@ -33,7 +33,7 @@ namespace HopEngine
 /**
  * @brief encapsulates all the behaviour of actually initialising and running the rendering environment.
  */
-class RenderServer final
+class GraphicsServer final
 {
     friend class InitMachine;
 
@@ -58,7 +58,7 @@ public:
     };
 
     /**
-     * @brief render server setup parameter struct.
+     * @brief graphics server setup parameter struct.
      */
     struct InitParams
     {
@@ -116,7 +116,7 @@ private:
     std::vector<std::function<void()>> free_list;
 
 public:
-    DELETE_NOT_ALL_CONSTRUCTORS(RenderServer);
+    DELETE_NOT_ALL_CONSTRUCTORS(GraphicsServer);
 
     static GPUHandle getDevice() { return getInstance()->device; }
     /**
@@ -221,14 +221,14 @@ public:
     static FrameStats draw();
 
 private:
-    RenderServer(const InitParams& params, bool& success);
-    ~RenderServer();
-    static RenderServer* getInstance();
+    GraphicsServer(const InitParams& params, bool& success);
+    ~GraphicsServer();
+    static GraphicsServer* getInstance();
 
     /**
      * @brief initialises Vulkan and constructs the necessary backend resources, including selecting the
      * physical device to use.
-     * @param enable_validation if `true`, render server will attempt to start with Vulkan validation layers
+     * @param enable_validation if `true`, graphics server will attempt to start with Vulkan validation layers
      * enabled, if available.
      */
     void createVulkan(bool enable_validation);

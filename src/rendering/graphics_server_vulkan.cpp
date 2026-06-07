@@ -1,4 +1,4 @@
-#include "render_server.h"
+#include "graphics_server.h"
 
 #include <chrono>
 #include <imgui/backends/imgui_impl_glfw.h>
@@ -42,9 +42,9 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
     return VK_FALSE;
 }
 
-void RenderServer::waitIdle() { vkDeviceWaitIdle(static_cast<VkDevice>(getInstance()->device)); }
+void GraphicsServer::waitIdle() { vkDeviceWaitIdle(static_cast<VkDevice>(getInstance()->device)); }
 
-std::vector<uint32_t> RenderServer::getUniqueQueueIndices()
+std::vector<uint32_t> GraphicsServer::getUniqueQueueIndices()
 {
     std::vector<uint32_t> unique_queue_families;
     unique_queue_families.push_back(getInstance()->queue_families.graphics_family.value());
@@ -56,7 +56,7 @@ std::vector<uint32_t> RenderServer::getUniqueQueueIndices()
     return unique_queue_families;
 }
 
-RenderServer::QueueFamilies RenderServer::queryQueueFamilies(GPUHandle _device)
+GraphicsServer::QueueFamilies GraphicsServer::queryQueueFamilies(GPUHandle _device)
 {
     QueueFamilies families;
     VkPhysicalDevice device = static_cast<VkPhysicalDevice>(_device);
@@ -80,7 +80,7 @@ RenderServer::QueueFamilies RenderServer::queryQueueFamilies(GPUHandle _device)
     return families;
 }
 
-GPUHandle RenderServer::createPipelineLayout(GPUHandle set_2)
+GPUHandle GraphicsServer::createPipelineLayout(GPUHandle set_2)
 {
     VkDescriptorSetLayout layouts[3] = {};
     layouts[0] = static_cast<VkDescriptorSetLayout>(getInstance()->scene_descriptor_set_layout);
@@ -92,17 +92,17 @@ GPUHandle RenderServer::createPipelineLayout(GPUHandle set_2)
     layout_create_info.pSetLayouts    = layouts;
 
     VkPipelineLayout pipeline_layout;
-    if (vkCreatePipelineLayout(static_cast<VkDevice>(RenderServer::getDevice()), &layout_create_info,
+    if (vkCreatePipelineLayout(static_cast<VkDevice>(GraphicsServer::getDevice()), &layout_create_info,
             nullptr, &pipeline_layout) != VK_SUCCESS)
         DBG_FAULT("vkCreatePipelineLayout failed");
 
     return pipeline_layout;
 }
 
-void RenderServer::queueFree(std::function<void()> destructor)
+void GraphicsServer::queueFree(std::function<void()> destructor)
 { getInstance()->free_list.push_back(destructor); }
 
-void RenderServer::createVulkan(bool enable_validation)
+void GraphicsServer::createVulkan(bool enable_validation)
 {
     createInstance(enable_validation);
 
@@ -152,7 +152,7 @@ void RenderServer::createVulkan(bool enable_validation)
     }
 }
 
-void RenderServer::createInstance(bool debug)
+void GraphicsServer::createInstance(bool debug)
 {
     // application info
     VkApplicationInfo app_info{};
@@ -236,7 +236,7 @@ void RenderServer::createInstance(bool debug)
     }
 }
 
-int RenderServer::queryPhysicalDevice(GPUHandle device, std::vector<const char*> extensions)
+int GraphicsServer::queryPhysicalDevice(GPUHandle device, std::vector<const char*> extensions)
 {
     VkPhysicalDevice test_device = static_cast<VkPhysicalDevice>(device);
     int score                    = 0;
@@ -297,7 +297,7 @@ int RenderServer::queryPhysicalDevice(GPUHandle device, std::vector<const char*>
     return score;
 }
 
-void RenderServer::createDevice()
+void GraphicsServer::createDevice()
 {
     // list out physical devices which are vulkan-compatible
     uint32_t physical_device_count = 0;
@@ -375,7 +375,7 @@ void RenderServer::createDevice()
         reinterpret_cast<VkQueue*>(&present_queue));
 }
 
-void RenderServer::initImGui()
+void GraphicsServer::initImGui()
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -403,7 +403,7 @@ void RenderServer::initImGui()
     ImGui_ImplVulkan_Init(&init_info);
 }
 
-void RenderServer::destroyImGui()
+void GraphicsServer::destroyImGui()
 {
     DBG_VERBOSE("\033[31mkilling imgui with a gun\033[0m");
     ImGui_ImplVulkan_Shutdown();
@@ -411,7 +411,7 @@ void RenderServer::destroyImGui()
     ImGui::DestroyContext();
 }
 
-void RenderServer::destroyVulkan()
+void GraphicsServer::destroyVulkan()
 {
     tryFreeResources(true);
 

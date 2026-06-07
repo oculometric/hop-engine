@@ -1,7 +1,7 @@
 #include "buffer.h"
 
 #include "command_buffer.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "vulkan_helpers.h"
 
 #include <map>
@@ -47,14 +47,14 @@ Buffer::Buffer(size_t size, const Usage buffer_usage, const MemoryProperties pro
     buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
     CHECK_RESULT(vkCreateBuffer,
-        (static_cast<VkDevice>(RenderServer::getDevice()), &buffer_create_info, nullptr,
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), &buffer_create_info, nullptr,
             reinterpret_cast<VkBuffer*>(&buffer)),
         FAULT,
         ;);
 
     // then we need to find appropriate memory
     VkMemoryRequirements memory_requirements;
-    vkGetBufferMemoryRequirements(static_cast<VkDevice>(RenderServer::getDevice()),
+    vkGetBufferMemoryRequirements(static_cast<VkDevice>(GraphicsServer::getDevice()),
         static_cast<VkBuffer>(buffer), &memory_requirements);
 
     // and allocate it
@@ -64,14 +64,14 @@ Buffer::Buffer(size_t size, const Usage buffer_usage, const MemoryProperties pro
     allocate_info.memoryTypeIndex = Buffer::findMemoryType(memory_requirements.memoryTypeBits, properties);
 
     CHECK_RESULT(vkAllocateMemory,
-        (static_cast<VkDevice>(RenderServer::getDevice()), &allocate_info, nullptr,
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), &allocate_info, nullptr,
             reinterpret_cast<VkDeviceMemory*>(&memory)),
         FAULT,
         ;);
 
     // and bind it to our buffer
     CHECK_RESULT(vkBindBufferMemory,
-        (static_cast<VkDevice>(RenderServer::getDevice()), static_cast<VkBuffer>(buffer),
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), static_cast<VkBuffer>(buffer),
             static_cast<VkDeviceMemory>(memory), 0),
         FAULT,
         ;);
@@ -104,7 +104,7 @@ uint32_t Buffer::findMemoryType(const uint32_t type_bits, const MemoryProperties
     const VkMemoryPropertyFlags properties =
         convertFlags<VkMemoryPropertyFlagBits, MemoryProperties, 4>(_properties, vulkan_memory_props);
     VkPhysicalDeviceMemoryProperties memory_properties;
-    vkGetPhysicalDeviceMemoryProperties(static_cast<VkPhysicalDevice>(RenderServer::getPhysicalDevice()),
+    vkGetPhysicalDeviceMemoryProperties(static_cast<VkPhysicalDevice>(GraphicsServer::getPhysicalDevice()),
         &memory_properties);
 
     for (uint32_t i = 0; i < memory_properties.memoryTypeCount; i++)
@@ -126,7 +126,7 @@ void* Buffer::mapMemory()
     // return the already-mapped pointer)
     if (mapped == nullptr)
         CHECK_RESULT(vkMapMemory,
-            (static_cast<VkDevice>(RenderServer::getDevice()), static_cast<VkDeviceMemory>(memory), 0,
+            (static_cast<VkDevice>(GraphicsServer::getDevice()), static_cast<VkDeviceMemory>(memory), 0,
                 buffer_size, 0, &mapped),
             FAULT, return nullptr;);
 
@@ -137,7 +137,7 @@ void Buffer::unmapMemory()
 {
     if (mapped == nullptr) return;
 
-    vkUnmapMemory(static_cast<VkDevice>(RenderServer::getDevice()), static_cast<VkDeviceMemory>(memory));
+    vkUnmapMemory(static_cast<VkDevice>(GraphicsServer::getDevice()), static_cast<VkDeviceMemory>(memory));
     mapped = nullptr;
 }
 

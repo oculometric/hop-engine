@@ -1,5 +1,5 @@
 #include "framebuffer.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "vulkan_helpers.h"
 
 #include <array>
@@ -142,7 +142,7 @@ void RenderPass::createRenderPass()
     render_pass_create_info.pDependencies   = dependencies.data();
 
     CHECK_RESULT(vkCreateRenderPass,
-        (static_cast<VkDevice>(RenderServer::getDevice()), &render_pass_create_info, nullptr,
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), &render_pass_create_info, nullptr,
             reinterpret_cast<VkRenderPass*>(&render_pass)),
         FAULT,
         ;);

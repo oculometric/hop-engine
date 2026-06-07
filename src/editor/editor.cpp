@@ -95,7 +95,7 @@ void Editor::awake()
 
     Engine::setScene(view_3d);
 
-    RenderServer::setMultiScene({
+    GraphicsServer::setMultiScene({
         { view_3d, { 0.0f, 0.0f }, { 0.8f, 0.7f } },
         //{ view_nodes, { 0.0f, 0.7f }, { 0.8f, 0.3f } },
     });
@@ -123,7 +123,7 @@ void Editor::awake()
     auto right_panel = main_canvas->addElement<UIPanel>();
     right_panel->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
     right_panel->setInternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
-    right_panel->setSize({ 0.2f * RenderServer::getFramebufferSize().x, 1 });
+    right_panel->setSize({ 0.2f * GraphicsServer::getFramebufferSize().x, 1 });
     right_panel->setScaling(UITransform::SCALING_FILL_VERTICAL);
     auto title_label = main_canvas->addChild<UILabel>(right_panel);
     title_label->setText("PROPERTIES");
@@ -146,7 +146,7 @@ void Editor::awake()
 
 void Editor::update(float delta_time)
 {
-    // if (!node_view->checkInput({ 0, RenderServer::getFramebufferSize().y * 0.7f },
+    // if (!node_view->checkInput({ 0, GraphicsServer::getFramebufferSize().y * 0.7f },
     // view_nodes->getViewportSize()))
     Engine::debugCamera(view_3d->findObject("camera"));
 

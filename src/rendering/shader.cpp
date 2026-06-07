@@ -1,6 +1,6 @@
 #include "command_buffer.h"
 #include "material.h"
-#include "render_server.h"
+#include "graphics_server.h"
 
 #include <filesystem>
 
@@ -34,7 +34,7 @@ Shader::Shader(const std::string& base_path)
 
     descriptor_set_layout = Shader::createDescriptorSetLayout(bindings);
 
-    pipeline_layout = RenderServer::createPipelineLayout(descriptor_set_layout);
+    pipeline_layout = GraphicsServer::createPipelineLayout(descriptor_set_layout);
 
     DBG_VERBOSE("created shader from " + base_path);
 }
@@ -119,7 +119,7 @@ void Shader::reload()
 
     descriptor_set_layout = createDescriptorSetLayout(bindings);
 
-    pipeline_layout = RenderServer::createPipelineLayout(descriptor_set_layout);
+    pipeline_layout = GraphicsServer::createPipelineLayout(descriptor_set_layout);
 }
 
 uint64_t Shader::computeHash(const std::vector<uint32_t>& blob1, const std::vector<uint32_t>& blob2)

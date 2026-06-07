@@ -73,7 +73,7 @@ private:
 public:
     DELETE_CONSTRUCTORS(Swapchain);
     /**
-     * @brief creates a new swapchain using the `RenderServer`'s surface with a given size.
+     * @brief creates a new swapchain using the `GraphicsServer`'s surface with a given size.
      * @param new_extent size of the surface in pixels. may be overriden based on the surface
      * `SupportInfo`.
      */
@@ -299,7 +299,7 @@ private:
  */
 class RenderPass final : public Destructible
 {
-    friend class RenderServer;
+    friend class GraphicsServer;
 
 private:
     GPUHandle render_pass = nullptr; // render pass GPU handle

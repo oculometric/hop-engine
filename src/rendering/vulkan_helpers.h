@@ -24,10 +24,10 @@ VkImageLayout toVulkanLayout(Texture::Layout layout);
 #define QUEUE_FREE(resource, type, func)                                                                \
     {                                                                                                   \
         auto _temp_##type = resource;                                                                   \
-        RenderServer::queueFree(                                                                        \
+        GraphicsServer::queueFree(                                                                        \
             [_temp_##type]()                                                                            \
             {                                                                                           \
-                func(static_cast<VkDevice>(RenderServer::getDevice()), static_cast<type>(_temp_##type), \
+                func(static_cast<VkDevice>(GraphicsServer::getDevice()), static_cast<type>(_temp_##type), \
                     nullptr);                                                                           \
             });                                                                                         \
         resource = VK_NULL_HANDLE;                                                                      \

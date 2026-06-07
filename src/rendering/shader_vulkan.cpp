@@ -1,5 +1,5 @@
 #include "material.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "vulkan_helpers.h"
 
 #include <format>
@@ -81,7 +81,7 @@ GPUHandle Shader::createShaderModule(const std::vector<uint32_t>& blob)
 
     VkShaderModule shader_module;
     CHECK_RESULT(vkCreateShaderModule,
-        (static_cast<VkDevice>(RenderServer::getDevice()), &create_info, nullptr, &shader_module), ERROR,
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), &create_info, nullptr, &shader_module), ERROR,
         return VK_NULL_HANDLE;);
 
     return shader_module;
@@ -185,7 +185,7 @@ GPUHandle Shader::createDescriptorSetLayout(std::vector<Descriptor> bindings)
     set_layout_create_info.pBindings    = layout_bindings.data();
 
     CHECK_RESULT(vkCreateDescriptorSetLayout,
-        (static_cast<VkDevice>(RenderServer::getDevice()), &set_layout_create_info, nullptr, &layout),
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), &set_layout_create_info, nullptr, &layout),
         ERROR, return VK_NULL_HANDLE;);
 
     return layout;

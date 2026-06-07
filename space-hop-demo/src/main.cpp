@@ -87,7 +87,7 @@ public:
         canvas = world_canvas->getCanvas();
         EventServer::subscribe(
             Window::EVENT_TYPE_RESIZE, [](void* data, size_t size, void* inst) -> void
-            { reinterpret_cast<MyGame*>(inst)->canvas->resize(RenderServer::getFramebufferSize()); }, this);
+            { reinterpret_cast<MyGame*>(inst)->canvas->resize(GraphicsServer::getFramebufferSize()); }, this);
 
         auto offsetter = canvas->addElement<UICanvasElement>();
         title_label    = canvas->addChild<UILabel>(offsetter).strong();
@@ -119,7 +119,7 @@ public:
         me_img->setSize(glm::vec2(72.0f));
 
         auto overlay      = scene->addObject<StaticMeshComponent>("overlay");
-        overlay->mesh     = RenderServer::getQuad().strong();
+        overlay->mesh     = GraphicsServer::getQuad().strong();
         overlay->material = Engine::loadMaterial("res://overlay.hmat");
         overlay->getTransform().setLocalEuler({ 90, 0, 0 });
         overlay->getTransform().setLocalScale({ 1.3333f, 1.0f, 1.0f });

@@ -3,7 +3,7 @@
 #include "basic_components.h"
 #include "command_buffer.h"
 #include "render_graph.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "texture.h"
 
 #include <map>

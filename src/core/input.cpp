@@ -4,7 +4,7 @@
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/imgui.h>
 #define GLFW_INCLUDE_VULKAN
-#include "render_server.h"
+#include "graphics_server.h"
 #include "window.h"
 
 #include <GLFW/glfw3.h>

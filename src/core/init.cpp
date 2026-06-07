@@ -4,7 +4,7 @@
 #include "input.h"
 #include "package.h"
 #include "random.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "user_interface.h"
 #include "window.h"
 
@@ -23,7 +23,7 @@ static Engine* engine              = nullptr;
 static EventServer* event_server   = nullptr;
 static Package* package            = nullptr;
 static Window* window              = nullptr;
-static RenderServer* render_server = nullptr;
+static GraphicsServer* render_server = nullptr;
 static Input* input                = nullptr;
 static UIManager* ui_manager       = nullptr;
 
@@ -89,9 +89,9 @@ public:
 
         if (!render_server)
         {
-            RenderServer::InitParams render_server_params{ params.enable_vulkan_validation };
-            IN_PLACE_INIT(render_server, RenderServer, (render_server_params, success));
-            if (success) DBG_INFO("initialised render server");
+            GraphicsServer::InitParams render_server_params{ params.enable_vulkan_validation };
+            IN_PLACE_INIT(render_server, GraphicsServer, (render_server_params, success));
+            if (success) DBG_INFO("initialised graphics server");
             else
                 return;
         }
@@ -145,7 +145,7 @@ public:
         {
             delete render_server;
             render_server = nullptr;
-            DBG_INFO("destroyed render server");
+            DBG_INFO("destroyed graphics server");
         }
 
         if (package)
@@ -206,9 +206,9 @@ Package* Package::getInstance()
     if (!package) DBG_ERROR("package manager instance has not been initialised!");
     return package;
 }
-RenderServer* RenderServer::getInstance()
+GraphicsServer* GraphicsServer::getInstance()
 {
-    if (!render_server) DBG_ERROR("render server instance has not been initialised!");
+    if (!render_server) DBG_ERROR("graphics server instance has not been initialised!");
     return render_server;
 }
 Input* Input::getInstance()

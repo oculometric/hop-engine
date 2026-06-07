@@ -2,7 +2,7 @@
 
 #include "command_buffer.h"
 #include "material.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "vulkan_helpers.h"
 
 #include <vulkan/vulkan.hpp>
@@ -64,7 +64,7 @@ void Framebuffer::bind(WeakRef<DrawCommandBuffer> command_buffer, Framebuffer::C
     clear_values.additionals.resize(getConfig().additional_attachments, { 0, 0, 0, 1 });
     clear_values.depth_present = getConfig().has_depth_attachment;
     command_buffer->startRenderPassInternal(
-        static_cast<VkRenderPass>(RenderServer::getRenderPass(getConfig())),
+        static_cast<VkRenderPass>(GraphicsServer::getRenderPass(getConfig())),
         getFramebuffer(command_buffer->getImageIndex()), getExtent(), clear_values);
 }
 
@@ -98,7 +98,7 @@ void Framebuffer::createResources()
 
         VkFramebufferCreateInfo framebuffer_create_info{};
         framebuffer_create_info.sType      = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebuffer_create_info.renderPass = static_cast<VkRenderPass>(RenderServer::getRenderPass(config));
+        framebuffer_create_info.renderPass = static_cast<VkRenderPass>(GraphicsServer::getRenderPass(config));
         framebuffer_create_info.attachmentCount = static_cast<uint32_t>(image_attachments.size());
         framebuffer_create_info.pAttachments    = image_attachments.data();
         framebuffer_create_info.width           = extent.x;
@@ -107,7 +107,7 @@ void Framebuffer::createResources()
 
         VkFramebuffer fb;
         CHECK_RESULT(vkCreateFramebuffer,
-            (static_cast<VkDevice>(RenderServer::getDevice()), &framebuffer_create_info, nullptr, &fb),
+            (static_cast<VkDevice>(GraphicsServer::getDevice()), &framebuffer_create_info, nullptr, &fb),
             FAULT,
             ;);
 

@@ -151,7 +151,7 @@ public:
 
     /**
      * @brief switches the currently active scene to the specified scene. also propagates to the render
-     * server via `RenderServer::setSingleScene`.
+     * server via `GraphicsServer::setSingleScene`.
      * @param new_scene primary scene to use for rendering and other activity from now on.
      */
     static void setScene(const Ref<Scene>& new_scene);

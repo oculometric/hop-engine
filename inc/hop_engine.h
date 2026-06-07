@@ -36,7 +36,7 @@
 #include "node_view.h"
 #include "package.h"
 #include "render_graph.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "scene.h"
 #include "framebuffer.h"
 #include "texture.h"

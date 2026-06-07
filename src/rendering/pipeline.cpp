@@ -1,7 +1,7 @@
 #include "command_buffer.h"
 #include "framebuffer.h"
 #include "material.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "vulkan_helpers.h"
 
 #include <array>
@@ -139,11 +139,11 @@ Pipeline::Pipeline(Ref<Shader> shader, const Builder& config, const Framebuffer:
     pipeline_create_info.pColorBlendState    = &color_blending;
     pipeline_create_info.pDynamicState       = &dynamic_state_create_info;
     pipeline_create_info.layout              = static_cast<VkPipelineLayout>(shader->getPipelineLayout());
-    pipeline_create_info.renderPass          = static_cast<VkRenderPass>(RenderServer::getRenderPass(render_pass));
+    pipeline_create_info.renderPass          = static_cast<VkRenderPass>(GraphicsServer::getRenderPass(render_pass));
     pipeline_create_info.subpass             = 0;
 
     CHECK_RESULT(vkCreateGraphicsPipelines,
-        (static_cast<VkDevice>(RenderServer::getDevice()), VK_NULL_HANDLE, 1, &pipeline_create_info,
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), VK_NULL_HANDLE, 1, &pipeline_create_info,
             nullptr, reinterpret_cast<VkPipeline*>(&pipeline)),
         FAULT,
         ;);

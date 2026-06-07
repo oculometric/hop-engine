@@ -1,7 +1,7 @@
 #include "command_buffer.h"
 #include "engine.h"
 #include "material.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "user_interface.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -185,8 +185,8 @@ void UIManager::draw(WeakRef<DrawCommandBuffer> command_buffer)
     command_buffer->setScissorViewport(glm::vec2(0.0f), glm::vec2(1.0f));
     for (auto& canvas : getInstance()->canvases)
     {
-        if (canvas->getSize() != RenderServer::getFramebufferSize())
-            canvas->resize(RenderServer::getFramebufferSize());
+        if (canvas->getSize() != GraphicsServer::getFramebufferSize())
+            canvas->resize(GraphicsServer::getFramebufferSize());
         canvas->build();
         auto command = canvas->draw();
         command.material->bind(command_buffer);

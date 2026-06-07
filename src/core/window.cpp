@@ -1,8 +1,8 @@
 #include "window.h"
 
 #include "../rendering/vulkan_helpers.h"
+#include "graphics_server.h"
 #include "package.h"
-#include "render_server.h"
 #include "stb_image.h"
 
 #define GLFW_INCLUDE_NONE
@@ -12,9 +12,7 @@
 using namespace HopEngine;
 
 void Window::setSize(glm::u32vec2 size)
-{
-    glfwSetWindowSize(static_cast<GLFWwindow*>(getWindow()), size.x, size.y);
-}
+{ glfwSetWindowSize(static_cast<GLFWwindow*>(getWindow()), size.x, size.y); }
 
 glm::u32vec2 Window::getPosition()
 {
@@ -152,11 +150,11 @@ bool Window::refreshSwapchain()
     }
     getInstance()->swapchain_needs_reset = false;
 
-    RenderServer::waitIdle();
+    GraphicsServer::waitIdle();
     glfwWaitEvents();
     getInstance()->swapchain = nullptr;
     getInstance()->destroyWindow();
-    vkDestroySurfaceKHR(static_cast<VkInstance>(RenderServer::getVulkanInstance()),
+    vkDestroySurfaceKHR(static_cast<VkInstance>(GraphicsServer::getVulkanInstance()),
         static_cast<VkSurfaceKHR>(getSurface()), nullptr);
 
     if (isFullscreen())
@@ -205,7 +203,13 @@ Window::Window(const InitParams& params, bool& success)
     success = true;
 }
 
-Window::~Window() { glfwWaitEvents(); swapchain = nullptr; destroyWindow(); }
+Window::~Window()
+{
+    glfwWaitEvents();
+    swapchain = nullptr;
+    destroySurface();
+    destroyWindow();
+}
 
 void Window::createWindow()
 {
@@ -233,7 +237,7 @@ void Window::createWindow()
 void Window::createSurface()
 {
     CHECK_RESULT(glfwCreateWindowSurface,
-        (static_cast<VkInstance>(RenderServer::getVulkanInstance()), static_cast<GLFWwindow*>(window),
+        (static_cast<VkInstance>(GraphicsServer::getVulkanInstance()), static_cast<GLFWwindow*>(window),
             nullptr, reinterpret_cast<VkSurfaceKHR*>(&surface)),
         FAULT,
         ;);
@@ -241,8 +245,8 @@ void Window::createSurface()
 
 void Window::destroySurface()
 {
-    RenderServer::waitIdle();
-    vkDestroySurfaceKHR(static_cast<VkInstance>(RenderServer::getVulkanInstance()),
+    GraphicsServer::waitIdle();
+    vkDestroySurfaceKHR(static_cast<VkInstance>(GraphicsServer::getVulkanInstance()),
         static_cast<VkSurfaceKHR>(surface), nullptr);
 }
 
