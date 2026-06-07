@@ -26,7 +26,7 @@ void Engine::start()
 
     auto last_frame = std::chrono::steady_clock::now();
 
-    while (!RenderServer::getWindowShouldClose() && !getInstance()->stop_requested)
+    while (!Window::shouldClose() && !getInstance()->stop_requested)
     {
         EventServer::dispatch(EVENT_TYPE_FRAME_BEGIN);
 
@@ -47,8 +47,7 @@ void Engine::start()
 
         Input::pollInput();
 
-        if (Input::wasKeyPressed(Input::KEY_F11))
-            RenderServer::setFullscreenEnabled(!RenderServer::getFullscreenEnabled());
+        if (Input::wasKeyPressed(Input::KEY_F11)) Window::setFullscreen(!Window::isFullscreen());
         if (Input::wasKeyPressed(Input::KEY_F10)) Engine::setForceWireframe(!Engine::isWireframeMode());
         if (Input::wasKeyPressed(Input::KEY_F9))
             RenderServer::setOverlayLogs(!RenderServer::getOverlayLogs());

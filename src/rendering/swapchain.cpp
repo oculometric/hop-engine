@@ -2,6 +2,7 @@
 #include "framebuffer.h"
 #include "render_server.h"
 #include "vulkan_helpers.h"
+#include "window.h"
 
 #include <algorithm>
 #include <vulkan/vulkan.hpp>
@@ -14,7 +15,7 @@ Swapchain::SupportInfo Swapchain::getSwapchainSupportInfo(const GPUHandle device
 
     VkSurfaceCapabilitiesKHR capabilities{};
     CHECK_RESULT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR,
-        (static_cast<VkPhysicalDevice>(device), static_cast<VkSurfaceKHR>(RenderServer::getSurface()),
+        (static_cast<VkPhysicalDevice>(device), static_cast<VkSurfaceKHR>(Window::getSurface()),
             &capabilities),
         FAULT,
         ;);
@@ -29,13 +30,13 @@ Swapchain::SupportInfo Swapchain::getSwapchainSupportInfo(const GPUHandle device
 
     uint32_t present_mode_count;
     CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR,
-        (static_cast<VkPhysicalDevice>(device), static_cast<VkSurfaceKHR>(RenderServer::getSurface()),
+        (static_cast<VkPhysicalDevice>(device), static_cast<VkSurfaceKHR>(Window::getSurface()),
             &present_mode_count, nullptr),
         FAULT,
         ;);
     std::vector<VkPresentModeKHR> present_modes(present_mode_count);
     vkGetPhysicalDeviceSurfacePresentModesKHR(static_cast<VkPhysicalDevice>(device),
-        static_cast<VkSurfaceKHR>(RenderServer::getSurface()), &present_mode_count, present_modes.data());
+        static_cast<VkSurfaceKHR>(Window::getSurface()), &present_mode_count, present_modes.data());
     si.supports_immediate_present = false;
     for (auto mode : present_modes)
     {
@@ -182,7 +183,7 @@ void Swapchain::createSwapchain()
 {
     VkSwapchainCreateInfoKHR create_info{};
     create_info.sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    create_info.surface          = static_cast<VkSurfaceKHR>(RenderServer::getSurface());
+    create_info.surface          = static_cast<VkSurfaceKHR>(Window::getSurface());
     create_info.minImageCount    = computeImageCount();
     create_info.imageFormat      = toVulkanFormat(format);
     create_info.imageColorSpace  = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
@@ -313,4 +314,5 @@ void Swapchain::destroyResources()
     in_flight_fences.clear();
     vkDestroySwapchainKHR(static_cast<VkDevice>(RenderServer::getDevice()),
         static_cast<VkSwapchainKHR>(swapchain), nullptr);
+    swapchain = nullptr;
 }

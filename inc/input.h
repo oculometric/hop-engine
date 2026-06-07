@@ -25,9 +25,6 @@
 #include <map>
 #include <set>
 
-struct GLFWwindow;
-struct GLFWcursor;
-
 namespace HopEngine
 {
 
@@ -203,8 +200,8 @@ public:
     };
 
 private:
-    GLFWwindow* window; // GLFW window object handle, initialised by `RenderServer`
-    std::array<GLFWcursor*, CURSOR_MAX_ENUM> cursors; // GLFW cursors created for each cursor type
+    GPUHandle window; // GLFW window object handle, initialised by `RenderServer`
+    std::array<GPUHandle, CURSOR_MAX_ENUM> cursors; // GLFW cursors created for each cursor type
     // set of keyboard keys which have been pressed since the last time they were queried
     std::set<uint16_t> pressed_since_checked;
     // set of mouse buttons which have been pressed down since the last time they were queried
@@ -329,8 +326,8 @@ private:
     ~Input() = default;
     static Input* getInstance();
 
-    static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-    static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+    static void keyCallback(GPUHandle window, int key, int scancode, int action, int mods);
+    static void mouseButtonCallback(GPUHandle window, int button, int action, int mods);
 };
 
 } // namespace HopEngine

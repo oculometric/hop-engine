@@ -42,3 +42,4 @@
 #include "texture.h"
 #include "user_interface.h"
 #include "random.h"
+#include "window.h"

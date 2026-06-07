@@ -14,6 +14,5 @@
         "bin/**": true,
     },
     "files.exclude": {
-        "bin/**": true,
     },
 }

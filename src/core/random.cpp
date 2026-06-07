@@ -30,7 +30,7 @@ void Random::setSeed(size_t seed) { mt_rd.seed(seed); }
 
 size_t Random::limit(size_t limit)
 {
-    std::uniform_int_distribution<size_t> dist(0, limit);
+    std::uniform_int_distribution<size_t> dist(0, limit - 1);
     return dist(mt_rd);
 }
 

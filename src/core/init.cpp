@@ -3,28 +3,31 @@
 #include "events.h"
 #include "input.h"
 #include "package.h"
+#include "random.h"
 #include "render_server.h"
 #include "user_interface.h"
-#include "random.h"
+#include "window.h"
 
 #define IN_PLACE_INIT(var, type, args)                   \
     var = reinterpret_cast<type*>(malloc(sizeof(type))); \
     new (var) type args
 
-using namespace HopEngine;
-
 extern unsigned char engine_hop_raw[];
 extern unsigned long long engine_hop_raw_size;
+
+namespace HopEngine
+{
 
 static Debug* debug                = nullptr;
 static Engine* engine              = nullptr;
 static EventServer* event_server   = nullptr;
 static Package* package            = nullptr;
+static Window* window              = nullptr;
 static RenderServer* render_server = nullptr;
 static Input* input                = nullptr;
 static UIManager* ui_manager       = nullptr;
 
-class HopEngine::InitMachine final
+class InitMachine final
 {
 public:
     static void initialise(const Engine::InitParams& params)
@@ -73,10 +76,20 @@ public:
             Package::importPackage(engine_hop);
         }
 
+        if (!window)
+        {
+            Window::InitParams window_params;
+            window_params.transparent_framebuffer = params.enable_transparent_window;
+            // TODO: populate window params
+            IN_PLACE_INIT(window, Window, (window_params, success));
+            if (success) DBG_INFO("initialised window");
+            else
+                return;
+        }
+
         if (!render_server)
         {
-            RenderServer::InitParams render_server_params{ params.enable_vulkan_validation,
-                params.enable_transparent_window };
+            RenderServer::InitParams render_server_params{ params.enable_vulkan_validation };
             IN_PLACE_INIT(render_server, RenderServer, (render_server_params, success));
             if (success) DBG_INFO("initialised render server");
             else
@@ -99,6 +112,7 @@ public:
         }
 
         EventServer::dispatch(Engine::EVENT_TYPE_INIT_FINISH);
+        Window::setIcon("res://engine/icon.png");
     }
 
     static void destroy()
@@ -118,6 +132,13 @@ public:
             delete input;
             input = nullptr;
             DBG_INFO("destroyed input manager");
+        }
+
+        if (window)
+        {
+            delete window;
+            window = nullptr;
+            DBG_INFO("destroyed window");
         }
 
         if (render_server)
@@ -165,9 +186,9 @@ public:
     }
 };
 
-void HopEngine::init(const Engine::InitParams& params) { InitMachine::initialise(params); }
+void init(const Engine::InitParams& params) { InitMachine::initialise(params); }
 
-void HopEngine::destroy() { InitMachine::destroy(); }
+void destroy() { InitMachine::destroy(); }
 
 Engine* Engine::getInstance()
 {
@@ -196,3 +217,6 @@ Input* Input::getInstance()
     return input;
 }
 UIManager* UIManager::getInstance() { return ui_manager; }
+Window* Window::getInstance() { return HopEngine::window; }
+
+}

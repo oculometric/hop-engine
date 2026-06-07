@@ -1,27 +1,26 @@
 # TODO
 
 # v0.56
-- material needs the ability to specify render priority (used by staticmeshes etc)
-
-- separate window functionality
-    - window aspect ratio limit
-    - ability to update window transparent-ness at runtime
+- hide code internally (render server interface)
 
 - transform overhaul
     - make local/global transform from forward/up vectors (generally complete the transform functionality), i.e. create from basis vectors
     - merge with hierarchy
     - implement quaternion
 
-- hide code internally (render server interface)
+- way to show performance metrics in a regular ass game
+- material needs the ability to specify render priority (used by staticmeshes etc)
+
+- horizon-based ambient occlusion
+- shadows
+
+- implement per-package-entry compresion
+- error with device sometimes lost on windows
+
 - update readme
 - errors with queuepresent suboptimal
-- error with device sometimes lost on windows
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
-- implement per-package-entry compresion
-- shadows
 - skinned mesh support
-- horizon-based ambient occlusion
-- way to show performance metrics in a regular ass game
 
 # v0.57
 - the ui update

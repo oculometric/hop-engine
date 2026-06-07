@@ -12,6 +12,7 @@
 #include "framebuffer.h"
 #include "material.h"
 #include "vulkan_helpers.h"
+#include "window.h"
 
 #include <GLFW/glfw3.h>
 
@@ -69,7 +70,7 @@ RenderServer::QueueFamilies RenderServer::queryQueueFamilies(GPUHandle _device)
     {
         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) families.graphics_family = i;
         VkBool32 queue_has_present_support = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, static_cast<VkSurfaceKHR>(getInstance()->surface),
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, static_cast<VkSurfaceKHR>(Window::getSurface()),
             &queue_has_present_support);
         if (queue_has_present_support) families.present_family = i;
 
@@ -105,10 +106,7 @@ void RenderServer::createVulkan(bool enable_validation)
 {
     createInstance(enable_validation);
 
-    CHECK_RESULT(glfwCreateWindowSurface,
-        (static_cast<VkInstance>(instance), window, nullptr, reinterpret_cast<VkSurfaceKHR*>(&surface)),
-        FAULT,
-        ;);
+    Window::getSurface();
 
     createDevice();
 
@@ -384,7 +382,7 @@ void RenderServer::initImGui()
     ImGuiIO& io = ImGui::GetIO();
     (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    ImGui_ImplGlfw_InitForVulkan(window, false);
+    ImGui_ImplGlfw_InitForVulkan(static_cast<GLFWwindow*>(Window::getWindow()), false);
     ImGui_ImplVulkan_InitInfo init_info{};
     init_info.ApiVersion     = VK_API_VERSION_1_4;
     init_info.Instance       = static_cast<VkInstance>(instance);
@@ -399,7 +397,7 @@ void RenderServer::initImGui()
     init_info.ImageCount    = Swapchain::computeImageCount();
     init_info.Allocator     = nullptr;
     init_info.PipelineInfoMain.RenderPass =
-        static_cast<VkRenderPass>(getRenderPass(swapchain->getFramebuffer()->getConfig()));
+        static_cast<VkRenderPass>(getRenderPass(getSwapchain()->getFramebuffer()->getConfig()));
     init_info.PipelineInfoMain.Subpass     = 0;
     init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     ImGui_ImplVulkan_Init(&init_info);
@@ -440,6 +438,5 @@ void RenderServer::destroyVulkan()
     }
 
     vkDestroyDevice(static_cast<VkDevice>(device), nullptr);
-    vkDestroySurfaceKHR(static_cast<VkInstance>(instance), static_cast<VkSurfaceKHR>(surface), nullptr);
     vkDestroyInstance(static_cast<VkInstance>(instance), nullptr);
 }
