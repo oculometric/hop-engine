@@ -694,6 +694,8 @@ bool Shader::compileShaders(const std::string& path, std::vector<uint32_t>& vert
     std::vector<uint32_t>& frag_blob)
 {
     auto shader_data = Package::load(path);
+    vert_blob.clear();
+    frag_blob.clear();
 
     if (shader_data.empty()) return false;
 
@@ -704,8 +706,8 @@ bool Shader::compileShaders(const std::string& path, std::vector<uint32_t>& vert
     ShaderParser parser(shader_text, path);
     if (parser.getVertexShader().empty() || parser.getFragmentShader().empty()) return false;
 
-    if (!compile(parser.getVertexShader(), STAGE_VERTEX, vert_blob, path)) return false;
-    if (!compile(parser.getFragmentShader(), STAGE_FRAGMENT, frag_blob, path)) return false;
+    if (!Shader::compile(parser.getVertexShader(), STAGE_VERTEX, vert_blob, path)) return false;
+    if (!Shader::compile(parser.getFragmentShader(), STAGE_FRAGMENT, frag_blob, path)) return false;
 
     return true;
 }

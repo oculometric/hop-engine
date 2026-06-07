@@ -11,28 +11,28 @@ Shader::Shader(const std::string& base_path)
     origin = base_path;
     std::vector<uint32_t> vert_blob;
     std::vector<uint32_t> frag_blob;
-    load_succeeded = compileShaders(base_path, vert_blob, frag_blob);
+    load_succeeded = Shader::compileShaders(base_path, vert_blob, frag_blob);
     hash           = 0;
 
     if (!load_succeeded)
     {
-        if (!compileShaders("res://engine/shaders/default_shader.glsl", vert_blob, frag_blob))
+        if (!Shader::compileShaders("res://engine/shaders/default_shader.glsl", vert_blob, frag_blob))
         {
             DBG_FAULT("failed to load default shader!");
         }
     }
 
-    hash = computeHash(vert_blob, frag_blob);
+    hash = Shader::computeHash(vert_blob, frag_blob);
 
-    vert_module = createShaderModule(vert_blob);
-    frag_module = createShaderModule(frag_blob);
+    vert_module = Shader::createShaderModule(vert_blob);
+    frag_module = Shader::createShaderModule(frag_blob);
 
-    const auto vert_bindings = getReflectedBindings(vert_blob);
-    const auto frag_bindings = getReflectedBindings(frag_blob);
+    const auto vert_bindings = Shader::getReflectedBindings(vert_blob);
+    const auto frag_bindings = Shader::getReflectedBindings(frag_blob);
 
-    bindings = mergeBindings(vert_bindings, frag_bindings);
+    bindings = Shader::mergeBindings(vert_bindings, frag_bindings);
 
-    descriptor_set_layout = createDescriptorSetLayout(bindings);
+    descriptor_set_layout = Shader::createDescriptorSetLayout(bindings);
 
     pipeline_layout = RenderServer::createPipelineLayout(descriptor_set_layout);
 

@@ -109,11 +109,18 @@ bool Shader::compile(const std::string& code, Stage stage, std::vector<uint32_t>
 
     EShLanguage stage_language;
     EProfile profile        = ENoProfile;
+    std::string shader_type_name = "";
     int version             = 450;
     if (stage == STAGE_VERTEX)
+    {
         stage_language = EShLangVertex;
+        shader_type_name = "vertex";
+    }
     else if (stage == STAGE_FRAGMENT)
+    {
         stage_language = EShLangFragment;
+        shader_type_name = "fragment";
+    }
     else
     {
         DBG_ERROR("attempted to compile a shader with an invalid shader stage parameter");
@@ -133,7 +140,7 @@ bool Shader::compile(const std::string& code, Stage stage, std::vector<uint32_t>
         static_cast<EShMessages>(EShMsgCascadingErrors | EShMsgSpvRules | EShMsgVulkanRules));
     if (!success)
     {
-        DBG_ERROR("error compiling vertex shader " + path + ": \n" + shader.getInfoLog());
+        DBG_ERROR("error compiling " + shader_type_name + " shader " + path + ": \n" + shader.getInfoLog());
         DBG_INFO("see the full shader code below: \n" + formatShaderCode(code));
         return false;
     }
@@ -143,7 +150,7 @@ bool Shader::compile(const std::string& code, Stage stage, std::vector<uint32_t>
     success = program.link(EShMsgDefault) && program.mapIO();
     if (!success)
     {
-        DBG_ERROR("error compiling vertex shader " + path + ": \n" + program.getInfoLog());
+        DBG_ERROR("error linking shader " + path + ": \n" + program.getInfoLog());
         DBG_INFO("see the full shader code below: \n" + formatShaderCode(code));
         return false;
     }
