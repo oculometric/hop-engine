@@ -1,17 +1,15 @@
 # TODO
 
 # v0.56
-- hide code internally (render server interface)
+- horizon-based ambient occlusion
+- way to show performance metrics in a regular ass game
+- material needs the ability to specify render priority (used by staticmeshes etc)
 
 - transform overhaul
     - make local/global transform from forward/up vectors (generally complete the transform functionality), i.e. create from basis vectors
     - merge with hierarchy
     - implement quaternion
 
-- way to show performance metrics in a regular ass game
-- material needs the ability to specify render priority (used by staticmeshes etc)
-
-- horizon-based ambient occlusion
 - shadows
 
 - implement per-package-entry compresion
@@ -57,6 +55,7 @@
 ---
 
 # v0.60
+- hide code internally (refactor graphics server interface)
 - interactive node editor
     - need to be able to move/disconnect existing links
     - dirty flag system for updating the mesh
