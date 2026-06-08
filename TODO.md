@@ -6,14 +6,14 @@
     - memory usage
     - gpu usage %
     - gpu memory usage
-
     - merge debug logs into here
-
 - fix GPU frame time counter wrong
 - errors with queuepresent suboptimal
 - fix fullscreen crash specifically on lucys laptop
 - better control of GTAO parameters via uniforms
 - issue with shader preprocessor with '//*'
+- fix fullscreen crash on my pc
+
 - transform overhaul
     - make local/global transform from forward/up vectors (generally complete the transform functionality), i.e. create from basis vectors
     - merge with hierarchy

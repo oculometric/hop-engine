@@ -32,7 +32,7 @@ find_package(Vulkan REQUIRED COMPONENTS SPIRV-Tools)
 set(ENGINE_HOP "${CMAKE_BINARY_DIR}/engine.hop")
 set(GIT_TAG "UNKNOWN")
 find_package(Git)
-if(${GIT_EXECUTABLE})
+if(${GIT_FOUND})
 execute_process(
 	COMMAND "${GIT_EXECUTABLE}" log --pretty=format:%h -n 1
 	OUTPUT_VARIABLE GIT_TAG
