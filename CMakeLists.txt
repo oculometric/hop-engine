@@ -30,6 +30,7 @@ endif()
 
 find_package(Vulkan REQUIRED COMPONENTS SPIRV-Tools)
 set(ENGINE_HOP "${CMAKE_BINARY_DIR}/engine.hop")
+set(GIT_TAG "UNKNOWN")
 execute_process(
 	COMMAND git log --pretty=format:%h -n 1
 	OUTPUT_VARIABLE GIT_TAG
