@@ -4,18 +4,14 @@
 - way to show performance metrics in a regular ass game
     - cpu usage %
     - memory usage
-    - delta time
-    - fps
-    - frame free %
-    - time since start
     - gpu usage %
     - gpu memory usage
-    - window resolution
-    - render pass count
-    - tri count
-    - draw call count
+
     - merge debug logs into here
 
+- fix GPU frame time counter wrong
+- errors with queuepresent suboptimal
+- fix fullscreen crash specifically on lucys laptop
 - better control of GTAO parameters via uniforms
 - issue with shader preprocessor with '//*'
 - transform overhaul
@@ -29,7 +25,6 @@
 - error with device sometimes lost on windows
 
 - update readme
-- errors with queuepresent suboptimal
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - skinned mesh support
     - blend shapes

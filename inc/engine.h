@@ -111,6 +111,7 @@ private:
     float total_time          = 0.0f; // total time since the engine was initialised
     float smoothed_delta_time = 0.0f; // delta time with 90% smoothing applied
     float smoothed_fps        = 0.0f; // inverse delta time with 90% smoothing applied
+    float frame_free_percent  = 0.0f; // percentage of the last frame which was spent just waiting for vsync
     size_t frame_index        = 0;    // number of frames rendered since the engine was initalised
     float delta_time_history[200];    // last 200 frames worth of delta time values
     int history_offset = 0;           // used for displaying delta time history
@@ -161,6 +162,7 @@ public:
     static float getEngineTime() { return getInstance()->total_time; }
     static float getSmoothedDeltaTime() { return getInstance()->smoothed_delta_time; }
     static float getSmoothedFPS() { return getInstance()->smoothed_fps; }
+    static float getFrameFreePercent() { return getInstance()->frame_free_percent; }
     static size_t getFrameCount() { return getInstance()->frame_index; }
     static FrameStats getFrameStats() { return getInstance()->last_frame_stats; }
 

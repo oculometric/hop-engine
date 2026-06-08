@@ -403,4 +403,9 @@ void Engine::updateStats(const FrameStats& stats)
 
     delta_time_history[history_offset] = delta_time * 1000.0f;
     history_offset                     = (history_offset + 1) % 200;
+
+    frame_free_percent =
+        glm::clamp(1.0f - (glm::max(stats.record_time + stats.update_time, stats.render_time) / delta_time),
+            0.0f, 1.0f) *
+        100.0f;
 }

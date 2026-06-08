@@ -10,6 +10,7 @@
 #include "user_interface.h"
 #include "window.h"
 
+#include <format>
 #include <thread>
 
 using namespace HopEngine;
@@ -162,39 +163,7 @@ GraphicsServer::GraphicsServer(const InitParams& params, bool& success)
     debug_ui_style->font = debug_text_font;
     debug_text_renderer  = new UIRenderer(debug_ui_style);
 
-    {
-        performance_overlay = new UICanvas();
-        auto version_label  = performance_overlay->addElement<UILabel>();
-        version_label->setText("HOP-ENGINE\nv" + HOP_ENGINE_VERSION_STRING + "\n" + HOP_ENGINE_COMMIT_STRING);
-
-        system_panel = performance_overlay->addElement<UIPanel>();
-        system_panel->setExternalAnchor(UITransform::ANCHOR_MIDDLE_LEFT);
-        system_panel->setSize({ 192, (26 * 4) + 6 });
-        system_panel->setColour({ 0.03f, 0.03f, 0.03f, 1.0f });
-        auto parent = performance_overlay->addChild<UICanvasElement>(system_panel);
-        parent->setPosition({ 6, 6 });
-        parent->setSize({ 192 - 12, 26 * 4 });
-        auto label = performance_overlay->addChild<UILabel>(parent);
-        label->setText("CPU");
-        label->setPosition({ 0, 0 });
-        cpu_label = performance_overlay->addChild<UILabel>(parent);
-        cpu_label->setText("00.0%");
-        cpu_label->setPosition({ 0, 0 });
-        cpu_label->setScaling(UITransform::SCALING_FILL_HORIZONTAL);
-        cpu_label->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
-        cpu_label->setFormatting(UIRenderer::TextFormatting{ UIRenderer::TEXT_ALIGN_RIGHT });
-
-        memory_label = performance_overlay->addChild<UILabel>(parent);
-        gpu_label = performance_overlay->addChild<UILabel>(parent);
-        gpu_memory_label = performance_overlay->addChild<UILabel>(parent);
-        memory_label->setText("MEMORY MB");
-        gpu_label->setText("GPU %");
-        gpu_memory_label->setText("GPU MEMORY MB");
-        memory_label->setPosition({ 0, 26 });
-        gpu_label->setPosition({ 0, 26 * 2 });
-        gpu_memory_label->setPosition({ 0, 26 * 3 });
-    }
-    // TODO: HERE
+    createPerformanceOverlay();
 
     initImGui();
 
@@ -248,6 +217,213 @@ void GraphicsServer::updateTextMesh()
         position.y +=
             debug_text_renderer->addText(position, 0, UIRenderer::TextFormatting(), line, { 1, 1, 1 }).y;
     debug_text_renderer->finalise();
+}
+
+void GraphicsServer::createPerformanceOverlay()
+{
+    {
+        performance_overlay = new UICanvas();
+        {
+            auto panel = performance_overlay->addElement<UIPanel>();
+            panel->setSize({ 156, (26 * 3) + 6 });
+            panel->setColour({ 0.03f, 0.03f, 0.03f, 1.0f });
+            auto parent = performance_overlay->addChild<UICanvasElement>(panel);
+            parent->setPosition({ 6, 6 });
+            parent->setSize({ 156 - 12, 26 * 3 });
+            auto label = performance_overlay->addChild<UILabel>(parent);
+            label->setText("HOP-ENGINE");
+            label->setPosition({ 0, 0 });
+            label = performance_overlay->addChild<UILabel>(parent);
+            label->setText("v" + HOP_ENGINE_VERSION_STRING);
+            label->setPosition({ 0, 26 });
+            label = performance_overlay->addChild<UILabel>(parent);
+            label->setText(HOP_ENGINE_COMMIT_STRING);
+            label->setPosition({ 0, 26 * 2 });
+        }
+
+        {
+            system_panel = performance_overlay->addElement<UIPanel>();
+            system_panel->setExternalAnchor(UITransform::ANCHOR_MIDDLE_LEFT);
+            system_panel->setSize({ 200, (26 * 4) + 6 });
+            system_panel->setColour({ 0.03f, 0.03f, 0.03f, 1.0f });
+            auto parent = performance_overlay->addChild<UICanvasElement>(system_panel);
+            parent->setPosition({ 6, 6 });
+            parent->setSize({ 200 - 12, 26 * 4 });
+
+            auto label = performance_overlay->addChild<UILabel>(parent);
+            label->setText("CPU");
+            label->setPosition({ 0, 0 });
+            cpu_label = performance_overlay->addChild<UILabel>(parent);
+            cpu_label->setText("00.0%");
+            cpu_label->setPosition({ 0, 0 });
+            cpu_label->setScaling(UITransform::SCALING_FILL_HORIZONTAL);
+            cpu_label->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+            cpu_label->setFormatting(UIRenderer::TextFormatting{ UIRenderer::TEXT_ALIGN_RIGHT });
+
+            label = performance_overlay->addChild<UILabel>(parent);
+            label->setText("CPUMEM");
+            label->setPosition({ 0, 26 });
+            memory_label = performance_overlay->addChild<UILabel>(parent);
+            memory_label->setText("00.0MB");
+            memory_label->setPosition({ 0, 26 });
+            memory_label->setScaling(UITransform::SCALING_FILL_HORIZONTAL);
+            memory_label->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+            memory_label->setFormatting(UIRenderer::TextFormatting{ UIRenderer::TEXT_ALIGN_RIGHT });
+
+            label = performance_overlay->addChild<UILabel>(parent);
+            label->setText("GPU");
+            label->setPosition({ 0, 26 * 2 });
+            gpu_label = performance_overlay->addChild<UILabel>(parent);
+            gpu_label->setText("00.0%");
+            gpu_label->setPosition({ 0, 26 * 2 });
+            gpu_label->setScaling(UITransform::SCALING_FILL_HORIZONTAL);
+            gpu_label->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+            gpu_label->setFormatting(UIRenderer::TextFormatting{ UIRenderer::TEXT_ALIGN_RIGHT });
+
+            label = performance_overlay->addChild<UILabel>(parent);
+            label->setText("GPUMEM");
+            label->setPosition({ 0, 26 * 3 });
+            gpu_memory_label = performance_overlay->addChild<UILabel>(parent);
+            gpu_memory_label->setText("00.0MB");
+            gpu_memory_label->setPosition({ 0, 26 * 3 });
+            gpu_memory_label->setScaling(UITransform::SCALING_FILL_HORIZONTAL);
+            gpu_memory_label->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+            gpu_memory_label->setFormatting(UIRenderer::TextFormatting{ UIRenderer::TEXT_ALIGN_RIGHT });
+        }
+
+        {
+            graphics_panel = performance_overlay->addElement<UIPanel>();
+            graphics_panel->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+            graphics_panel->setInternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+            graphics_panel->setSize({ 300, (26 * 4) + 6 });
+            graphics_panel->setColour({ 0.03f, 0.03f, 0.03f, 1.0f });
+            auto parent = performance_overlay->addChild<UICanvasElement>(graphics_panel);
+            parent->setPosition({ 6, 6 });
+            parent->setSize({ 300 - 12, 26 * 4 });
+
+            auto label = performance_overlay->addChild<UILabel>(parent);
+            label->setText("RESOLUTION");
+            label->setPosition({ 0, 0 });
+            window_size_label = performance_overlay->addChild<UILabel>(parent);
+            window_size_label->setText("1024x1024");
+            window_size_label->setPosition({ 0, 0 });
+            window_size_label->setScaling(UITransform::SCALING_FILL_HORIZONTAL);
+            window_size_label->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+            window_size_label->setFormatting(UIRenderer::TextFormatting{ UIRenderer::TEXT_ALIGN_RIGHT });
+
+            label = performance_overlay->addChild<UILabel>(parent);
+            label->setText("PASSES");
+            label->setPosition({ 0, 26 });
+            render_pass_count_label = performance_overlay->addChild<UILabel>(parent);
+            render_pass_count_label->setText("4");
+            render_pass_count_label->setPosition({ 0, 26 });
+            render_pass_count_label->setScaling(UITransform::SCALING_FILL_HORIZONTAL);
+            render_pass_count_label->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+            render_pass_count_label->setFormatting(
+                UIRenderer::TextFormatting{ UIRenderer::TEXT_ALIGN_RIGHT });
+
+            label = performance_overlay->addChild<UILabel>(parent);
+            label->setText("DRAWCALLS");
+            label->setPosition({ 0, 26 * 2 });
+            draw_call_count_label = performance_overlay->addChild<UILabel>(parent);
+            draw_call_count_label->setText("19");
+            draw_call_count_label->setPosition({ 0, 26 * 2 });
+            draw_call_count_label->setScaling(UITransform::SCALING_FILL_HORIZONTAL);
+            draw_call_count_label->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+            draw_call_count_label->setFormatting(
+                UIRenderer::TextFormatting{ UIRenderer::TEXT_ALIGN_RIGHT });
+
+            label = performance_overlay->addChild<UILabel>(parent);
+            label->setText("TRIS");
+            label->setPosition({ 0, 26 * 3 });
+            tri_count_label = performance_overlay->addChild<UILabel>(parent);
+            tri_count_label->setText("4557");
+            tri_count_label->setPosition({ 0, 26 * 3 });
+            tri_count_label->setScaling(UITransform::SCALING_FILL_HORIZONTAL);
+            tri_count_label->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+            tri_count_label->setFormatting(UIRenderer::TextFormatting{ UIRenderer::TEXT_ALIGN_RIGHT });
+        }
+
+        {
+            timing_panel = performance_overlay->addElement<UIPanel>();
+            timing_panel->setExternalAnchor(UITransform::ANCHOR_MIDDLE_RIGHT);
+            timing_panel->setInternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+            timing_panel->setSize({ 256, (26 * 5) + 6 });
+            timing_panel->setColour({ 0.03f, 0.03f, 0.03f, 1.0f });
+            auto parent = performance_overlay->addChild<UICanvasElement>(timing_panel);
+            parent->setPosition({ 6, 6 });
+            parent->setSize({ 256 - 12, 26 * 5 });
+
+            auto label = performance_overlay->addChild<UILabel>(parent);
+            label->setText("FPS");
+            label->setPosition({ 0, 0 });
+            fps_label = performance_overlay->addChild<UILabel>(parent);
+            fps_label->setText("352.0");
+            fps_label->setPosition({ 0, 0 });
+            fps_label->setScaling(UITransform::SCALING_FILL_HORIZONTAL);
+            fps_label->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+            fps_label->setFormatting(UIRenderer::TextFormatting{ UIRenderer::TEXT_ALIGN_RIGHT });
+
+            label = performance_overlay->addChild<UILabel>(parent);
+            label->setText("DELTA");
+            label->setPosition({ 0, 26 });
+            delta_time_label = performance_overlay->addChild<UILabel>(parent);
+            delta_time_label->setText("2.35MS");
+            delta_time_label->setPosition({ 0, 26 });
+            delta_time_label->setScaling(UITransform::SCALING_FILL_HORIZONTAL);
+            delta_time_label->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+            delta_time_label->setFormatting(UIRenderer::TextFormatting{ UIRenderer::TEXT_ALIGN_RIGHT });
+
+            label = performance_overlay->addChild<UILabel>(parent);
+            label->setText("FRAMEFREE");
+            label->setPosition({ 0, 26 * 2 });
+            frame_free_label = performance_overlay->addChild<UILabel>(parent);
+            frame_free_label->setText("43.0%");
+            frame_free_label->setPosition({ 0, 26 * 2 });
+            frame_free_label->setScaling(UITransform::SCALING_FILL_HORIZONTAL);
+            frame_free_label->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+            frame_free_label->setFormatting(UIRenderer::TextFormatting{ UIRenderer::TEXT_ALIGN_RIGHT });
+
+            label = performance_overlay->addChild<UILabel>(parent);
+            label->setText("TIME");
+            label->setPosition({ 0, 26 * 3 });
+            time_elapsed_label = performance_overlay->addChild<UILabel>(parent);
+            time_elapsed_label->setText("23.5S");
+            time_elapsed_label->setPosition({ 0, 26 * 3 });
+            time_elapsed_label->setScaling(UITransform::SCALING_FILL_HORIZONTAL);
+            time_elapsed_label->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+            time_elapsed_label->setFormatting(UIRenderer::TextFormatting{ UIRenderer::TEXT_ALIGN_RIGHT });
+
+            label = performance_overlay->addChild<UILabel>(parent);
+            label->setText("FRAME");
+            label->setPosition({ 0, 26 * 4 });
+            frame_index_label = performance_overlay->addChild<UILabel>(parent);
+            frame_index_label->setText("24353");
+            frame_index_label->setPosition({ 0, 26 * 4 });
+            frame_index_label->setScaling(UITransform::SCALING_FILL_HORIZONTAL);
+            frame_index_label->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+            frame_index_label->setFormatting(UIRenderer::TextFormatting{ UIRenderer::TEXT_ALIGN_RIGHT });
+        }
+    }
+}
+
+void GraphicsServer::updatePerformanceOverlay()
+{
+    {
+        glm::u32vec2 size = GraphicsServer::getFramebufferSize();
+        window_size_label->setText(std::format("{}x{}", size.x, size.y));
+        auto stats = Engine::getFrameStats();
+        render_pass_count_label->setText(std::format("{}", stats.passes));
+        draw_call_count_label->setText(std::format("{}", stats.draw_calls));
+        tri_count_label->setText(std::format("{}", stats.triangles));
+    }
+    {
+        fps_label->setText(std::format("{:4.1f}", Engine::getSmoothedFPS()));
+        delta_time_label->setText(std::format("{:4.1f}ms", Engine::getSmoothedDeltaTime() * 1000.0f));
+        frame_free_label->setText(std::format("{:3.1f}%", Engine::getFrameFreePercent()));
+        time_elapsed_label->setText(std::format("{:5.1f}s", Engine::getEngineTime()));
+        frame_index_label->setText(std::format("{}", Engine::getFrameCount()));
+    }
 }
 
 void GraphicsServer::tryFreeResources(bool force)
@@ -333,6 +509,7 @@ WeakRef<DrawCommandBuffer> GraphicsServer::recordRenderCommands(uint32_t image_i
     }
 
     {
+        updatePerformanceOverlay();
         command_buffer->setScissorViewport(glm::vec2(0.0f), glm::vec2(1.0f));
         if (performance_overlay->getSize() != GraphicsServer::getFramebufferSize())
             performance_overlay->resize(GraphicsServer::getFramebufferSize());

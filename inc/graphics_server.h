@@ -121,6 +121,7 @@ private:
     WeakRef<UILabel> delta_time_label;
     WeakRef<UILabel> frame_free_label;
     WeakRef<UILabel> time_elapsed_label;
+    WeakRef<UILabel> frame_index_label;
 
     Ref<UniformBlock> final_pass_uniforms; // scene uniforms for the final (swapchain) render pass
     Ref<Material> spinner_material;        // material used to render the loading/no-scene spinner image
@@ -279,6 +280,9 @@ private:
      * @brief updates the debug log overlay text.
      */
     void updateTextMesh();
+    void createPerformanceOverlay();
+    void updatePerformanceOverlay();
+
     /**
      * @brief checks if the garbage collector should run, and runs it if so. the garbage collector runs when
      * more than 30 resources are queued for destruction, or when more than 2 seconds as passed (if there is
