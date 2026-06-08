@@ -38,6 +38,8 @@ execute_process(
 	OUTPUT_VARIABLE GIT_TAG
 	ERROR_QUIET
 )
+else()
+	message(WARNING "git executable not found. using 'unknown' as the silly tag")
 endif()
 add_compile_definitions(HOP_ENGINE_COMMIT=${GIT_TAG})
 
