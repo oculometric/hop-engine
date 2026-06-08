@@ -21,6 +21,7 @@ add_executable(space-hop-demo ${HOP_SRC_FILES})
 
 target_include_directories(space-hop-demo
 	PRIVATE ${HOP_INCLUDE}
+    "${CMAKE_SOURCE_DIR}/lib/inc/glm-1.0.2"
 )
 target_link_libraries(space-hop-demo
 	PRIVATE ${HOP_LINK}
