@@ -1,7 +1,8 @@
 #include "command_buffer.h"
 #include "framebuffer.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "vulkan_helpers.h"
+#include "window.h"
 
 #include <algorithm>
 #include <vulkan/vulkan.hpp>
@@ -14,7 +15,7 @@ Swapchain::SupportInfo Swapchain::getSwapchainSupportInfo(const GPUHandle device
 
     VkSurfaceCapabilitiesKHR capabilities{};
     CHECK_RESULT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR,
-        (static_cast<VkPhysicalDevice>(device), static_cast<VkSurfaceKHR>(RenderServer::getSurface()),
+        (static_cast<VkPhysicalDevice>(device), static_cast<VkSurfaceKHR>(Window::getSurface()),
             &capabilities),
         FAULT,
         ;);
@@ -29,13 +30,13 @@ Swapchain::SupportInfo Swapchain::getSwapchainSupportInfo(const GPUHandle device
 
     uint32_t present_mode_count;
     CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR,
-        (static_cast<VkPhysicalDevice>(device), static_cast<VkSurfaceKHR>(RenderServer::getSurface()),
+        (static_cast<VkPhysicalDevice>(device), static_cast<VkSurfaceKHR>(Window::getSurface()),
             &present_mode_count, nullptr),
         FAULT,
         ;);
     std::vector<VkPresentModeKHR> present_modes(present_mode_count);
     vkGetPhysicalDeviceSurfacePresentModesKHR(static_cast<VkPhysicalDevice>(device),
-        static_cast<VkSurfaceKHR>(RenderServer::getSurface()), &present_mode_count, present_modes.data());
+        static_cast<VkSurfaceKHR>(Window::getSurface()), &present_mode_count, present_modes.data());
     si.supports_immediate_present = false;
     for (auto mode : present_modes)
     {
@@ -47,7 +48,7 @@ Swapchain::SupportInfo Swapchain::getSwapchainSupportInfo(const GPUHandle device
 
 glm::u32vec2 Swapchain::computeActualExtent(const glm::u32vec2 extent)
 {
-    SupportInfo si = getSwapchainSupportInfo(RenderServer::getPhysicalDevice());
+    SupportInfo si = getSwapchainSupportInfo(GraphicsServer::getPhysicalDevice());
     if (si.current_extent.x != UINT32_MAX) return si.current_extent;
     else
         return glm::clamp(extent, si.min_extent, si.max_extent);
@@ -55,7 +56,7 @@ glm::u32vec2 Swapchain::computeActualExtent(const glm::u32vec2 extent)
 
 uint32_t Swapchain::computeImageCount()
 {
-    SupportInfo si       = getSwapchainSupportInfo(RenderServer::getPhysicalDevice());
+    SupportInfo si       = getSwapchainSupportInfo(GraphicsServer::getPhysicalDevice());
     uint32_t image_count = si.min_image_count + 1;
     if (si.max_image_count > 0) image_count = glm::min(image_count, si.max_image_count);
     return image_count;
@@ -87,7 +88,7 @@ uint32_t Swapchain::acquireNextImage()
     ++frame_index;
 
     {
-        VkResult _result = vkWaitForFences(static_cast<VkDevice>(RenderServer::getDevice()), 1,
+        VkResult _result = vkWaitForFences(static_cast<VkDevice>(GraphicsServer::getDevice()), 1,
             reinterpret_cast<VkFence*>(&in_flight_fences[frame_index % in_flight_fences.size()]), VK_TRUE,
             10000000);
         if (_result == VK_TIMEOUT) return UINT32_MAX;
@@ -98,13 +99,13 @@ uint32_t Swapchain::acquireNextImage()
         }
     }
     CHECK_RESULT(vkResetFences,
-        (static_cast<VkDevice>(RenderServer::getDevice()), 1,
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), 1,
             reinterpret_cast<VkFence*>(&in_flight_fences[frame_index % in_flight_fences.size()])),
         ERROR, return UINT32_MAX);
 
     uint32_t image_index;
     CHECK_RESULT(vkAcquireNextImageKHR,
-        (static_cast<VkDevice>(RenderServer::getDevice()), static_cast<VkSwapchainKHR>(swapchain),
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), static_cast<VkSwapchainKHR>(swapchain),
             UINT64_MAX,
             static_cast<VkSemaphore>(image_available_semaphores[frame_index % in_flight_fences.size()]),
             VK_NULL_HANDLE, &image_index),
@@ -132,7 +133,7 @@ bool Swapchain::submitCommands(WeakRef<DrawCommandBuffer> command_buffer, uint32
     submit_info.signalSemaphoreCount      = 1;
     submit_info.pSignalSemaphores         = signal_semaphores;
     CHECK_RESULT(vkQueueSubmit,
-        (static_cast<VkQueue>(RenderServer::getGraphicsQueue()), 1, &submit_info,
+        (static_cast<VkQueue>(GraphicsServer::getGraphicsQueue()), 1, &submit_info,
             static_cast<VkFence>(in_flight_fences[frame_index % in_flight_fences.size()])),
         ERROR, return false);
 
@@ -143,7 +144,7 @@ bool Swapchain::submitCommands(WeakRef<DrawCommandBuffer> command_buffer, uint32
     present_info.swapchainCount     = 1;
     present_info.pSwapchains        = reinterpret_cast<VkSwapchainKHR*>(&swapchain);
     present_info.pImageIndices      = &image_index;
-    CHECK_RESULT(vkQueuePresentKHR, (static_cast<VkQueue>(RenderServer::getPresentQueue()), &present_info),
+    CHECK_RESULT(vkQueuePresentKHR, (static_cast<VkQueue>(GraphicsServer::getPresentQueue()), &present_info),
         ERROR, return false);
 
     return true;
@@ -182,14 +183,14 @@ void Swapchain::createSwapchain()
 {
     VkSwapchainCreateInfoKHR create_info{};
     create_info.sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    create_info.surface          = static_cast<VkSurfaceKHR>(RenderServer::getSurface());
+    create_info.surface          = static_cast<VkSurfaceKHR>(Window::getSurface());
     create_info.minImageCount    = computeImageCount();
     create_info.imageFormat      = toVulkanFormat(format);
     create_info.imageColorSpace  = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
     create_info.imageExtent      = { extent.x, extent.y };
     create_info.imageArrayLayers = 1;
     create_info.imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    auto queue_families          = RenderServer::getUniqueQueueIndices();
+    auto queue_families          = GraphicsServer::getUniqueQueueIndices();
     if (queue_families.size() > 1)
     {
         create_info.imageSharingMode      = VK_SHARING_MODE_CONCURRENT;
@@ -202,7 +203,7 @@ void Swapchain::createSwapchain()
         create_info.queueFamilyIndexCount = 0;
         create_info.pQueueFamilyIndices   = nullptr;
     }
-    SupportInfo si             = Swapchain::getSwapchainSupportInfo(RenderServer::getPhysicalDevice());
+    SupportInfo si             = Swapchain::getSwapchainSupportInfo(GraphicsServer::getPhysicalDevice());
     create_info.preTransform   = static_cast<VkSurfaceTransformFlagBitsKHR>(si.current_transform);
     create_info.compositeAlpha = si.supports_premultiplied_alpha_composite
                                      ? VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR
@@ -214,7 +215,7 @@ void Swapchain::createSwapchain()
     create_info.oldSwapchain   = VK_NULL_HANDLE;
 
     CHECK_RESULT(vkCreateSwapchainKHR,
-        (static_cast<VkDevice>(RenderServer::getDevice()), &create_info, nullptr,
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), &create_info, nullptr,
             reinterpret_cast<VkSwapchainKHR*>(&swapchain)),
         FAULT,
         ;);
@@ -225,12 +226,12 @@ void Swapchain::createImageViews()
     // retrieve images
     uint32_t image_count = 0;
     CHECK_RESULT(vkGetSwapchainImagesKHR,
-        (static_cast<VkDevice>(RenderServer::getDevice()), static_cast<VkSwapchainKHR>(swapchain),
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), static_cast<VkSwapchainKHR>(swapchain),
             &image_count, nullptr),
         FAULT,
         ;);
     images.resize(image_count);
-    vkGetSwapchainImagesKHR(static_cast<VkDevice>(RenderServer::getDevice()),
+    vkGetSwapchainImagesKHR(static_cast<VkDevice>(GraphicsServer::getDevice()),
         static_cast<VkSwapchainKHR>(swapchain), &image_count, reinterpret_cast<VkImage*>(images.data()));
 
     // create image views
@@ -253,7 +254,7 @@ void Swapchain::createImageViews()
         view_create_info.subresourceRange.layerCount     = 1;
 
         CHECK_RESULT(vkCreateImageView,
-            (static_cast<VkDevice>(RenderServer::getDevice()), &view_create_info, nullptr,
+            (static_cast<VkDevice>(GraphicsServer::getDevice()), &view_create_info, nullptr,
                 reinterpret_cast<VkImageView*>(&image_views[i])),
             FAULT,
             ;);
@@ -275,17 +276,17 @@ void Swapchain::createSyncObjects()
     for (size_t i = 0; i < images.size(); ++i)
     {
         CHECK_RESULT(vkCreateSemaphore,
-            (static_cast<VkDevice>(RenderServer::getDevice()), &semaphore_create_info, nullptr,
+            (static_cast<VkDevice>(GraphicsServer::getDevice()), &semaphore_create_info, nullptr,
                 reinterpret_cast<VkSemaphore*>(&image_available_semaphores[i])),
             FAULT,
             ;);
         CHECK_RESULT(vkCreateSemaphore,
-            (static_cast<VkDevice>(RenderServer::getDevice()), &semaphore_create_info, nullptr,
+            (static_cast<VkDevice>(GraphicsServer::getDevice()), &semaphore_create_info, nullptr,
                 reinterpret_cast<VkSemaphore*>(&render_finished_semaphores[i])),
             FAULT,
             ;);
         CHECK_RESULT(vkCreateFence,
-            (static_cast<VkDevice>(RenderServer::getDevice()), &fence_create_info, nullptr,
+            (static_cast<VkDevice>(GraphicsServer::getDevice()), &fence_create_info, nullptr,
                 reinterpret_cast<VkFence*>(&in_flight_fences[i])),
             FAULT,
             ;);
@@ -294,23 +295,24 @@ void Swapchain::createSyncObjects()
 
 void Swapchain::destroyResources()
 {
-    RenderServer::waitIdle();
+    GraphicsServer::waitIdle();
     for (const auto image_view : image_views)
-        vkDestroyImageView(static_cast<VkDevice>(RenderServer::getDevice()),
+        vkDestroyImageView(static_cast<VkDevice>(GraphicsServer::getDevice()),
             static_cast<VkImageView>(image_view), nullptr);
     image_views.clear();
     for (size_t i = 0; i < image_available_semaphores.size(); ++i)
     {
-        vkDestroySemaphore(static_cast<VkDevice>(RenderServer::getDevice()),
+        vkDestroySemaphore(static_cast<VkDevice>(GraphicsServer::getDevice()),
             static_cast<VkSemaphore>(image_available_semaphores[i]), nullptr);
-        vkDestroySemaphore(static_cast<VkDevice>(RenderServer::getDevice()),
+        vkDestroySemaphore(static_cast<VkDevice>(GraphicsServer::getDevice()),
             static_cast<VkSemaphore>(render_finished_semaphores[i]), nullptr);
-        vkDestroyFence(static_cast<VkDevice>(RenderServer::getDevice()),
+        vkDestroyFence(static_cast<VkDevice>(GraphicsServer::getDevice()),
             static_cast<VkFence>(in_flight_fences[i]), nullptr);
     }
     image_available_semaphores.clear();
     render_finished_semaphores.clear();
     in_flight_fences.clear();
-    vkDestroySwapchainKHR(static_cast<VkDevice>(RenderServer::getDevice()),
+    vkDestroySwapchainKHR(static_cast<VkDevice>(GraphicsServer::getDevice()),
         static_cast<VkSwapchainKHR>(swapchain), nullptr);
+    swapchain = nullptr;
 }

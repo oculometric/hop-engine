@@ -1,5 +1,5 @@
 #include "material.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "vulkan_helpers.h"
 
 #include <format>
@@ -81,7 +81,7 @@ GPUHandle Shader::createShaderModule(const std::vector<uint32_t>& blob)
 
     VkShaderModule shader_module;
     CHECK_RESULT(vkCreateShaderModule,
-        (static_cast<VkDevice>(RenderServer::getDevice()), &create_info, nullptr, &shader_module), ERROR,
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), &create_info, nullptr, &shader_module), ERROR,
         return VK_NULL_HANDLE;);
 
     return shader_module;
@@ -109,11 +109,18 @@ bool Shader::compile(const std::string& code, Stage stage, std::vector<uint32_t>
 
     EShLanguage stage_language;
     EProfile profile        = ENoProfile;
+    std::string shader_type_name = "";
     int version             = 450;
     if (stage == STAGE_VERTEX)
+    {
         stage_language = EShLangVertex;
+        shader_type_name = "vertex";
+    }
     else if (stage == STAGE_FRAGMENT)
+    {
         stage_language = EShLangFragment;
+        shader_type_name = "fragment";
+    }
     else
     {
         DBG_ERROR("attempted to compile a shader with an invalid shader stage parameter");
@@ -133,7 +140,7 @@ bool Shader::compile(const std::string& code, Stage stage, std::vector<uint32_t>
         static_cast<EShMessages>(EShMsgCascadingErrors | EShMsgSpvRules | EShMsgVulkanRules));
     if (!success)
     {
-        DBG_ERROR("error compiling vertex shader " + path + ": \n" + shader.getInfoLog());
+        DBG_ERROR("error compiling " + shader_type_name + " shader " + path + ": \n" + shader.getInfoLog());
         DBG_INFO("see the full shader code below: \n" + formatShaderCode(code));
         return false;
     }
@@ -143,7 +150,7 @@ bool Shader::compile(const std::string& code, Stage stage, std::vector<uint32_t>
     success = program.link(EShMsgDefault) && program.mapIO();
     if (!success)
     {
-        DBG_ERROR("error compiling vertex shader " + path + ": \n" + program.getInfoLog());
+        DBG_ERROR("error linking shader " + path + ": \n" + program.getInfoLog());
         DBG_INFO("see the full shader code below: \n" + formatShaderCode(code));
         return false;
     }
@@ -178,7 +185,7 @@ GPUHandle Shader::createDescriptorSetLayout(std::vector<Descriptor> bindings)
     set_layout_create_info.pBindings    = layout_bindings.data();
 
     CHECK_RESULT(vkCreateDescriptorSetLayout,
-        (static_cast<VkDevice>(RenderServer::getDevice()), &set_layout_create_info, nullptr, &layout),
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), &set_layout_create_info, nullptr, &layout),
         ERROR, return VK_NULL_HANDLE;);
 
     return layout;

@@ -20,7 +20,6 @@
 
 #include "common.h"
 #include "engine.h"
-#include "events.h"
 #include "framebuffer.h"
 
 #include <glm/vec2.hpp>
@@ -28,15 +27,13 @@
 #include <optional>
 #include <vector>
 
-struct GLFWwindow;
-
 namespace HopEngine
 {
 
 /**
  * @brief encapsulates all the behaviour of actually initialising and running the rendering environment.
  */
-class RenderServer final
+class GraphicsServer final
 {
     friend class InitMachine;
 
@@ -61,30 +58,14 @@ public:
     };
 
     /**
-     * @brief render server setup parameter struct.
+     * @brief graphics server setup parameter struct.
      */
     struct InitParams
     {
         bool enable_api_validation = false; // if `true` Vulkan API validation layers are enabled
-        bool transparent_window    = false; // if `true` the window will be created to be transparent
-    };
-
-    /**
-     * @brief render-server-specific event IDs which can be subscribed to via the event server.
-     */
-    enum Events : EventServer::TypeID
-    {
-        EVENT_TYPE_RESIZE = 0x20000001, // called when the framebuffer size changes
     };
 
 private:
-    GLFWwindow* window       = nullptr;        // main window that the user will see and interact with
-    glm::u32vec2 window_size = { 1024, 1024 }; // current size of the window, and i.e. the surface
-    // cached value for the size of the window before it entered fullscreen, so that we can return to it
-    // when it leaves fullscreen
-    glm::u32vec2 size_before_fullscreen = { 1024, 1024 };
-    GPUHandle surface                   = nullptr; // surface for rendering into the attached window
-
     GPUHandle instance        = nullptr; // handle for the graphics API instance itself
     GPUHandle debug_messenger = nullptr; // debug messenger used to handle validation from vulkan nicely
     GPUHandle physical_device = nullptr; // selected physical device GPU handle
@@ -96,7 +77,6 @@ private:
     // array of graphics command buffers used for rendering, one per frame-in-flight
     std::vector<Ref<DrawCommandBuffer>> command_buffers;
 
-    Ref<Swapchain> swapchain; // connected to the window surface, provides images to present
     std::map<Framebuffer::Config, Ref<RenderPass>,
         decltype([](const Framebuffer::Config& a, const Framebuffer::Config& b) { return a < b; })>
         render_passes;
@@ -130,18 +110,13 @@ private:
     Ref<UniformBlock> spinner_uniforms;    // object uniforms used for the loading/no-scene spinner
     std::vector<SceneRender> scenes;       // list of scenes currently wanting to be rendered each frame
 
-    bool transparent             = false; // if `true`, the window should be transparently composited
-    bool fullscreen              = false; // if `true`, the window should be borderless fullscreen
-    bool wants_fullscreen_update = false; // if `true`, there is a setFullscreen operation pending
-    bool vsync                   = true;  // if `true`, image present is clamped to screen refresh rate
-    bool wants_vsync_update      = false; // if `true`, there is a setVsync operation pending
-    bool overlay_logs            = false; // if `true`, the last 15 lines of logs are shown on the screen
+    bool overlay_logs = false; // if `true`, the last 15 lines of logs are shown on the screen
 
     // list of free operations which will be executed the next time the garbage collector runs
     std::vector<std::function<void()>> free_list;
 
 public:
-    DELETE_NOT_ALL_CONSTRUCTORS(RenderServer);
+    DELETE_NOT_ALL_CONSTRUCTORS(GraphicsServer);
 
     static GPUHandle getDevice() { return getInstance()->device; }
     /**
@@ -149,7 +124,7 @@ public:
      */
     static void waitIdle();
     static GPUHandle getPhysicalDevice() { return getInstance()->physical_device; }
-    static GPUHandle getSurface() { return getInstance()->surface; }
+    static GPUHandle getVulkanInstance() { return getInstance()->instance; }
     static GPUHandle getGraphicsQueue() { return getInstance()->graphics_queue; }
     static uint32_t getGraphicsQueueIndex()
     { return getInstance()->queue_families.graphics_family.value(); }
@@ -185,6 +160,7 @@ public:
     static GPUHandle createPipelineLayout(GPUHandle layout_set_2);
     static GPUHandle getDefaultPipelineLayout() { return getInstance()->default_pipeline_layout; }
     static GPUHandle getRenderPass(const Framebuffer::Config& for_config);
+    static Ref<Swapchain> getSwapchain();
 
     /**
      * @brief queues up a resource to be freed when the internal garbage collector runs. this should be used
@@ -212,69 +188,8 @@ public:
      * @returns number of frames which can be concurrently 'in-flight' on the GPU.
      */
     static uint32_t getFramesInFlight();
-    static GLFWwindow* getWindow() { return getInstance()->window; }
     static glm::vec2 getFramebufferSize();
-    /**
-     * @brief checks if the GLFW window is waiting to be terminated.
-     * @returns `true` if the user has just clicked the close button or otherwise closed the window,
-     * otherwise `false`.
-     */
-    static bool getWindowShouldClose();
-    /**
-     * @brief updates the window title.
-     * @param title new text to be displayed in the window title, if the title bar is visible.
-     */
-    static void setTitle(const std::string& title);
-    /**
-     * @brief toggles window visibility.
-     * @param visible if `true`, the window will be shown, otherwise the window will be made invisible.
-     */
-    static void setVisible(bool visible);
-    /**
-     * @brief updates the window icon.
-     * @param path path to the window icon file.
-     */
-    static void setIcon(const std::string& path);
-    /**
-     * @brief toggles window decoration.
-     * @param borderless if `true`, then no decorations will be shown (window borders and title bar),
-     * otherwise the platform-default decorations are drawn. window title bar controls may also be
-     * unavailable to the user.
-     */
-    static void setBorderless(bool borderless);
-    /**
-     * @brief resizes the window.
-     * @param new_window_size intended new size for the window. you should check that the framebuffer size
-     * has been updated correctly.
-     */
-    static void setSize(glm::u32vec2 new_window_size);
-    /**
-     * @brief toggles window resizability.
-     * @param resizable if `true` the user is able to resize the window, otherwise the windows size is fixed
-     * (until `setSize` is used).
-     */
-    static void setResizable(bool resizable);
-    static glm::u32vec2 getWindowPosition();
-    static void setWindowPosition(glm::u32vec2 position);
 
-    /**
-     * @brief toggles whether image presentation to the window is tied to the screen's refresh rate.
-     * generally this should be enabled unless you're trying to find out how fast she can go or you're
-     * trying to flex.
-     * @param enabled if `true`, images will not be presented to the screen faster than the screen's refresh
-     * rate. if `false`, images will be presented to the screen as fast as they can be rendered.
-     */
-    static void setVsyncEnabled(bool enabled);
-    static bool getVsyncEnabled();
-    /**
-     * @brief toggles whether the window is set in fullscreen mode or not. when fullscreened, the window
-     * takes up the entire monitor, shows on top of all other windows, and lacks decorations. when the
-     * window becomes unfocused in this state, it becomes entirely invisible until focused again.
-     * @param enabled `true` if fullscreen mode should be used, or `false` if standard windowed mode should
-     * be used.
-     */
-    static void setFullscreenEnabled(bool enabled);
-    static bool getFullscreenEnabled();
     /**
      * @brief toggles whether the debug logs should be displayed on top of the screen. this can be useful
      * for debugging but may be removed in future. the 15 most recent calls to `Debug::write` are displayed.
@@ -306,18 +221,14 @@ public:
     static FrameStats draw();
 
 private:
-    RenderServer(const InitParams& params, bool& success);
-    ~RenderServer();
-    static RenderServer* getInstance();
+    GraphicsServer(const InitParams& params, bool& success);
+    ~GraphicsServer();
+    static GraphicsServer* getInstance();
 
-    /**
-     * @brief initialises GLFW and creates the window.
-     */
-    void createWindow();
     /**
      * @brief initialises Vulkan and constructs the necessary backend resources, including selecting the
      * physical device to use.
-     * @param enable_validation if `true`, render server will attempt to start with Vulkan validation layers
+     * @param enable_validation if `true`, graphics server will attempt to start with Vulkan validation layers
      * enabled, if available.
      */
     void createVulkan(bool enable_validation);
@@ -347,15 +258,6 @@ private:
      */
     void initImGui();
 
-    /**
-     * @brief checks for pending swapchain-altering operations: window resize, fullscreen toggle, and vsync
-     * toggle, and resizes and recreates internal resources as needed.
-     * @param force_resize if `true`, resources will be resized/recreated even if the window size does not
-     * appear to have changed.
-     * @returns `true` if a resize/recreation operation was actually performed, or `false` if there was
-     * nothing to do.
-     */
-    bool resize(bool force_resize = false);
     /**
      * @brief updates the debug log overlay text.
      */
@@ -389,10 +291,6 @@ private:
      * already been released by this point.
      */
     void destroyVulkan();
-    /**
-     * @brief destroys the window and de-initialises GLFW.
-     */
-    void destroyWindow();
 };
 
 } // namespace HopEngine

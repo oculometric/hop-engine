@@ -1,7 +1,7 @@
 #include "command_buffer.h"
 
 #include "engine.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "vulkan_helpers.h"
 
 #include <imgui/backends/imgui_impl_vulkan.h>
@@ -16,11 +16,11 @@ TransientCommandBuffer::TransientCommandBuffer()
     VkCommandBufferAllocateInfo allocate_info{};
     allocate_info.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocate_info.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocate_info.commandPool        = static_cast<VkCommandPool>(RenderServer::getCommandPool());
+    allocate_info.commandPool        = static_cast<VkCommandPool>(GraphicsServer::getCommandPool());
     allocate_info.commandBufferCount = 1;
 
     CHECK_RESULT(vkAllocateCommandBuffers,
-        (static_cast<VkDevice>(RenderServer::getDevice()), &allocate_info,
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), &allocate_info,
             reinterpret_cast<VkCommandBuffer*>(&buffer)),
         FAULT,
         ;);
@@ -38,8 +38,8 @@ TransientCommandBuffer::~TransientCommandBuffer()
     if (!already_submitted)
         DBG_WARNING("command buffer " + PTR(this) + " being destructed without being submitted");
     DBG_VERBOSE("destroying command buffer " + PTR(this));
-    vkFreeCommandBuffers(static_cast<VkDevice>(RenderServer::getDevice()),
-        static_cast<VkCommandPool>(RenderServer::getCommandPool()), 1,
+    vkFreeCommandBuffers(static_cast<VkDevice>(GraphicsServer::getDevice()),
+        static_cast<VkCommandPool>(GraphicsServer::getCommandPool()), 1,
         reinterpret_cast<VkCommandBuffer*>(&buffer));
 }
 
@@ -64,21 +64,21 @@ void TransientCommandBuffer::submit()
 
     // submit and wait for it to be executed
     CHECK_RESULT(vkQueueSubmit,
-        (static_cast<VkQueue>(RenderServer::getGraphicsQueue()), 1, &submit_info, VK_NULL_HANDLE), ERROR,
+        (static_cast<VkQueue>(GraphicsServer::getGraphicsQueue()), 1, &submit_info, VK_NULL_HANDLE), ERROR,
         return;);
-    CHECK_RESULT(vkQueueWaitIdle, (static_cast<VkQueue>(RenderServer::getGraphicsQueue())), FAULT, ;);
+    CHECK_RESULT(vkQueueWaitIdle, (static_cast<VkQueue>(GraphicsServer::getGraphicsQueue())), FAULT, ;);
 }
 
 DrawCommandBuffer::DrawCommandBuffer()
 {
     VkCommandBufferAllocateInfo buffer_allocate_info{};
     buffer_allocate_info.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    buffer_allocate_info.commandPool        = static_cast<VkCommandPool>(RenderServer::getCommandPool());
+    buffer_allocate_info.commandPool        = static_cast<VkCommandPool>(GraphicsServer::getCommandPool());
     buffer_allocate_info.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     buffer_allocate_info.commandBufferCount = 1;
 
     CHECK_RESULT(vkAllocateCommandBuffers,
-        (static_cast<VkDevice>(RenderServer::getDevice()), &buffer_allocate_info,
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), &buffer_allocate_info,
             reinterpret_cast<VkCommandBuffer*>(&buffer)),
         FAULT,
         ;);
@@ -88,7 +88,7 @@ DrawCommandBuffer::DrawCommandBuffer()
     query_pool_create_info.queryCount = 512;
     query_pool_create_info.queryType  = VK_QUERY_TYPE_TIMESTAMP;
     CHECK_RESULT(vkCreateQueryPool,
-        (static_cast<VkDevice>(RenderServer::getDevice()), &query_pool_create_info, nullptr,
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), &query_pool_create_info, nullptr,
             reinterpret_cast<VkQueryPool*>(&query_pool)),
         FAULT,
         ;);
@@ -98,11 +98,11 @@ DrawCommandBuffer::~DrawCommandBuffer()
 {
     DBG_VERBOSE("destroying command buffer " + PTR(this));
     auto temp_buffer = buffer;
-    RenderServer::queueFree(
+    GraphicsServer::queueFree(
         [temp_buffer]()
         {
-            vkFreeCommandBuffers(static_cast<VkDevice>(static_cast<VkDevice>(RenderServer::getDevice())),
-                static_cast<VkCommandPool>(RenderServer::getCommandPool()), 1,
+            vkFreeCommandBuffers(static_cast<VkDevice>(static_cast<VkDevice>(GraphicsServer::getDevice())),
+                static_cast<VkCommandPool>(GraphicsServer::getCommandPool()), 1,
                 reinterpret_cast<const VkCommandBuffer*>(&temp_buffer));
         });
     buffer = VK_NULL_HANDLE;
@@ -158,7 +158,7 @@ void DrawCommandBuffer::startRenderPassInternal(GPUHandle render_pass, GPUHandle
     current_descriptor_sets[0] = nullptr;
     current_descriptor_sets[1] = nullptr;
     current_descriptor_sets[2] = nullptr;
-    current_pipeline_layout    = RenderServer::getDefaultPipelineLayout();
+    current_pipeline_layout    = GraphicsServer::getDefaultPipelineLayout();
     current_pipeline           = nullptr;
     current_vertex_buffer      = nullptr;
     current_index_buffer       = nullptr;
@@ -418,7 +418,7 @@ void DrawCommandBuffer::extractTiming() const
     std::vector<uint32_t> results_buf;
     results_buf.resize(query_offset, 0);
     {
-        VkResult _result = vkGetQueryPoolResults(static_cast<VkDevice>(RenderServer::getDevice()),
+        VkResult _result = vkGetQueryPoolResults(static_cast<VkDevice>(GraphicsServer::getDevice()),
             static_cast<VkQueryPool>(query_pool), 0, query_offset, results_buf.size() * sizeof(uint32_t),
             results_buf.data(), 4, VK_QUERY_RESULT_WAIT_BIT);
         if (_result == VK_NOT_READY)

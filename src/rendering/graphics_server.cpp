@@ -1,4 +1,4 @@
-#include "render_server.h"
+#include "graphics_server.h"
 
 #include "command_buffer.h"
 #include "engine.h"
@@ -8,59 +8,81 @@
 #include "render_graph.h"
 #include "scene.h"
 #include "user_interface.h"
+#include "window.h"
+
+#include <thread>
 
 using namespace HopEngine;
 
 constexpr Shader::Descriptor scene_uniform_descriptor{ 0, Shader::UNIFORM, sizeof(SceneUniforms) };
 constexpr Shader::Descriptor object_uniform_descriptor{ 0, Shader::UNIFORM, sizeof(ObjectUniforms) };
 
-Ref<UniformBlock> RenderServer::createSceneUniforms()
+Ref<UniformBlock> GraphicsServer::createSceneUniforms()
 {
     return new UniformBlock(
         Shader::Layout{ getInstance()->scene_descriptor_set_layout, { scene_uniform_descriptor }, 0 });
 }
 
-Ref<UniformBlock> RenderServer::createObjectUniforms()
+Ref<UniformBlock> GraphicsServer::createObjectUniforms()
 {
     return new UniformBlock(
         Shader::Layout{ getInstance()->object_descriptor_set_layout, { object_uniform_descriptor }, 1 });
 }
 
-uint32_t RenderServer::getFramesInFlight() { return getInstance()->swapchain->getImageCount(); }
+uint32_t GraphicsServer::getFramesInFlight() { return getSwapchain()->getImageCount(); }
 
-glm::vec2 RenderServer::getFramebufferSize() { return glm::vec2(getInstance()->swapchain->getExtent()); }
+glm::vec2 GraphicsServer::getFramebufferSize() { return glm::vec2(getSwapchain()->getExtent()); }
 
-void RenderServer::setVsyncEnabled(bool enabled)
-{
-    getInstance()->vsync              = enabled;
-    getInstance()->wants_vsync_update = true;
-}
-
-bool RenderServer::getVsyncEnabled() { return getInstance()->vsync; }
-
-void RenderServer::setFullscreenEnabled(bool enabled)
-{
-    getInstance()->fullscreen              = enabled;
-    getInstance()->wants_fullscreen_update = true;
-}
-
-bool RenderServer::getFullscreenEnabled() { return getInstance()->fullscreen; }
-
-void RenderServer::setSingleScene(const Ref<Scene>& scene)
+void GraphicsServer::setSingleScene(const Ref<Scene>& scene)
 {
     setMultiScene({
         { scene, glm::vec2{ 0, 0 }, glm::vec2{ 1, 1 } }
     });
 }
 
-void RenderServer::setMultiScene(const std::vector<SceneRender>& multi_scenes)
+void GraphicsServer::setMultiScene(const std::vector<SceneRender>& multi_scenes)
 {
-    RenderServer::waitIdle();
+    GraphicsServer::waitIdle();
     getInstance()->scenes.clear();
     for (auto& scene : multi_scenes) getInstance()->scenes.emplace_back(scene);
 }
 
-GPUHandle RenderServer::getRenderPass(const Framebuffer::Config& for_config)
+FrameStats GraphicsServer::draw()
+{
+    if (Window::isMinimised())
+    {
+        std::this_thread::sleep_for(std::chrono::duration<float>(0.125f));
+        return {};
+    }
+    if (Window::refreshSwapchain())
+    {
+        getInstance()->destroyImGui();
+        getInstance()->initImGui();
+
+        Input::applyCallbackBindings();
+    }
+
+    FrameStats stats{};
+
+    uint32_t image_index = getSwapchain()->acquireNextImage();
+    if (image_index == (uint32_t)-1) return {};
+
+    const auto record_start = std::chrono::steady_clock::now();
+    auto command_buffer     = getInstance()->recordRenderCommands(image_index, stats);
+    const std::chrono::duration<float> record_duration = std::chrono::steady_clock::now() - record_start;
+    stats.record_time                                  = record_duration.count();
+
+    getSwapchain()->submitCommands(command_buffer, image_index);
+
+    command_buffer->extractTiming();
+
+    getInstance()->updateTextMesh();
+    getInstance()->tryFreeResources();
+
+    return stats;
+}
+
+GPUHandle GraphicsServer::getRenderPass(const Framebuffer::Config& for_config)
 {
     auto it = getInstance()->render_passes.find(for_config);
     if (it == getInstance()->render_passes.end())
@@ -72,19 +94,18 @@ GPUHandle RenderServer::getRenderPass(const Framebuffer::Config& for_config)
     return it->second->getRenderPass();
 }
 
-RenderServer::RenderServer(const InitParams& params, bool& success)
-{
-    transparent = params.transparent_window;
-    createWindow();
+Ref<Swapchain> GraphicsServer::getSwapchain() { return Window::getSwapchain(); }
 
+GraphicsServer::GraphicsServer(const InitParams& params, bool& success)
+{
     createVulkan(params.enable_api_validation);
 
-    swapchain = new Swapchain(window_size);
+    Window::refreshSwapchain();
 
     scene_descriptor_set_layout   = Shader::createDescriptorSetLayout({ scene_uniform_descriptor });
     object_descriptor_set_layout  = Shader::createDescriptorSetLayout({ object_uniform_descriptor });
     default_descriptor_set_layout = Shader::createDescriptorSetLayout({});
-    default_pipeline_layout       = RenderServer::createPipelineLayout(default_descriptor_set_layout);
+    default_pipeline_layout       = GraphicsServer::createPipelineLayout(default_descriptor_set_layout);
 
     const uint32_t default_image_data[2 * 2 * 2] = {
         0xFF000000,
@@ -128,7 +149,7 @@ RenderServer::RenderServer(const InitParams& params, bool& success)
     final_pass_uniforms = createSceneUniforms();
     spinner_material    = new Material(Engine::loadShader("res://engine/shaders/screen_space_image.glsl"),
         Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthWrite(false).depthTest(false),
-        swapchain->getFramebuffer()->getConfig());
+        getSwapchain()->getFramebuffer()->getConfig());
     spinner_uniforms    = createObjectUniforms();
     ObjectUniforms* spinner = static_cast<ObjectUniforms*>(spinner_uniforms->getBuffer());
     spinner->model_to_world = glm::mat4(1);
@@ -145,19 +166,17 @@ RenderServer::RenderServer(const InitParams& params, bool& success)
 
     DBG_VERBOSE("graphics server initialised");
 
-    RenderServer::setIcon("res://engine/icon.png");
-
     draw();
-    setVisible(true);
+    Window::setVisible(true);
 
     success = true;
 }
 
-RenderServer::~RenderServer()
+GraphicsServer::~GraphicsServer()
 {
-    RenderServer::waitIdle();
+    GraphicsServer::waitIdle();
 
-    RenderServer::destroyImGui();
+    GraphicsServer::destroyImGui();
 
     command_buffers.clear();
     scenes.clear();
@@ -179,27 +198,24 @@ RenderServer::~RenderServer()
     default_sampler     = nullptr;
 
     render_passes.clear();
-    swapchain = nullptr;
 
     destroyVulkan();
-
-    destroyWindow();
 }
 
-void RenderServer::updateTextMesh()
+void GraphicsServer::updateTextMesh()
 {
     if (!overlay_logs) return;
     auto lines = Debug::queryLines(32);
 
     debug_text_renderer->clear();
-    glm::vec2 position = -glm::vec2(swapchain->getExtent()) / 2.0f;
+    glm::vec2 position = -glm::vec2(getSwapchain()->getExtent()) / 2.0f;
     for (const auto& line : lines)
         position.y +=
             debug_text_renderer->addText(position, 0, UIRenderer::TextFormatting(), line, { 1, 1, 1 }).y;
     debug_text_renderer->finalise();
 }
 
-void RenderServer::tryFreeResources(bool force)
+void GraphicsServer::tryFreeResources(bool force)
 {
     static float last_free_time = 0.0f;
 
@@ -207,19 +223,19 @@ void RenderServer::tryFreeResources(bool force)
     if (free_list.empty()) return;
     if (!force && (current_time - last_free_time < 2.0f) && free_list.size() < 30) return;
 
-    RenderServer::waitIdle();
+    GraphicsServer::waitIdle();
     DBG_VERBOSE("freeing " + std::to_string(free_list.size()) + " resources");
     last_free_time = current_time;
     for (auto& item : free_list) item();
     free_list.clear();
 }
 
-WeakRef<DrawCommandBuffer> RenderServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
+WeakRef<DrawCommandBuffer> GraphicsServer::recordRenderCommands(uint32_t image_index, FrameStats& stats)
 {
     SceneUniforms scene_uniforms;
     scene_uniforms.time          = Engine::getEngineTime();
     scene_uniforms.eye_position  = { 0, 0, 0 };
-    scene_uniforms.viewport_size = swapchain->getExtent();
+    scene_uniforms.viewport_size = getSwapchain()->getExtent();
     scene_uniforms.world_to_view = glm::mat4(1);
     scene_uniforms.view_to_clip  = glm::mat4(1);
     scene_uniforms.clip_to_view  = glm::mat4(1);
@@ -230,7 +246,7 @@ WeakRef<DrawCommandBuffer> RenderServer::recordRenderCommands(uint32_t image_ind
     ObjectUniforms* spinner = static_cast<ObjectUniforms*>(spinner_uniforms->getBuffer());
     spinner->model_to_world =
         glm::scale(glm::rotate(glm::translate(glm::mat4(1),
-                                   glm::vec3{ glm::vec2(swapchain->getExtent()) / 2.0f, 0.0f }),
+                                   glm::vec3{ glm::vec2(getSwapchain()->getExtent()) / 2.0f, 0.0f }),
                        Engine::getEngineTime(), glm::vec3{ 0, 0, 1 }),
             glm::vec3(256, 256, 1));
 
@@ -241,12 +257,12 @@ WeakRef<DrawCommandBuffer> RenderServer::recordRenderCommands(uint32_t image_ind
     {
         if (scene.scene)
             scene.scene->draw(command_buffer,
-                glm::u32vec2(scene.size_uv * glm::vec2(swapchain->getExtent())));
+                glm::u32vec2(scene.size_uv * glm::vec2(getSwapchain()->getExtent())));
     }
 
-    swapchain->getFramebuffer()->bind(command_buffer, Framebuffer::Clear{
-                                                          { 0.02f, 0.02f, 0.02f },
-                                                          !scenes.empty()
+    getSwapchain()->getFramebuffer()->bind(command_buffer, Framebuffer::Clear{
+                                                               { 0.02f, 0.02f, 0.02f },
+                                                               !scenes.empty()
     });
 
     if (scenes.empty())

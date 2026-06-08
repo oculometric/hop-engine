@@ -1,14 +1,28 @@
 # TODO
 
 # v0.56
-- update readme
-- window aspect ratio limit
-- random number generation utilities
-- prevent crash when shader doesnt compile
-- errors with queuepresent suboptimal
-- ability to update window transparent-ness at runtime
-- input actions, and general input event cleanup (expand on pressed_since_checked etc)
+- hide code internally (render server interface)
+
+- transform overhaul
+    - make local/global transform from forward/up vectors (generally complete the transform functionality), i.e. create from basis vectors
+    - merge with hierarchy
+    - implement quaternion
+
+- way to show performance metrics in a regular ass game
 - material needs the ability to specify render priority (used by staticmeshes etc)
+
+- horizon-based ambient occlusion
+- shadows
+
+- implement per-package-entry compresion
+- error with device sometimes lost on windows
+
+- update readme
+- errors with queuepresent suboptimal
+- input actions, and general input event cleanup (expand on pressed_since_checked etc)
+- skinned mesh support
+
+# v0.57
 - the ui update
     - document user_interface.h
     - separate ui style into multiple textures (one for icons, one for nineslices, etc)
@@ -40,12 +54,6 @@
         - pack everything into a single texture
         - use the generic user interface shader
     - ui deserialisation
-
-- transform overhaul
-    - make local/global transform from forward/up vectors (generally complete the transform functionality), i.e. create from basis vectors
-    - merge with hierarchy
-    - implement quaternion
-- implement per-package-entry compresion
 ---
 
 # v0.60
@@ -83,17 +91,14 @@
 - hover tooltips for nodes....
 - frustrum culling [M]
 - texture upload/download of data
-- shadows
 - textures should be loadable in linear mode?
 - a proper procedural shading art workflow
 - bytecode node language
 - VR interfaces
 - 3D editor
 - geometry shader support
-- skinned mesh support
 - networking kit
 - Steamworks integration
 - animated images
-- horizon-based ambient occlusion
 - support multiple materials per mesh
 - replace discord integration library with internal stuff

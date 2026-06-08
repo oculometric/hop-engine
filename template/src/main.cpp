@@ -14,8 +14,8 @@ public:
         Package::importDeferredPackage("resources.hop");
 
         // update the window title and icon
-        RenderServer::setTitle("David's Crate");
-        RenderServer::setIcon("res://david_crate.jpg");
+        Window::setTitle("David's Crate");
+        Window::setIcon("res://david_crate.jpg");
 
         // create a scene and make it current
         auto scene = Scene::create("scene");
@@ -36,7 +36,7 @@ public:
 
 int main()
 {
-    HopEngine::init(Engine::InitParams{ false, Debug::DEBUG_INFO, false });
+    HopEngine::init(Engine::InitParams{ false, false, Debug::DEBUG_INFO, false });
     Engine::startApplication<MyGame>();
     HopEngine::destroy();
 

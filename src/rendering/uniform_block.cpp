@@ -1,7 +1,7 @@
 #include "buffer.h"
 #include "command_buffer.h"
 #include "material.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "texture.h"
 #include "vulkan_helpers.h"
 
@@ -24,15 +24,15 @@ UniformBlock::UniformBlock(const Shader::Layout& layout_info)
         else if (binding.type == Shader::TEXTURE)
         {
             textures_in_use[binding.binding] = { binding.texture_is_3d
-                                                     ? RenderServer::getDefault3DTexture().strong()
-                                                     : RenderServer::getDefaultTexture().strong(),
-                RenderServer::getDefaultSampler().strong() };
+                                                     ? GraphicsServer::getDefault3DTexture().strong()
+                                                     : GraphicsServer::getDefaultTexture().strong(),
+                GraphicsServer::getDefaultSampler().strong() };
         }
     }
 
     // create uniform buffers for each frame-in-flight to avoid updating
     // a buffer currently being used by the GPU
-    uniform_buffers.resize(RenderServer::getFramesInFlight());
+    uniform_buffers.resize(GraphicsServer::getFramesInFlight());
     for (auto& uniform_buffer : uniform_buffers)
         uniform_buffer = new Buffer(size + 4, Buffer::BUFFER_USAGE_UNIFORM,
             MEMORY_PROPERTY_HOST_VISIBLE | MEMORY_PROPERTY_HOST_COHERENT);
@@ -43,12 +43,12 @@ UniformBlock::UniformBlock(const Shader::Layout& layout_info)
     VkDescriptorSetAllocateInfo descriptor_set_alloc_info{};
     descriptor_set_alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     descriptor_set_alloc_info.descriptorPool =
-        static_cast<VkDescriptorPool>(RenderServer::getDescriptorPool());
+        static_cast<VkDescriptorPool>(GraphicsServer::getDescriptorPool());
     descriptor_set_alloc_info.descriptorSetCount = static_cast<uint32_t>(uniform_buffers.size());
     descriptor_set_alloc_info.pSetLayouts        = set_layouts.data();
     descriptor_sets.resize(uniform_buffers.size());
     CHECK_RESULT(vkAllocateDescriptorSets,
-        (static_cast<VkDevice>(RenderServer::getDevice()), &descriptor_set_alloc_info,
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), &descriptor_set_alloc_info,
             reinterpret_cast<VkDescriptorSet*>(descriptor_sets.data())),
         FAULT,
         ;);
@@ -70,11 +70,11 @@ UniformBlock::~UniformBlock()
     for (GPUHandle& set : descriptor_sets)
     {
         auto _temp_ = set;
-        RenderServer::queueFree(
+        GraphicsServer::queueFree(
             [_temp_]()
             {
-                vkFreeDescriptorSets(static_cast<VkDevice>(RenderServer::getDevice()),
-                    static_cast<VkDescriptorPool>(RenderServer::getDescriptorPool()), 1,
+                vkFreeDescriptorSets(static_cast<VkDevice>(GraphicsServer::getDevice()),
+                    static_cast<VkDescriptorPool>(GraphicsServer::getDescriptorPool()), 1,
                     reinterpret_cast<const VkDescriptorSet*>(&_temp_));
             });
         set = nullptr;
@@ -100,8 +100,8 @@ void UniformBlock::setTexture(const uint32_t binding, Ref<Texture> texture)
     // update the binding
     if (!texture)
         std::get<0>(textures_in_use[binding]) = layout.bindings[binding].texture_is_3d
-                                                    ? RenderServer::getDefault3DTexture().strong()
-                                                    : RenderServer::getDefaultTexture().strong();
+                                                    ? GraphicsServer::getDefault3DTexture().strong()
+                                                    : GraphicsServer::getDefaultTexture().strong();
     else
         std::get<0>(textures_in_use[binding]) = texture;
     rebind_needed = true;
@@ -112,7 +112,7 @@ void UniformBlock::setSampler(const uint32_t binding, Ref<Sampler> sampler)
     // if same sampler, skip rebinding
     if (std::get<1>(textures_in_use[binding]) == sampler) return;
     // update sampler binding; use default engine sampler if null
-    if (!sampler) std::get<1>(textures_in_use[binding]) = RenderServer::getDefaultSampler().strong();
+    if (!sampler) std::get<1>(textures_in_use[binding]) = GraphicsServer::getDefaultSampler().strong();
     else
         std::get<1>(textures_in_use[binding]) = sampler;
     rebind_needed = true;
@@ -169,8 +169,8 @@ void UniformBlock::applyDescriptorBindings()
                     DBG_ERROR(
                         "uniform attempted to bind an incompatible texture dimension. texture will be reset to default.");
                     std::get<0>(textures_in_use[binding.binding]) =
-                        binding.texture_is_3d ? RenderServer::getDefault3DTexture().strong()
-                                              : RenderServer::getDefaultTexture().strong();
+                        binding.texture_is_3d ? GraphicsServer::getDefault3DTexture().strong()
+                                              : GraphicsServer::getDefaultTexture().strong();
                     texture = std::get<0>(textures_in_use[binding.binding]);
                 }
                 image_info.imageView = static_cast<VkImageView>(texture->getView());
@@ -182,7 +182,7 @@ void UniformBlock::applyDescriptorBindings()
             // this could potentially be more efficient, since we could group all the
             // write commands into a sensible array and issue one big vkUpdateDescriptorSets,
             // but it's annoying to corral all the secondary structures involved
-            vkUpdateDescriptorSets(static_cast<VkDevice>(RenderServer::getDevice()), 1, &descriptor_write,
+            vkUpdateDescriptorSets(static_cast<VkDevice>(GraphicsServer::getDevice()), 1, &descriptor_write,
                 0, nullptr);
         }
     }

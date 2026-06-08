@@ -5,7 +5,7 @@
 #include "framebuffer.h"
 #include "material.h"
 #include "mesh.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "scene.h"
 #include "texture.h"
 
@@ -118,7 +118,7 @@ RenderGraph::RenderGraph(const Builder& config)
                 Pipeline::Builder().cullMode(Pipeline::CULL_NONE).depthTest(false).depthWrite(false),
                 step_desc.framebuffer_config);
             step.texture_bindings  = step_desc.texture_bindings;
-            step.scene_uniforms    = RenderServer::createSceneUniforms();
+            step.scene_uniforms    = GraphicsServer::createSceneUniforms();
             step.clear_colour      = step_desc.clear_colour;
             step.clear_transparent = step_desc.clear_transparent;
         }
@@ -246,7 +246,7 @@ void RenderGraph::draw(WeakRef<DrawCommandBuffer> command_buffer,
 
     auto final_image_info                = getFinalImage();
     WeakRef<Texture> new_passthrough_tex = final_image_info;
-    if (!new_passthrough_tex) new_passthrough_tex = RenderServer::getDefaultTexture();
+    if (!new_passthrough_tex) new_passthrough_tex = GraphicsServer::getDefaultTexture();
     if (new_passthrough_tex != passthrough_texture)
     {
         passthrough->setTexture(0, new_passthrough_tex.strong());
@@ -264,7 +264,7 @@ void RenderGraph::draw(WeakRef<DrawCommandBuffer> command_buffer,
         {
             const Step& step = execution_steps[i];
             if (!step.is_camera) continue;
-            if (!cmd.material) cmd.material = RenderServer::getDefaultMaterial();
+            if (!cmd.material) cmd.material = GraphicsServer::getDefaultMaterial();
             if (step.framebuffer->isCompatible(cmd.material) && (cmd.camera_mask & (1 << step.camera_slot)))
             {
                 step_commands[i].emplace_back(cmd);
@@ -334,7 +334,7 @@ void RenderGraph::rebuildBindings()
             {
                 if (binding_step.is_camera || binding_step.texture_bindings.empty())
                 {
-                    texture = RenderServer::getDefaultTexture().strong();
+                    texture = GraphicsServer::getDefaultTexture().strong();
                     break;
                 }
                 binding_step = execution_steps[binding_step.texture_bindings[0].step_index];
@@ -356,8 +356,8 @@ void RenderGraph::recordCameraStep(WeakRef<DrawCommandBuffer> command_buffer, We
     {
         auto material = command.material;
         auto mesh     = command.mesh;
-        if (!material) material = RenderServer::getDefaultMaterial();
-        if (!mesh) mesh = RenderServer::getDefaultMesh();
+        if (!material) material = GraphicsServer::getDefaultMaterial();
+        if (!mesh) mesh = GraphicsServer::getDefaultMesh();
 
         // material must be bound before we can start binding uniforms at all
         material->bind(command_buffer);
@@ -378,6 +378,6 @@ void RenderGraph::recordPostProcessStep(WeakRef<DrawCommandBuffer> command_buffe
     material->bind(command_buffer, false);
     scene_descriptor_set->bind(command_buffer);
 
-    WeakRef<Mesh> quad = RenderServer::getQuad();
+    WeakRef<Mesh> quad = GraphicsServer::getQuad();
     quad->draw(command_buffer);
 }

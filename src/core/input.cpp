@@ -4,7 +4,8 @@
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/imgui.h>
 #define GLFW_INCLUDE_VULKAN
-#include "render_server.h"
+#include "graphics_server.h"
+#include "window.h"
 
 #include <GLFW/glfw3.h>
 
@@ -13,7 +14,7 @@ using namespace HopEngine;
 bool Input::isKeyDown(const int key)
 {
     if (ImGui::GetIO().WantTextInput) return false;
-    return glfwGetKey(getInstance()->window, key) == GLFW_PRESS;
+    return glfwGetKey(static_cast<GLFWwindow*>(getInstance()->window), key) == GLFW_PRESS;
 }
 
 bool Input::wasKeyPressed(const int key)
@@ -37,7 +38,7 @@ static double last_x = 0, last_y = 0;
 bool Input::isMouseDown(const MouseButton button)
 {
     if (ImGui::GetIO().WantCaptureMouse) return false;
-    return glfwGetMouseButton(getInstance()->window, button) == GLFW_PRESS;
+    return glfwGetMouseButton(static_cast<GLFWwindow*>(getInstance()->window), button) == GLFW_PRESS;
 }
 
 bool Input::wasMousePressed(const MouseButton button)
@@ -67,7 +68,7 @@ void Input::pollInput()
 
     double new_mouse_x;
     double new_mouse_y;
-    glfwGetCursorPos(getInstance()->window, &new_mouse_x, &new_mouse_y);
+    glfwGetCursorPos(static_cast<GLFWwindow*>(getInstance()->window), &new_mouse_x, &new_mouse_y);
 
     glm::vec2 new_mouse           = { static_cast<float>(new_mouse_x), static_cast<float>(new_mouse_y) };
     getInstance()->mouse_delta    = new_mouse - getInstance()->mouse_position;
@@ -77,7 +78,8 @@ void Input::pollInput()
     {
         getInstance()->mouse_position = glm::clamp(getInstance()->mouse_position,
             getInstance()->mouse_lock_min, getInstance()->mouse_lock_max);
-        glfwSetCursorPos(getInstance()->window, static_cast<double>(getInstance()->mouse_position.x),
+        glfwSetCursorPos(static_cast<GLFWwindow*>(getInstance()->window),
+            static_cast<double>(getInstance()->mouse_position.x),
             static_cast<double>(getInstance()->mouse_position.y));
     }
 
@@ -132,29 +134,36 @@ float Input::getGamepadAxis(const GamepadAxis axis, const int controller)
 
 void Input::setCursorVisible(const bool visible)
 {
-    glfwSetInputMode(getInstance()->window, GLFW_CURSOR,
+    glfwSetInputMode(static_cast<GLFWwindow*>(getInstance()->window), GLFW_CURSOR,
         visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 }
 
 void Input::setCursorImage(CursorType type)
-{ glfwSetCursor(getInstance()->window, getInstance()->cursors[type]); }
+{
+    glfwSetCursor(static_cast<GLFWwindow*>(getInstance()->window),
+        static_cast<GLFWcursor*>(getInstance()->cursors[type]));
+}
 
 void Input::applyCallbackBindings()
 {
-    getInstance()->window = RenderServer::getWindow();
-    glfwSetKeyCallback(getInstance()->window, Input::keyCallback);
-    glfwSetMouseButtonCallback(getInstance()->window, Input::mouseButtonCallback);
-    ImGui_ImplGlfw_InstallCallbacks(getInstance()->window);
+    if (!getInstance())
+        return;
+    getInstance()->window = Window::getWindow();
+    glfwSetKeyCallback(static_cast<GLFWwindow*>(getInstance()->window),
+        reinterpret_cast<GLFWkeyfun>(Input::keyCallback));
+    glfwSetMouseButtonCallback(static_cast<GLFWwindow*>(getInstance()->window),
+        reinterpret_cast<GLFWmousebuttonfun>(Input::mouseButtonCallback));
+    ImGui_ImplGlfw_InstallCallbacks(static_cast<GLFWwindow*>(getInstance()->window));
 }
 
-void Input::keyCallback(GLFWwindow* window, const int key, const int scancode, const int action,
+void Input::keyCallback(GPUHandle window, const int key, const int scancode, const int action,
     const int mods)
 {
     if (ImGui::GetIO().WantTextInput) return;
     if (action == GLFW_PRESS || action == GLFW_REPEAT) getInstance()->pressed_since_checked.insert(key);
 }
 
-void Input::mouseButtonCallback(GLFWwindow* window, const int button, const int action, const int mods)
+void Input::mouseButtonCallback(GPUHandle window, const int button, const int action, const int mods)
 {
     if (ImGui::GetIO().WantCaptureMouse) return;
     if (action == GLFW_PRESS)

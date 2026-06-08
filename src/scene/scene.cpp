@@ -3,7 +3,7 @@
 #include "basic_components.h"
 #include "command_buffer.h"
 #include "render_graph.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "texture.h"
 
 #include <map>
@@ -203,5 +203,5 @@ Scene::Scene(const std::string& name)
     root         = Object::create();
     root->name   = "scene root";
 
-    DBG_INFO("created new scene " + getOrigin());
+    DBG_INFO("created new scene \"" + getOrigin() + '\"');
 }

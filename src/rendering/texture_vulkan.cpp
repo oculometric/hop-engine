@@ -1,6 +1,6 @@
 #include "buffer.h"
 #include "command_buffer.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "texture.h"
 #include "vulkan_helpers.h"
 
@@ -39,7 +39,7 @@ void Texture::transitionLayout(const Layout new_layout)
     memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     memory_barrier.image               = static_cast<VkImage>(image);
     memory_barrier.subresourceRange.aspectMask =
-        format == FORMAT_DEPTH ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+        format == FORMAT_DEPTH ? (VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT) : VK_IMAGE_ASPECT_COLOR_BIT;
     memory_barrier.subresourceRange.baseMipLevel   = 0;
     memory_barrier.subresourceRange.levelCount     = 1;
     memory_barrier.subresourceRange.baseArrayLayer = 0;
@@ -206,13 +206,13 @@ void Texture::createImage()
     image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     image_create_info.samples     = VK_SAMPLE_COUNT_1_BIT;
     CHECK_RESULT(vkCreateImage,
-        (static_cast<VkDevice>(RenderServer::getDevice()), &image_create_info, nullptr,
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), &image_create_info, nullptr,
             reinterpret_cast<VkImage*>(&image)),
         FAULT, return;);
     current_layout = LAYOUT_UNDEFINED;
 
     VkMemoryRequirements memory_requirements;
-    vkGetImageMemoryRequirements(static_cast<VkDevice>(RenderServer::getDevice()),
+    vkGetImageMemoryRequirements(static_cast<VkDevice>(GraphicsServer::getDevice()),
         static_cast<VkImage>(image), &memory_requirements);
 
     VkMemoryAllocateInfo allocate_info{};
@@ -222,11 +222,11 @@ void Texture::createImage()
     allocate_info.memoryTypeIndex =
         Buffer::findMemoryType(memory_requirements.memoryTypeBits, MEMORY_PROPERTY_DEVICE_LOCAL);
     CHECK_RESULT(vkAllocateMemory,
-        (static_cast<VkDevice>(RenderServer::getDevice()), &allocate_info, nullptr,
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), &allocate_info, nullptr,
             reinterpret_cast<VkDeviceMemory*>(&memory)),
         FAULT, return;);
     CHECK_RESULT(vkBindImageMemory,
-        (static_cast<VkDevice>(RenderServer::getDevice()), static_cast<VkImage>(image),
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), static_cast<VkImage>(image),
             static_cast<VkDeviceMemory>(memory), 0),
         FAULT, return;);
 }
@@ -246,7 +246,7 @@ void Texture::createView()
     view_create_info.subresourceRange.layerCount     = 1;
 
     CHECK_RESULT(vkCreateImageView,
-        (static_cast<VkDevice>(RenderServer::getDevice()), &view_create_info, nullptr,
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), &view_create_info, nullptr,
             reinterpret_cast<VkImageView*>(&view)),
         ERROR, return;);
 }

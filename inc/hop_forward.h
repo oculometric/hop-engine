@@ -25,7 +25,7 @@ namespace HopEngine
 
 // graphics classes
 
-class RenderServer;
+class GraphicsServer;
 class TransientCommandBuffer;
 class DrawCommandBuffer;
 class Swapchain;

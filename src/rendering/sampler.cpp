@@ -1,4 +1,4 @@
-#include "render_server.h"
+#include "graphics_server.h"
 #include "texture.h"
 #include "vulkan_helpers.h"
 
@@ -25,7 +25,7 @@ Sampler::Sampler(Filter filtering_mode, Address address_mode)
     create_info.addressModeV = vulkan_address[address_mode];
     create_info.addressModeW = vulkan_address[address_mode];
     VkPhysicalDeviceProperties properties{};
-    vkGetPhysicalDeviceProperties(static_cast<VkPhysicalDevice>(RenderServer::getPhysicalDevice()),
+    vkGetPhysicalDeviceProperties(static_cast<VkPhysicalDevice>(GraphicsServer::getPhysicalDevice()),
         &properties);
     create_info.anisotropyEnable        = VK_TRUE;
     create_info.maxAnisotropy           = properties.limits.maxSamplerAnisotropy;
@@ -38,7 +38,7 @@ Sampler::Sampler(Filter filtering_mode, Address address_mode)
     create_info.minLod                  = 0.0f;
     create_info.maxLod                  = 0.0f;
     CHECK_RESULT(vkCreateSampler,
-        (static_cast<VkDevice>(RenderServer::getDevice()), &create_info, nullptr,
+        (static_cast<VkDevice>(GraphicsServer::getDevice()), &create_info, nullptr,
             reinterpret_cast<VkSampler*>(&sampler)),
         FAULT,
         ;);

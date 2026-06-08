@@ -2,7 +2,7 @@
 
 #include "buffer.h"
 #include "package.h"
-#include "render_server.h"
+#include "graphics_server.h"
 
 #include <stb_image.h>
 #include <stb_image_write.h>

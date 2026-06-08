@@ -3,33 +3,39 @@
 #include "events.h"
 #include "input.h"
 #include "package.h"
-#include "render_server.h"
+#include "random.h"
+#include "graphics_server.h"
 #include "user_interface.h"
+#include "window.h"
 
 #define IN_PLACE_INIT(var, type, args)                   \
     var = reinterpret_cast<type*>(malloc(sizeof(type))); \
     new (var) type args
 
-using namespace HopEngine;
-
 extern unsigned char engine_hop_raw[];
 extern unsigned long long engine_hop_raw_size;
+
+namespace HopEngine
+{
 
 static Debug* debug                = nullptr;
 static Engine* engine              = nullptr;
 static EventServer* event_server   = nullptr;
 static Package* package            = nullptr;
-static RenderServer* render_server = nullptr;
+static Window* window              = nullptr;
+static GraphicsServer* render_server = nullptr;
 static Input* input                = nullptr;
 static UIManager* ui_manager       = nullptr;
 
-class HopEngine::InitMachine final
+class InitMachine final
 {
 public:
     static void initialise(const Engine::InitParams& params)
     {
         // TODO: checks for success, checks for already-inited
         bool success = true;
+
+        Random::randomiseSeed();
 
         if (!debug)
         {
@@ -70,12 +76,22 @@ public:
             Package::importPackage(engine_hop);
         }
 
+        if (!window)
+        {
+            Window::InitParams window_params;
+            window_params.transparent_framebuffer = params.enable_transparent_window;
+            // TODO: populate window params
+            IN_PLACE_INIT(window, Window, (window_params, success));
+            if (success) DBG_INFO("initialised window");
+            else
+                return;
+        }
+
         if (!render_server)
         {
-            RenderServer::InitParams render_server_params{ params.enable_vulkan_validation,
-                params.enable_transparent_window };
-            IN_PLACE_INIT(render_server, RenderServer, (render_server_params, success));
-            if (success) DBG_INFO("initialised render server");
+            GraphicsServer::InitParams render_server_params{ params.enable_vulkan_validation };
+            IN_PLACE_INIT(render_server, GraphicsServer, (render_server_params, success));
+            if (success) DBG_INFO("initialised graphics server");
             else
                 return;
         }
@@ -96,6 +112,7 @@ public:
         }
 
         EventServer::dispatch(Engine::EVENT_TYPE_INIT_FINISH);
+        Window::setIcon("res://engine/icon.png");
     }
 
     static void destroy()
@@ -117,11 +134,18 @@ public:
             DBG_INFO("destroyed input manager");
         }
 
+        if (window)
+        {
+            delete window;
+            window = nullptr;
+            DBG_INFO("destroyed window");
+        }
+
         if (render_server)
         {
             delete render_server;
             render_server = nullptr;
-            DBG_INFO("destroyed render server");
+            DBG_INFO("destroyed graphics server");
         }
 
         if (package)
@@ -162,9 +186,9 @@ public:
     }
 };
 
-void HopEngine::init(const Engine::InitParams& params) { InitMachine::initialise(params); }
+void init(const Engine::InitParams& params) { InitMachine::initialise(params); }
 
-void HopEngine::destroy() { InitMachine::destroy(); }
+void destroy() { InitMachine::destroy(); }
 
 Engine* Engine::getInstance()
 {
@@ -182,9 +206,9 @@ Package* Package::getInstance()
     if (!package) DBG_ERROR("package manager instance has not been initialised!");
     return package;
 }
-RenderServer* RenderServer::getInstance()
+GraphicsServer* GraphicsServer::getInstance()
 {
-    if (!render_server) DBG_ERROR("render server instance has not been initialised!");
+    if (!render_server) DBG_ERROR("graphics server instance has not been initialised!");
     return render_server;
 }
 Input* Input::getInstance()
@@ -193,3 +217,6 @@ Input* Input::getInstance()
     return input;
 }
 UIManager* UIManager::getInstance() { return ui_manager; }
+Window* Window::getInstance() { return HopEngine::window; }
+
+}

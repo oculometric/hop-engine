@@ -1,4 +1,4 @@
-#include "render_server.h"
+#include "graphics_server.h"
 #include "scene.h"
 
 using namespace HopEngine;

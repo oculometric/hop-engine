@@ -1,5 +1,5 @@
 #include "material.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "scene.h"
 
 using namespace HopEngine;
@@ -24,13 +24,13 @@ bool DrawCommand::compare(const DrawCommand& a, const DrawCommand& b)
 
 Sky::Sky(Ref<Texture> skybox_texture)
 {
-    uniforms = RenderServer::createObjectUniforms();
+    uniforms = GraphicsServer::createObjectUniforms();
     setSkyboxCubemap(skybox_texture);
 }
 
 Sky::Sky(Ref<Material> custom_material, bool render_cube)
 {
-    uniforms = RenderServer::createObjectUniforms();
+    uniforms = GraphicsServer::createObjectUniforms();
     setCustomMaterial(custom_material, render_cube);
 }
 
@@ -56,6 +56,6 @@ void Sky::setCustomMaterial(Ref<Material> custom_material, bool render_cube)
 DrawCommand Sky::getDrawCommand() const
 {
     return DrawCommand(material,
-        render_as_cube ? RenderServer::getSkyboxCube() : RenderServer::getSkySphere(), uniforms)
+        render_as_cube ? GraphicsServer::getSkyboxCube() : GraphicsServer::getSkySphere(), uniforms)
         .priority(1000);
 }

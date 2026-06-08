@@ -3,7 +3,7 @@
 #include "command_buffer.h"
 #include "engine.h"
 #include "framebuffer.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "texture.h"
 
 using namespace HopEngine;

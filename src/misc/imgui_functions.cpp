@@ -11,9 +11,10 @@
 #include "material.h"
 #include "input.h"
 #include "render_graph.h"
-#include "render_server.h"
+#include "graphics_server.h"
 #include "package.h"
 #include "node_view.h"
+#include "window.h"
 
 using namespace HopEngine;
 using namespace std;
@@ -347,11 +348,11 @@ void Engine::_drawImGuiDebug() const
 		if (ImGui::MenuItem("toggle wireframe"))
 			Engine::setForceWireframe(!Engine::isWireframeMode());
 		if (ImGui::MenuItem("toggle V-sync"))
-			RenderServer::setVsyncEnabled(!RenderServer::getVsyncEnabled());
+			Window::setVsyncEnabled(!Window::isVsyncEnabled());
 		if (ImGui::MenuItem("toggle fullscreen"))
-			RenderServer::setFullscreenEnabled(!RenderServer::getFullscreenEnabled());
+			Window::setFullscreen(!Window::isFullscreen());
         if (ImGui::MenuItem("toggle overlay logs"))
-            RenderServer::setOverlayLogs(!RenderServer::getOverlayLogs());
+            GraphicsServer::setOverlayLogs(!GraphicsServer::getOverlayLogs());
 		ImGui::EndMenu();
 	}
 
