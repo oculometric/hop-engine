@@ -431,6 +431,11 @@ private:
  */
 class Material final : public Destructible
 {
+public:
+    // affects draw order for commands using this material, where higher priority draw commands render before
+    // lower priority ones
+    int render_priority = 0;
+
 private:
     std::string origin;              // if not empty, contains the path from which this shader was compiled
     Ref<Shader> shader;              // shader used by the material for rendering

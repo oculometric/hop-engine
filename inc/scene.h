@@ -151,6 +151,27 @@ struct DrawCommand final
 };
 
 /**
+ * @brief helper struct describing how multiple priority factors (for instance, draw command priority)
+ * should interact.
+ */
+struct Priority final
+{
+    enum Mode
+    {
+        PRIORITY_REPLACE,  // simply replace the base priority with the incoming one
+        PRIORITY_ADD,      // return the sum of the two priorities
+        PRIORITY_MULTIPLY, // return the product of the two priorities
+        PRIORITY_SUBTRACT, // subtract the incoming priority from the base one
+        PRIORITY_IGNORE    // ignore the incoming priority and simply return the base one
+    };
+
+    Mode mode    = PRIORITY_REPLACE;
+    int priority = 0;
+
+    int calculatePriority(int base) const;
+};
+
+/**
  * @brief scene component base class which can be attached to an object to participate in a scene. all
  * actual behaviour happens through scene components. may be extended to provide additional functionality.
  * components should never be constructed directly, only via `Object::addComponent`.

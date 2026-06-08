@@ -70,6 +70,16 @@ Stencil(
 );
 
 /*
+ * 'Priority' statement controls render command execution priority using this material. materials with higher priority will render before those with lower priorities.
+ * - anonymous arguments
+ * - children forbidden
+ * - identifier forbidden
+ */
+Priority(
+    3
+);
+
+/*
  * 'RenderPass' statement specifies a custom render pass layout.
  * - named arguments
  * - children forbidden

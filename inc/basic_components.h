@@ -86,6 +86,8 @@ public:
     Ref<Mesh> mesh;                    // mesh which will be rendered
     Ref<Material> material;            // material which will be used to render the mesh
     uint32_t camera_mask = 0x000000FF; // bitflag mask for which camera slots this mesh will be visible in
+    // affects draw order for this component. overrides the the priority specified by the material
+    Priority render_priority = { Priority::PRIORITY_IGNORE, 0 };
 
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(StaticMeshComponent);
@@ -151,7 +153,7 @@ private:
 
 public:
     DELETE_NOT_ALL_CONSTRUCTORS(TextComponent);
-    TextComponent()           = default;
+    TextComponent() = default;
     ~TextComponent() override;
 
     void awake() override;

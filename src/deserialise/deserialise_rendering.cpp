@@ -103,6 +103,7 @@ Ref<Material> Material::deserialise(const std::string& token_str, const std::str
     std::vector<std::tuple<Ref<Texture>, std::string, Sampler::Filter, Sampler::Address>> texture_bindings;
     Framebuffer::Config custom_config;
     bool use_custom_render_pass = false;
+    int priority = 0;
 
     Deserialiser deserialiser("error deserialising material '" + origin + "'");
     deserialiser.addStatementAnonymous(
@@ -179,6 +180,14 @@ Ref<Material> Material::deserialise(const std::string& token_str, const std::str
             result.read("write_mask", pipeline_builder.stencil_write);
             return true;
         });
+    deserialiser.addStatementAnonymous(
+        Deserialiser::AnonymousStatementSpec("Priority", Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
+            .argument(TokenReader::TOKEN_INT),
+        [&](Deserialiser::AnonymousStatementResult result) -> bool
+        {
+            result.read(0, priority);
+            return true;
+        });
     deserialiser.addStatementNamed(
         Deserialiser::NamedStatementSpec("Shader", Deserialiser::STATEMENT_IDENTIFIER_FORBIDDEN, false)
             .argument("resource", TokenReader::TOKEN_IDENTIFIER, true),
@@ -253,6 +262,7 @@ Ref<Material> Material::deserialise(const std::string& token_str, const std::str
     else
         material = new Material(main_shader, pipeline_builder);
     if (!material) return nullptr;
+    material->render_priority = priority;
 
     for (const auto& binding : texture_bindings)
     {

@@ -2,8 +2,8 @@
 
 #include "basic_components.h"
 #include "command_buffer.h"
-#include "render_graph.h"
 #include "graphics_server.h"
+#include "render_graph.h"
 #include "texture.h"
 
 #include <map>
@@ -204,4 +204,17 @@ Scene::Scene(const std::string& name)
     root->name   = "scene root";
 
     DBG_INFO("created new scene \"" + getOrigin() + '\"');
+}
+
+int Priority::calculatePriority(int base) const
+{
+    switch (mode)
+    {
+    case Mode::PRIORITY_REPLACE:  return priority;
+    case Mode::PRIORITY_ADD:      return base - priority;
+    case Mode::PRIORITY_MULTIPLY: return base * priority;
+    case Mode::PRIORITY_SUBTRACT: return base - priority;
+    case Mode::PRIORITY_IGNORE:   return base;
+    }
+    return 0;
 }

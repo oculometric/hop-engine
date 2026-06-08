@@ -2,9 +2,9 @@
 
 #include "command_buffer.h"
 #include "engine.h"
+#include "graphics_server.h"
 #include "material.h"
 #include "mesh.h"
-#include "graphics_server.h"
 #include "scene.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -58,12 +58,9 @@ std::vector<DrawCommand> CameraComponent::getDrawCommands()
     u->id             = static_cast<int>(reinterpret_cast<size_t>(this));
     u->model_to_world = getTransform().getMatrix();
 
-    if (!camera_gizmo)
-        camera_gizmo = Engine::loadMaterial("res://engine/materials/camera_gizmo.hmat");
+    if (!camera_gizmo) camera_gizmo = Engine::loadMaterial("res://engine/materials/camera_gizmo.hmat");
 
-    return { DrawCommand(camera_gizmo,
-        GraphicsServer::getQuad(), object_uniforms)
-            .priority(-1000) };
+    return { DrawCommand(camera_gizmo, GraphicsServer::getQuad(), object_uniforms).priority(-1000) };
 }
 
 void StaticMeshComponent::awake() { uniforms = GraphicsServer::createObjectUniforms(); }
@@ -79,7 +76,9 @@ std::vector<DrawCommand> StaticMeshComponent::getDrawCommands()
     object_uniforms->id             = static_cast<int>(reinterpret_cast<size_t>(this));
     object_uniforms->model_to_world = getTransform().getMatrix();
 
-    return { DrawCommand(material, mesh, uniforms).mask(camera_mask) };
+    return { DrawCommand(material, mesh, uniforms)
+            .mask(camera_mask)
+            .priority(render_priority.calculatePriority(material->render_priority)) };
 }
 
 BoundingBox StaticMeshComponent::getLocalBounds() const { return mesh->getBoundingBox(); }
@@ -101,15 +100,12 @@ void LightComponent::awake() { object_uniforms = GraphicsServer::createObjectUni
 std::vector<DrawCommand> LightComponent::getDrawCommands()
 {
     if (!Engine::getShowGizmos()) return {};
-    
+
     ObjectUniforms* u = reinterpret_cast<ObjectUniforms*>(object_uniforms->getBuffer());
     u->id             = static_cast<int>(reinterpret_cast<size_t>(this));
     u->model_to_world = getTransform().getMatrix();
 
-    if (!light_gizmo)
-        light_gizmo = Engine::loadMaterial("res://engine/materials/light_gizmo.hmat");
+    if (!light_gizmo) light_gizmo = Engine::loadMaterial("res://engine/materials/light_gizmo.hmat");
 
-    return { DrawCommand(light_gizmo,
-        GraphicsServer::getQuad(), object_uniforms)
-            .priority(-1000) };
+    return { DrawCommand(light_gizmo, GraphicsServer::getQuad(), object_uniforms).priority(-1000) };
 }

@@ -3,7 +3,6 @@
 # v0.56
 - ground-truth ambient occlusion
 - way to show performance metrics in a regular ass game
-- material needs the ability to specify render priority (used by staticmeshes etc)
 
 - transform overhaul
     - make local/global transform from forward/up vectors (generally complete the transform functionality), i.e. create from basis vectors
