@@ -30,9 +30,8 @@ void Editor::awake()
 
         obj            = view_3d->addObject("cube");
         cube           = obj->addComponent<StaticMeshComponent>();
-        cube->mesh     = Engine::loadMesh("res://engine/meshes/cube.obj");
-        // cube->material = new Material(Engine::loadShader("test_shader.glsl"));
-        // cube->material->setTexture("albedo", Engine::loadTexture("res://engine/icon.png"));
+        cube->mesh     = Engine::loadMesh("res://engine/meshes/dragon.obj");
+        cube->material = Engine::loadMaterial("res://engine/materials/white_clay.hmat");
     }
 
     view_3d->render_graph = new RenderGraph(RenderGraph::Builder()
@@ -40,6 +39,7 @@ void Editor::awake()
         .addPostprocessStep("ssao", Engine::loadShader("res://engine/shaders/gtao_firstpass.glsl"))
         .bindTexture("normal_texture", RenderGraph::TextureInput(0, 1))
         .bindTexture("depth_texture", RenderGraph::TextureInput(0, 4))
+        .bindTexture("colour_texture", RenderGraph::TextureInput(0, 0))
     );
 
     // view_nodes = Scene::create("Node Editor");
@@ -109,7 +109,7 @@ void Editor::awake()
 
     auto canvas = UIManager::push();
     auto panel  = canvas->addElement<UIPanel>();
-    panel->setColour({ 1, 0, 0 });
+    panel->setColour({ 1, 0, 0, 1 });
     panel->setSize({ 300, 300 });
     auto label = canvas->addChild<UILabel>(panel);
     label->setText("hello, World!");
@@ -119,7 +119,7 @@ void Editor::awake()
 
     auto canvas2 = view_3d->addObject<UICanvasComponent>("canvas_test");
     panel        = canvas2->getCanvas()->addElement<UIPanel>();
-    panel->setColour({ 1.0f, 0.6f, 0 });
+    panel->setColour({ 1.0f, 0.6f, 0, 1 });
     panel->setScaling(UITransform::SCALING_FILL_BOTH);
     panel->setStyle(0);
     canvas2->getCanvas()->addElement<UILabel>()->setText("this is in world space");

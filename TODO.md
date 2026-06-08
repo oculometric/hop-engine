@@ -1,9 +1,23 @@
 # TODO
 
 # v0.56
-- ground-truth ambient occlusion
 - way to show performance metrics in a regular ass game
+    - cpu usage %
+    - memory usage
+    - delta time
+    - fps
+    - frame free %
+    - time since start
+    - gpu usage %
+    - gpu memory usage
+    - window resolution
+    - render pass count
+    - tri count
+    - draw call count
+    - merge debug logs into here
 
+- better control of GTAO parameters via uniforms
+- issue with shader preprocessor with '//*'
 - transform overhaul
     - make local/global transform from forward/up vectors (generally complete the transform functionality), i.e. create from basis vectors
     - merge with hierarchy
@@ -18,6 +32,10 @@
 - errors with queuepresent suboptimal
 - input actions, and general input event cleanup (expand on pressed_since_checked etc)
 - skinned mesh support
+    - blend shapes
+    - FBX support
+    - glTF/glB support
+    - MMD
 
 # v0.57
 - the ui update
@@ -100,3 +118,4 @@
 - animated images
 - support multiple materials per mesh
 - replace discord integration library with internal stuff
+- transparency blending stuff (multiple passes, ordering, blend modes)

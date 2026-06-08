@@ -65,6 +65,9 @@ class UIStyle;
 class UICanvas;
 class UICanvasElement;
 class UIManager;
+class UILabel;
+class UIPanel;
+class UIButton;
 
 // misc
 

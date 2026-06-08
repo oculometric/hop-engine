@@ -162,6 +162,30 @@ GraphicsServer::GraphicsServer(const InitParams& params, bool& success)
     debug_ui_style->font = debug_text_font;
     debug_text_renderer  = new UIRenderer(debug_ui_style);
 
+    {
+        performance_overlay = new UICanvas();
+        auto version_label  = performance_overlay->addElement<UILabel>();
+        version_label->setText("HOP-ENGINE\nv" + HOP_ENGINE_VERSION_STRING + "\n" + HOP_ENGINE_COMMIT_STRING);
+
+        system_panel = performance_overlay->addElement<UIPanel>();
+        system_panel->setExternalAnchor(UITransform::ANCHOR_MIDDLE_LEFT);
+        system_panel->setSize({ 192, 64 });
+        system_panel->setColour({ 0, 0, 0, 0 });
+        cpu_label = performance_overlay->addChild<UILabel>(system_panel);
+        memory_label = performance_overlay->addChild<UILabel>(system_panel);
+        gpu_label = performance_overlay->addChild<UILabel>(system_panel);
+        gpu_memory_label = performance_overlay->addChild<UILabel>(system_panel);
+        cpu_label->setText("CPU %");
+        memory_label->setText("MEMORY MB");
+        gpu_label->setText("GPU %");
+        gpu_memory_label->setText("GPU MEMORY MB");
+        cpu_label->setPosition({ 0, 0 });
+        memory_label->setPosition({ 0, 16 });
+        gpu_label->setPosition({ 0, 32 });
+        gpu_memory_label->setPosition({ 0, 48 });
+    }
+    // TODO: HERE
+
     initImGui();
 
     DBG_VERBOSE("graphics server initialised");
@@ -196,6 +220,7 @@ GraphicsServer::~GraphicsServer()
     default_image       = nullptr;
     default_3d_image    = nullptr;
     default_sampler     = nullptr;
+    performance_overlay = nullptr;
 
     render_passes.clear();
 
@@ -295,6 +320,16 @@ WeakRef<DrawCommandBuffer> GraphicsServer::recordRenderCommands(uint32_t image_i
             command.material->bind(command_buffer, false);
             command.mesh->draw(command_buffer);
         }
+    }
+
+    {
+        command_buffer->setScissorViewport(glm::vec2(0.0f), glm::vec2(1.0f));
+        if (performance_overlay->getSize() != GraphicsServer::getFramebufferSize())
+            performance_overlay->resize(GraphicsServer::getFramebufferSize());
+        performance_overlay->build();
+        auto command = performance_overlay->draw();
+        command.material->bind(command_buffer);
+        command.mesh->draw(command_buffer);
     }
 
     command_buffer->drawImGui();

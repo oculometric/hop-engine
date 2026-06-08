@@ -76,9 +76,11 @@ std::vector<DrawCommand> StaticMeshComponent::getDrawCommands()
     object_uniforms->id             = static_cast<int>(reinterpret_cast<size_t>(this));
     object_uniforms->model_to_world = getTransform().getMatrix();
 
-    return { DrawCommand(material, mesh, uniforms)
-            .mask(camera_mask)
-            .priority(render_priority.calculatePriority(material->render_priority)) };
+    auto command = DrawCommand(material, mesh, uniforms).mask(camera_mask);
+    if (material) command.draw_priority = render_priority.calculatePriority(material->render_priority);
+    else command.draw_priority = render_priority.priority;
+
+    return { command };
 }
 
 BoundingBox StaticMeshComponent::getLocalBounds() const { return mesh->getBoundingBox(); }

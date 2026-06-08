@@ -223,15 +223,15 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
     return addText(position, z, formatting, text, colour, backing);
 }
 
-void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec3 fill,
+void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill,
     BackingData& backing_ref)
 {
     addQuad(position, position + glm::vec2{ size.x, 0 }, position + glm::vec2{ 0, size.y }, position + size,
-        z, { 0, 0 }, { 1, 1 }, glm::vec4{ fill, 1 }, glm::vec4{ 1, layer, 0b1111, 0 },
+        z, { 0, 0 }, { 1, 1 }, fill, glm::vec4{ 1, layer, 0b1111, 0 },
         glm::vec4{ size, 0, 0 }, backing_ref);
 }
 
-void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec3 fill)
+void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill)
 {
     BackingData backing;
     addNineSlice(position, z, size, layer, fill, backing);

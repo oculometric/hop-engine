@@ -81,7 +81,7 @@ vec2 nineSliceUV(vec2 uv, vec2 quad_size, vec2 atlas_size, bool top_border, bool
 bool fragment(in Varyings vars, inout Fragment frag)
 {
     int draw_mode = int(round(vars.normal.x));
-    vec3 fill_colour = vars.colour.rgb;
+    vec4 fill_colour = vars.colour;
 
     if (draw_mode == 0)         // text mode
     {
@@ -116,7 +116,7 @@ bool fragment(in Varyings vars, inout Fragment frag)
         if (tex_value < 0.5f)
             return false;
 
-        frag.colour = vec4(fill_colour, 1);
+        frag.colour = fill_colour;
     }
     else if (draw_mode == 1)    // 9-slice mode
     {
@@ -129,7 +129,7 @@ bool fragment(in Varyings vars, inout Fragment frag)
         if (colour.a < 0.5f)
             return false;
         if (colour.rgb == vec3(1, 0, 1))
-            frag.colour = vec4(fill_colour, 1);
+            frag.colour = fill_colour;
         else
             frag.colour = vec4(colour.rgb, 1);
     }
@@ -141,7 +141,7 @@ bool fragment(in Varyings vars, inout Fragment frag)
         vec4 colour = texture(ui_atlas, vec3(uv, float(slice) / atlas_size.z));
         if (colour.a < 0.5f)
             return false;
-        frag.colour = vec4(fill_colour, 1);
+        frag.colour = fill_colour;
     }
     return true;
 }

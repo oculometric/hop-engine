@@ -5,7 +5,7 @@ void vertex(in Vertex vert, inout vec4 clip, inout Varyings vars)
     vec4 position = object.model_to_world[3];
     clip = scene.view_to_clip * scene.world_to_view * position;
     clip /= clip.w;
-    clip.xy += (vert.position.xy * 0.2f);
+    clip.xy += (vert.position.xy * 0.2f * vec2(float(scene.viewport_size.y) / float(scene.viewport_size.x), 1.0f));
     vars.uv = vert.uv * vec3(1, -1, 1);
 }
 

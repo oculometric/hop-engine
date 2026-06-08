@@ -105,6 +105,23 @@ private:
     Ref<Font> debug_text_font;           // font used for drawing debug logs on the screen
     Ref<UIRenderer> debug_text_renderer; // ui renderer used for drawing logs on the screen
 
+    Ref<UICanvas> performance_overlay;
+    WeakRef<UIPanel> system_panel;
+    WeakRef<UILabel> cpu_label;
+    WeakRef<UILabel> memory_label;
+    WeakRef<UILabel> gpu_label;
+    WeakRef<UILabel> gpu_memory_label;
+    WeakRef<UIPanel> graphics_panel;
+    WeakRef<UILabel> window_size_label;
+    WeakRef<UILabel> render_pass_count_label;
+    WeakRef<UILabel> tri_count_label;
+    WeakRef<UILabel> draw_call_count_label;
+    WeakRef<UIPanel> timing_panel;
+    WeakRef<UILabel> fps_label;
+    WeakRef<UILabel> delta_time_label;
+    WeakRef<UILabel> frame_free_label;
+    WeakRef<UILabel> time_elapsed_label;
+
     Ref<UniformBlock> final_pass_uniforms; // scene uniforms for the final (swapchain) render pass
     Ref<Material> spinner_material;        // material used to render the loading/no-scene spinner image
     Ref<UniformBlock> spinner_uniforms;    // object uniforms used for the loading/no-scene spinner

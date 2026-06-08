@@ -35,7 +35,7 @@ void UILabel::build()
     getRenderer()->addText({ 0, 0 }, 0.0f, formatting, text, colour, text_backing);
 }
 
-void UIPanel::setColour(glm::vec3 new_colour)
+void UIPanel::setColour(glm::vec4 new_colour)
 {
     colour = new_colour;
     build();
@@ -103,7 +103,7 @@ void UIButton::setIcon(bool show_icon, int new_icon_index)
 void UIButton::build()
 {
     getRenderer()->setTransformation(getTransform());
-    getRenderer()->addNineSlice({ 0, 0 }, 0.0f, getSize(), 1, colour, background_backing);
+    getRenderer()->addNineSlice({ 0, 0 }, 0.0f, getSize(), 1, { colour, 1 }, background_backing);
     float icon_size  = 12.0f;
     float icon_inset = (getSize().y - icon_size) / 2.0f;
     float text_inset = (getSize().y - 22.0f) / 2.0f;

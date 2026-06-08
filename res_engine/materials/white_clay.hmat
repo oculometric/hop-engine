@@ -1,0 +1,11 @@
+Resource(shader, "res://engine/shaders/clay.glsl") : shader;
+
+Shader(resource = @shader);
+Culling(mode = NONE);
+Uniform()
+{
+    vec4("light_direction", [ 0, 0, -1, 0 ]);
+    vec4("light_colour", [ 1, 1, 1, 0 ]);
+    vec4("ambient_colour", [ 0.8, 0.8, 0.8, 0 ]);
+    vec4("surface_colour", [ 0.8, 0.8, 0.8, 0 ]);
+};
