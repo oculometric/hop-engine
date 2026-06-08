@@ -339,7 +339,7 @@ void main()
 {
     Fragment frag;
     frag.colour = vec4(0, 0, 0, 0);
-    frag.normal = vec4(0, 0, 0, 0);
+    frag.normal = vec4(_HEI_varyings.normal.xyz, 1);
     frag.params = vec4(0, 0, 0, 0);
     frag.custom = vec4(0, 0, 0, 0);
     if (!fragment(_HEI_varyings)VOGON",

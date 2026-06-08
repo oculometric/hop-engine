@@ -3,9 +3,9 @@
 #include "command_buffer.h"
 #include "engine.h"
 #include "framebuffer.h"
+#include "graphics_server.h"
 #include "material.h"
 #include "mesh.h"
-#include "graphics_server.h"
 #include "scene.h"
 #include "texture.h"
 
@@ -229,10 +229,13 @@ void RenderGraph::draw(WeakRef<DrawCommandBuffer> command_buffer,
         if (!step.is_camera)
         {
             SceneUniforms* uniforms = reinterpret_cast<SceneUniforms*>(step.scene_uniforms->getBuffer());
-            auto& first_input       = execution_steps[(*step.texture_bindings.begin()).second.step_index];
-            if (first_input.is_camera) last_uniforms = cameras.at(first_input.camera_slot).first;
-            else
-                last_uniforms = first_input.scene_uniforms;
+            if (!step.texture_bindings.empty())
+            {
+                auto& first_input = execution_steps[(*step.texture_bindings.begin()).second.step_index];
+                if (first_input.is_camera) last_uniforms = cameras.at(first_input.camera_slot).first;
+                else
+                    last_uniforms = first_input.scene_uniforms;
+            }
             if (last_uniforms)
             {
                 SceneUniforms* last_uniforms_data =

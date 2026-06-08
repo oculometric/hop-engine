@@ -31,9 +31,16 @@ void Editor::awake()
         obj            = view_3d->addObject("cube");
         cube           = obj->addComponent<StaticMeshComponent>();
         cube->mesh     = Engine::loadMesh("res://engine/meshes/cube.obj");
-        cube->material = new Material(Engine::loadShader("test_shader.glsl"));
-        cube->material->setTexture("albedo", Engine::loadTexture("res://engine/icon.png"));
+        // cube->material = new Material(Engine::loadShader("test_shader.glsl"));
+        // cube->material->setTexture("albedo", Engine::loadTexture("res://engine/icon.png"));
     }
+
+    view_3d->render_graph = new RenderGraph(RenderGraph::Builder()
+        .addCameraStep("camera", 0)
+        .addPostprocessStep("ssao", Engine::loadShader("res://engine/shaders/gtao_firstpass.glsl"))
+        .bindTexture("normal_texture", RenderGraph::TextureInput(0, 1))
+        .bindTexture("depth_texture", RenderGraph::TextureInput(0, 4))
+    );
 
     // view_nodes = Scene::create("Node Editor");
     // {

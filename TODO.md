@@ -1,7 +1,7 @@
 # TODO
 
 # v0.56
-- horizon-based ambient occlusion
+- ground-truth ambient occlusion
 - way to show performance metrics in a regular ass game
 - material needs the ability to specify render priority (used by staticmeshes etc)
 

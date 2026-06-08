@@ -205,7 +205,6 @@ Window::Window(const InitParams& params, bool& success)
 
 Window::~Window()
 {
-    glfwWaitEvents();
     swapchain = nullptr;
     destroySurface();
     destroyWindow();
