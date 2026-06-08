@@ -169,20 +169,30 @@ GraphicsServer::GraphicsServer(const InitParams& params, bool& success)
 
         system_panel = performance_overlay->addElement<UIPanel>();
         system_panel->setExternalAnchor(UITransform::ANCHOR_MIDDLE_LEFT);
-        system_panel->setSize({ 192, 64 });
-        system_panel->setColour({ 0, 0, 0, 0 });
-        cpu_label = performance_overlay->addChild<UILabel>(system_panel);
-        memory_label = performance_overlay->addChild<UILabel>(system_panel);
-        gpu_label = performance_overlay->addChild<UILabel>(system_panel);
-        gpu_memory_label = performance_overlay->addChild<UILabel>(system_panel);
-        cpu_label->setText("CPU %");
+        system_panel->setSize({ 192, (26 * 4) + 6 });
+        system_panel->setColour({ 0.03f, 0.03f, 0.03f, 1.0f });
+        auto parent = performance_overlay->addChild<UICanvasElement>(system_panel);
+        parent->setPosition({ 6, 6 });
+        parent->setSize({ 192 - 12, 26 * 4 });
+        auto label = performance_overlay->addChild<UILabel>(parent);
+        label->setText("CPU");
+        label->setPosition({ 0, 0 });
+        cpu_label = performance_overlay->addChild<UILabel>(parent);
+        cpu_label->setText("00.0%");
+        cpu_label->setPosition({ 0, 0 });
+        cpu_label->setScaling(UITransform::SCALING_FILL_HORIZONTAL);
+        cpu_label->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
+        cpu_label->setFormatting(UIRenderer::TextFormatting{ UIRenderer::TEXT_ALIGN_RIGHT });
+
+        memory_label = performance_overlay->addChild<UILabel>(parent);
+        gpu_label = performance_overlay->addChild<UILabel>(parent);
+        gpu_memory_label = performance_overlay->addChild<UILabel>(parent);
         memory_label->setText("MEMORY MB");
         gpu_label->setText("GPU %");
         gpu_memory_label->setText("GPU MEMORY MB");
-        cpu_label->setPosition({ 0, 0 });
-        memory_label->setPosition({ 0, 16 });
-        gpu_label->setPosition({ 0, 32 });
-        gpu_memory_label->setPosition({ 0, 48 });
+        memory_label->setPosition({ 0, 26 });
+        gpu_label->setPosition({ 0, 26 * 2 });
+        gpu_memory_label->setPosition({ 0, 26 * 3 });
     }
     // TODO: HERE
 

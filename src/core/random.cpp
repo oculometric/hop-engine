@@ -10,7 +10,7 @@ static std::mt19937 mt_rd((std::random_device())());
 
 float Random::range(float min, float max)
 {
-    std::uniform_real_distribution<float> dist(min, std::nextafter(max, __FLT_MAX__));
+    std::uniform_real_distribution<float> dist(min, max);
     return dist(mt_rd);
 }
 
@@ -39,7 +39,7 @@ glm::vec3 Random::hemisphere(glm::vec3 vector)
     std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
     const float y     = dist(mt_rd);
     const float r     = glm::sqrt(1.0f - (y * y));
-    const float l     = dist(mt_rd) * M_PI;
+    const float l     = dist(mt_rd) * 3.14159265358979323846f;
     const glm::vec3 v = { glm::sin(l) * r, glm::cos(l) * r, y };
 
     if (glm::dot(v, vector) < 0.0f) return v * -glm::length(vector);
