@@ -205,11 +205,11 @@ void GraphicsServer::createPerformanceOverlay()
     auto background_panel = performance_overlay->addElement<UIPanel>();
     background_panel->setScaling(UITransform::SCALING_FILL_BOTH);
     background_panel->setStyle(3);
-    background_panel->setColour({ 0.8f, 0.8f, 0.8f, 0.1f });
+    background_panel->setColour({ 0.8f, 0.8f, 0.8f, 0.01f });
     {
         auto panel = performance_overlay->addElement<UIPanel>();
         panel->setSize({ 156, (25 * 3) + 6 });
-        panel->setColour({ 0.03f, 0.03f, 0.03f, 0.8f });
+        panel->setColour({ 0.03f, 0.03f, 0.03f, 0.5f });
         auto parent = performance_overlay->addChild<UICanvasElement>(panel);
         parent->setPosition({ 6, 6 });
         parent->setSize({ 156 - 12, 25 * 3 });
@@ -228,7 +228,7 @@ void GraphicsServer::createPerformanceOverlay()
         system_panel = performance_overlay->addElement<UIPanel>();
         system_panel->setExternalAnchor(UITransform::ANCHOR_MIDDLE_LEFT);
         system_panel->setSize({ 200, (25 * 4) + 6 });
-        system_panel->setColour({ 0.03f, 0.03f, 0.03f, 0.8f });
+        system_panel->setColour({ 0.03f, 0.03f, 0.03f, 0.5f });
         auto parent = performance_overlay->addChild<UICanvasElement>(system_panel);
         parent->setPosition({ 6, 6 });
         parent->setSize({ 200 - 12, 25 * 4 });
@@ -279,7 +279,7 @@ void GraphicsServer::createPerformanceOverlay()
         graphics_panel->setExternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
         graphics_panel->setInternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
         graphics_panel->setSize({ 300, (25 * 4) + 6 });
-        graphics_panel->setColour({ 0.03f, 0.03f, 0.03f, 0.8f });
+        graphics_panel->setColour({ 0.03f, 0.03f, 0.03f, 0.5f });
         auto parent = performance_overlay->addChild<UICanvasElement>(graphics_panel);
         parent->setPosition({ 6, 6 });
         parent->setSize({ 300 - 12, 25 * 4 });
@@ -330,7 +330,7 @@ void GraphicsServer::createPerformanceOverlay()
         timing_panel->setExternalAnchor(UITransform::ANCHOR_MIDDLE_RIGHT);
         timing_panel->setInternalAnchor(UITransform::ANCHOR_TOP_RIGHT);
         timing_panel->setSize({ 256, (25 * 5) + 6 });
-        timing_panel->setColour({ 0.03f, 0.03f, 0.03f, 0.8f });
+        timing_panel->setColour({ 0.03f, 0.03f, 0.03f, 0.5f });
         auto parent = performance_overlay->addChild<UICanvasElement>(timing_panel);
         parent->setPosition({ 6, 6 });
         parent->setSize({ 256 - 12, 25 * 5 });
@@ -392,7 +392,7 @@ void GraphicsServer::createPerformanceOverlay()
         logs_panel->setInternalAnchor(UITransform::ANCHOR_BOTTOM_LEFT);
         logs_panel->setSize({ 768, (25 * 8) + 6 });
         logs_panel->setScaling(UITransform::SCALING_FILL_HORIZONTAL);
-        logs_panel->setColour({ 0.03f, 0.03f, 0.03f, 0.8f });
+        logs_panel->setColour({ 0.03f, 0.03f, 0.03f, 0.5f });
         auto parent = performance_overlay->addChild<UICanvasElement>(logs_panel);
         parent->setPosition({ 6, 6 });
         parent->setSize({ 768 - 16, 25 * 8 });

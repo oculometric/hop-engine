@@ -1,17 +1,18 @@
 # TODO
 
 # v0.56
-- way to show performance metrics in a regular ass game
-    - gpu usage %
-    - gpu memory usage
-    - cpu and memory usage on windows
-- fix GPU frame time counter wrong
-- errors with queuepresent suboptimal
-
 - better control of GTAO parameters via uniforms
 - fix fullscreen crash specifically on lucys laptop
 - preserve icon during window recreation
 - debug file and line number incorrect
+- errors with queuepresent suboptimal
+
+- way to show performance metrics in a regular ass game
+    - gpu usage %
+    - gpu memory usage
+    - cpu and memory usage on windows
+    - gpu frame time
+- fix GPU frame time counter wrong
 
 - transform overhaul
     - make local/global transform from forward/up vectors (generally complete the transform functionality), i.e. create from basis vectors

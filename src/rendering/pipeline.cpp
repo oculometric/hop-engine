@@ -91,7 +91,7 @@ Pipeline::Pipeline(Ref<Shader> shader, const Builder& config, const Framebuffer:
     colour_blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
     colour_blend_attachment.colorBlendOp        = VK_BLEND_OP_ADD;
     colour_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-    colour_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    colour_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
     colour_blend_attachment.alphaBlendOp        = VK_BLEND_OP_ADD;
     colour_attachment_blends.push_back(colour_blend_attachment);
 

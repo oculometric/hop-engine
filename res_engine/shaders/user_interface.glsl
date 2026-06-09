@@ -84,7 +84,7 @@ bool fragment(in Varyings vars, inout Fragment frag)
 {
     int draw_mode = int(round(vars.normal.x));
     vec4 fill_colour = vars.colour;
-    ivec2 screen_coord = ivec2(floor((vars.position.xy + 1.0f / 2.0f) * scene.viewport_size));
+    ivec2 screen_coord = ivec2(vars.position.xy);
 
     if (draw_mode == 0)         // text mode
     {
@@ -119,7 +119,7 @@ bool fragment(in Varyings vars, inout Fragment frag)
         if (tex_value < 0.5f)
             return false;
 
-        frag.colour = fill_colour;
+        frag.colour = vec4(fill_colour.rgb, 1);
     }
     else if (draw_mode == 1)    // 9-slice mode
     {
@@ -129,10 +129,14 @@ bool fragment(in Varyings vars, inout Fragment frag)
         int slice = int(round(vars.normal.y));
         vec2 uv = nineSliceUV(vars.uv.xy, quad_size, atlas_size.xy, bool(borders & 1), bool(borders & 2), bool(borders & 4), bool(borders & 8));
         vec4 colour = texture(ui_atlas, vec3(uv, float(slice) / atlas_size.z));
-        if (dither_4x4(colour.a, screen_coord) < 1.0f)
+        if (dither_4x4(colour.a, screen_coord) < 0.5f)
             return false;
         if (colour.rgb == vec3(1, 0, 1))
-            frag.colour = fill_colour;
+        {
+            if (dither_4x4(fill_colour.a, screen_coord) < 0.5f)
+                return false;
+            frag.colour = vec4(fill_colour.rgb, 1);
+        }
         else
             frag.colour = vec4(colour.rgb, 1);
     }
@@ -142,9 +146,9 @@ bool fragment(in Varyings vars, inout Fragment frag)
         vec2 uv = vars.uv.xy;
         int slice = int(vars.normal.y);
         vec4 colour = texture(ui_atlas, vec3(uv, float(slice) / atlas_size.z));
-        if (dither_4x4(colour.a, screen_coord) < 1.0f)
+        if (dither_4x4(colour.a * fill_colour.a, screen_coord) < 0.5f)
             return false;
-        frag.colour = fill_colour;
+        frag.colour = vec4(fill_colour.rgb, 1);
     }
     return true;
 }

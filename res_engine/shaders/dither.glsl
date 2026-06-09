@@ -31,17 +31,17 @@ const float dither_map_8[64] =
 
 float dither_2x2(float f, ivec2 coord)
 {
-    return float(f * 4 >= dither_map_2[(coord.x % 2) + ((coord.y % 2) * 2)]);
+    return float(f * 4 > dither_map_2[(coord.x % 2) + ((coord.y % 2) * 2)]);
 }
 
 float dither_4x4(float f, ivec2 coord)
 {
-    return float((f * 16) - 0.5f >= dither_map_4[(coord.x % 4) + ((coord.y % 4) * 4)]);
+    return float((f * 16) > dither_map_4[(coord.x % 4) + ((coord.y % 4) * 4)]);
 }
 
 float dither_8x8(float f, ivec2 coord)
 {
-    return float(f * 64 >= dither_map_8[(coord.x % 8) + ((coord.y % 8) * 8)]);
+    return float(f * 64 > dither_map_8[(coord.x % 8) + ((coord.y % 8) * 8)]);
 }
 
 ivec2 pixelCoord(vec2 uv, vec2 viewport_size)
