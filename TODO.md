@@ -4,7 +4,6 @@
 - GTAO fix and optimise
 - debug file and line number incorrect
 - errors with queuepresent suboptimal
-- fix windows issues
 
 - way to show performance metrics in a regular ass game
     - gpu usage %

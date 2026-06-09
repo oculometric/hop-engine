@@ -2,6 +2,8 @@
 
 #if defined(_WIN32)
 
+using namespace HopEngine;
+
 float Engine::getCPUUsagePercent() { return 0.0f; }
 float Engine::getMemoryUsageMegabytes() { return 0.0f; }
 
