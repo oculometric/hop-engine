@@ -37,8 +37,8 @@ void Debug::write(const std::string& description, Level severity, const std::sou
     static const std::string bracket_col  = makeANSIColour(60);
     static const std::string standard_col = makeANSIColour(67);
     static const std::string time_col     = makeANSIColour(5);
-    std::filesystem::path file_path       = location.file_name();
-    static const std::string file_str     = file_path.filename().generic_string();
+    const std::filesystem::path file_path = location.file_name();
+    const std::string file_str            = file_path.filename().generic_string();
 
     std::string type_col  = "";
     std::string log_type  = "";
