@@ -165,6 +165,10 @@ public:
     static float getFrameFreePercent() { return getInstance()->frame_free_percent; }
     static size_t getFrameCount() { return getInstance()->frame_index; }
     static FrameStats getFrameStats() { return getInstance()->last_frame_stats; }
+    static float getCPUUsagePercent();
+    static float getMemoryUsageMegabytes();
+    static float getGPUUsagePercent();
+    static float getGPUMemoryUsageMegabytes();
 
     static bool isWireframeMode() { return getInstance()->wireframe_view; }
     /**

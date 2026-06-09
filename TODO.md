@@ -2,8 +2,6 @@
 
 # v0.56
 - way to show performance metrics in a regular ass game
-    - cpu usage %
-    - memory usage
     - gpu usage %
     - gpu memory usage
     - merge debug logs into here
@@ -14,6 +12,7 @@
 - issue with shader preprocessor with '//*'
 - better control of GTAO parameters via uniforms
 - fix fullscreen crash specifically on lucys laptop
+- preserve icon during window recreation
 
 - transform overhaul
     - make local/global transform from forward/up vectors (generally complete the transform functionality), i.e. create from basis vectors

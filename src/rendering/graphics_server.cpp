@@ -411,6 +411,12 @@ void GraphicsServer::createPerformanceOverlay()
 void GraphicsServer::updatePerformanceOverlay()
 {
     {
+        cpu_label->setText(std::format("{:4.1f}%", Engine::getCPUUsagePercent()));
+        memory_label->setText(std::format("{:5.0f}mb", Engine::getMemoryUsageMegabytes()));
+        gpu_label->setText(std::format("{:4.1f}%", Engine::getGPUUsagePercent()));
+        gpu_memory_label->setText(std::format("{:5.0f}mb", Engine::getGPUMemoryUsageMegabytes()));
+    }
+    {
         glm::u32vec2 size = GraphicsServer::getFramebufferSize();
         window_size_label->setText(std::format("{}x{}", size.x, size.y));
         auto stats = Engine::getFrameStats();
