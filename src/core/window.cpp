@@ -139,9 +139,18 @@ bool Window::refreshSwapchain()
     {
         if (old_size != new_size)
         {
+            // this fucking sucks, i hate it a lot.
+            while (getInstance()->size != new_size)
+            {
+                getInstance()->size = new_size;
+                std::this_thread::sleep_for(std::chrono::milliseconds(96));
+                glfwPollEvents();
+                glfwGetFramebufferSize(static_cast<GLFWwindow*>(getWindow()), &window_x, &window_y);
+                new_size = glm::u32vec2{ static_cast<uint32_t>(window_x), static_cast<uint32_t>(window_y) };
+            }
             // you MUST resize the swapchain, or destroy it first. trying to create multiple swapchains on
             // the same surfaces makes vulkan explode :(
-            getInstance()->swapchain->resize(new_size);
+            getSwapchain()->resize(new_size);
             getInstance()->size = getSwapchain()->getExtent();
             EventServer::dispatch(EVENT_TYPE_RESIZE);
             return true;
@@ -250,7 +259,4 @@ void Window::destroySurface()
         static_cast<VkSurfaceKHR>(surface), nullptr);
 }
 
-void Window::destroyWindow()
-{
-    glfwDestroyWindow(static_cast<GLFWwindow*>(window));
-}
+void Window::destroyWindow() { glfwDestroyWindow(static_cast<GLFWwindow*>(window)); }

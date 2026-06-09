@@ -9,6 +9,7 @@
     - merge debug logs into here
 - fix GPU frame time counter wrong
 - errors with queuepresent suboptimal
+- fix other validation errors
 
 - issue with shader preprocessor with '//*'
 - better control of GTAO parameters via uniforms

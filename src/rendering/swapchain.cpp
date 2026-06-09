@@ -187,7 +187,6 @@ void Swapchain::createSwapchain()
     create_info.minImageCount    = computeImageCount();
     create_info.imageFormat      = toVulkanFormat(format);
     create_info.imageColorSpace  = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-    create_info.imageExtent      = { extent.x, extent.y };
     create_info.imageArrayLayers = 1;
     create_info.imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     auto queue_families          = GraphicsServer::getUniqueQueueIndices();
@@ -213,6 +212,8 @@ void Swapchain::createSwapchain()
                                      : VK_PRESENT_MODE_FIFO_KHR;
     create_info.clipped        = VK_TRUE;
     create_info.oldSwapchain   = VK_NULL_HANDLE;
+    extent = computeActualExtent(extent);
+    create_info.imageExtent      = { extent.x, extent.y };
 
     CHECK_RESULT(vkCreateSwapchainKHR,
         (static_cast<VkDevice>(GraphicsServer::getDevice()), &create_info, nullptr,
