@@ -3,7 +3,6 @@
 # v0.56
 - better control of GTAO parameters via uniforms
 - fix fullscreen crash specifically on lucys laptop
-- preserve icon during window recreation
 - debug file and line number incorrect
 - errors with queuepresent suboptimal
 
