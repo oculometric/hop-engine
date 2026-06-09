@@ -100,14 +100,16 @@ void Window::setAspectRatioLock(int numerator, int denominator)
 void Window::clearAspectRatioLock()
 { glfwSetWindowAspectRatio(static_cast<GLFWwindow*>(getWindow()), GLFW_DONT_CARE, GLFW_DONT_CARE); }
 
-void Window::setIcon(const std::string& path)
-{
-    GLFWimage image;
+void Window::setIcon(const std::string& path) { setIcon(Package::load(path)); }
 
-    const auto image_data = Package::load(path);
+void Window::setIcon(const DataBlock& data)
+{
+    getInstance()->icon_data = data;
+    GLFWimage image;
     int img_channels;
-    image.pixels = stbi_load_from_memory(image_data.data(), static_cast<int>(image_data.size()),
-        &image.width, &image.height, &img_channels, STBI_rgb_alpha);
+    image.pixels = stbi_load_from_memory(getInstance()->icon_data.data(),
+        static_cast<int>(getInstance()->icon_data.size()), &image.width, &image.height, &img_channels,
+        STBI_rgb_alpha);
 
     glfwSetWindowIcon(static_cast<GLFWwindow*>(getWindow()), 1, &image);
     stbi_image_free(image.pixels);
@@ -175,6 +177,7 @@ bool Window::refreshSwapchain()
     }
     getInstance()->createWindow();
     setBorderless(isBorderless());
+    setIcon(getInstance()->icon_data);
     glfwHideWindow(static_cast<GLFWwindow*>(getWindow()));
     getInstance()->createSurface();
 

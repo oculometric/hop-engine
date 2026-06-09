@@ -61,6 +61,7 @@ private:
     bool visible                        = true;
     bool resizable                      = true;
     bool vsync                          = true;
+    DataBlock icon_data;
 
     bool swapchain_needs_reset = false;
     Ref<Swapchain> swapchain   = nullptr;
@@ -129,6 +130,7 @@ public:
      * @param path path to the window icon file.
      */
     static void setIcon(const std::string& path);
+    static void setIcon(const DataBlock& data);
     static bool isMinimised();
     /**
      * @brief checks if the GLFW window is waiting to be terminated.
