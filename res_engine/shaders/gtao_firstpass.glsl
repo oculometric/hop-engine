@@ -9,11 +9,11 @@ uniform sampler2D colour_texture;
 
 uniform SSAOParams
 {
-    float filter_radius; // default 4.0f
+    float filter_radius; // default 12
     int samples; // default 4
     bool use_smoothstep; // default false
-    float power; // default 1.4f
-    float strength; // default 1.0f
+    float power; // default 1.2
+    float strength; // default 1.0
 };
 
 struct SSAOConstants
@@ -25,6 +25,8 @@ struct SSAOConstants
     vec3 x;
     vec3 n_x;
     float inv_sq_depth;
+    vec3 perp_a;
+    vec3 perp_b;
 };
 
 vec3 screenPointToWorldSpace(vec2 screen_point, out float depth)
@@ -36,7 +38,7 @@ vec3 screenPointToWorldSpace(vec2 screen_point, out float depth)
     return (scene.view_to_world * tmp).xyz;
 }
 
-float computeHorizon(SSAOConstants constants, vec2 t_phi)
+float computeHorizon(in SSAOConstants constants, vec2 t_phi)
 {
     float max_s_dot_o = 0.0f;
     for (float k = 1.0f; k <= constants.filter_radius; k += 1.0f)
@@ -54,34 +56,30 @@ float computeHorizon(SSAOConstants constants, vec2 t_phi)
     return acos(max_s_dot_o);
 }
 
-float computeInnerIntegral(SSAOConstants constants, float phi)
+float computeInnerIntegral(in SSAOConstants constants, float phi)
 {
     // vector in the image plane based on phi
-    vec3 perp_a = cross(constants.omega_o, scene.view_to_world[1].xyz);
-    vec3 perp_b = cross(scene.view_to_world[0].xyz, constants.omega_o);
-    vec3 t_phi = (perp_a * cos(phi)) + (perp_b * sin(phi));
-
+    vec3 t_phi = (constants.perp_a * cos(phi)) + (constants.perp_b * sin(phi));
     vec2 t_hat_phi = vec2(dot(t_phi, scene.view_to_world[0].xyz), dot(t_phi, scene.view_to_world[1].xyz)) / vec2(scene.viewport_size);
 
     // compute plane defined by t_phi (i.e. unprojected t_hat_phi) and omega_o
     vec3 proj_plane = normalize(cross(t_phi, constants.omega_o));
     // project n_x onto plane
     vec3 proj_n_x = constants.n_x - (dot(constants.n_x, proj_plane) * proj_plane);
-    if (length(proj_n_x) != 1.0f)
-        proj_n_x = constants.n_x;
+    proj_n_x = (dot(proj_n_x, proj_n_x) != 1.0f) ? constants.n_x : proj_n_x;
     // angle between normal and view vector
-    float gamma = acos(dot(constants.omega_o, normalize(proj_n_x)));
+    float cos_gamma = dot(constants.omega_o, normalize(proj_n_x));
+    float gamma = acos(cos_gamma);
     
     // horizons on both sides of the vector
     float theta_1 = computeHorizon(constants, t_hat_phi);
     float theta_2 = computeHorizon(constants, -t_hat_phi);
 
     // solve inner integral a_hat
-    float cos_gamma = cos(gamma);
     float sin_gamma = sin(gamma);
-    // TODO: OPTIMISE
-    float a_hat = ((cos_gamma + (2.0f * theta_1 * sin_gamma) - cos((2.0f * theta_1) - gamma))
-                 + (cos_gamma + (2.0f * theta_2 * sin_gamma) - cos((2.0f * theta_2) - gamma))
+    float a_hat = (
+        (cos_gamma + (2.0f * theta_1 * sin_gamma)) + cos_gamma + (2.0f * theta_2 * sin_gamma)
+       - (cos((2.0f * theta_1) - gamma) + cos((2.0f * theta_2) - gamma))
     ) / 4.0f;
 
     return length(proj_n_x) * a_hat;
@@ -94,6 +92,9 @@ bool fragment(in Varyings vars, inout Fragment frag)
 {
     // world space normal vector of the surface
     vec3 n_x = texture(normal_texture, vars.uv.xy).xyz;
+    frag.colour = texture(colour_texture, vars.uv.xy);
+    if (length(n_x) < 0.5f)
+        return true;
     // projected position of the pixel in clip space
     vec2 x_hat = vars.position.xy;
     // pixel point in world space
@@ -105,7 +106,7 @@ bool fragment(in Varyings vars, inout Fragment frag)
 
     SSAOConstants constants;
     if (filter_radius <= 0.0f)
-        constants.filter_radius = 4.0f;
+        constants.filter_radius = 12.0f;
     else
         constants.filter_radius = filter_radius;
     if (samples <= 0)
@@ -117,6 +118,8 @@ bool fragment(in Varyings vars, inout Fragment frag)
     constants.x = x;
     constants.n_x = n_x;
     constants.inv_sq_depth = inv_sq_depth;
+    constants.perp_a = cross(constants.omega_o, scene.view_to_world[1].xyz);
+    constants.perp_b = cross(scene.view_to_world[0].xyz, constants.omega_o);
 
     // TODO: FIX THE INTEGRATION PROPERLY
     int _samples = samples;
@@ -138,19 +141,10 @@ bool fragment(in Varyings vars, inout Fragment frag)
     }
     total /= 3.1415f;
 
-    float final = total;
-    if (use_smoothstep)
-        final = smoothstep(0, 1, total);
-    if (power <= 0.0f)
-        final = pow(final, 1.4f);
-    else
-        final = pow(final, power);
+    float final = use_smoothstep ? smoothstep(0, 1, total) : total;
+        
+    final = pow(final, (power <= 0.0f) ? 1.2f : power);
 
-    frag.colour = texture(colour_texture, vars.uv.xy);
-    float s = strength;
-    if (s <= 0.0f)
-        s = 1.0f;
-    if (length(n_x) > 0.5f)
-        frag.colour.rgb = mix(frag.colour.rgb, frag.colour.rgb * final, s);
+    frag.colour.rgb = mix(frag.colour.rgb, frag.colour.rgb * final, (strength <= 0.0f) ? 1.0f : strength);
     return true;
 }

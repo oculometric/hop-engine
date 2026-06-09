@@ -32,10 +32,10 @@ private:
     WeakRef<StaticMeshComponent> cube;
     Ref<UICanvas> main_canvas;
     WeakRef<Material> ssao_material;
-    int samples = 4;
-    float radius = 4.0f;
-    float power = 1.4f;
-    bool use_smoothstep = false;
+    int samples = 8;
+    float radius = 8.0f;
+    float power = 1.2f;
+    bool use_smoothstep = true;
     float strength = 1.0f;
 
 public:

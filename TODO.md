@@ -2,7 +2,6 @@
 
 # v0.56
 - GTAO fix and optimise
-- debug file and line number incorrect
 - errors with queuepresent suboptimal
 
 - way to show performance metrics in a regular ass game
