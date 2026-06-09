@@ -208,6 +208,7 @@ Window::~Window()
     swapchain = nullptr;
     destroySurface();
     destroyWindow();
+    glfwTerminate();
 }
 
 void Window::createWindow()
@@ -252,5 +253,4 @@ void Window::destroySurface()
 void Window::destroyWindow()
 {
     glfwDestroyWindow(static_cast<GLFWwindow*>(window));
-    glfwTerminate();
 }

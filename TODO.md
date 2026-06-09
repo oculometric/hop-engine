@@ -9,10 +9,10 @@
     - merge debug logs into here
 - fix GPU frame time counter wrong
 - errors with queuepresent suboptimal
-- fix fullscreen crash specifically on lucys laptop
-- better control of GTAO parameters via uniforms
+
 - issue with shader preprocessor with '//*'
-- fix fullscreen crash on my pc
+- better control of GTAO parameters via uniforms
+- fix fullscreen crash specifically on lucys laptop
 
 - transform overhaul
     - make local/global transform from forward/up vectors (generally complete the transform functionality), i.e. create from basis vectors

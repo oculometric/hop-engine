@@ -61,6 +61,7 @@ FrameStats GraphicsServer::draw()
         getInstance()->initImGui();
 
         Input::applyCallbackBindings();
+        return {};
     }
 
     FrameStats stats{};
