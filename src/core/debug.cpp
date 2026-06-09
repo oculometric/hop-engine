@@ -91,8 +91,17 @@ void Debug::write(const std::string& description, Level severity, const std::sou
         log_line.append("\n" + next_line);
         term_line.append("\n" + next_line);
     }
-    getInstance()->lines_history.push_back(log_line);
-    if (getInstance()->lines_history.size() > 256) getInstance()->lines_history.pop_front();
+
+    size_t next = 0;
+    while (next != std::string::npos)
+    {
+        size_t newline   = log_line.find('\n', next);
+        std::string line = log_line.substr(next, newline - next);
+        getInstance()->lines_history.push_back(log_line);
+        if (getInstance()->lines_history.size() > 256) getInstance()->lines_history.pop_front();
+        if (newline == std::string::npos) break;
+        next = newline + 1;
+    }
     if (getInstance()->file_output.is_open()) getInstance()->file_output << log_line << std::endl;
     DEBUG_TERMINAL << term_line << std::endl;
 

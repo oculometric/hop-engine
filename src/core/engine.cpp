@@ -50,7 +50,7 @@ void Engine::start()
         if (Input::wasKeyPressed(Input::KEY_F11)) Window::setFullscreen(!Window::isFullscreen());
         if (Input::wasKeyPressed(Input::KEY_F10)) Engine::setForceWireframe(!Engine::isWireframeMode());
         if (Input::wasKeyPressed(Input::KEY_F9))
-            GraphicsServer::setOverlayLogs(!GraphicsServer::getOverlayLogs());
+            GraphicsServer::setShowDiagnostics(!GraphicsServer::getShowDiagnostics());
 
         auto update_start = std::chrono::steady_clock::now();
         if (getInstance()->application) getInstance()->application->update(getDeltaTime());

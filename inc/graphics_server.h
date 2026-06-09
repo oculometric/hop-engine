@@ -102,9 +102,6 @@ private:
     Ref<Mesh> quad;         // mesh used to render quads
     Ref<Mesh> tri;          // mesh used to render full-screen images (NOT A QUAD)
 
-    Ref<Font> debug_text_font;           // font used for drawing debug logs on the screen
-    Ref<UIRenderer> debug_text_renderer; // ui renderer used for drawing logs on the screen
-
     Ref<UICanvas> performance_overlay;
     WeakRef<UIPanel> system_panel;
     WeakRef<UILabel> cpu_label;
@@ -122,13 +119,15 @@ private:
     WeakRef<UILabel> frame_free_label;
     WeakRef<UILabel> time_elapsed_label;
     WeakRef<UILabel> frame_index_label;
+    WeakRef<UIPanel> logs_panel;
+    WeakRef<UILabel> logs_label;
 
     Ref<UniformBlock> final_pass_uniforms; // scene uniforms for the final (swapchain) render pass
     Ref<Material> spinner_material;        // material used to render the loading/no-scene spinner image
     Ref<UniformBlock> spinner_uniforms;    // object uniforms used for the loading/no-scene spinner
     std::vector<SceneRender> scenes;       // list of scenes currently wanting to be rendered each frame
 
-    bool overlay_logs = false; // if `true`, the last 15 lines of logs are shown on the screen
+    bool diagnostic_overlay = false; // if `true`, some diagnostic info is shown on screen
 
     // list of free operations which will be executed the next time the garbage collector runs
     std::vector<std::function<void()>> free_list;
@@ -209,12 +208,12 @@ public:
     static glm::vec2 getFramebufferSize();
 
     /**
-     * @brief toggles whether the debug logs should be displayed on top of the screen. this can be useful
-     * for debugging but may be removed in future. the 15 most recent calls to `Debug::write` are displayed.
-     * @param `true` if debug logs should be overlaid onto the screen, `false` otherwise.
+     * @brief toggles whether the debug logs and various performance stats should be displayed over top of
+     * the screen. this can be useful for debugging.
+     * @param `true` if diagnostic UI should be overlaid onto the screen, `false` otherwise.
      */
-    static void setOverlayLogs(bool enabled) { getInstance()->overlay_logs = enabled; }
-    static bool getOverlayLogs() { return getInstance()->overlay_logs; }
+    static void setShowDiagnostics(bool enabled) { getInstance()->diagnostic_overlay = enabled; }
+    static bool getShowDiagnostics() { return getInstance()->diagnostic_overlay; }
 
     /**
      * @brief instructs the renderer to draw a single scene, filling the window, from now on. the scene will
@@ -246,8 +245,8 @@ private:
     /**
      * @brief initialises Vulkan and constructs the necessary backend resources, including selecting the
      * physical device to use.
-     * @param enable_validation if `true`, graphics server will attempt to start with Vulkan validation layers
-     * enabled, if available.
+     * @param enable_validation if `true`, graphics server will attempt to start with Vulkan validation
+     * layers enabled, if available.
      */
     void createVulkan(bool enable_validation);
     /**
@@ -276,10 +275,6 @@ private:
      */
     void initImGui();
 
-    /**
-     * @brief updates the debug log overlay text.
-     */
-    void updateTextMesh();
     void createPerformanceOverlay();
     void updatePerformanceOverlay();
 

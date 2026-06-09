@@ -121,7 +121,8 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
 
     const glm::vec2 char_size = style->font->getGlyphSize();
     size_t allocated_chars    = backing.vertex_count / 4;
-
+    const size_t chars_wide =
+        static_cast<size_t>(glm::floor(static_cast<float>(formatting.clip_bounds.x) / char_size.x));
     std::vector<std::string> lines;
 
     if (!formatting.wrap || (formatting.wrap && !formatting.clip))
@@ -133,16 +134,21 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
             size_t next    = 0;
             do
             {
-                next = text.find('\n', newline);
-                lines.push_back(text.substr(newline, (next - newline)));
+                next             = text.find('\n', newline);
+                std::string line = text.substr(newline, (next - newline));
+                if (formatting.clip)
+                {
+                    while (calculateTextWidth(line.substr(0, line.size() - 1), formatting, style->font) >
+                           formatting.clip_bounds.x)
+                        line.pop_back();
+                }
+                lines.push_back(line);
                 newline = next + 1;
             } while (next != std::string::npos);
         }
     }
     else
     {
-        const size_t chars_wide =
-            static_cast<size_t>(glm::floor(static_cast<float>(formatting.clip_bounds.x) / char_size.x));
         size_t base = 0;
         while (base < text.size())
         {
@@ -227,8 +233,8 @@ void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int l
     BackingData& backing_ref)
 {
     addQuad(position, position + glm::vec2{ size.x, 0 }, position + glm::vec2{ 0, size.y }, position + size,
-        z, { 0, 0 }, { 1, 1 }, fill, glm::vec4{ 1, layer, 0b1111, 0 },
-        glm::vec4{ size, 0, 0 }, backing_ref);
+        z, { 0, 0 }, { 1, 1 }, fill, glm::vec4{ 1, layer, 0b1111, 0 }, glm::vec4{ size, 0, 0 },
+        backing_ref);
 }
 
 void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill)
@@ -270,7 +276,8 @@ void UIRenderer::finalise()
             ((final_indices.size() / 256) + 1) * 256);
 }
 
-void UIRenderer::setWorldSpace(bool world_space, Framebuffer::Config custom_config) { material = style->makeMaterial(world_space, custom_config); }
+void UIRenderer::setWorldSpace(bool world_space, Framebuffer::Config custom_config)
+{ material = style->makeMaterial(world_space, custom_config); }
 
 bool UIRenderer::isBackingValid(const BackingData& backing_ref)
 { return backing_datas.contains(backing_ref.id); }
@@ -328,6 +335,15 @@ void UIRenderer::updateTextSingleLine(glm::vec2 position, TextFormatting formatt
             bl.y -= subtract_amount_px;
             br.y -= subtract_amount_px;
             uv_br.y += subtract_amount_uv;
+        }
+
+        if (formatting.clip && tr.x > formatting.clip_bounds.x)
+        {
+            float subtract_amount_px = glm::min(tr.x, tr.x - formatting.clip_bounds.x);
+            float subtract_amount_uv = (uv_size.x / char_size.x) * subtract_amount_px;
+            tr.x -= subtract_amount_px;
+            br.x -= subtract_amount_px;
+            uv_br.x -= subtract_amount_uv;
         }
 
         updateQuad(tl, tr, bl, br, uv_tl, uv_br, glm::vec4{ colour, 1 },

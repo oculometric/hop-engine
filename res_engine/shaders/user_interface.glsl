@@ -1,6 +1,8 @@
 #pragma OMIT_TRANSFORM
 #pragma CANVAS_ATTACHMENTS
 
+#include "res://engine/shaders/dither.glsl"
+
 uniform Uniforms
 {
     bool world_space;
@@ -82,6 +84,7 @@ bool fragment(in Varyings vars, inout Fragment frag)
 {
     int draw_mode = int(round(vars.normal.x));
     vec4 fill_colour = vars.colour;
+    ivec2 screen_coord = ivec2(floor((vars.position.xy + 1.0f / 2.0f) * scene.viewport_size));
 
     if (draw_mode == 0)         // text mode
     {
@@ -126,7 +129,7 @@ bool fragment(in Varyings vars, inout Fragment frag)
         int slice = int(round(vars.normal.y));
         vec2 uv = nineSliceUV(vars.uv.xy, quad_size, atlas_size.xy, bool(borders & 1), bool(borders & 2), bool(borders & 4), bool(borders & 8));
         vec4 colour = texture(ui_atlas, vec3(uv, float(slice) / atlas_size.z));
-        if (colour.a < 0.5f)
+        if (dither_4x4(colour.a, screen_coord) < 1.0f)
             return false;
         if (colour.rgb == vec3(1, 0, 1))
             frag.colour = fill_colour;
@@ -139,7 +142,7 @@ bool fragment(in Varyings vars, inout Fragment frag)
         vec2 uv = vars.uv.xy;
         int slice = int(vars.normal.y);
         vec4 colour = texture(ui_atlas, vec3(uv, float(slice) / atlas_size.z));
-        if (colour.a < 0.5f)
+        if (dither_4x4(colour.a, screen_coord) < 1.0f)
             return false;
         frag.colour = fill_colour;
     }

@@ -352,7 +352,7 @@ void Engine::_drawImGuiDebug() const
 		if (ImGui::MenuItem("toggle fullscreen"))
 			Window::setFullscreen(!Window::isFullscreen());
         if (ImGui::MenuItem("toggle overlay logs"))
-            GraphicsServer::setOverlayLogs(!GraphicsServer::getOverlayLogs());
+            GraphicsServer::setShowDiagnostics(!GraphicsServer::getShowDiagnostics());
 		ImGui::EndMenu();
 	}
 

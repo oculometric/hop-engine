@@ -75,31 +75,50 @@ ShaderParser::ShaderParser(const std::string& source, const std::string& file)
 
 void ShaderParser::processComments(std::string& source)
 {
+    std::string result;
+    result.reserve(source.size());
+    bool inside_string        = false;
+    bool inside_line_comment  = false;
+    bool inside_block_comment = false;
+    char last                 = '\0';
+    for (size_t i = 0; i < source.size(); ++i)
     {
-        size_t comment_pos = source.find("/*");
-        while (comment_pos != std::string::npos)
+        if (i > 0) last = source[i - 1];
+        if (inside_string)
         {
-            size_t comment_end = source.find("*/", comment_pos);
-            if (comment_end == std::string::npos)
+            result.push_back(source[i]);
+            if (source[i] == '\"') inside_string = false;
+            continue;
+        }
+        if (inside_block_comment)
+        {
+            if (last == '*' && source[i] == '/') inside_block_comment = false;
+            continue;
+        }
+        if (inside_line_comment)
+        {
+            if (source[i] == '\n') inside_line_comment = false;
+            continue;
+        }
+        if (source[i] == '\"') inside_string = true;
+        else if (last == '/')
+        {
+            if (source[i] == '/')
             {
-                DBG_ERROR("error parsing shader " + file_path + ": unterminated multiline comment");
-                success = false;
-                return;
+                inside_line_comment = true;
+                result.pop_back();
+                continue;
             }
-            source.erase(comment_pos, (comment_end - comment_pos) + 2);
-            comment_pos = source.find("/*", comment_pos);
+            else if (source[i] == '*')
+            {
+                inside_block_comment = true;
+                result.pop_back();
+                continue;
+            }
         }
+        result.push_back(source[i]);
     }
-
-    {
-        size_t comment_pos = source.find("//");
-        while (comment_pos != std::string::npos)
-        {
-            size_t comment_end = source.find('\n', comment_pos);
-            source.erase(comment_pos, comment_end - comment_pos);
-            comment_pos = source.find("//", comment_pos);
-        }
-    }
+    source = result;
 }
 
 void ShaderParser::processIncludes(std::string& source_code_text, const std::string& path_prefix,
