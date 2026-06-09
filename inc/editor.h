@@ -31,6 +31,12 @@ private:
     WeakRef<NodeView> node_view;
     WeakRef<StaticMeshComponent> cube;
     Ref<UICanvas> main_canvas;
+    WeakRef<Material> ssao_material;
+    int samples = 4;
+    float radius = 4.0f;
+    float power = 1.4f;
+    bool use_smoothstep = false;
+    float strength = 1.0f;
 
 public:
     void awake() override;

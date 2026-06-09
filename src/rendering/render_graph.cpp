@@ -107,6 +107,7 @@ RenderGraph::RenderGraph(const Builder& config)
     for (const auto& step_desc : config.execution_steps)
     {
         Step step;
+        step.name = step_desc.name;
         step.is_camera        = step_desc.is_camera;
         step.resolution_scale = step_desc.resolution_scale;
         step.custom_extent    = step_desc.custom_extent;

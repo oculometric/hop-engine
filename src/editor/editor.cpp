@@ -41,6 +41,7 @@ void Editor::awake()
         .bindTexture("depth_texture", RenderGraph::TextureInput(0, 4))
         .bindTexture("colour_texture", RenderGraph::TextureInput(0, 0))
     );
+    ssao_material = view_3d->render_graph->getMaterialForStep("ssao");
 
     // view_nodes = Scene::create("Node Editor");
     // {
@@ -156,6 +157,30 @@ void Editor::update(float delta_time)
     // if (!node_view->checkInput({ 0, GraphicsServer::getFramebufferSize().y * 0.7f },
     // view_nodes->getViewportSize()))
     Engine::debugCamera(view_3d->findObject("camera"));
+    ssao_material->setBoolUniform("use_smoothstep", use_smoothstep);
+    ssao_material->setIntUniform("samples", samples);
+    ssao_material->setFloatUniform("filter_radius", radius);
+    ssao_material->setFloatUniform("power", power);
+    ssao_material->setFloatUniform("strength", strength);
+
+    if (Input::wasKeyPressed('\\'))
+        use_smoothstep = !use_smoothstep;
+    if (Input::wasKeyPressed(']'))
+        samples *= 2;
+    if (Input::wasKeyPressed('['))
+        samples /= 2;
+    if (Input::wasKeyPressed('P'))
+        radius += 1.0f;
+    if (Input::wasKeyPressed('O'))
+        radius -= 1.0f;
+    if (Input::wasKeyPressed('I'))
+        power += 0.1f;
+    if (Input::wasKeyPressed('U'))
+        power -= 0.1f;
+    if (Input::wasKeyPressed('L'))
+        strength += 0.1f;
+    if (Input::wasKeyPressed('K'))
+        strength -= 0.1f;
 
     // cube->material->getShader()->reload();
 }
