@@ -111,3 +111,4 @@
 - support multiple materials per mesh
 - replace discord integration library with internal stuff
 - transparency blending stuff (multiple passes, ordering, blend modes)
+- XR tracking integration
